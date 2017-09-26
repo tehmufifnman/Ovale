@@ -1,0 +1,52 @@
+import __addon from "addon";
+let [OVALE, Ovale] = __addon;
+let OvaleShadowWordDeath = Ovale.NewModule("OvaleShadowWordDeath", "AceEvent-3.0");
+Ovale.OvaleShadowWordDeath = OvaleShadowWordDeath;
+let OvaleAura = undefined;
+let API_GetTime = GetTime;
+let self_playerGUID = undefined;
+let SHADOW_WORD_DEATH = { [32379]: true, [129176]: true }
+OvaleShadowWordDeath.spellName = "Shadow Word: Death Reset Cooldown";
+OvaleShadowWordDeath.spellId = 125927;
+OvaleShadowWordDeath.start = 0;
+OvaleShadowWordDeath.ending = 0;
+OvaleShadowWordDeath.duration = 9;
+OvaleShadowWordDeath.stacks = 0;
+class OvaleShadowWordDeath {
+    OnInitialize() {
+        OvaleAura = Ovale.OvaleAura;
+    }
+    OnEnable() {
+        if (Ovale.playerClass == "PRIEST") {
+            self_playerGUID = Ovale.playerGUID;
+            this.RegisterMessage("Ovale_SpecializationChanged");
+        }
+    }
+    OnDisable() {
+        if (Ovale.playerClass == "PRIEST") {
+            this.UnregisterMessage("Ovale_SpecializationChanged");
+        }
+    }
+    Ovale_SpecializationChanged(event, specialization, previousSpecialization) {
+        if (specialization == "shadow") {
+            this.RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
+        } else {
+            this.UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
+        }
+    }
+    COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, cleuEvent, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, ...__args) {
+        let [arg12, arg13, arg14, arg15, arg16, arg17, arg18, arg19, arg20, arg21, arg22, arg23, arg24, arg25] = __args;
+        if (sourceGUID == self_playerGUID) {
+            if (cleuEvent == "SPELL_DAMAGE") {
+                let [spellId, overkill] = [arg12, arg16];
+                if (SHADOW_WORD_DEATH[spellId] && !(overkill && overkill > 0)) {
+                    let now = API_GetTime();
+                    this.start = now;
+                    this.ending = now + this.duration;
+                    this.stacks = 1;
+                    OvaleAura.GainedAuraOnGUID(self_playerGUID, this.start, this.spellId, self_playerGUID, "HELPFUL", undefined, undefined, this.stacks, undefined, this.duration, this.ending, undefined, this.spellName, undefined, undefined, undefined);
+                }
+            }
+        }
+    }
+}
