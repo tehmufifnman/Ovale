@@ -5,8 +5,25 @@ Ovale.OvaleWildImps = OvaleWildImps;
 let OvaleState = undefined;
 let tinsert = table.insert;
 let tremove = table.remove;
-let demonData = { [55659]: { duration: 12 }, [98035]: { duration: 12 }, [103673]: { duration: 12 }, [11859]: { duration: 25 }, [89]: { duration: 25 } }
-let self_demons = {  }
+let demonData = {
+    [55659]: {
+        duration: 12
+    },
+    [98035]: {
+        duration: 12
+    },
+    [103673]: {
+        duration: 12
+    },
+    [11859]: {
+        duration: 25
+    },
+    [89]: {
+        duration: 25
+    }
+}
+let self_demons = {
+}
 let self_serial = 1;
 let API_GetTime = GetTime;
 class OvaleWildImps {
@@ -17,7 +34,8 @@ class OvaleWildImps {
         if (Ovale.playerClass == "WARLOCK") {
             this.RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
             OvaleState.RegisterState(this, this.statePrototype);
-            self_demons = {  }
+            self_demons = {
+            }
         }
     }
     OnDisable() {
@@ -38,7 +56,11 @@ class OvaleWildImps {
             let now = API_GetTime();
             for (const [id, v] of pairs(demonData)) {
                 if (id == creatureId) {
-                    self_demons[destGUID] = { id: creatureId, timestamp: now, finish: now + v.duration }
+                    self_demons[destGUID] = {
+                        id: creatureId,
+                        timestamp: now,
+                        finish: now + v.duration
+                    }
                     break;
                 }
             }
@@ -61,7 +83,8 @@ class OvaleWildImps {
         }
     }
 }
-OvaleWildImps.statePrototype = {  }
+OvaleWildImps.statePrototype = {
+}
 let statePrototype = OvaleWildImps.statePrototype;
 statePrototype.GetNotDemonicEmpoweredDemonsCount = function (state, creatureId, atTime) {
     let count = 0;

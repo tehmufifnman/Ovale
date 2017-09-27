@@ -4,9 +4,13 @@ let OvaleSpellDamage = Ovale.NewModule("OvaleSpellDamage", "AceEvent-3.0");
 Ovale.OvaleSpellDamage = OvaleSpellDamage;
 import { OvaleProfiler } from "./OvaleProfiler";
 OvaleProfiler.RegisterProfiling(OvaleSpellDamage);
-let CLEU_DAMAGE_EVENT = { SPELL_DAMAGE: true, SPELL_PERIODIC_AURA: true }
+let CLEU_DAMAGE_EVENT = {
+    SPELL_DAMAGE: true,
+    SPELL_PERIODIC_AURA: true
+}
 let self_playerGUID = undefined;
-OvaleSpellDamage.value = {  }
+OvaleSpellDamage.value = {
+}
 class OvaleSpellDamage {
     OnEnable() {
         self_playerGUID = Ovale.playerGUID;

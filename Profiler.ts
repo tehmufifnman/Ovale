@@ -18,47 +18,93 @@ let tsort = table.sort;
 let _wipe = wipe;
 let API_GetTime = GetTime;
 let self_timestamp = _debugprofilestop();
-let self_stack = {  }
+let self_stack = {
+}
 let self_stackSize = 0;
-let self_timeSpent = {  }
-let self_timesInvoked = {  }
+let self_timeSpent = {
+}
+let self_timesInvoked = {
+}
 let self_profilingOutput = undefined;
 {
-    let actions = { profiling: { name: L["Profiling"], type: "execute", func: function () {
-        let appName = OvaleProfiler.GetName();
-        AceConfigDialog.SetDefaultSize(appName, 800, 550);
-        AceConfigDialog.Open(appName);
-    } } }
+    let actions = {
+        profiling: {
+            name: L["Profiling"],
+            type: "execute",
+            func: function () {
+                let appName = OvaleProfiler.GetName();
+                AceConfigDialog.SetDefaultSize(appName, 800, 550);
+                AceConfigDialog.Open(appName);
+            }
+        }
+    }
     for (const [k, v] of _pairs(actions)) {
         OvaleOptions.options.args.actions.args[k] = v;
     }
-    OvaleOptions.defaultDB.global = OvaleOptions.defaultDB.global || {  }
-    OvaleOptions.defaultDB.global.profiler = {  }
+    OvaleOptions.defaultDB.global = OvaleOptions.defaultDB.global || {
+    }
+    OvaleOptions.defaultDB.global.profiler = {
+    }
     OvaleOptions.RegisterOptions(OvaleProfiler);
 }
-OvaleProfiler.options = { name: OVALE + " " + L["Profiling"], type: "group", args: { profiling: { name: L["Profiling"], type: "group", args: { modules: { name: L["Modules"], type: "group", inline: true, order: 10, args: {  }, get: function (info) {
-    let name = info[lualength(info)];
-    import { value } from "./db";
-    return (value != undefined);
-}, set: function (info, value) {
-    value = value || undefined;
-    let name = info[lualength(info)];
-    Ovale.db.global.profiler[name] = value;
-    if (value) {
-        OvaleProfiler.EnableProfiling(name);
-    } else {
-        OvaleProfiler.DisableProfiling(name);
+OvaleProfiler.options = {
+    name: OVALE + " " + L["Profiling"],
+    type: "group",
+    args: {
+        profiling: {
+            name: L["Profiling"],
+            type: "group",
+            args: {
+                modules: {
+                    name: L["Modules"],
+                    type: "group",
+                    inline: true,
+                    order: 10,
+                    args: {
+                    },
+                    get: function (info) {
+                        let name = info[lualength(info)];
+                        import { value } from "./db";
+                        return (value != undefined);
+                    },
+                    set: function (info, value) {
+                        value = value || undefined;
+                        let name = info[lualength(info)];
+                        Ovale.db.global.profiler[name] = value;
+                        if (value) {
+                            OvaleProfiler.EnableProfiling(name);
+                        } else {
+                            OvaleProfiler.DisableProfiling(name);
+                        }
+                    }
+                },
+                reset: {
+                    name: L["Reset"],
+                    desc: L["Reset the profiling statistics."],
+                    type: "execute",
+                    order: 20,
+                    func: function () {
+                        OvaleProfiler.ResetProfiling();
+                    }
+                },
+                show: {
+                    name: L["Show"],
+                    desc: L["Show the profiling statistics."],
+                    type: "execute",
+                    order: 30,
+                    func: function () {
+                        self_profilingOutput.Clear();
+                        let s = OvaleProfiler.GetProfilingInfo();
+                        if (s) {
+                            self_profilingOutput.AddLine(s);
+                            self_profilingOutput.Display();
+                        }
+                    }
+                }
+            }
+        }
     }
-} }, reset: { name: L["Reset"], desc: L["Reset the profiling statistics."], type: "execute", order: 20, func: function () {
-    OvaleProfiler.ResetProfiling();
-} }, show: { name: L["Show"], desc: L["Show the profiling statistics."], type: "execute", order: 30, func: function () {
-    self_profilingOutput.Clear();
-    let s = OvaleProfiler.GetProfilingInfo();
-    if (s) {
-        self_profilingOutput.AddLine(s);
-        self_profilingOutput.Display();
-    }
-} } } } } }
+}
 const DoNothing = function() {
 }
 const StartProfiling = function(_, tag) {
@@ -109,7 +155,11 @@ class OvaleProfiler {
     }
     RegisterProfiling(addon, name) {
         name = name || addon.GetName();
-        this.options.args.profiling.args.modules.args[name] = { name: name, desc: format(L["Enable profiling for the %s module."], name), type: "toggle" }
+        this.options.args.profiling.args.modules.args[name] = {
+            name: name,
+            desc: format(L["Enable profiling for the %s module."], name),
+            type: "toggle"
+        }
         this.DisableProfiling(name);
     }
     EnableProfiling(name) {
@@ -136,7 +186,8 @@ class OvaleProfiler {
     }
 }
 {
-    let array = {  }
+    let array = {
+    }
 class OvaleProfiler {
         GetProfilingInfo() {
             if (_next(self_timeSpent)) {

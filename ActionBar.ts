@@ -23,18 +23,37 @@ let API_GetMacroSpell = GetMacroSpell;
 OvaleDebug.RegisterDebugging(OvaleActionBar);
 OvaleProfiler.RegisterProfiling(OvaleActionBar);
 {
-    let debugOptions = { actionbar: { name: L["Action bar"], type: "group", args: { spellbook: { name: L["Action bar"], type: "input", multiline: 25, width: "full", get: function (info) {
-        return OvaleActionBar.DebugActions();
-    } } } } }
+    let debugOptions = {
+        actionbar: {
+            name: L["Action bar"],
+            type: "group",
+            args: {
+                spellbook: {
+                    name: L["Action bar"],
+                    type: "input",
+                    multiline: 25,
+                    width: "full",
+                    get: function (info) {
+                        return OvaleActionBar.DebugActions();
+                    }
+                }
+            }
+        }
+    }
     for (const [k, v] of pairs(debugOptions)) {
         OvaleDebug.options.args[k] = v;
     }
 }
-OvaleActionBar.action = {  }
-OvaleActionBar.keybind = {  }
-OvaleActionBar.spell = {  }
-OvaleActionBar.macro = {  }
-OvaleActionBar.item = {  }
+OvaleActionBar.action = {
+}
+OvaleActionBar.keybind = {
+}
+OvaleActionBar.spell = {
+}
+OvaleActionBar.macro = {
+}
+OvaleActionBar.item = {
+}
 const GetKeyBinding = function(slot) {
     let name;
     if (Bartender4) {
@@ -223,13 +242,15 @@ class OvaleActionBar {
     }
 }
 {
-    let output = {  }
+    let output = {
+    }
     const OutputTableValues = function(output, tbl) {
     }
 class OvaleActionBar {
         DebugActions() {
             _wipe(output);
-            let array = {  }
+            let array = {
+            }
             for (const [k, v] of pairs(this.spell)) {
                 tinsert(array, tostring(GetKeyBinding(v)) + ": " + tostring(k) + " " + tostring(OvaleSpellBook.GetSpellName(k)));
             }

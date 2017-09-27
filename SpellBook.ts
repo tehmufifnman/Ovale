@@ -47,29 +47,68 @@ let WARRIOR_HEROICTHROW_SPELLID = 57755;
 OvaleDebug.RegisterDebugging(OvaleSpellBook);
 OvaleProfiler.RegisterProfiling(OvaleSpellBook);
 {
-    let debugOptions = { spellbook: { name: L["Spellbook"], type: "group", args: { spellbook: { name: L["Spellbook"], type: "input", multiline: 25, width: "full", get: function (info) {
-        return OvaleSpellBook.DebugSpells();
-    } } } }, talent: { name: L["Talents"], type: "group", args: { talent: { name: L["Talents"], type: "input", multiline: 25, width: "full", get: function (info) {
-        return OvaleSpellBook.DebugTalents();
-    } } } } }
+    let debugOptions = {
+        spellbook: {
+            name: L["Spellbook"],
+            type: "group",
+            args: {
+                spellbook: {
+                    name: L["Spellbook"],
+                    type: "input",
+                    multiline: 25,
+                    width: "full",
+                    get: function (info) {
+                        return OvaleSpellBook.DebugSpells();
+                    }
+                }
+            }
+        },
+        talent: {
+            name: L["Talents"],
+            type: "group",
+            args: {
+                talent: {
+                    name: L["Talents"],
+                    type: "input",
+                    multiline: 25,
+                    width: "full",
+                    get: function (info) {
+                        return OvaleSpellBook.DebugTalents();
+                    }
+                }
+            }
+        }
+    }
     for (const [k, v] of _pairs(debugOptions)) {
         OvaleDebug.options.args[k] = v;
     }
 }
 OvaleSpellBook.ready = false;
-OvaleSpellBook.spell = {  }
-OvaleSpellBook.spellbookId = { [_BOOKTYPE_PET]: {  }, [_BOOKTYPE_SPELL]: {  } }
-OvaleSpellBook.isHarmful = {  }
-OvaleSpellBook.isHelpful = {  }
-OvaleSpellBook.texture = {  }
-OvaleSpellBook.talent = {  }
-OvaleSpellBook.talentPoints = {  }
+OvaleSpellBook.spell = {
+}
+OvaleSpellBook.spellbookId = {
+    [_BOOKTYPE_PET]: {
+    },
+    [_BOOKTYPE_SPELL]: {
+    }
+}
+OvaleSpellBook.isHarmful = {
+}
+OvaleSpellBook.isHelpful = {
+}
+OvaleSpellBook.texture = {
+}
+OvaleSpellBook.talent = {
+}
+OvaleSpellBook.talentPoints = {
+}
 const ParseHyperlink = function(hyperlink) {
     let [color, linkType, linkData, text] = strmatch(hyperlink, "|?c?f?f?(%x*)|?H?([^:]*):?(%d*):?%d?|?h?%[?([^%[%]]*)%]?|?h?|?r?");
     return [color, linkType, linkData, text];
 }
 const OutputTableValues = function(output, tbl) {
-    let array = {  }
+    let array = {
+    }
     for (const [k, v] of _pairs(tbl)) {
         tinsert(array, _tostring(v) + ": " + _tostring(k));
     }
@@ -333,7 +372,8 @@ class OvaleSpellBook {
     }
 }
 {
-    let output = {  }
+    let output = {
+    }
 class OvaleSpellBook {
         DebugSpells() {
             _wipe(output);
@@ -370,7 +410,8 @@ class OvaleSpellBook {
         return [verified, requirement, index];
     }
 }
-OvaleSpellBook.statePrototype = {  }
+OvaleSpellBook.statePrototype = {
+}
 let statePrototype = OvaleSpellBook.statePrototype;
 statePrototype.IsUsableItem = function (state, itemId, atTime) {
     OvaleSpellBook.StartProfiling("OvaleSpellBook_state_IsUsableItem");

@@ -39,14 +39,124 @@ let _CR_HASTE_MELEE = CR_HASTE_MELEE;
 OvaleDebug.RegisterDebugging(OvalePaperDoll);
 OvaleProfiler.RegisterProfiling(OvalePaperDoll);
 let self_playerGUID = undefined;
-let OVALE_SPELLDAMAGE_SCHOOL = { DEATHKNIGHT: 4, DEMONHUNTER: 3, DRUID: 4, HUNTER: 4, MAGE: 5, MONK: 4, PALADIN: 2, PRIEST: 2, ROGUE: 4, SHAMAN: 4, WARLOCK: 6, WARRIOR: 4 }
-let OVALE_HEALING_CLASS = { DRUID: true, MONK: true, PALADIN: true, PRIEST: true, SHAMAN: true }
-let OVALE_SPECIALIZATION_NAME = { DEATHKNIGHT: { 1: "blood", 2: "frost", 3: "unholy" }, DEMONHUNTER: { 1: "havoc", 2: "vengeance" }, DRUID: { 1: "balance", 2: "feral", 3: "guardian", 4: "restoration" }, HUNTER: { 1: "beast_mastery", 2: "marksmanship", 3: "survival" }, MAGE: { 1: "arcane", 2: "fire", 3: "frost" }, MONK: { 1: "brewmaster", 2: "mistweaver", 3: "windwalker" }, PALADIN: { 1: "holy", 2: "protection", 3: "retribution" }, PRIEST: { 1: "discipline", 2: "holy", 3: "shadow" }, ROGUE: { 1: "assassination", 2: "outlaw", 3: "subtlety" }, SHAMAN: { 1: "elemental", 2: "enhancement", 3: "restoration" }, WARLOCK: { 1: "affliction", 2: "demonology", 3: "destruction" }, WARRIOR: { 1: "arms", 2: "fury", 3: "protection" } }
+let OVALE_SPELLDAMAGE_SCHOOL = {
+    DEATHKNIGHT: 4,
+    DEMONHUNTER: 3,
+    DRUID: 4,
+    HUNTER: 4,
+    MAGE: 5,
+    MONK: 4,
+    PALADIN: 2,
+    PRIEST: 2,
+    ROGUE: 4,
+    SHAMAN: 4,
+    WARLOCK: 6,
+    WARRIOR: 4
+}
+let OVALE_HEALING_CLASS = {
+    DRUID: true,
+    MONK: true,
+    PALADIN: true,
+    PRIEST: true,
+    SHAMAN: true
+}
+let OVALE_SPECIALIZATION_NAME = {
+    DEATHKNIGHT: {
+        1: "blood",
+        2: "frost",
+        3: "unholy"
+    },
+    DEMONHUNTER: {
+        1: "havoc",
+        2: "vengeance"
+    },
+    DRUID: {
+        1: "balance",
+        2: "feral",
+        3: "guardian",
+        4: "restoration"
+    },
+    HUNTER: {
+        1: "beast_mastery",
+        2: "marksmanship",
+        3: "survival"
+    },
+    MAGE: {
+        1: "arcane",
+        2: "fire",
+        3: "frost"
+    },
+    MONK: {
+        1: "brewmaster",
+        2: "mistweaver",
+        3: "windwalker"
+    },
+    PALADIN: {
+        1: "holy",
+        2: "protection",
+        3: "retribution"
+    },
+    PRIEST: {
+        1: "discipline",
+        2: "holy",
+        3: "shadow"
+    },
+    ROGUE: {
+        1: "assassination",
+        2: "outlaw",
+        3: "subtlety"
+    },
+    SHAMAN: {
+        1: "elemental",
+        2: "enhancement",
+        3: "restoration"
+    },
+    WARLOCK: {
+        1: "affliction",
+        2: "demonology",
+        3: "destruction"
+    },
+    WARRIOR: {
+        1: "arms",
+        2: "fury",
+        3: "protection"
+    }
+}
 OvalePaperDoll.class = Ovale.playerClass;
 OvalePaperDoll.level = API_UnitLevel("player");
 OvalePaperDoll.specialization = undefined;
-OvalePaperDoll.STAT_NAME = { snapshotTime: true, agility: true, intellect: true, spirit: true, stamina: true, strength: true, attackPower: true, rangedAttackPower: true, spellBonusDamage: true, spellBonusHealing: true, masteryEffect: true, meleeCrit: true, meleeHaste: true, rangedCrit: true, rangedHaste: true, spellCrit: true, spellHaste: true, multistrike: true, critRating: true, hasteRating: true, masteryRating: true, multistrikeRating: true, mainHandWeaponDamage: true, offHandWeaponDamage: true, baseDamageMultiplier: true }
-OvalePaperDoll.SNAPSHOT_STAT_NAME = { snapshotTime: true, masteryEffect: true, baseDamageMultiplier: true }
+OvalePaperDoll.STAT_NAME = {
+    snapshotTime: true,
+    agility: true,
+    intellect: true,
+    spirit: true,
+    stamina: true,
+    strength: true,
+    attackPower: true,
+    rangedAttackPower: true,
+    spellBonusDamage: true,
+    spellBonusHealing: true,
+    masteryEffect: true,
+    meleeCrit: true,
+    meleeHaste: true,
+    rangedCrit: true,
+    rangedHaste: true,
+    spellCrit: true,
+    spellHaste: true,
+    multistrike: true,
+    critRating: true,
+    hasteRating: true,
+    masteryRating: true,
+    multistrikeRating: true,
+    mainHandWeaponDamage: true,
+    offHandWeaponDamage: true,
+    baseDamageMultiplier: true
+}
+OvalePaperDoll.SNAPSHOT_STAT_NAME = {
+    snapshotTime: true,
+    masteryEffect: true,
+    baseDamageMultiplier: true
+}
 OvalePaperDoll.snapshotTime = 0;
 OvalePaperDoll.agility = 0;
 OvalePaperDoll.intellect = 0;
@@ -368,7 +478,8 @@ class OvalePaperDoll {
         this.UpdateSnapshot(spellcast, true);
     }
 }
-OvalePaperDoll.statePrototype = {  }
+OvalePaperDoll.statePrototype = {
+}
 let statePrototype = OvalePaperDoll.statePrototype;
 statePrototype.class = undefined;
 statePrototype.level = undefined;

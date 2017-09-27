@@ -15,11 +15,14 @@ import { MSG_PREFIX } from "./MSG_PREFIX";
 let self_playerGUID = undefined;
 let self_name = undefined;
 OvaleDebug.RegisterDebugging(OvaleScore);
-OvaleScore.damageMeter = {  }
-OvaleScore.damageMeterMethod = {  }
+OvaleScore.damageMeter = {
+}
+OvaleScore.damageMeterMethod = {
+}
 OvaleScore.score = 0;
 OvaleScore.maxScore = 0;
-OvaleScore.scoredSpell = {  }
+OvaleScore.scoredSpell = {
+}
 class OvaleScore {
     OnInitialize() {
         OvaleFuture = Ovale.OvaleFuture;

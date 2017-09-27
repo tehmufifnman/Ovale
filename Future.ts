@@ -33,10 +33,31 @@ OvaleProfiler.RegisterProfiling(OvaleFuture);
 let self_playerGUID = undefined;
 let self_pool = OvalePool("OvaleFuture_pool");
 let self_timeAuraAdded = undefined;
-let self_modules = {  }
-let CLEU_AURA_EVENT = { SPELL_AURA_APPLIED: "hit", SPELL_AURA_APPLIED_DOSE: "hit", SPELL_AURA_BROKEN: "hit", SPELL_AURA_BROKEN_SPELL: "hit", SPELL_AURA_REFRESH: "hit", SPELL_AURA_REMOVED: "hit", SPELL_AURA_REMOVED_DOSE: "hit" }
-let CLEU_SPELLCAST_FINISH_EVENT = { SPELL_DAMAGE: "hit", SPELL_DISPEL: "hit", SPELL_DISPEL_FAILED: "miss", SPELL_HEAL: "hit", SPELL_INTERRUPT: "hit", SPELL_MISSED: "miss", SPELL_STOLEN: "hit" }
-let CLEU_SPELLCAST_EVENT = { SPELL_CAST_FAILED: true, SPELL_CAST_START: true, SPELL_CAST_SUCCESS: true }
+let self_modules = {
+}
+let CLEU_AURA_EVENT = {
+    SPELL_AURA_APPLIED: "hit",
+    SPELL_AURA_APPLIED_DOSE: "hit",
+    SPELL_AURA_BROKEN: "hit",
+    SPELL_AURA_BROKEN_SPELL: "hit",
+    SPELL_AURA_REFRESH: "hit",
+    SPELL_AURA_REMOVED: "hit",
+    SPELL_AURA_REMOVED_DOSE: "hit"
+}
+let CLEU_SPELLCAST_FINISH_EVENT = {
+    SPELL_DAMAGE: "hit",
+    SPELL_DISPEL: "hit",
+    SPELL_DISPEL_FAILED: "miss",
+    SPELL_HEAL: "hit",
+    SPELL_INTERRUPT: "hit",
+    SPELL_MISSED: "miss",
+    SPELL_STOLEN: "hit"
+}
+let CLEU_SPELLCAST_EVENT = {
+    SPELL_CAST_FAILED: true,
+    SPELL_CAST_START: true,
+    SPELL_CAST_SUCCESS: true
+}
 {
     for (const [cleuEvent, v] of _pairs(CLEU_AURA_EVENT)) {
         CLEU_SPELLCAST_FINISH_EVENT[cleuEvent] = v;
@@ -45,11 +66,24 @@ let CLEU_SPELLCAST_EVENT = { SPELL_CAST_FAILED: true, SPELL_CAST_START: true, SP
         CLEU_SPELLCAST_EVENT[cleuEvent] = true;
     }
 }
-let SPELLCAST_AURA_ORDER = { 1: "target", 2: "pet" }
+let SPELLCAST_AURA_ORDER = {
+    1: "target",
+    2: "pet"
+}
 let UNKNOWN_GUID = 0;
-let SPELLAURALIST_AURA_VALUE = { count: true, extend: true, refresh: true, refresh_keep_snapshot: true }
-let WHITE_ATTACK = { [75]: true, [5019]: true, [6603]: true }
-let WHITE_ATTACK_NAME = {  }
+let SPELLAURALIST_AURA_VALUE = {
+    count: true,
+    extend: true,
+    refresh: true,
+    refresh_keep_snapshot: true
+}
+let WHITE_ATTACK = {
+    [75]: true,
+    [5019]: true,
+    [6603]: true
+}
+let WHITE_ATTACK_NAME = {
+}
 {
     for (const [spellId] of _pairs(WHITE_ATTACK)) {
         let name = API_GetSpellInfo(spellId);
@@ -61,12 +95,17 @@ let WHITE_ATTACK_NAME = {  }
 let SIMULATOR_LAG = 0.005;
 OvaleFuture.inCombat = undefined;
 OvaleFuture.combatStartTime = undefined;
-OvaleFuture.queue = {  }
-OvaleFuture.lastCastTime = {  }
+OvaleFuture.queue = {
+}
+OvaleFuture.lastCastTime = {
+}
 OvaleFuture.lastSpellcast = undefined;
-OvaleFuture.lastGCDSpellcast = {  }
-OvaleFuture.lastOffGCDSpellcast = {  }
-OvaleFuture.counter = {  }
+OvaleFuture.lastGCDSpellcast = {
+}
+OvaleFuture.lastOffGCDSpellcast = {
+}
+OvaleFuture.counter = {
+}
 const IsSameSpellcast = function(a, b) {
     let boolean = (a.spellId == b.spellId && a.queued == b.queued);
     if (boolean) {
@@ -796,7 +835,8 @@ class OvaleFuture {
         }
     }
 }
-OvaleFuture.statePrototype = {  }
+OvaleFuture.statePrototype = {
+}
 let statePrototype = OvaleFuture.statePrototype;
 statePrototype.inCombat = undefined;
 statePrototype.combatStartTime = undefined;
@@ -809,13 +849,16 @@ statePrototype.lastCast = undefined;
 statePrototype.channel = undefined;
 statePrototype.lastSpellId = undefined;
 statePrototype.lastGCDSpellId = undefined;
-statePrototype.lastGCDSpellIds = {  }
+statePrototype.lastGCDSpellIds = {
+}
 statePrototype.lastOffGCDSpellId = undefined;
 statePrototype.counter = undefined;
 class OvaleFuture {
     InitializeState(state) {
-        state.lastCast = {  }
-        state.counter = {  }
+        state.lastCast = {
+        }
+        state.counter = {
+        }
     }
     ResetState(state) {
         this.StartProfiling("OvaleFuture_ResetState");
@@ -937,7 +980,8 @@ statePrototype.IsChanneling = function (state, atTime) {
     return state.channel && (atTime < state.endCast);
 }
 {
-    let staticSpellcast = {  }
+    let staticSpellcast = {
+    }
     statePrototype.PushGCDSpellId = function (state, spellId) {
         if (state.lastGCDSpellId) {
             tinsert(state.lastGCDSpellIds, state.lastGCDSpellId);

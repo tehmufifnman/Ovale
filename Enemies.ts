@@ -22,13 +22,38 @@ let _COMBATLOG_OBJECT_REACTION_FRIENDLY = COMBATLOG_OBJECT_REACTION_FRIENDLY;
 let GROUP_MEMBER = bit_bor(_COMBATLOG_OBJECT_AFFILIATION_MINE, _COMBATLOG_OBJECT_AFFILIATION_PARTY, _COMBATLOG_OBJECT_AFFILIATION_RAID);
 OvaleDebug.RegisterDebugging(OvaleEnemies);
 OvaleProfiler.RegisterProfiling(OvaleEnemies);
-let CLEU_TAG_SUFFIXES = { 1: "_DAMAGE", 2: "_MISSED", 3: "_AURA_APPLIED", 4: "_AURA_APPLIED_DOSE", 5: "_AURA_REFRESH", 6: "_CAST_START", 7: "_INTERRUPT", 8: "_DISPEL", 9: "_DISPEL_FAILED", 10: "_STOLEN", 11: "_DRAIN", 12: "_LEECH" }
-let CLEU_AUTOATTACK = { RANGED_DAMAGE: true, RANGED_MISSED: true, SWING_DAMAGE: true, SWING_MISSED: true }
-let CLEU_UNIT_REMOVED = { UNIT_DESTROYED: true, UNIT_DIED: true, UNIT_DISSIPATES: true }
+let CLEU_TAG_SUFFIXES = {
+    1: "_DAMAGE",
+    2: "_MISSED",
+    3: "_AURA_APPLIED",
+    4: "_AURA_APPLIED_DOSE",
+    5: "_AURA_REFRESH",
+    6: "_CAST_START",
+    7: "_INTERRUPT",
+    8: "_DISPEL",
+    9: "_DISPEL_FAILED",
+    10: "_STOLEN",
+    11: "_DRAIN",
+    12: "_LEECH"
+}
+let CLEU_AUTOATTACK = {
+    RANGED_DAMAGE: true,
+    RANGED_MISSED: true,
+    SWING_DAMAGE: true,
+    SWING_MISSED: true
+}
+let CLEU_UNIT_REMOVED = {
+    UNIT_DESTROYED: true,
+    UNIT_DIED: true,
+    UNIT_DISSIPATES: true
+}
 let self_playerGUID = undefined;
-let self_enemyName = {  }
-let self_enemyLastSeen = {  }
-let self_taggedEnemyLastSeen = {  }
+let self_enemyName = {
+}
+let self_enemyLastSeen = {
+}
+let self_taggedEnemyLastSeen = {
+}
 let self_reaperTimer = undefined;
 let REAP_INTERVAL = 3;
 OvaleEnemies.activeEnemies = 0;
@@ -195,7 +220,8 @@ class OvaleEnemies {
         this.Print("Total tagged enemies: %d", this.taggedEnemies);
     }
 }
-OvaleEnemies.statePrototype = {  }
+OvaleEnemies.statePrototype = {
+}
 let statePrototype = OvaleEnemies.statePrototype;
 statePrototype.activeEnemies = undefined;
 statePrototype.taggedEnemies = undefined;

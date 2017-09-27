@@ -43,52 +43,105 @@ let self_petGUID = undefined;
 let self_pool = OvalePool("OvaleAura_pool");
 let UNKNOWN_GUID = 0;
 {
-    let output = {  }
-    let debugOptions = { playerAura: { name: L["Auras (player)"], type: "group", args: { buff: { name: L["Auras on the player"], type: "input", multiline: 25, width: "full", get: function (info) {
-        _wipe(output);
-        let helpful = OvaleState.state.DebugUnitAuras("player", "HELPFUL");
-        if (helpful) {
-            output[lualength(output) + 1] = "== BUFFS ==";
-            output[lualength(output) + 1] = helpful;
+    let output = {
+    }
+    let debugOptions = {
+        playerAura: {
+            name: L["Auras (player)"],
+            type: "group",
+            args: {
+                buff: {
+                    name: L["Auras on the player"],
+                    type: "input",
+                    multiline: 25,
+                    width: "full",
+                    get: function (info) {
+                        _wipe(output);
+                        let helpful = OvaleState.state.DebugUnitAuras("player", "HELPFUL");
+                        if (helpful) {
+                            output[lualength(output) + 1] = "== BUFFS ==";
+                            output[lualength(output) + 1] = helpful;
+                        }
+                        let harmful = OvaleState.state.DebugUnitAuras("player", "HARMFUL");
+                        if (harmful) {
+                            output[lualength(output) + 1] = "== DEBUFFS ==";
+                            output[lualength(output) + 1] = harmful;
+                        }
+                        return tconcat(output, "\n");
+                    }
+                }
+            }
+        },
+        targetAura: {
+            name: L["Auras (target)"],
+            type: "group",
+            args: {
+                targetbuff: {
+                    name: L["Auras on the target"],
+                    type: "execute",
+                    type: "input",
+                    multiline: 25,
+                    width: "full",
+                    get: function (info) {
+                        _wipe(output);
+                        let helpful = OvaleState.state.DebugUnitAuras("target", "HELPFUL");
+                        if (helpful) {
+                            output[lualength(output) + 1] = "== BUFFS ==";
+                            output[lualength(output) + 1] = helpful;
+                        }
+                        let harmful = OvaleState.state.DebugUnitAuras("target", "HARMFUL");
+                        if (harmful) {
+                            output[lualength(output) + 1] = "== DEBUFFS ==";
+                            output[lualength(output) + 1] = harmful;
+                        }
+                        return tconcat(output, "\n");
+                    }
+                }
+            }
         }
-        let harmful = OvaleState.state.DebugUnitAuras("player", "HARMFUL");
-        if (harmful) {
-            output[lualength(output) + 1] = "== DEBUFFS ==";
-            output[lualength(output) + 1] = harmful;
-        }
-        return tconcat(output, "\n");
-    } } } }, targetAura: { name: L["Auras (target)"], type: "group", args: { targetbuff: { name: L["Auras on the target"], type: "execute", type: "input", multiline: 25, width: "full", get: function (info) {
-        _wipe(output);
-        let helpful = OvaleState.state.DebugUnitAuras("target", "HELPFUL");
-        if (helpful) {
-            output[lualength(output) + 1] = "== BUFFS ==";
-            output[lualength(output) + 1] = helpful;
-        }
-        let harmful = OvaleState.state.DebugUnitAuras("target", "HARMFUL");
-        if (harmful) {
-            output[lualength(output) + 1] = "== DEBUFFS ==";
-            output[lualength(output) + 1] = harmful;
-        }
-        return tconcat(output, "\n");
-    } } } } }
+    }
     for (const [k, v] of _pairs(debugOptions)) {
         OvaleDebug.options.args[k] = v;
     }
 }
-let DEBUFF_TYPE = { Curse: true, Disease: true, Enrage: true, Magic: true, Poison: true }
-let SPELLINFO_DEBUFF_TYPE = {  }
+let DEBUFF_TYPE = {
+    Curse: true,
+    Disease: true,
+    Enrage: true,
+    Magic: true,
+    Poison: true
+}
+let SPELLINFO_DEBUFF_TYPE = {
+}
 {
     for (const [debuffType] of _pairs(DEBUFF_TYPE)) {
         let siDebuffType = strlower(debuffType);
         SPELLINFO_DEBUFF_TYPE[siDebuffType] = debuffType;
     }
 }
-let CLEU_AURA_EVENTS = { SPELL_AURA_APPLIED: true, SPELL_AURA_REMOVED: true, SPELL_AURA_APPLIED_DOSE: true, SPELL_AURA_REMOVED_DOSE: true, SPELL_AURA_REFRESH: true, SPELL_AURA_BROKEN: true, SPELL_AURA_BROKEN_SPELL: true }
-let CLEU_TICK_EVENTS = { SPELL_PERIODIC_DAMAGE: true, SPELL_PERIODIC_HEAL: true, SPELL_PERIODIC_ENERGIZE: true, SPELL_PERIODIC_DRAIN: true, SPELL_PERIODIC_LEECH: true }
+let CLEU_AURA_EVENTS = {
+    SPELL_AURA_APPLIED: true,
+    SPELL_AURA_REMOVED: true,
+    SPELL_AURA_APPLIED_DOSE: true,
+    SPELL_AURA_REMOVED_DOSE: true,
+    SPELL_AURA_REFRESH: true,
+    SPELL_AURA_BROKEN: true,
+    SPELL_AURA_BROKEN_SPELL: true
+}
+let CLEU_TICK_EVENTS = {
+    SPELL_PERIODIC_DAMAGE: true,
+    SPELL_PERIODIC_HEAL: true,
+    SPELL_PERIODIC_ENERGIZE: true,
+    SPELL_PERIODIC_DRAIN: true,
+    SPELL_PERIODIC_LEECH: true
+}
 let CLEU_SCHOOL_MASK_MAGIC = bit_bor(_SCHOOL_MASK_ARCANE, _SCHOOL_MASK_FIRE, _SCHOOL_MASK_FROST, _SCHOOL_MASK_HOLY, _SCHOOL_MASK_NATURE, _SCHOOL_MASK_SHADOW);
-OvaleAura.aura = {  }
-OvaleAura.serial = {  }
-OvaleAura.bypassState = {  }
+OvaleAura.aura = {
+}
+OvaleAura.serial = {
+}
+OvaleAura.bypassState = {
+}
 const PutAura = function(auraDB, guid, auraId, casterGUID, aura) {
     if (!auraDB[guid]) {
         auraDB[guid] = self_pool.Get();
@@ -281,7 +334,8 @@ class OvaleAura {
                 for (const [filter, auraTable] of _pairs(si.aura.player)) {
                     for (const [auraId] of _pairs(auraTable)) {
                         if (!bypassState[auraId]) {
-                            bypassState[auraId] = {  }
+                            bypassState[auraId] = {
+                            }
                         }
                         bypassState[auraId][self_playerGUID] = true;
                     }
@@ -291,7 +345,8 @@ class OvaleAura {
                 for (const [filter, auraTable] of _pairs(si.aura.target)) {
                     for (const [auraId] of _pairs(auraTable)) {
                         if (!bypassState[auraId]) {
-                            bypassState[auraId] = {  }
+                            bypassState[auraId] = {
+                            }
                         }
                         bypassState[auraId][destGUID] = true;
                     }
@@ -302,7 +357,8 @@ class OvaleAura {
                     for (const [auraId, index] of _pairs(auraTable)) {
                         for (const [petGUID] of _pairs(self_petGUID)) {
                             if (!bypassState[petGUID]) {
-                                bypassState[auraId] = {  }
+                                bypassState[auraId] = {
+                                }
                             }
                             bypassState[auraId][petGUID] = true;
                         }
@@ -726,13 +782,17 @@ class OvaleAura {
         return [verified, requirement, index];
     }
 }
-OvaleAura.statePrototype = { aura: undefined, serial: undefined }
+OvaleAura.statePrototype = {
+    aura: undefined,
+    serial: undefined
+}
 let statePrototype = OvaleAura.statePrototype;
 statePrototype.aura = undefined;
 statePrototype.serial = undefined;
 class OvaleAura {
     InitializeState(state) {
-        state.aura = {  }
+        state.aura = {
+        }
         state.serial = 0;
     }
     ResetState(state) {
@@ -949,7 +1009,8 @@ const GetStateAuraOnGUID = function(state, guid, auraId, filter, mine) {
     return auraFound;
 }
 {
-    let array = {  }
+    let array = {
+    }
     statePrototype.DebugUnitAuras = function (state, unitId, filter) {
         _wipe(array);
         let guid = OvaleGUID.UnitGUID(unitId);
@@ -1176,7 +1237,8 @@ statePrototype.GetAura = function (state, unitId, auraId, filter, mine) {
     let aura = OvaleAura.GetAuraByGUID(guid, auraId, filter, mine);
     let bypassState = OvaleAura.bypassState;
     if (!bypassState[auraId]) {
-        bypassState[auraId] = {  }
+        bypassState[auraId] = {
+        }
     }
     if (bypassState[auraId][guid]) {
         if (aura && aura.start && aura.ending && stateAura && stateAura.start && stateAura.ending && aura.start == stateAura.start && aura.ending == stateAura.ending) {

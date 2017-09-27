@@ -1,12 +1,11 @@
 import __addon from "addon";
 let [OVALE, Ovale] = __addon;
-let OvaleDebug = Ovale.NewModule("OvaleDebug", "AceTimer-3.0");
-Ovale.OvaleDebug = OvaleDebug;
-let AceConfig = LibStub("AceConfig-3.0");
-let AceConfigDialog = LibStub("AceConfigDialog-3.0");
-import { L } from "./L";
-let LibTextDump = LibStub("LibTextDump-1.0");
-import { OvaleOptions } from "./OvaleOptions";
+let OvaleDebugBase = Ovale.NewModule("OvaleDebug", "AceTimer-3.0");
+import AceConfig from "AceConfig-3.0";
+import AceConfigDialog from "AceConfigDialog-3.0";
+import { L } from "./Localization";
+import LibTextDump from "LibTextDump-1.0";
+import { options } from "./Options";
 let format = string.format;
 let gmatch = string.gmatch;
 let gsub = string.gsub;
@@ -22,33 +21,78 @@ let _DEFAULT_CHAT_FRAME = DEFAULT_CHAT_FRAME;
 let self_traced = false;
 let self_traceLog = undefined;
 let OVALE_TRACELOG_MAXLINES = 4096;
-{
-    let actions = { debug: { name: L["Debug"], type: "execute", func: function () {
-        let appName = OvaleDebug.GetName();
-        AceConfigDialog.SetDefaultSize(appName, 800, 550);
-        AceConfigDialog.Open(appName);
-    } } }
-    for (const [k, v] of _pairs(actions)) {
-        OvaleOptions.options.args.actions.args[k] = v;
+
+class OvaleDebug extends OvaleDebugBase {
+    options = {
+        name: OVALE + " " + L["Debug"],
+        type: "group",
+        args: {
+            toggles: {
+                name: L["Options"],
+                type: "group",
+                order: 10,
+                args: {
+                },
+                get: function (info) {
+                    const value = Ovale.db.global.debug[info[lualength(info)]];
+                    return (value != undefined);
+                },
+                set: function (info, value) {
+                    value = value || undefined;
+                    Ovale.db.global.debug[info[lualength(info)]] = value;
+                }
+            },
+            trace: {
+                name: L["Trace"],
+                type: "group",
+                order: 20,
+                args: {
+                    trace: {
+                        order: 10,
+                        type: "execute",
+                        name: L["Trace"],
+                        desc: L["Trace the next frame update."],
+                        func: () => {
+                            this.DoTrace(true);
+                        }
+                    },
+                    traceLog: {
+                        order: 20,
+                        type: "execute",
+                        name: L["Show Trace Log"],
+                        func: () => {
+                            this.DisplayTraceLog();
+                        }
+                    }
+                }
+            }
+        }
     }
-    OvaleOptions.defaultDB.global = OvaleOptions.defaultDB.global || {  }
-    OvaleOptions.defaultDB.global.debug = {  }
-    OvaleOptions.RegisterOptions(OvaleDebug);
-}
-OvaleDebug.options = { name: OVALE + " " + L["Debug"], type: "group", args: { toggles: { name: L["Options"], type: "group", order: 10, args: {  }, get: function (info) {
-    import { value } from "./db";
-    return (value != undefined);
-}, set: function (info, value) {
-    value = value || undefined;
-    Ovale.db.global.debug[info[lualength(info)]] = value;
-} }, trace: { name: L["Trace"], type: "group", order: 20, args: { trace: { order: 10, type: "execute", name: L["Trace"], desc: L["Trace the next frame update."], func: function () {
-    OvaleDebug.DoTrace(true);
-} }, traceLog: { order: 20, type: "execute", name: L["Show Trace Log"], func: function () {
-    OvaleDebug.DisplayTraceLog();
-} } } } } }
-OvaleDebug.bug = false;
-OvaleDebug.trace = false;
-class OvaleDebug {
+
+    bug = false;
+    trace = false;
+
+    constructor() {
+        super();
+        let actions = {
+            debug: {
+                name: L["Debug"],
+                type: "execute",
+                func: function () {
+                    let appName = this.GetName();
+                    AceConfigDialog.SetDefaultSize(appName, 800, 550);
+                    AceConfigDialog.Open(appName);
+                }
+            }
+        }
+        for (const [k, v] of _pairs(actions)) {
+            options.options.args.actions.args[k] = v;
+        }
+        options.defaultDB.global = options.defaultDB.global || {}
+        options.defaultDB.global.debug = {}
+        options.RegisterOptions(OvaleDebug);
+    }
+    
     OnInitialize() {
         let appName = this.GetName();
         AceConfig.RegisterOptionsTable(appName, this.options);
@@ -84,7 +128,11 @@ class OvaleDebug {
     }
     RegisterDebugging(addon) {
         let name = addon.GetName();
-        this.options.args.toggles.args[name] = { name: name, desc: format(L["Enable debugging messages for the %s module."], name), type: "toggle" }
+        this.options.args.toggles.args[name] = {
+            name: name,
+            desc: format(L["Enable debugging messages for the %s module."], name),
+            type: "toggle"
+        }
         addon.Debug = this.Debug;
         addon.DebugTimestamp = this.DebugTimestamp;
     }
@@ -119,24 +167,5 @@ class OvaleDebug {
         self_traceLog.Display();
     }
 }
-{
-    let NEW_DEBUG_NAMES = { action_bar: "OvaleActionBar", aura: "OvaleAura", combo_points: "OvaleComboPoints", compile: "OvaleCompile", damage_taken: "OvaleDamageTaken", enemy: "OvaleEnemies", guid: "OvaleGUID", missing_spells: false, paper_doll: "OvalePaperDoll", power: "OvalePower", snapshot: false, spellbook: "OvaleSpellBook", state: "OvaleState", steady_focus: "OvaleSteadyFocus", unknown_spells: false }
-class OvaleDebug {
-        UpgradeSavedVariables() {
-            import { global } from "./db";
-            import { profile } from "./db";
-            profile.debug = undefined;
-            for (const [old, new] of _pairs(NEW_DEBUG_NAMES)) {
-                if (global.debug[old] && new) {
-                    global.debug[new] = global.debug[old];
-                }
-                global.debug[old] = undefined;
-            }
-            for (const [k, v] of _pairs(global.debug)) {
-                if (!v) {
-                    global.debug[k] = undefined;
-                }
-            }
-        }
-}
-}
+
+export const debug = new OvaleDebug();

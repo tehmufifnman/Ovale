@@ -6,8 +6,10 @@ let OvaleState = undefined;
 let _type = type;
 let _wipe = wipe;
 let INFINITY = math.huge;
-let self_condition = {  }
-let self_spellBookCondition = {  }
+let self_condition = {
+}
+let self_spellBookCondition = {
+}
 {
     self_spellBookCondition["spell"] = true;
 }
@@ -16,7 +18,13 @@ OvaleCondition.ParseCondition = undefined;
 OvaleCondition.ParseRuneCondition = undefined;
 OvaleCondition.TestBoolean = undefined;
 OvaleCondition.TestValue = undefined;
-OvaleCondition.COMPARATOR = { atLeast: true, atMost: true, equal: true, less: true, more: true }
+OvaleCondition.COMPARATOR = {
+    atLeast: true,
+    atMost: true,
+    equal: true,
+    less: true,
+    more: true
+}
 class OvaleCondition {
     OnInitialize() {
         OvaleState = Ovale.OvaleState;
@@ -125,7 +133,8 @@ OvaleCondition.TestValue = function (start, ending, value, origin, rate, compara
 OvaleCondition.Compare = function (value, comparator, limit) {
     return OvaleCondition.TestValue(0, INFINITY, value, 0, 0, comparator, limit);
 }
-OvaleCondition.statePrototype = {  }
+OvaleCondition.statePrototype = {
+}
 let statePrototype = OvaleCondition.statePrototype;
 statePrototype.defaultTarget = undefined;
 class OvaleCondition {

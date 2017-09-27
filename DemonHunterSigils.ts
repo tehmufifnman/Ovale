@@ -12,17 +12,22 @@ let tremove = table.remove;
 let API_GetTime = GetTime;
 let UPDATE_DELAY = 0.5;
 let SIGIL_ACTIVATION_TIME = math.huge;
-let activated_sigils = {  }
+let activated_sigils = {
+}
 OvaleProfiler.RegisterProfiling(OvaleSigil);
 class OvaleSigil {
     OnInitialize() {
         OvalePaperDoll = Ovale.OvalePaperDoll;
         OvaleSpellBook = Ovale.OvaleSpellBook;
         OvaleState = Ovale.OvaleState;
-        activated_sigils["flame"] = {  }
-        activated_sigils["silence"] = {  }
-        activated_sigils["misery"] = {  }
-        activated_sigils["chains"] = {  }
+        activated_sigils["flame"] = {
+        }
+        activated_sigils["silence"] = {
+        }
+        activated_sigils["misery"] = {
+        }
+        activated_sigils["chains"] = {
+        }
     }
     OnEnable() {
         if (Ovale.playerClass == "DEMONHUNTER") {
@@ -37,8 +42,38 @@ class OvaleSigil {
         }
     }
 }
-let sigil_start = { [204596]: { type: "flame" }, [189110]: { type: "flame", talent: 8 }, [202137]: { type: "silence" }, [207684]: { type: "misery" }, [202138]: { type: "chains" } }
-let sigil_end = { [204598]: { type: "flame" }, [204490]: { type: "silence" }, [207685]: { type: "misery" }, [204834]: { type: "chains" } }
+let sigil_start = {
+    [204596]: {
+        type: "flame"
+    },
+    [189110]: {
+        type: "flame",
+        talent: 8
+    },
+    [202137]: {
+        type: "silence"
+    },
+    [207684]: {
+        type: "misery"
+    },
+    [202138]: {
+        type: "chains"
+    }
+}
+let sigil_end = {
+    [204598]: {
+        type: "flame"
+    },
+    [204490]: {
+        type: "silence"
+    },
+    [207685]: {
+        type: "misery"
+    },
+    [204834]: {
+        type: "chains"
+    }
+}
 let QUICKENED_SIGILS_TALENT = 15;
 class OvaleSigil {
     UNIT_SPELLCAST_SUCCEEDED(event, unitId, spellName, spellRank, guid, spellId, ...__args) {
@@ -64,7 +99,8 @@ class OvaleSigil {
         }
     }
 }
-OvaleSigil.statePrototype = {  }
+OvaleSigil.statePrototype = {
+}
 let statePrototype = OvaleSigil.statePrototype;
 statePrototype.IsSigilCharging = function (state, type, atTime) {
     atTime = atTime || state.currentTime;

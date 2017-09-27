@@ -36,13 +36,18 @@ class OvaleDemonHunterSoulFragments {
 let SOUL_FRAGMENTS_BUFF_ID = 228477;
 let SOUL_FRAGMENTS_SPELL_HEAL_ID = 203794;
 let SOUL_FRAGMENTS_SPELL_CAST_SUCCESS_ID = 204255;
-let SOUL_FRAGMENT_FINISHERS = { [228477]: true, [247454]: true, [227225]: true }
+let SOUL_FRAGMENT_FINISHERS = {
+    [228477]: true,
+    [247454]: true,
+    [227225]: true
+}
 class OvaleDemonHunterSoulFragments {
     PLAYER_REGEN_ENABLED() {
         this.SetCurrentSoulFragments();
     }
     PLAYER_REGEN_DISABLED() {
-        this.soul_fragments = {  }
+        this.soul_fragments = {
+        }
         this.last_checked = undefined;
         this.SetCurrentSoulFragments();
     }
@@ -68,7 +73,8 @@ class OvaleDemonHunterSoulFragments {
     SetCurrentSoulFragments(count) {
         let now = API_GetTime();
         this.last_checked = now;
-        this.soul_fragments = this.soul_fragments || {  }
+        this.soul_fragments = this.soul_fragments || {
+        }
         if (type(count) != "number") {
             count = API_GetSpellCount(SOUL_FRAGMENTS_BUFF_ID) || 0;
         }
@@ -76,7 +82,10 @@ class OvaleDemonHunterSoulFragments {
             count = 0;
         }
         if (this.last_soul_fragment_count == undefined || this.last_soul_fragment_count.fragments != count) {
-            let entry = { ["timestamp"]: now, ["fragments"]: count }
+            let entry = {
+                ["timestamp"]: now,
+                ["fragments"]: count
+            }
             this.Debug("Setting current soul fragment count to '%d' (at: %s)", entry.fragments, entry.timestamp);
             this.last_soul_fragment_count = entry;
             tinsert(this.soul_fragments, entry);
@@ -87,7 +96,8 @@ class OvaleDemonHunterSoulFragments {
         print("Time:" + this.last_soul_fragment_count["timestamp"]);
     }
 }
-OvaleDemonHunterSoulFragments.statePrototype = {  }
+OvaleDemonHunterSoulFragments.statePrototype = {
+}
 let statePrototype = OvaleDemonHunterSoulFragments.statePrototype;
 statePrototype.SoulFragments = function (state, atTime) {
     for (const [k, v] of spairs(OvaleDemonHunterSoulFragments.soul_fragments, function (t, a, b) {
@@ -100,7 +110,8 @@ statePrototype.SoulFragments = function (state, atTime) {
     return (OvaleDemonHunterSoulFragments.last_soul_fragment_count != undefined && OvaleDemonHunterSoulFragments.last_soul_fragment_count.fragments) || 0;
 }
 function spairs(t, order) {
-    let keys = {  }
+    let keys = {
+    }
     for (const [k] of pairs(t)) {
         keys[lualength(keys) + 1] = k;
     }

@@ -16,14 +16,32 @@ let API_UnitHealthMax = UnitHealthMax;
 let INFINITY = math.huge;
 OvaleDebug.RegisterDebugging(OvaleHealth);
 OvaleProfiler.RegisterProfiling(OvaleHealth);
-let CLEU_DAMAGE_EVENT = { DAMAGE_SHIELD: true, DAMAGE_SPLIT: true, RANGE_DAMAGE: true, SPELL_BUILDING_DAMAGE: true, SPELL_DAMAGE: true, SPELL_PERIODIC_DAMAGE: true, SWING_DAMAGE: true, ENVIRONMENTAL_DAMAGE: true }
-let CLEU_HEAL_EVENT = { SPELL_HEAL: true, SPELL_PERIODIC_HEAL: true }
-OvaleHealth.health = {  }
-OvaleHealth.maxHealth = {  }
-OvaleHealth.totalDamage = {  }
-OvaleHealth.totalHealing = {  }
-OvaleHealth.firstSeen = {  }
-OvaleHealth.lastUpdated = {  }
+let CLEU_DAMAGE_EVENT = {
+    DAMAGE_SHIELD: true,
+    DAMAGE_SPLIT: true,
+    RANGE_DAMAGE: true,
+    SPELL_BUILDING_DAMAGE: true,
+    SPELL_DAMAGE: true,
+    SPELL_PERIODIC_DAMAGE: true,
+    SWING_DAMAGE: true,
+    ENVIRONMENTAL_DAMAGE: true
+}
+let CLEU_HEAL_EVENT = {
+    SPELL_HEAL: true,
+    SPELL_PERIODIC_HEAL: true
+}
+OvaleHealth.health = {
+}
+OvaleHealth.maxHealth = {
+}
+OvaleHealth.totalDamage = {
+}
+OvaleHealth.totalHealing = {
+}
+OvaleHealth.firstSeen = {
+}
+OvaleHealth.lastUpdated = {
+}
 class OvaleHealth {
     OnInitialize() {
         OvaleData = Ovale.OvaleData;
@@ -236,6 +254,7 @@ class OvaleHealth {
         return [verified, requirement, index];
     }
 }
-OvaleHealth.statePrototype = {  }
+OvaleHealth.statePrototype = {
+}
 let statePrototype = OvaleHealth.statePrototype;
 statePrototype.RequireHealthPercentHandler = OvaleHealth.RequireHealthPercentHandler;

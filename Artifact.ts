@@ -10,7 +10,8 @@ let tsort = table.sort;
 let tinsert = table.insert;
 let tremove = table.remove;
 let tconcat = table.concat;
-let self_traits = {  }
+let self_traits = {
+}
 OvaleDebug.RegisterDebugging(OvaleArtifact);
 class OvaleArtifact {
     OnInitialize() {
@@ -31,7 +32,8 @@ class OvaleArtifact {
     }
     UpdateTraits(message) {
         let [artifactId, traits] = LibArtifactData.GetArtifactTraits();
-        self_traits = {  }
+        self_traits = {
+        }
         if (!traits) {
             break;
         }
@@ -50,11 +52,13 @@ class OvaleArtifact {
     }
 }
 {
-    let output = {  }
+    let output = {
+    }
 class OvaleArtifact {
         DebugTraits() {
             wipe(output);
-            let array = {  }
+            let array = {
+            }
             for (const [k, v] of pairs(self_traits)) {
                 tinsert(array, tostring(v.name) + ": " + tostring(k));
             }
@@ -67,9 +71,23 @@ class OvaleArtifact {
 }
 }
 {
-    let debugOptions = { artifacttraits: { name: L["Artifact traits"], type: "group", args: { artifacttraits: { name: L["Artifact traits"], type: "input", multiline: 25, width: "full", get: function (info) {
-        return OvaleArtifact.DebugTraits();
-    } } } } }
+    let debugOptions = {
+        artifacttraits: {
+            name: L["Artifact traits"],
+            type: "group",
+            args: {
+                artifacttraits: {
+                    name: L["Artifact traits"],
+                    type: "input",
+                    multiline: 25,
+                    width: "full",
+                    get: function (info) {
+                        return OvaleArtifact.DebugTraits();
+                    }
+                }
+            }
+        }
+    }
     for (const [k, v] of pairs(debugOptions)) {
         OvaleDebug.options.args[k] = v;
     }

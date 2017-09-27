@@ -31,10 +31,15 @@ OvaleDebug.RegisterDebugging(OvaleCompile);
 OvaleProfiler.RegisterProfiling(OvaleCompile);
 let self_compileOnStances = false;
 let self_canEvaluate = false;
-let self_requirePreload = { 1: "OvaleEquipment", 2: "OvaleSpellBook", 3: "OvaleStance" }
+let self_requirePreload = {
+    1: "OvaleEquipment",
+    2: "OvaleSpellBook",
+    3: "OvaleStance"
+}
 let self_serial = 0;
 let self_timesEvaluated = 0;
-let self_icon = {  }
+let self_icon = {
+}
 let NUMBER_PATTERN = "^%-?%d+%.?%d*$";
 OvaleCompile.serial = undefined;
 OvaleCompile.ast = undefined;
@@ -93,7 +98,17 @@ const TestConditionTrait = function(value) {
     let hasTrait = OvaleArtifact.HasTrait(trait);
     return (required && hasTrait) || (!required && !hasTrait);
 }
-let TEST_CONDITION_DISPATCH = { if_spell: TestConditionSpell, if_equipped: TestConditionEquipped, if_stance: TestConditionStance, level: TestConditionLevel, maxLevel: TestConditionMaxLevel, specialization: TestConditionSpecialization, talent: TestConditionTalent, trait: TestConditionTrait, pertrait: TestConditionTrait }
+let TEST_CONDITION_DISPATCH = {
+    if_spell: TestConditionSpell,
+    if_equipped: TestConditionEquipped,
+    if_stance: TestConditionStance,
+    level: TestConditionLevel,
+    maxLevel: TestConditionMaxLevel,
+    specialization: TestConditionSpecialization,
+    talent: TestConditionTalent,
+    trait: TestConditionTrait,
+    pertrait: TestConditionTrait
+}
 const TestConditions = function(positionalParams, namedParams) {
     OvaleCompile.StartProfiling("OvaleCompile_TestConditions");
     let boolean = true;
@@ -157,7 +172,8 @@ const EvaluateAddCheckBox = function(node) {
             self_serial = self_serial + 1;
             OvaleCompile.Debug("New checkbox '%s': advance age to %d.", name, self_serial);
         }
-        checkBox = checkBox || {  }
+        checkBox = checkBox || {
+        }
         checkBox.text = node.description.value;
         for (const [_, v] of _ipairs(positionalParams)) {
             if (v == "default") {
@@ -186,7 +202,11 @@ const EvaluateAddListItem = function(node) {
             self_serial = self_serial + 1;
             OvaleCompile.Debug("New list '%s': advance age to %d.", name, self_serial);
         }
-        list = list || { items: {  }, default: undefined }
+        list = list || {
+            items: {
+            },
+            default: undefined
+        }
         list.items[item] = node.description.value;
         for (const [_, v] of _ipairs(positionalParams)) {
             if (v == "default") {
@@ -208,7 +228,8 @@ const EvaluateItemInfo = function(node) {
                 let buff = _tonumber(namedParams.buff);
                 if (buff) {
                     let name = "item_proc_" + namedParams.proc;
-                    let list = OvaleData.buffSpellList[name] || {  }
+                    let list = OvaleData.buffSpellList[name] || {
+                    }
                     list[buff] = true;
                     OvaleData.buffSpellList[name] = list;
                 } else {
@@ -230,7 +251,8 @@ const EvaluateItemRequire = function(node) {
         let property = node.property;
         let count = 0;
         let ii = OvaleData.ItemInfo(itemId);
-        let tbl = ii.require[property] || {  }
+        let tbl = ii.require[property] || {
+        }
         for (const [k, v] of _pairs(namedParams)) {
             if (!OvaleAST.PARAMETER_KEYWORD[k]) {
                 tbl[k] = v;
@@ -252,7 +274,8 @@ const EvaluateList = function(node) {
     } else {
         listDB = "buffSpellList";
     }
-    let list = OvaleData[listDB][name] || {  }
+    let list = OvaleData[listDB][name] || {
+    }
     for (const [_, id] of _pairs(positionalParams)) {
         id = _tonumber(id);
         if (id) {
@@ -300,7 +323,8 @@ const EvaluateSpellAuraList = function(node) {
             auraTable = si.aura.player;
         }
         let filter = strfind(node.keyword, "Debuff") && "HARMFUL" || "HELPFUL";
-        let tbl = auraTable[filter] || {  }
+        let tbl = auraTable[filter] || {
+        }
         let count = 0;
         for (const [k, v] of _pairs(namedParams)) {
             if (!OvaleAST.PARAMETER_KEYWORD[k]) {
@@ -315,7 +339,8 @@ const EvaluateSpellAuraList = function(node) {
     return ok;
 }
 const EvaluateSpellInfo = function(node) {
-    let addpower = {  }
+    let addpower = {
+    }
     for (const [powertype, _] of _pairs(OvalePower.POWER_INFO)) {
         let key = "add" + powertype;
         addpower[key] = powertype;
@@ -348,7 +373,8 @@ const EvaluateSpellInfo = function(node) {
                     break;
                 }
             } else if (k == "addlist") {
-                let list = OvaleData.buffSpellList[v] || {  }
+                let list = OvaleData.buffSpellList[v] || {
+                }
                 list[spellId] = true;
                 OvaleData.buffSpellList[v] = list;
             } else if (k == "dummy_replace") {
@@ -388,7 +414,8 @@ const EvaluateSpellRequire = function(node) {
         let property = node.property;
         let count = 0;
         let si = OvaleData.SpellInfo(spellId);
-        let tbl = si.require[property] || {  }
+        let tbl = si.require[property] || {
+        }
         for (const [k, v] of _pairs(namedParams)) {
             if (!OvaleAST.PARAMETER_KEYWORD[k]) {
                 tbl[k] = v;
@@ -435,18 +462,21 @@ const AddToBuffList = function(buffId, statName, isStacking) {
         for (const [_, useName] of _pairs(OvaleData.STAT_USE_NAMES)) {
             if (isStacking || !strfind(useName, "_stacking_")) {
                 let name = useName + "_" + statName + "_buff";
-                let list = OvaleData.buffSpellList[name] || {  }
+                let list = OvaleData.buffSpellList[name] || {
+                }
                 list[buffId] = true;
                 OvaleData.buffSpellList[name] = list;
                 let shortStatName = OvaleData.STAT_SHORTNAME[statName];
                 if (shortStatName) {
                     name = useName + "_" + shortStatName + "_buff";
-                    list = OvaleData.buffSpellList[name] || {  }
+                    list = OvaleData.buffSpellList[name] || {
+                    }
                     list[buffId] = true;
                     OvaleData.buffSpellList[name] = list;
                 }
                 name = useName + "_any_buff";
-                list = OvaleData.buffSpellList[name] || {  }
+                list = OvaleData.buffSpellList[name] || {
+                }
                 list[buffId] = true;
                 OvaleData.buffSpellList[name] = list;
             }
@@ -468,7 +498,8 @@ const AddToBuffList = function(buffId, statName, isStacking) {
 }
 let UpdateTrinketInfo = undefined;
 {
-    let trinket = {  }
+    let trinket = {
+    }
     UpdateTrinketInfo = function () {
         [trinket[1], trinket[2]] = OvaleEquipment.GetEquippedTrinkets();
         for (let i = 1; i <= 2; i += 1) {

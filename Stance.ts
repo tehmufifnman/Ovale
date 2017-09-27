@@ -21,24 +21,50 @@ let API_GetShapeshiftForm = GetShapeshiftForm;
 let API_GetShapeshiftFormInfo = GetShapeshiftFormInfo;
 let API_GetSpellInfo = GetSpellInfo;
 OvaleProfiler.RegisterProfiling(OvaleStance);
-let SPELL_NAME_TO_STANCE = { [API_GetSpellInfo(768)]: "druid_cat_form", [API_GetSpellInfo(783)]: "druid_travel_form", [API_GetSpellInfo(1066)]: "druid_aquatic_form", [API_GetSpellInfo(5487)]: "druid_bear_form", [API_GetSpellInfo(24858)]: "druid_moonkin_form", [API_GetSpellInfo(33943)]: "druid_flight_form", [API_GetSpellInfo(40120)]: "druid_swift_flight_form", [API_GetSpellInfo(1784)]: "rogue_stealth" }
-let STANCE_NAME = {  }
+let SPELL_NAME_TO_STANCE = {
+    [API_GetSpellInfo(768)]: "druid_cat_form",
+    [API_GetSpellInfo(783)]: "druid_travel_form",
+    [API_GetSpellInfo(1066)]: "druid_aquatic_form",
+    [API_GetSpellInfo(5487)]: "druid_bear_form",
+    [API_GetSpellInfo(24858)]: "druid_moonkin_form",
+    [API_GetSpellInfo(33943)]: "druid_flight_form",
+    [API_GetSpellInfo(40120)]: "druid_swift_flight_form",
+    [API_GetSpellInfo(1784)]: "rogue_stealth"
+}
+let STANCE_NAME = {
+}
 {
     for (const [_, name] of _pairs(SPELL_NAME_TO_STANCE)) {
         STANCE_NAME[name] = true;
     }
 }
 {
-    let debugOptions = { stance: { name: L["Stances"], type: "group", args: { stance: { name: L["Stances"], type: "input", multiline: 25, width: "full", get: function (info) {
-        return OvaleStance.DebugStances();
-    } } } } }
+    let debugOptions = {
+        stance: {
+            name: L["Stances"],
+            type: "group",
+            args: {
+                stance: {
+                    name: L["Stances"],
+                    type: "input",
+                    multiline: 25,
+                    width: "full",
+                    get: function (info) {
+                        return OvaleStance.DebugStances();
+                    }
+                }
+            }
+        }
+    }
     for (const [k, v] of _pairs(debugOptions)) {
         OvaleDebug.options.args[k] = v;
     }
 }
 OvaleStance.ready = false;
-OvaleStance.stanceList = {  }
-OvaleStance.stanceId = {  }
+OvaleStance.stanceList = {
+}
+OvaleStance.stanceId = {
+}
 OvaleStance.stance = undefined;
 OvaleStance.STANCE_NAME = STANCE_NAME;
 class OvaleStance {
@@ -92,7 +118,8 @@ class OvaleStance {
     }
 }
 {
-    let array = {  }
+    let array = {
+    }
 class OvaleStance {
         DebugStances() {
             _wipe(array);
@@ -173,7 +200,8 @@ class OvaleStance {
         return [verified, requirement, index];
     }
 }
-OvaleStance.statePrototype = {  }
+OvaleStance.statePrototype = {
+}
 let statePrototype = OvaleStance.statePrototype;
 statePrototype.stance = undefined;
 class OvaleStance {

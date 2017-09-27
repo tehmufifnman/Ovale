@@ -1,6 +1,7 @@
 import __addon from "addon";
 let [OVALE, Ovale] = __addon;
-let OvaleLexer = {  }
+let OvaleLexer = {
+}
 Ovale.OvaleLexer = OvaleLexer;
 import { OvaleQueue } from "./OvaleQueue";
 let _pairs = pairs;
@@ -18,7 +19,8 @@ const assert_arg = function(idx, val, tp) {
         _error("argument " + idx + " must be " + tp, 2);
     }
 }
-let lexer = {  }
+let lexer = {
+}
 let NUMBER1 = '^[%+%-]?%d+%.?%d*[eE][%+%-]?%d+';
 let NUMBER2 = '^[%+%-]?%d+%.?%d*';
 let NUMBER3 = '^0x[%da-fA-F]+';
@@ -91,8 +93,13 @@ const cpp_vdump = function(tok) {
 class lexer {
     scan(s, matches, filter, options) {
         let file = _type(s) != 'string' && s;
-        filter = filter || { space: true }
-        options = options || { number: true, string: true }
+        filter = filter || {
+            space: true
+        }
+        options = options || {
+            number: true,
+            string: true
+        }
         if (filter) {
             if (filter.space) {
                 filter[wsdump] = true;
@@ -103,7 +110,44 @@ class lexer {
         }
         if (!matches) {
             if (!plain_matches) {
-                plain_matches = { 1: { 1: WSPACE, 2: wsdump }, 2: { 1: NUMBER3, 2: ndump }, 3: { 1: IDEN, 2: plain_vdump }, 4: { 1: NUMBER1, 2: ndump }, 5: { 1: NUMBER2, 2: ndump }, 6: { 1: STRING3, 2: sdump }, 7: { 1: STRING0, 2: sdump }, 8: { 1: STRING1, 2: sdump }, 9: { 1: '^.', 2: tdump } }
+                plain_matches = {
+                    1: {
+                        1: WSPACE,
+                        2: wsdump
+                    },
+                    2: {
+                        1: NUMBER3,
+                        2: ndump
+                    },
+                    3: {
+                        1: IDEN,
+                        2: plain_vdump
+                    },
+                    4: {
+                        1: NUMBER1,
+                        2: ndump
+                    },
+                    5: {
+                        1: NUMBER2,
+                        2: ndump
+                    },
+                    6: {
+                        1: STRING3,
+                        2: sdump
+                    },
+                    7: {
+                        1: STRING0,
+                        2: sdump
+                    },
+                    8: {
+                        1: STRING1,
+                        2: sdump
+                    },
+                    9: {
+                        1: '^.',
+                        2: tdump
+                    }
+                }
             }
             matches = plain_matches;
         }
@@ -122,7 +166,9 @@ class lexer {
                 for (const [_, m] of _ipairs(matches)) {
                     pat = m[1];
                     fun = m[2];
-                    findres = { 1: strfind(s, pat, idx) }
+                    findres = {
+                        1: strfind(s, pat, idx)
+                    }
                     i1 = findres[1];
                     i2 = findres[2];
                     if (i1) {
@@ -186,11 +232,20 @@ class lexer {
         }
         let ts;
         if (isstring(a1) && isstring(a2)) {
-            ts = { 1: { 1: a1, 2: a2 } }
+            ts = {
+                1: {
+                    1: a1,
+                    2: a2
+                }
+            }
         } else if (_type(a1) == 'function') {
-            ts = {  }
+            ts = {
+            }
             for (const [t, v] of a1()) {
-                append(ts, { 1: t, 2: v });
+                append(ts, {
+                    1: t,
+                    2: v
+                });
             }
         } else {
             ts = a1;
@@ -210,37 +265,295 @@ class lexer {
     }
     get_keywords() {
         if (!lua_keyword) {
-            lua_keyword = { ["and"]: true, ["break"]: true, ["do"]: true, ["else"]: true, ["elseif"]: true, ["end"]: true, ["false"]: true, ["for"]: true, ["function"]: true, ["if"]: true, ["in"]: true, ["local"]: true, ["nil"]: true, ["not"]: true, ["or"]: true, ["repeat"]: true, ["return"]: true, ["then"]: true, ["true"]: true, ["until"]: true, ["while"]: true }
+            lua_keyword = {
+                ["and"]: true,
+                ["break"]: true,
+                ["do"]: true,
+                ["else"]: true,
+                ["elseif"]: true,
+                ["end"]: true,
+                ["false"]: true,
+                ["for"]: true,
+                ["function"]: true,
+                ["if"]: true,
+                ["in"]: true,
+                ["local"]: true,
+                ["nil"]: true,
+                ["not"]: true,
+                ["or"]: true,
+                ["repeat"]: true,
+                ["return"]: true,
+                ["then"]: true,
+                ["true"]: true,
+                ["until"]: true,
+                ["while"]: true
+            }
         }
         return lua_keyword;
     }
     lua(s, filter, options) {
-        filter = filter || { space: true, comments: true }
+        filter = filter || {
+            space: true,
+            comments: true
+        }
         lexer.get_keywords();
         if (!lua_matches) {
-            lua_matches = { 1: { 1: WSPACE, 2: wsdump }, 2: { 1: NUMBER3, 2: ndump }, 3: { 1: IDEN, 2: lua_vdump }, 4: { 1: NUMBER4, 2: ndump }, 5: { 1: NUMBER5, 2: ndump }, 6: { 1: STRING3, 2: sdump }, 7: { 1: STRING0, 2: sdump }, 8: { 1: STRING1, 2: sdump }, 9: { 1: '^%-%-%[(=*)%[.-%]%1%]', 2: cdump }, 10: { 1: '^%-%-.-\n', 2: cdump }, 11: { 1: '^%[(=*)%[.-%]%1%]', 2: sdump_l }, 12: { 1: '^==', 2: tdump }, 13: { 1: '^~=', 2: tdump }, 14: { 1: '^<=', 2: tdump }, 15: { 1: '^>=', 2: tdump }, 16: { 1: '^%.%.%.', 2: tdump }, 17: { 1: '^%.%.', 2: tdump }, 18: { 1: '^.', 2: tdump } }
+            lua_matches = {
+                1: {
+                    1: WSPACE,
+                    2: wsdump
+                },
+                2: {
+                    1: NUMBER3,
+                    2: ndump
+                },
+                3: {
+                    1: IDEN,
+                    2: lua_vdump
+                },
+                4: {
+                    1: NUMBER4,
+                    2: ndump
+                },
+                5: {
+                    1: NUMBER5,
+                    2: ndump
+                },
+                6: {
+                    1: STRING3,
+                    2: sdump
+                },
+                7: {
+                    1: STRING0,
+                    2: sdump
+                },
+                8: {
+                    1: STRING1,
+                    2: sdump
+                },
+                9: {
+                    1: '^%-%-%[(=*)%[.-%]%1%]',
+                    2: cdump
+                },
+                10: {
+                    1: '^%-%-.-\n',
+                    2: cdump
+                },
+                11: {
+                    1: '^%[(=*)%[.-%]%1%]',
+                    2: sdump_l
+                },
+                12: {
+                    1: '^==',
+                    2: tdump
+                },
+                13: {
+                    1: '^~=',
+                    2: tdump
+                },
+                14: {
+                    1: '^<=',
+                    2: tdump
+                },
+                15: {
+                    1: '^>=',
+                    2: tdump
+                },
+                16: {
+                    1: '^%.%.%.',
+                    2: tdump
+                },
+                17: {
+                    1: '^%.%.',
+                    2: tdump
+                },
+                18: {
+                    1: '^.',
+                    2: tdump
+                }
+            }
         }
         return lexer.scan(s, lua_matches, filter, options);
     }
     cpp(s, filter, options) {
-        filter = filter || { comments: true }
+        filter = filter || {
+            comments: true
+        }
         if (!cpp_keyword) {
-            cpp_keyword = { ["class"]: true, ["break"]: true, ["do"]: true, ["sizeof"]: true, ["else"]: true, ["continue"]: true, ["struct"]: true, ["false"]: true, ["for"]: true, ["public"]: true, ["void"]: true, ["private"]: true, ["protected"]: true, ["goto"]: true, ["if"]: true, ["static"]: true, ["const"]: true, ["typedef"]: true, ["enum"]: true, ["char"]: true, ["int"]: true, ["bool"]: true, ["long"]: true, ["float"]: true, ["true"]: true, ["delete"]: true, ["double"]: true, ["while"]: true, ["new"]: true, ["namespace"]: true, ["try"]: true, ["catch"]: true, ["switch"]: true, ["case"]: true, ["extern"]: true, ["return"]: true, ["default"]: true, ['unsigned']: true, ['signed']: true, ["union"]: true, ["volatile"]: true, ["register"]: true, ["short"]: true }
+            cpp_keyword = {
+                ["class"]: true,
+                ["break"]: true,
+                ["do"]: true,
+                ["sizeof"]: true,
+                ["else"]: true,
+                ["continue"]: true,
+                ["struct"]: true,
+                ["false"]: true,
+                ["for"]: true,
+                ["public"]: true,
+                ["void"]: true,
+                ["private"]: true,
+                ["protected"]: true,
+                ["goto"]: true,
+                ["if"]: true,
+                ["static"]: true,
+                ["const"]: true,
+                ["typedef"]: true,
+                ["enum"]: true,
+                ["char"]: true,
+                ["int"]: true,
+                ["bool"]: true,
+                ["long"]: true,
+                ["float"]: true,
+                ["true"]: true,
+                ["delete"]: true,
+                ["double"]: true,
+                ["while"]: true,
+                ["new"]: true,
+                ["namespace"]: true,
+                ["try"]: true,
+                ["catch"]: true,
+                ["switch"]: true,
+                ["case"]: true,
+                ["extern"]: true,
+                ["return"]: true,
+                ["default"]: true,
+                ['unsigned']: true,
+                ['signed']: true,
+                ["union"]: true,
+                ["volatile"]: true,
+                ["register"]: true,
+                ["short"]: true
+            }
         }
         if (!cpp_matches) {
-            cpp_matches = { 1: { 1: WSPACE, 2: wsdump }, 2: { 1: PREPRO, 2: pdump }, 3: { 1: NUMBER3, 2: ndump }, 4: { 1: IDEN, 2: cpp_vdump }, 5: { 1: NUMBER4, 2: ndump }, 6: { 1: NUMBER5, 2: ndump }, 7: { 1: STRING3, 2: sdump }, 8: { 1: STRING1, 2: chdump }, 9: { 1: '^//.-\n', 2: cdump }, 10: { 1: '^/%*.-%*/', 2: cdump }, 11: { 1: '^==', 2: tdump }, 12: { 1: '^!=', 2: tdump }, 13: { 1: '^<=', 2: tdump }, 14: { 1: '^>=', 2: tdump }, 15: { 1: '^->', 2: tdump }, 16: { 1: '^&&', 2: tdump }, 17: { 1: '^||', 2: tdump }, 18: { 1: '^%+%+', 2: tdump }, 19: { 1: '^%-%-', 2: tdump }, 20: { 1: '^%+=', 2: tdump }, 21: { 1: '^%-=', 2: tdump }, 22: { 1: '^%*=', 2: tdump }, 23: { 1: '^/=', 2: tdump }, 24: { 1: '^|=', 2: tdump }, 25: { 1: '^%^=', 2: tdump }, 26: { 1: '^::', 2: tdump }, 27: { 1: '^.', 2: tdump } }
+            cpp_matches = {
+                1: {
+                    1: WSPACE,
+                    2: wsdump
+                },
+                2: {
+                    1: PREPRO,
+                    2: pdump
+                },
+                3: {
+                    1: NUMBER3,
+                    2: ndump
+                },
+                4: {
+                    1: IDEN,
+                    2: cpp_vdump
+                },
+                5: {
+                    1: NUMBER4,
+                    2: ndump
+                },
+                6: {
+                    1: NUMBER5,
+                    2: ndump
+                },
+                7: {
+                    1: STRING3,
+                    2: sdump
+                },
+                8: {
+                    1: STRING1,
+                    2: chdump
+                },
+                9: {
+                    1: '^//.-\n',
+                    2: cdump
+                },
+                10: {
+                    1: '^/%*.-%*/',
+                    2: cdump
+                },
+                11: {
+                    1: '^==',
+                    2: tdump
+                },
+                12: {
+                    1: '^!=',
+                    2: tdump
+                },
+                13: {
+                    1: '^<=',
+                    2: tdump
+                },
+                14: {
+                    1: '^>=',
+                    2: tdump
+                },
+                15: {
+                    1: '^->',
+                    2: tdump
+                },
+                16: {
+                    1: '^&&',
+                    2: tdump
+                },
+                17: {
+                    1: '^||',
+                    2: tdump
+                },
+                18: {
+                    1: '^%+%+',
+                    2: tdump
+                },
+                19: {
+                    1: '^%-%-',
+                    2: tdump
+                },
+                20: {
+                    1: '^%+=',
+                    2: tdump
+                },
+                21: {
+                    1: '^%-=',
+                    2: tdump
+                },
+                22: {
+                    1: '^%*=',
+                    2: tdump
+                },
+                23: {
+                    1: '^/=',
+                    2: tdump
+                },
+                24: {
+                    1: '^|=',
+                    2: tdump
+                },
+                25: {
+                    1: '^%^=',
+                    2: tdump
+                },
+                26: {
+                    1: '^::',
+                    2: tdump
+                },
+                27: {
+                    1: '^.',
+                    2: tdump
+                }
+            }
         }
         return lexer.scan(s, cpp_matches, filter, options);
     }
     get_separated_list(tok, endtoken, delim) {
         endtoken = endtoken || ')';
         delim = delim || ',';
-        let parm_values = {  }
+        let parm_values = {
+        }
         let level = 1;
-        let tl = {  }
+        let tl = {
+        }
         const tappend = function(tl, t, val) {
             val = val || t;
-            append(tl, { 1: t, 2: val });
+            append(tl, {
+                1: t,
+                2: val
+            });
         }
         let is_end;
         if (endtoken == '\n') {
@@ -274,12 +587,16 @@ class lexer {
                 }
             } else if (token == delim && level == 1) {
                 append(parm_values, tl);
-                tl = {  }
+                tl = {
+                }
             } else {
                 tappend(tl, token, value);
             }
         }
-        return [parm_values, { 1: token, 2: value }];
+        return [parm_values, {
+            1: token,
+            2: value
+        }];
     }
     skipws(tok) {
         let [t, v] = tok();
@@ -313,13 +630,19 @@ OvaleLexer.endOfStream = undefined;
 OvaleLexer.scan = lexer.scan;
 OvaleLexer.__index = OvaleLexer;
 {
-    _setmetatable(OvaleLexer, { __call: function (self, ...__args) {
-        return this.New(...__args);
-    } });
+    _setmetatable(OvaleLexer, {
+        __call: function (self, ...__args) {
+            return this.New(...__args);
+        }
+    });
 }
 class OvaleLexer {
     New(name, iterator) {
-        let obj = { typeQueue: OvaleQueue.NewDeque(name + "_typeQueue"), tokenQueue: OvaleQueue.NewDeque(name + "_tokenQueue"), iterator: iterator }
+        let obj = {
+            typeQueue: OvaleQueue.NewDeque(name + "_typeQueue"),
+            tokenQueue: OvaleQueue.NewDeque(name + "_tokenQueue"),
+            iterator: iterator
+        }
         return _setmetatable(obj, this);
     }
     Release() {

@@ -6,10 +6,12 @@ import { L } from "./L";
 import { OvaleDebug } from "./OvaleDebug";
 import { OvaleQueue } from "./OvaleQueue";
 let _pairs = pairs;
-let self_statePrototype = {  }
+let self_statePrototype = {
+}
 let self_stateAddons = OvaleQueue.NewQueue("OvaleState_stateAddons");
 OvaleDebug.RegisterDebugging(OvaleState);
-OvaleState.state = {  }
+OvaleState.state = {
+}
 class OvaleState {
     OnEnable() {
         this.RegisterState(this, this.statePrototype);
@@ -52,7 +54,8 @@ class OvaleState {
         }
     }
 }
-OvaleState.statePrototype = {  }
+OvaleState.statePrototype = {
+}
 let statePrototype = OvaleState.statePrototype;
 statePrototype.isState = true;
 statePrototype.isInitialized = undefined;
@@ -62,10 +65,14 @@ statePrototype.variable = undefined;
 statePrototype.lastEnable = undefined;
 class OvaleState {
     InitializeState(state) {
-        state.futureVariable = {  }
-        state.futureLastEnable = {  }
-        state.variable = {  }
-        state.lastEnable = {  }
+        state.futureVariable = {
+        }
+        state.futureLastEnable = {
+        }
+        state.variable = {
+        }
+        state.lastEnable = {
+        }
     }
     ResetState(state) {
         for (const [k] of _pairs(state.futureVariable)) {

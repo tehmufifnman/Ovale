@@ -30,12 +30,20 @@ let RUTHLESSNESS = 14161;
 let self_hasRuthlessness = false;
 let ENVENOM = 32645;
 let self_hasAssassination4pT17 = false;
-let self_pendingComboEvents = {  }
+let self_pendingComboEvents = {
+}
 let PENDING_THRESHOLD = 0.8;
-let self_updateSpellcastInfo = {  }
+let self_updateSpellcastInfo = {
+}
 OvaleComboPoints.combo = 0;
 const AddPendingComboEvent = function(atTime, spellId, guid, reason, combo) {
-    let comboEvent = { atTime: atTime, spellId: spellId, guid: guid, reason: reason, combo: combo }
+    let comboEvent = {
+        atTime: atTime,
+        spellId: spellId,
+        guid: guid,
+        reason: reason,
+        combo: combo
+    }
     tinsert(self_pendingComboEvents, comboEvent);
     Ovale.refreshNeeded[self_playerGUID] = true;
 }
@@ -285,7 +293,8 @@ class OvaleComboPoints {
         }
     }
 }
-OvaleComboPoints.statePrototype = {  }
+OvaleComboPoints.statePrototype = {
+}
 let statePrototype = OvaleComboPoints.statePrototype;
 statePrototype.combo = undefined;
 class OvaleComboPoints {

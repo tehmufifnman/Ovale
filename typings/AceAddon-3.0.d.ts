@@ -9,10 +9,16 @@
 //     SendMessage?: (message:string) => void;
 // }
 
+declare class AceModule {
+    GetName?: () => string;
+}
+
 interface Addon {
-    NewModule(name:string, module: "AceEvent-3.0"): new() => (AceEvent);
-    NewModule(name:string, module: "AceTimer-3.0"): new() => (AceTimerModule);
-    NewModule(name:string, module1: "AceEvent-3.0", module2: "AceTimer-3.0"): new() => (AceEvent & AceTimerModule);
+    NewModule(name:string, module: "AceEvent-3.0"): new() => (AceEvent & AceModule);
+    NewModule(name:string, module: "AceTimer-3.0"): new() => (AceTimerModule & AceModule);
+    NewModule(name:string, module: "AceConsole-3.0"): new() => (AceConsole & AceModule);
+    NewModule(name:string, module: "AceConsole-3.0", module2: "AceEvent-3.0"): new() => (AceConsole & AceEvent & AceModule);
+    NewModule(name:string, module1: "AceEvent-3.0", module2: "AceTimer-3.0"): new() => (AceEvent & AceTimerModule & AceModule);
     db:any;
     Print(message:string, ...parameters):void;
 }

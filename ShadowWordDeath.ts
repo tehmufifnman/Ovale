@@ -5,7 +5,10 @@ Ovale.OvaleShadowWordDeath = OvaleShadowWordDeath;
 let OvaleAura = undefined;
 let API_GetTime = GetTime;
 let self_playerGUID = undefined;
-let SHADOW_WORD_DEATH = { [32379]: true, [129176]: true }
+let SHADOW_WORD_DEATH = {
+    [32379]: true,
+    [129176]: true
+}
 OvaleShadowWordDeath.spellName = "Shadow Word: Death Reset Cooldown";
 OvaleShadowWordDeath.spellId = 125927;
 OvaleShadowWordDeath.start = 0;

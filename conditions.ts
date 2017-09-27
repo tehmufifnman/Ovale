@@ -514,10 +514,10 @@ const GetHastedTime = function(seconds, haste, state) {
 }
 {
     const Class = function(positionalParams, namedParams, state, atTime) {
-        let [class, yesno] = [positionalParams[1], positionalParams[2]];
+        let [className, yesno] = [positionalParams[1], positionalParams[2]];
         let target = ParseCondition(positionalParams, namedParams, state);
         let [_, classToken] = API_UnitClass(target);
-        let boolean = (classToken == class);
+        let boolean = (classToken == className);
         return TestBoolean(boolean, yesno);
     }
     OvaleCondition.RegisterCondition("class", false, Class);

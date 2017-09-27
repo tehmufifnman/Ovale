@@ -14,17 +14,41 @@ let tinsert = table.insert;
 let API_CreateFrame = CreateFrame;
 let API_EasyMenu = EasyMenu;
 let API_IsShiftKeyDown = IsShiftKeyDown;
-let CLASS_ICONS = { ["DEATHKNIGHT"]: "Interface\\Icons\\ClassIcon_DeathKnight", ["DEMONHUNTER"]: "Interface\\Icons\\ClassIcon_DemonHunter", ["DRUID"]: "Interface\\Icons\\ClassIcon_Druid", ["HUNTER"]: "Interface\\Icons\\ClassIcon_Hunter", ["MAGE"]: "Interface\\Icons\\ClassIcon_Mage", ["MONK"]: "Interface\\Icons\\ClassIcon_Monk", ["PALADIN"]: "Interface\\Icons\\ClassIcon_Paladin", ["PRIEST"]: "Interface\\Icons\\ClassIcon_Priest", ["ROGUE"]: "Interface\\Icons\\ClassIcon_Rogue", ["SHAMAN"]: "Interface\\Icons\\ClassIcon_Shaman", ["WARLOCK"]: "Interface\\Icons\\ClassIcon_Warlock", ["WARRIOR"]: "Interface\\Icons\\ClassIcon_Warrior" }
+let CLASS_ICONS = {
+    ["DEATHKNIGHT"]: "Interface\\Icons\\ClassIcon_DeathKnight",
+    ["DEMONHUNTER"]: "Interface\\Icons\\ClassIcon_DemonHunter",
+    ["DRUID"]: "Interface\\Icons\\ClassIcon_Druid",
+    ["HUNTER"]: "Interface\\Icons\\ClassIcon_Hunter",
+    ["MAGE"]: "Interface\\Icons\\ClassIcon_Mage",
+    ["MONK"]: "Interface\\Icons\\ClassIcon_Monk",
+    ["PALADIN"]: "Interface\\Icons\\ClassIcon_Paladin",
+    ["PRIEST"]: "Interface\\Icons\\ClassIcon_Priest",
+    ["ROGUE"]: "Interface\\Icons\\ClassIcon_Rogue",
+    ["SHAMAN"]: "Interface\\Icons\\ClassIcon_Shaman",
+    ["WARLOCK"]: "Interface\\Icons\\ClassIcon_Warlock",
+    ["WARRIOR"]: "Interface\\Icons\\ClassIcon_Warrior"
+}
 let self_menuFrame = undefined;
 let self_tooltipTitle = undefined;
 {
-    let defaultDB = { minimap: {  } }
-    let options = { minimap: { order: 25, type: "toggle", name: L["Show minimap icon"], get: function (info) {
-        return !Ovale.db.profile.apparence.minimap.hide;
-    }, set: function (info, value) {
-        Ovale.db.profile.apparence.minimap.hide = !value;
-        OvaleDataBroker.UpdateIcon();
-    } } }
+    let defaultDB = {
+        minimap: {
+        }
+    }
+    let options = {
+        minimap: {
+            order: 25,
+            type: "toggle",
+            name: L["Show minimap icon"],
+            get: function (info) {
+                return !Ovale.db.profile.apparence.minimap.hide;
+            },
+            set: function (info, value) {
+                Ovale.db.profile.apparence.minimap.hide = !value;
+                OvaleDataBroker.UpdateIcon();
+            }
+        }
+    }
     for (const [k, v] of _pairs(defaultDB)) {
         OvaleOptions.defaultDB.profile.apparence[k] = v;
     }
@@ -36,13 +60,21 @@ let self_tooltipTitle = undefined;
 OvaleDataBroker.broker = undefined;
 const OnClick = function(frame, button) {
     if (button == "LeftButton") {
-        let menu = { 1: { text: L["Script"], isTitle: true } }
+        let menu = {
+            1: {
+                text: L["Script"],
+                isTitle: true
+            }
+        }
         let scriptType = !Ovale.db.profile.showHiddenScripts && "script";
         let descriptions = OvaleScripts.GetDescriptions(scriptType);
         for (const [name, description] of _pairs(descriptions)) {
-            let menuItem = { text: description, func: function () {
-                OvaleScripts.SetScript(name);
-            } }
+            let menuItem = {
+                text: description,
+                func: function () {
+                    OvaleScripts.SetScript(name);
+                }
+            }
             tinsert(menu, menuItem);
         }
         self_menuFrame = self_menuFrame || API_CreateFrame("Frame", "OvaleDataBroker_MenuFrame", UIParent, "UIDropDownMenuTemplate");
@@ -71,7 +103,13 @@ class OvaleDataBroker {
         OvaleScripts = Ovale.OvaleScripts;
         OvaleVersion = Ovale.OvaleVersion;
         if (LibDataBroker) {
-            let broker = { type: "data source", text: "", icon: CLASS_ICONS[Ovale.playerClass], OnClick: OnClick, OnTooltipShow: OnTooltipShow }
+            let broker = {
+                type: "data source",
+                text: "",
+                icon: CLASS_ICONS[Ovale.playerClass],
+                OnClick: OnClick,
+                OnTooltipShow: OnTooltipShow
+            }
             this.broker = LibDataBroker.NewDataObject(OVALE, broker);
             if (LibDBIcon) {
                 LibDBIcon.Register(OVALE, this.broker, Ovale.db.profile.apparence.minimap);

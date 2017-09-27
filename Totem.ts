@@ -17,10 +17,22 @@ let _MAX_TOTEMS = MAX_TOTEMS;
 let _WATER_TOTEM_SLOT = WATER_TOTEM_SLOT;
 OvaleProfiler.RegisterProfiling(OvaleTotem);
 let self_serial = 0;
-let TOTEM_CLASS = { DRUID: true, MAGE: true, MONK: true, SHAMAN: true }
-let TOTEM_SLOT = { air: _AIR_TOTEM_SLOT, earth: _EARTH_TOTEM_SLOT, fire: _FIRE_TOTEM_SLOT, water: _WATER_TOTEM_SLOT, spirit_wolf: 1 }
+let TOTEM_CLASS = {
+    DRUID: true,
+    MAGE: true,
+    MONK: true,
+    SHAMAN: true
+}
+let TOTEM_SLOT = {
+    air: _AIR_TOTEM_SLOT,
+    earth: _EARTH_TOTEM_SLOT,
+    fire: _FIRE_TOTEM_SLOT,
+    water: _WATER_TOTEM_SLOT,
+    spirit_wolf: 1
+}
 let TOTEMIC_RECALL = 36936;
-OvaleTotem.totem = {  }
+OvaleTotem.totem = {
+}
 class OvaleTotem {
     OnInitialize() {
         OvaleData = Ovale.OvaleData;
@@ -50,14 +62,17 @@ class OvaleTotem {
         Ovale.refreshNeeded[Ovale.playerGUID] = true;
     }
 }
-OvaleTotem.statePrototype = {  }
+OvaleTotem.statePrototype = {
+}
 let statePrototype = OvaleTotem.statePrototype;
 statePrototype.totem = undefined;
 class OvaleTotem {
     InitializeState(state) {
-        state.totem = {  }
+        state.totem = {
+        }
         for (let slot = 1; slot <= _MAX_TOTEMS; slot += 1) {
-            state.totem[slot] = {  }
+            state.totem[slot] = {
+            }
         }
     }
     CleanState(state) {

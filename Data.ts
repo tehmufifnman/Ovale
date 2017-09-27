@@ -12,40 +12,275 @@ let strfind = string.find;
 let _tonumber = tonumber;
 let _wipe = wipe;
 let INFINITY = math.huge;
-let self_requirement = {  }
-let BLOODELF_CLASSES = { ["DEATHKNIGHT"]: true, ["DEMONHUNTER"]: true, ["DRUID"]: false, ["HUNTER"]: true, ["MAGE"]: true, ["MONK"]: true, ["PALADIN"]: true, ["PRIEST"]: true, ["ROGUE"]: true, ["SHAMAN"]: false, ["WARLOCK"]: true, ["WARRIOR"]: true }
-let PANDAREN_CLASSES = { ["DEATHKNIGHT"]: false, ["DEMONHUNTER"]: false, ["DRUID"]: false, ["HUNTER"]: true, ["MAGE"]: true, ["MONK"]: true, ["PALADIN"]: false, ["PRIEST"]: true, ["ROGUE"]: true, ["SHAMAN"]: true, ["WARLOCK"]: false, ["WARRIOR"]: true }
-let TAUREN_CLASSES = { ["DEATHKNIGHT"]: true, ["DEMONHUNTER"]: false, ["DRUID"]: true, ["HUNTER"]: true, ["MAGE"]: false, ["MONK"]: true, ["PALADIN"]: true, ["PRIEST"]: true, ["ROGUE"]: false, ["SHAMAN"]: true, ["WARLOCK"]: false, ["WARRIOR"]: true }
-let STAT_NAMES = { 1: "agility", 2: "bonus_armor", 3: "critical_strike", 4: "haste", 5: "intellect", 6: "mastery", 7: "multistrike", 8: "spirit", 9: "spellpower", 10: "strength", 11: "versatility" }
-let STAT_SHORTNAME = { agility: "agi", critical_strike: "crit", intellect: "int", strength: "str", spirit: "spi" }
-let STAT_USE_NAMES = { 1: "trinket_proc", 2: "trinket_stacking_proc", 3: "trinket_stacking_stat", 4: "trinket_stat", 5: "trinket_stack_proc" }
+let self_requirement = {
+}
+let BLOODELF_CLASSES = {
+    ["DEATHKNIGHT"]: true,
+    ["DEMONHUNTER"]: true,
+    ["DRUID"]: false,
+    ["HUNTER"]: true,
+    ["MAGE"]: true,
+    ["MONK"]: true,
+    ["PALADIN"]: true,
+    ["PRIEST"]: true,
+    ["ROGUE"]: true,
+    ["SHAMAN"]: false,
+    ["WARLOCK"]: true,
+    ["WARRIOR"]: true
+}
+let PANDAREN_CLASSES = {
+    ["DEATHKNIGHT"]: false,
+    ["DEMONHUNTER"]: false,
+    ["DRUID"]: false,
+    ["HUNTER"]: true,
+    ["MAGE"]: true,
+    ["MONK"]: true,
+    ["PALADIN"]: false,
+    ["PRIEST"]: true,
+    ["ROGUE"]: true,
+    ["SHAMAN"]: true,
+    ["WARLOCK"]: false,
+    ["WARRIOR"]: true
+}
+let TAUREN_CLASSES = {
+    ["DEATHKNIGHT"]: true,
+    ["DEMONHUNTER"]: false,
+    ["DRUID"]: true,
+    ["HUNTER"]: true,
+    ["MAGE"]: false,
+    ["MONK"]: true,
+    ["PALADIN"]: true,
+    ["PRIEST"]: true,
+    ["ROGUE"]: false,
+    ["SHAMAN"]: true,
+    ["WARLOCK"]: false,
+    ["WARRIOR"]: true
+}
+let STAT_NAMES = {
+    1: "agility",
+    2: "bonus_armor",
+    3: "critical_strike",
+    4: "haste",
+    5: "intellect",
+    6: "mastery",
+    7: "multistrike",
+    8: "spirit",
+    9: "spellpower",
+    10: "strength",
+    11: "versatility"
+}
+let STAT_SHORTNAME = {
+    agility: "agi",
+    critical_strike: "crit",
+    intellect: "int",
+    strength: "str",
+    spirit: "spi"
+}
+let STAT_USE_NAMES = {
+    1: "trinket_proc",
+    2: "trinket_stacking_proc",
+    3: "trinket_stacking_stat",
+    4: "trinket_stat",
+    5: "trinket_stack_proc"
+}
 OvaleData.STAT_NAMES = STAT_NAMES;
 OvaleData.STAT_SHORTNAME = STAT_SHORTNAME;
 OvaleData.STAT_USE_NAMES = STAT_USE_NAMES;
 OvaleData.BLOODELF_CLASSES = BLOODELF_CLASSES;
 OvaleData.PANDAREN_CLASSES = PANDAREN_CLASSES;
 OvaleData.TAUREN_CLASSES = TAUREN_CLASSES;
-OvaleData.itemInfo = {  }
-OvaleData.itemList = {  }
-OvaleData.spellInfo = {  }
-OvaleData.buffSpellList = { fear_debuff: { [5246]: true, [5484]: true, [5782]: true, [8122]: true }, incapacitate_debuff: { [6770]: true, [12540]: true, [20066]: true, [137460]: true }, root_debuff: { [122]: true, [339]: true }, stun_debuff: { [408]: true, [853]: true, [1833]: true, [5211]: true, [46968]: true }, attack_power_multiplier_buff: { [6673]: true, [19506]: true, [57330]: true }, critical_strike_buff: { [1459]: true, [24604]: true, [24932]: true, [61316]: true, [90309]: true, [90363]: true, [97229]: true, [116781]: true, [126309]: true, [126373]: true, [128997]: true, [160052]: true, [160200]: true }, haste_buff: { [49868]: true, [55610]: true, [113742]: true, [128432]: true, [135678]: true, [160003]: true, [160074]: true, [160203]: true }, mastery_buff: { [19740]: true, [24907]: true, [93435]: true, [116956]: true, [128997]: true, [155522]: true, [160073]: true, [160198]: true }, multistrike_buff: { [24844]: true, [34889]: true, [49868]: true, [57386]: true, [58604]: true, [109773]: true, [113742]: true, [166916]: true, [172968]: true }, spell_power_multiplier_buff: { [1459]: true, [61316]: true, [90364]: true, [109773]: true, [126309]: true, [128433]: true, [160205]: true }, stamina_buff: { [469]: true, [21562]: true, [50256]: true, [90364]: true, [160003]: true, [160014]: true, [166928]: true, [160199]: true }, str_agi_int_buff: { [1126]: true, [20217]: true, [90363]: true, [115921]: true, [116781]: true, [159988]: true, [160017]: true, [160077]: true, [160206]: true }, versatility_buff: { [1126]: true, [35290]: true, [50518]: true, [55610]: true, [57386]: true, [159735]: true, [160045]: true, [160077]: true, [167187]: true, [167188]: true, [172967]: true }, bleed_debuff: { [1079]: true, [16511]: true, [33745]: true, [77758]: true, [113344]: true, [115767]: true, [122233]: true, [154953]: true, [155722]: true }, healing_reduced_debuff: { [8680]: true, [54680]: true, [115625]: true, [115804]: true }, stealthed_buff: { [1784]: true, [5215]: true, [11327]: true, [24450]: true, [58984]: true, [90328]: true, [102543]: true, [148523]: true, [115191]: true, [115192]: true, [115193]: true, [185422]: true }, burst_haste_buff: { [2825]: true, [32182]: true, [80353]: true, [90355]: true }, burst_haste_debuff: { [57723]: true, [57724]: true, [80354]: true, [95809]: true }, raid_movement_buff: { [106898]: true } }
+OvaleData.itemInfo = {
+}
+OvaleData.itemList = {
+}
+OvaleData.spellInfo = {
+}
+OvaleData.buffSpellList = {
+    fear_debuff: {
+        [5246]: true,
+        [5484]: true,
+        [5782]: true,
+        [8122]: true
+    },
+    incapacitate_debuff: {
+        [6770]: true,
+        [12540]: true,
+        [20066]: true,
+        [137460]: true
+    },
+    root_debuff: {
+        [122]: true,
+        [339]: true
+    },
+    stun_debuff: {
+        [408]: true,
+        [853]: true,
+        [1833]: true,
+        [5211]: true,
+        [46968]: true
+    },
+    attack_power_multiplier_buff: {
+        [6673]: true,
+        [19506]: true,
+        [57330]: true
+    },
+    critical_strike_buff: {
+        [1459]: true,
+        [24604]: true,
+        [24932]: true,
+        [61316]: true,
+        [90309]: true,
+        [90363]: true,
+        [97229]: true,
+        [116781]: true,
+        [126309]: true,
+        [126373]: true,
+        [128997]: true,
+        [160052]: true,
+        [160200]: true
+    },
+    haste_buff: {
+        [49868]: true,
+        [55610]: true,
+        [113742]: true,
+        [128432]: true,
+        [135678]: true,
+        [160003]: true,
+        [160074]: true,
+        [160203]: true
+    },
+    mastery_buff: {
+        [19740]: true,
+        [24907]: true,
+        [93435]: true,
+        [116956]: true,
+        [128997]: true,
+        [155522]: true,
+        [160073]: true,
+        [160198]: true
+    },
+    multistrike_buff: {
+        [24844]: true,
+        [34889]: true,
+        [49868]: true,
+        [57386]: true,
+        [58604]: true,
+        [109773]: true,
+        [113742]: true,
+        [166916]: true,
+        [172968]: true
+    },
+    spell_power_multiplier_buff: {
+        [1459]: true,
+        [61316]: true,
+        [90364]: true,
+        [109773]: true,
+        [126309]: true,
+        [128433]: true,
+        [160205]: true
+    },
+    stamina_buff: {
+        [469]: true,
+        [21562]: true,
+        [50256]: true,
+        [90364]: true,
+        [160003]: true,
+        [160014]: true,
+        [166928]: true,
+        [160199]: true
+    },
+    str_agi_int_buff: {
+        [1126]: true,
+        [20217]: true,
+        [90363]: true,
+        [115921]: true,
+        [116781]: true,
+        [159988]: true,
+        [160017]: true,
+        [160077]: true,
+        [160206]: true
+    },
+    versatility_buff: {
+        [1126]: true,
+        [35290]: true,
+        [50518]: true,
+        [55610]: true,
+        [57386]: true,
+        [159735]: true,
+        [160045]: true,
+        [160077]: true,
+        [167187]: true,
+        [167188]: true,
+        [172967]: true
+    },
+    bleed_debuff: {
+        [1079]: true,
+        [16511]: true,
+        [33745]: true,
+        [77758]: true,
+        [113344]: true,
+        [115767]: true,
+        [122233]: true,
+        [154953]: true,
+        [155722]: true
+    },
+    healing_reduced_debuff: {
+        [8680]: true,
+        [54680]: true,
+        [115625]: true,
+        [115804]: true
+    },
+    stealthed_buff: {
+        [1784]: true,
+        [5215]: true,
+        [11327]: true,
+        [24450]: true,
+        [58984]: true,
+        [90328]: true,
+        [102543]: true,
+        [148523]: true,
+        [115191]: true,
+        [115192]: true,
+        [115193]: true,
+        [185422]: true
+    },
+    burst_haste_buff: {
+        [2825]: true,
+        [32182]: true,
+        [80353]: true,
+        [90355]: true
+    },
+    burst_haste_debuff: {
+        [57723]: true,
+        [57724]: true,
+        [80354]: true,
+        [95809]: true
+    },
+    raid_movement_buff: {
+        [106898]: true
+    }
+}
 {
     for (const [_, useName] of _pairs(STAT_USE_NAMES)) {
         let name;
         for (const [_, statName] of _pairs(STAT_NAMES)) {
             name = useName + "_" + statName + "_buff";
-            OvaleData.buffSpellList[name] = {  }
+            OvaleData.buffSpellList[name] = {
+            }
             let shortName = STAT_SHORTNAME[statName];
             if (shortName) {
                 name = useName + "_" + shortName + "_buff";
-                OvaleData.buffSpellList[name] = {  }
+                OvaleData.buffSpellList[name] = {
+                }
             }
         }
         name = useName + "_any_buff";
-        OvaleData.buffSpellList[name] = {  }
+        OvaleData.buffSpellList[name] = {
+        }
     }
 }
-OvaleData.DEFAULT_SPELL_LIST = {  }
+OvaleData.DEFAULT_SPELL_LIST = {
+}
 {
     for (const [name] of _pairs(OvaleData.buffSpellList)) {
         OvaleData.DEFAULT_SPELL_LIST[name] = true;
@@ -64,7 +299,10 @@ class OvaleData {
         OvaleState.UnregisterState(this);
     }
     RegisterRequirement(name, method, arg) {
-        self_requirement[name] = { 1: method, 2: arg }
+        self_requirement[name] = {
+            1: method,
+            2: arg
+        }
     }
     UnregisterRequirement(name) {
         self_requirement[name] = undefined;
@@ -84,7 +322,20 @@ class OvaleData {
     SpellInfo(spellId) {
         let si = this.spellInfo[spellId];
         if (!si) {
-            si = { aura: { player: {  }, target: {  }, pet: {  }, damage: {  } }, require: {  } }
+            si = {
+                aura: {
+                    player: {
+                    },
+                    target: {
+                    },
+                    pet: {
+                    },
+                    damage: {
+                    }
+                },
+                require: {
+                }
+            }
             this.spellInfo[spellId] = si;
         }
         return si;
@@ -103,7 +354,10 @@ class OvaleData {
     ItemInfo(itemId) {
         let ii = this.itemInfo[itemId];
         if (!ii) {
-            ii = { require: {  } }
+            ii = {
+                require: {
+                }
+            }
             this.itemInfo[itemId] = ii;
         }
         return ii;
@@ -339,7 +593,8 @@ class OvaleData {
         return tick;
     }
 }
-OvaleData.statePrototype = {  }
+OvaleData.statePrototype = {
+}
 let statePrototype = OvaleData.statePrototype;
 statePrototype.CheckRequirements = OvaleData.CheckRequirements;
 statePrototype.CheckSpellAuraData = OvaleData.CheckSpellAuraData;

@@ -1,6 +1,7 @@
 import __addon from "addon";
 let [OVALE, Ovale] = __addon;
-let OvalePool = {  }
+let OvalePool = {
+}
 Ovale.OvalePool = OvalePool;
 import { OvaleProfiler } from "./OvaleProfiler";
 let _assert = assert;
@@ -16,14 +17,18 @@ OvalePool.size = 0;
 OvalePool.unused = 0;
 OvalePool.__index = OvalePool;
 {
-    _setmetatable(OvalePool, { __call: function (self, ...__args) {
-        return this.NewPool(...__args);
-    } });
+    _setmetatable(OvalePool, {
+        __call: function (self, ...__args) {
+            return this.NewPool(...__args);
+        }
+    });
 }
 class OvalePool {
     NewPool(name) {
         name = name || this.name;
-        let obj = _setmetatable({ name: name }, this);
+        let obj = _setmetatable({
+            name: name
+        }, this);
         obj.Drain();
         return obj;
     }
@@ -35,7 +40,8 @@ class OvalePool {
             this.unused = this.unused - 1;
         } else {
             this.size = this.size + 1;
-            item = {  }
+            item = {
+            }
         }
         OvalePool.StopProfiling(this.name);
         return item;
@@ -53,7 +59,8 @@ class OvalePool {
     }
     Drain() {
         OvalePool.StartProfiling(this.name);
-        this.pool = {  }
+        this.pool = {
+        }
         this.size = this.size - this.unused;
         this.unused = 0;
         OvalePool.StopProfiling(this.name);

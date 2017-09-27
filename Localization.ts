@@ -3,14 +3,17 @@ let [OVALE, Ovale] = __addon;
 let _rawset = rawset;
 let _setmetatable = setmetatable;
 let _tostring = tostring;
-let L = undefined;
+export let L = undefined;
 {
-    let MT = { __index: function (self, key) {
-        let value = _tostring(key);
-        _rawset(this, key, value);
-        return value;
-    } }
-    L = _setmetatable({  }, MT);
+    let MT = {
+        __index: function (self, key) {
+            let value = _tostring(key);
+            _rawset(this, key, value);
+            return value;
+        }
+    }
+    L = _setmetatable({
+    }, MT);
     Ovale.L = L;
 }
 let locale = GetLocale();

@@ -23,7 +23,8 @@ OvaleDebug.RegisterDebugging(OvaleRunes);
 OvaleProfiler.RegisterProfiling(OvaleRunes);
 let EMPOWER_RUNE_WEAPON = 47568;
 let RUNE_SLOTS = 6;
-OvaleRunes.rune = {  }
+OvaleRunes.rune = {
+}
 const IsActiveRune = function(rune, atTime) {
     return (rune.startCooldown == 0 || rune.endCooldown <= atTime);
 }
@@ -39,7 +40,10 @@ class OvaleRunes {
     OnEnable() {
         if (Ovale.playerClass == "DEATHKNIGHT") {
             for (let slot = 1; slot <= RUNE_SLOTS; slot += 1) {
-                this.rune[slot] = { slot: slot, IsActiveRune: IsActiveRune }
+                this.rune[slot] = {
+                    slot: slot,
+                    IsActiveRune: IsActiveRune
+                }
             }
             this.RegisterEvent("PLAYER_ENTERING_WORLD", "UpdateAllRunes");
             this.RegisterEvent("RUNE_POWER_UPDATE");
@@ -58,7 +62,8 @@ class OvaleRunes {
             this.UnregisterEvent("UNIT_RANGEDDAMAGE");
             this.UnregisterEvent("UNIT_SPELL_HASTE");
             OvaleState.UnregisterState(this);
-            this.rune = {  }
+            this.rune = {
+            }
         }
     }
     RUNE_POWER_UPDATE(event, slot, usable) {
@@ -111,14 +116,17 @@ class OvaleRunes {
         }
     }
 }
-OvaleRunes.statePrototype = {  }
+OvaleRunes.statePrototype = {
+}
 let statePrototype = OvaleRunes.statePrototype;
 statePrototype.rune = undefined;
 class OvaleRunes {
     InitializeState(state) {
-        state.rune = {  }
+        state.rune = {
+        }
         for (const [slot] of _ipairs(this.rune)) {
-            state.rune[slot] = {  }
+            state.rune[slot] = {
+            }
         }
     }
     ResetState(state) {
@@ -238,8 +246,10 @@ statePrototype.RuneCount = function (state, atTime) {
 }
 statePrototype.GetRunesCooldown = undefined;
 {
-    let count = {  }
-    let usedRune = {  }
+    let count = {
+    }
+    let usedRune = {
+    }
     statePrototype.GetRunesCooldown = function (state, atTime, runes) {
         if (runes <= 0) {
             return 0;

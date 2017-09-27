@@ -14,8 +14,25 @@ let PRE_STEADY_FOCUS = 177667;
 let STEADY_FOCUS_TALENT = 10;
 let STEADY_FOCUS = 177668;
 let STEADY_FOCUS_DURATION = 15;
-let STEADY_SHOT = { [56641]: "Steady Shot", [77767]: "Cobra Shot", [163485]: "Focusing Shot" }
-let RANGED_ATTACKS = { [2643]: "Multi-Shot", [3044]: "Arcane Shot", [19434]: "Aimed Shot", [19801]: "Tranquilizing Shot", [53209]: "Chimaera Shot", [53351]: "Kill Shot", [109259]: "Powershot", [117050]: "Glaive Toss", [120360]: "Barrage", [120361]: "Barrage", [120761]: "Glaive Toss", [121414]: "Glaive Toss" }
+let STEADY_SHOT = {
+    [56641]: "Steady Shot",
+    [77767]: "Cobra Shot",
+    [163485]: "Focusing Shot"
+}
+let RANGED_ATTACKS = {
+    [2643]: "Multi-Shot",
+    [3044]: "Arcane Shot",
+    [19434]: "Aimed Shot",
+    [19801]: "Tranquilizing Shot",
+    [53209]: "Chimaera Shot",
+    [53351]: "Kill Shot",
+    [109259]: "Powershot",
+    [117050]: "Glaive Toss",
+    [120360]: "Barrage",
+    [120361]: "Barrage",
+    [120761]: "Glaive Toss",
+    [121414]: "Glaive Toss"
+}
 OvaleDebug.RegisterDebugging(OvaleSteadyFocus);
 OvaleProfiler.RegisterProfiling(OvaleSteadyFocus);
 OvaleSteadyFocus.hasSteadyFocus = undefined;
@@ -107,7 +124,8 @@ class OvaleSteadyFocus {
         }
     }
 }
-OvaleSteadyFocus.statePrototype = {  }
+OvaleSteadyFocus.statePrototype = {
+}
 let statePrototype = OvaleSteadyFocus.statePrototype;
 class OvaleSteadyFocus {
     ApplySpellAfterCast(state, spellId, targetGUID, startCast, endCast, channel, spellcast) {

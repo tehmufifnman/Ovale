@@ -53,11 +53,26 @@ let API_IsUsableAction = IsUsableAction;
 let API_IsUsableItem = IsUsableItem;
 OvaleDebug.RegisterDebugging(OvaleBestAction);
 OvaleProfiler.RegisterProfiling(OvaleBestAction);
-let COMPUTE_VISITOR = { ["action"]: "ComputeAction", ["arithmetic"]: "ComputeArithmetic", ["compare"]: "ComputeCompare", ["custom_function"]: "ComputeCustomFunction", ["function"]: "ComputeFunction", ["group"]: "ComputeGroup", ["if"]: "ComputeIf", ["logical"]: "ComputeLogical", ["lua"]: "ComputeLua", ["state"]: "ComputeState", ["unless"]: "ComputeIf", ["value"]: "ComputeValue" }
+let COMPUTE_VISITOR = {
+    ["action"]: "ComputeAction",
+    ["arithmetic"]: "ComputeArithmetic",
+    ["compare"]: "ComputeCompare",
+    ["custom_function"]: "ComputeCustomFunction",
+    ["function"]: "ComputeFunction",
+    ["group"]: "ComputeGroup",
+    ["if"]: "ComputeIf",
+    ["logical"]: "ComputeLogical",
+    ["lua"]: "ComputeLua",
+    ["state"]: "ComputeState",
+    ["unless"]: "ComputeIf",
+    ["value"]: "ComputeValue"
+}
 let self_serial = 0;
-let self_timeSpan = {  }
+let self_timeSpan = {
+}
 let self_valuePool = OvalePool("OvaleBestAction_valuePool");
-let self_value = {  }
+let self_value = {
+}
 const SetValue = function(node, value, origin, rate) {
     let result = self_value[node];
     if (!result) {

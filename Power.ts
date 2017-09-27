@@ -29,25 +29,146 @@ let INFINITY = math.huge;
 OvaleDebug.RegisterDebugging(OvalePower);
 OvaleProfiler.RegisterProfiling(OvalePower);
 let self_playerGUID = undefined;
-let self_updateSpellcastInfo = {  }
-let self_SpellcastInfoPowerTypes = { 1: "chi", 2: "holy" }
+let self_updateSpellcastInfo = {
+}
+let self_SpellcastInfoPowerTypes = {
+    1: "chi",
+    2: "holy"
+}
 let self_button = undefined;
 {
-    let debugOptions = { power: { name: L["Power"], type: "group", args: { power: { name: L["Power"], type: "input", multiline: 25, width: "full", get: function (info) {
-        return OvaleState.state.DebugPower();
-    } } } } }
+    let debugOptions = {
+        power: {
+            name: L["Power"],
+            type: "group",
+            args: {
+                power: {
+                    name: L["Power"],
+                    type: "input",
+                    multiline: 25,
+                    width: "full",
+                    get: function (info) {
+                        return OvaleState.state.DebugPower();
+                    }
+                }
+            }
+        }
+    }
     for (const [k, v] of _pairs(debugOptions)) {
         OvaleDebug.options.args[k] = v;
     }
 }
 OvalePower.powerType = undefined;
-OvalePower.power = {  }
-OvalePower.maxPower = {  }
+OvalePower.power = {
+}
+OvalePower.maxPower = {
+}
 OvalePower.activeRegen = 0;
 OvalePower.inactiveRegen = 0;
-OvalePower.POWER_INFO = { alternate: { id: SPELL_POWER_ALTERNATE_POWER, token: "ALTERNATE_RESOURCE_TEXT", mini: 0 }, chi: { id: SPELL_POWER_CHI, token: "CHI", mini: 0, costString: CHI_COST }, combopoints: { id: SPELL_POWER_COMBO_POINTS, token: "COMBO_POINTS", mini: 0, costString: COMBO_POINTS_COST }, energy: { id: SPELL_POWER_ENERGY, token: "ENERGY", mini: 0, costString: ENERGY_COST }, focus: { id: SPELL_POWER_FOCUS, token: "FOCUS", mini: 0, costString: FOCUS_COST }, holy: { id: SPELL_POWER_HOLY_POWER, token: "HOLY_POWER", mini: 0, costString: HOLY_POWER_COST }, mana: { id: SPELL_POWER_MANA, token: "MANA", mini: 0, costString: MANA_COST }, rage: { id: SPELL_POWER_RAGE, token: "RAGE", mini: 0, costString: RAGE_COST }, runicpower: { id: SPELL_POWER_RUNIC_POWER, token: "RUNIC_POWER", mini: 0, costString: RUNIC_POWER_COST }, soulshards: { id: SPELL_POWER_SOUL_SHARDS, token: "SOUL_SHARDS", mini: 0, costString: SOUL_SHARDS_COST }, astralpower: { id: SPELL_POWER_LUNAR_POWER, token: "LUNAR_POWER", mini: 0, costString: LUNAR_POWER_COST }, insanity: { id: SPELL_POWER_INSANITY, token: "INSANITY", mini: 0, costString: INSANITY_COST }, maelstrom: { id: SPELL_POWER_MAELSTROM, token: "MAELSTROM", mini: 0, costString: MAELSTROM_COST }, arcanecharges: { id: SPELL_POWER_ARCANE_CHARGES, token: "ARCANE_CHARGES", mini: 0, costString: ARCANE_CHARGES_COST }, pain: { id: SPELL_POWER_PAIN, token: "PAIN", mini: 0, costString: PAIN_COST }, fury: { id: SPELL_POWER_FURY, token: "FURY", mini: 0, costString: FURY_COST } }
-OvalePower.PRIMARY_POWER = { energy: true, focus: true, mana: true }
-OvalePower.POWER_TYPE = {  }
+OvalePower.POWER_INFO = {
+    alternate: {
+        id: SPELL_POWER_ALTERNATE_POWER,
+        token: "ALTERNATE_RESOURCE_TEXT",
+        mini: 0
+    },
+    chi: {
+        id: SPELL_POWER_CHI,
+        token: "CHI",
+        mini: 0,
+        costString: CHI_COST
+    },
+    combopoints: {
+        id: SPELL_POWER_COMBO_POINTS,
+        token: "COMBO_POINTS",
+        mini: 0,
+        costString: COMBO_POINTS_COST
+    },
+    energy: {
+        id: SPELL_POWER_ENERGY,
+        token: "ENERGY",
+        mini: 0,
+        costString: ENERGY_COST
+    },
+    focus: {
+        id: SPELL_POWER_FOCUS,
+        token: "FOCUS",
+        mini: 0,
+        costString: FOCUS_COST
+    },
+    holy: {
+        id: SPELL_POWER_HOLY_POWER,
+        token: "HOLY_POWER",
+        mini: 0,
+        costString: HOLY_POWER_COST
+    },
+    mana: {
+        id: SPELL_POWER_MANA,
+        token: "MANA",
+        mini: 0,
+        costString: MANA_COST
+    },
+    rage: {
+        id: SPELL_POWER_RAGE,
+        token: "RAGE",
+        mini: 0,
+        costString: RAGE_COST
+    },
+    runicpower: {
+        id: SPELL_POWER_RUNIC_POWER,
+        token: "RUNIC_POWER",
+        mini: 0,
+        costString: RUNIC_POWER_COST
+    },
+    soulshards: {
+        id: SPELL_POWER_SOUL_SHARDS,
+        token: "SOUL_SHARDS",
+        mini: 0,
+        costString: SOUL_SHARDS_COST
+    },
+    astralpower: {
+        id: SPELL_POWER_LUNAR_POWER,
+        token: "LUNAR_POWER",
+        mini: 0,
+        costString: LUNAR_POWER_COST
+    },
+    insanity: {
+        id: SPELL_POWER_INSANITY,
+        token: "INSANITY",
+        mini: 0,
+        costString: INSANITY_COST
+    },
+    maelstrom: {
+        id: SPELL_POWER_MAELSTROM,
+        token: "MAELSTROM",
+        mini: 0,
+        costString: MAELSTROM_COST
+    },
+    arcanecharges: {
+        id: SPELL_POWER_ARCANE_CHARGES,
+        token: "ARCANE_CHARGES",
+        mini: 0,
+        costString: ARCANE_CHARGES_COST
+    },
+    pain: {
+        id: SPELL_POWER_PAIN,
+        token: "PAIN",
+        mini: 0,
+        costString: PAIN_COST
+    },
+    fury: {
+        id: SPELL_POWER_FURY,
+        token: "FURY",
+        mini: 0,
+        costString: FURY_COST
+    }
+}
+OvalePower.PRIMARY_POWER = {
+    energy: true,
+    focus: true,
+    mana: true
+}
+OvalePower.POWER_TYPE = {
+}
 {
     for (const [powerType, v] of _pairs(OvalePower.POWER_INFO)) {
         if (!v.id) {
@@ -57,7 +178,12 @@ OvalePower.POWER_TYPE = {  }
         OvalePower.POWER_TYPE[v.token] = powerType;
     }
 }
-OvalePower.POOLED_RESOURCE = { ["DRUID"]: "energy", ["HUNTER"]: "focus", ["MONK"]: "energy", ["ROGUE"]: "energy" }
+OvalePower.POOLED_RESOURCE = {
+    ["DRUID"]: "energy",
+    ["HUNTER"]: "focus",
+    ["MONK"]: "energy",
+    ["ROGUE"]: "energy"
+}
 class OvalePower {
     OnInitialize() {
         OvaleAura = Ovale.OvaleAura;
@@ -393,7 +519,8 @@ class OvalePower {
         }
     }
 }
-OvalePower.statePrototype = {  }
+OvalePower.statePrototype = {
+}
 let statePrototype = OvalePower.statePrototype;
 statePrototype.powerRate = undefined;
 class OvalePower {
@@ -401,7 +528,8 @@ class OvalePower {
         for (const [powerType] of _pairs(this.POWER_INFO)) {
             state[powerType] = 0;
         }
-        state.powerRate = {  }
+        state.powerRate = {
+        }
     }
     ResetState(state) {
         this.StartProfiling("OvalePower_ResetState");
@@ -505,7 +633,8 @@ statePrototype.GetPower = OvalePower.GetPower;
 statePrototype.PowerCost = OvalePower.PowerCost;
 statePrototype.RequirePowerHandler = OvalePower.RequirePowerHandler;
 {
-    let output = {  }
+    let output = {
+    }
     statePrototype.DebugPower = function (state) {
         _wipe(output);
         for (const [powerType] of _pairs(OvalePower.POWER_INFO)) {

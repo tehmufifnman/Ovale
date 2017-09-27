@@ -17,18 +17,31 @@ let API_IsInGuild = IsInGuild;
 let API_IsInRaid = IsInRaid;
 let _LE_PARTY_CATEGORY_INSTANCE = LE_PARTY_CATEGORY_INSTANCE;
 OvaleDebug.RegisterDebugging(OvaleVersion);
-let self_printTable = {  }
-let self_userVersion = {  }
+let self_printTable = {
+}
+let self_userVersion = {
+}
 let self_timer;
 import { MSG_PREFIX } from "./MSG_PREFIX";
 let OVALE_VERSION = "7.3.0.2";
 let REPOSITORY_KEYWORD = "@" + "project-version" + "@";
 {
-    let actions = { ping: { name: L["Ping for Ovale users in group"], type: "execute", func: function () {
-        OvaleVersion.VersionCheck();
-    } }, version: { name: L["Show version number"], type: "execute", func: function () {
-        OvaleVersion.Print(OvaleVersion.version);
-    } } }
+    let actions = {
+        ping: {
+            name: L["Ping for Ovale users in group"],
+            type: "execute",
+            func: function () {
+                OvaleVersion.VersionCheck();
+            }
+        },
+        version: {
+            name: L["Show version number"],
+            type: "execute",
+            func: function () {
+                OvaleVersion.Print(OvaleVersion.version);
+            }
+        }
+    }
     for (const [k, v] of _pairs(actions)) {
         OvaleOptions.options.args.actions.args[k] = v;
     }

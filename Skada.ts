@@ -19,7 +19,9 @@ class OvaleSkada {
         OvaleScore = Ovale.OvaleScore;
     }
     OnEnable() {
-        this.metadata = { showspots: true }
+        this.metadata = {
+            showspots: true
+        }
         if (Skada) {
             Skada.AddMode(this);
             OvaleScore.RegisterDamageMeter("OvaleSkada", this, "ReceiveScore");
@@ -49,7 +51,8 @@ class OvaleSkada {
         let nr = 1;
         for (const [i, player] of _ipairs(set.players)) {
             if (player.ovaleMax && player.ovaleMax > 0) {
-                let d = win.dataset[nr] || {  }
+                let d = win.dataset[nr] || {
+                }
                 win.dataset[nr] = d;
                 d.value = GetValue(player);
                 d.label = player.name;

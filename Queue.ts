@@ -1,6 +1,7 @@
 import __addon from "addon";
 let [OVALE, Ovale] = __addon;
-let OvaleQueue = {  }
+let OvaleQueue = {
+}
 Ovale.OvaleQueue = OvaleQueue;
 let _setmetatable = setmetatable;
 OvaleQueue.name = "OvaleQueue";
@@ -23,7 +24,11 @@ const FrontToBackIterator = function(invariant, control) {
 }
 class OvaleQueue {
     NewDeque(name) {
-        return _setmetatable({ name: name, first: 0, last: -1 }, OvaleQueue);
+        return _setmetatable({
+            name: name,
+            first: 0,
+            last: -1
+        }, OvaleQueue);
     }
     InsertFront(element) {
         let first = this.first - 1;

@@ -282,7 +282,12 @@ let [OVALE, Ovale] = __addon;
         let iconNodes = OvaleCompile.GetIconNodes();
         for (const [k, node] of _ipairs(iconNodes)) {
             if (!this.actions[k]) {
-                this.actions[k] = { icons: {  }, secureIcons: {  } }
+                this.actions[k] = {
+                    icons: {
+                    },
+                    secureIcons: {
+                    }
+                }
             }
             let action = this.actions[k];
             let [width, height, newScale];
@@ -379,7 +384,8 @@ let [OVALE, Ovale] = __addon;
         hider.SetAllPoints(true);
         API_RegisterStateDriver(hider, "visibility", "[petbattle] hide; show");
         let frame = API_CreateFrame("Frame", undefined, hider);
-        let self = {  }
+        let self = {
+        }
         import { profile } from "./db";
         this.Hide = Hide;
         this.Show = Show;
@@ -393,8 +399,10 @@ let [OVALE, Ovale] = __addon;
         this.OnUpdate = OnUpdate;
         this.GetScore = GetScore;
         this.type = "Frame";
-        this.localstatus = {  }
-        this.actions = {  }
+        this.localstatus = {
+        }
+        this.actions = {
+        }
         this.frame = frame;
         this.hider = hider;
         this.updateFrame = API_CreateFrame("Frame", OVALE + "UpdateFrame");

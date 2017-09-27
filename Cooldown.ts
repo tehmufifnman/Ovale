@@ -20,10 +20,64 @@ let GLOBAL_COOLDOWN = 61304;
 let COOLDOWN_THRESHOLD = 0.10;
 OvaleDebug.RegisterDebugging(OvaleCooldown);
 OvaleProfiler.RegisterProfiling(OvaleCooldown);
-let BASE_GCD = { ["DEATHKNIGHT"]: { 1: 1.5, 2: "melee" }, ["DEMONHUNTER"]: { 1: 1.5, 2: "melee" }, ["DRUID"]: { 1: 1.5, 2: "spell" }, ["HUNTER"]: { 1: 1.5, 2: "ranged" }, ["MAGE"]: { 1: 1.5, 2: "spell" }, ["MONK"]: { 1: 1.0, 2: false }, ["PALADIN"]: { 1: 1.5, 2: "spell" }, ["PRIEST"]: { 1: 1.5, 2: "spell" }, ["ROGUE"]: { 1: 1.0, 2: false }, ["SHAMAN"]: { 1: 1.5, 2: "spell" }, ["WARLOCK"]: { 1: 1.5, 2: "spell" }, ["WARRIOR"]: { 1: 1.5, 2: "melee" } }
+let BASE_GCD = {
+    ["DEATHKNIGHT"]: {
+        1: 1.5,
+        2: "melee"
+    },
+    ["DEMONHUNTER"]: {
+        1: 1.5,
+        2: "melee"
+    },
+    ["DRUID"]: {
+        1: 1.5,
+        2: "spell"
+    },
+    ["HUNTER"]: {
+        1: 1.5,
+        2: "ranged"
+    },
+    ["MAGE"]: {
+        1: 1.5,
+        2: "spell"
+    },
+    ["MONK"]: {
+        1: 1.0,
+        2: false
+    },
+    ["PALADIN"]: {
+        1: 1.5,
+        2: "spell"
+    },
+    ["PRIEST"]: {
+        1: 1.5,
+        2: "spell"
+    },
+    ["ROGUE"]: {
+        1: 1.0,
+        2: false
+    },
+    ["SHAMAN"]: {
+        1: 1.5,
+        2: "spell"
+    },
+    ["WARLOCK"]: {
+        1: 1.5,
+        2: "spell"
+    },
+    ["WARRIOR"]: {
+        1: 1.5,
+        2: "melee"
+    }
+}
 OvaleCooldown.serial = 0;
-OvaleCooldown.sharedCooldown = {  }
-OvaleCooldown.gcd = { serial: 0, start: 0, duration: 0 }
+OvaleCooldown.sharedCooldown = {
+}
+OvaleCooldown.gcd = {
+    serial: 0,
+    start: 0,
+    duration: 0
+}
 class OvaleCooldown {
     OnInitialize() {
         OvaleData = Ovale.OvaleData;
@@ -94,7 +148,8 @@ class OvaleCooldown {
         return (spellTable && _next(spellTable) != undefined);
     }
     AddSharedCooldown(name, spellId) {
-        this.sharedCooldown[name] = this.sharedCooldown[name] || {  }
+        this.sharedCooldown[name] = this.sharedCooldown[name] || {
+        }
         this.sharedCooldown[name][spellId] = true;
     }
     GetGlobalCooldown(now) {
@@ -188,12 +243,14 @@ class OvaleCooldown {
         return [verified, requirement, index];
     }
 }
-OvaleCooldown.statePrototype = {  }
+OvaleCooldown.statePrototype = {
+}
 let statePrototype = OvaleCooldown.statePrototype;
 statePrototype.cd = undefined;
 class OvaleCooldown {
     InitializeState(state) {
-        state.cd = {  }
+        state.cd = {
+        }
     }
     ResetState(state) {
         for (const [spellId, cd] of _pairs(state.cd)) {
@@ -303,7 +360,8 @@ statePrototype.GetCD = function (state, spellId) {
         cdName = si.sharedcd;
     }
     if (!state.cd[cdName]) {
-        state.cd[cdName] = {  }
+        state.cd[cdName] = {
+        }
     }
     let cd = state.cd[cdName];
     if (!cd.start || !cd.serial || cd.serial < OvaleCooldown.serial) {

@@ -34,10 +34,13 @@ class OvaleRecount {
             let AceLocale = LibStub("AceLocale-3.0", true);
             let L = AceLocale && AceLocale.GetLocale("Recount", true);
             if (!L) {
-                L = _setmetatable({  }, { __index: function (t, k) {
-                    t[k] = k;
-                    return k;
-                } });
+                L = _setmetatable({
+                }, {
+                    __index: function (t, k) {
+                        t[k] = k;
+                        return k;
+                    }
+                });
             }
             Recount.AddModeTooltip(OVALE, DataModes, TooltipFuncs, undefined, undefined, undefined, undefined);
         }

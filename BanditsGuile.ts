@@ -11,9 +11,15 @@ let self_playerGUID = undefined;
 let SHALLOW_INSIGHT = 84745;
 let MODERATE_INSIGHT = 84746;
 let DEEP_INSIGHT = 84747;
-let INSIGHT_BUFF = { [SHALLOW_INSIGHT]: API_GetSpellInfo(SHALLOW_INSIGHT), [MODERATE_INSIGHT]: API_GetSpellInfo(MODERATE_INSIGHT), [DEEP_INSIGHT]: API_GetSpellInfo(DEEP_INSIGHT) }
+let INSIGHT_BUFF = {
+    [SHALLOW_INSIGHT]: API_GetSpellInfo(SHALLOW_INSIGHT),
+    [MODERATE_INSIGHT]: API_GetSpellInfo(MODERATE_INSIGHT),
+    [DEEP_INSIGHT]: API_GetSpellInfo(DEEP_INSIGHT)
+}
 let BANDITS_GUILE = 84654;
-let BANDITS_GUILE_ATTACK = { [1752]: API_GetSpellInfo(1752) }
+let BANDITS_GUILE_ATTACK = {
+    [1752]: API_GetSpellInfo(1752)
+}
 OvaleBanditsGuile.spellName = "Bandit's Guile";
 OvaleBanditsGuile.spellId = BANDITS_GUILE;
 OvaleBanditsGuile.start = 0;

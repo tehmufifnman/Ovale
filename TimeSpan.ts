@@ -1,6 +1,7 @@
 import __addon from "addon";
 let [OVALE, Ovale] = __addon;
-let OvaleTimeSpan = {  }
+let OvaleTimeSpan = {
+}
 Ovale.OvaleTimeSpan = OvaleTimeSpan;
 let _select = select;
 let _setmetatable = setmetatable;
@@ -11,16 +12,23 @@ let tremove = table.remove;
 let _type = type;
 let _wipe = wipe;
 let INFINITY = math.huge;
-let self_pool = {  }
+let self_pool = {
+}
 let self_poolSize = 0;
 let self_poolUnused = 0;
-let EMPTY_SET = _setmetatable({  }, OvaleTimeSpan);
-let UNIVERSE = _setmetatable({ 1: 0, 2: INFINITY }, OvaleTimeSpan);
+let EMPTY_SET = _setmetatable({
+}, OvaleTimeSpan);
+let UNIVERSE = _setmetatable({
+    1: 0,
+    2: INFINITY
+}, OvaleTimeSpan);
 OvaleTimeSpan.__index = OvaleTimeSpan;
 {
-    _setmetatable(OvaleTimeSpan, { __call: function (self, ...__args) {
-        return this.New(...__args);
-    } });
+    _setmetatable(OvaleTimeSpan, {
+        __call: function (self, ...__args) {
+            return this.New(...__args);
+        }
+    });
 }
 OvaleTimeSpan.EMPTY_SET = EMPTY_SET;
 OvaleTimeSpan.UNIVERSE = UNIVERSE;
@@ -48,7 +56,8 @@ class OvaleTimeSpan {
         if (obj) {
             self_poolUnused = self_poolUnused - 1;
         } else {
-            obj = {  }
+            obj = {
+            }
             self_poolSize = self_poolSize + 1;
         }
         _setmetatable(obj, this);

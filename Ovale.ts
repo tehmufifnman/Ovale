@@ -1,8 +1,8 @@
 import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-Ovale = LibStub("AceAddon-3.0").NewAddon(Ovale || {  }, OVALE || "Ovale", "AceEvent-3.0");
-_G["Ovale"] = Ovale;
-let AceGUI = LibStub("AceGUI-3.0");
+let [OVALE, Addon] = __addon;
+const OvaleBase = Addon.NewModule("Ovale", "AceEvent-3.0");
+import AceGUI from "AceGUI-3.0";
+import { ovaleFuture } from "./Future";
 let L = undefined;
 let _assert = assert;
 let format = string.format;
@@ -31,42 +31,54 @@ let _DEFAULT_CHAT_FRAME = DEFAULT_CHAT_FRAME;
 let INFINITY = math.huge;
 let OVALE_VERSION = "7.3.0.2";
 let REPOSITORY_KEYWORD = "@" + "project-version" + "@";
-let self_oneTimeMessage = {  }
+let self_oneTimeMessage = {
+}
 let MAX_REFRESH_INTERVALS = 500;
-let self_refreshIntervals = {  }
+let self_refreshIntervals:LuaArray<number> = {
+}
 let self_refreshIndex = 1;
-Ovale.L = undefined;
-Ovale.playerClass = _select(2, API_UnitClass("player"));
-Ovale.playerGUID = undefined;
-Ovale.db = undefined;
-Ovale.frame = undefined;
-Ovale.checkBox = {  }
-Ovale.list = {  }
-Ovale.checkBoxWidget = {  }
-Ovale.listWidget = {  }
-Ovale.refreshNeeded = {  }
-Ovale.MSG_PREFIX = OVALE;
-const OnCheckBoxValueChanged = function(widget) {
-    let name = widget.GetUserData("name");
-    Ovale.db.profile.check[name] = widget.GetValue();
-    Ovale.SendMessage("Ovale_CheckBoxValueChanged", name);
-}
-const OnDropDownValueChanged = function(widget) {
-    let name = widget.GetUserData("name");
-    Ovale.db.profile.list[name] = widget.GetValue();
-    Ovale.SendMessage("Ovale_ListValueChanged", name);
-}
-class Ovale {
-    OnInitialize() {
-        L = Ovale.L;
-        BINDING_HEADER_OVALE = OVALE;
-        let toggleCheckBox = L["Inverser la boîte à cocher "];
-        BINDING_NAME_OVALE_CHECKBOX0 = toggleCheckBox + "(1)";
-        BINDING_NAME_OVALE_CHECKBOX1 = toggleCheckBox + "(2)";
-        BINDING_NAME_OVALE_CHECKBOX2 = toggleCheckBox + "(3)";
-        BINDING_NAME_OVALE_CHECKBOX3 = toggleCheckBox + "(4)";
-        BINDING_NAME_OVALE_CHECKBOX4 = toggleCheckBox + "(5)";
+
+class Ovale extends OvaleBase {
+    L = undefined;
+    playerClass = _select(2, API_UnitClass("player"));
+    playerGUID = undefined;
+    db = undefined;
+    frame = undefined;
+    checkBox = {
     }
+    list = {
+    }
+    checkBoxWidget = {
+    }
+    listWidget = {
+    }
+    refreshNeeded = {
+    }
+    MSG_PREFIX = OVALE;
+
+    OnCheckBoxValueChanged(widget) {
+        let name = widget.GetUserData("name");
+        this.db.profile.check[name] = widget.GetValue();
+        this.SendMessage("Ovale_CheckBoxValueChanged", name);
+    }
+
+    OnDropDownValueChanged = function(widget) {
+        let name = widget.GetUserData("name");
+        this.db.profile.list[name] = widget.GetValue();
+        this.SendMessage("Ovale_ListValueChanged", name);
+    }
+
+    OnInitialize() {
+        L = this.L;
+        _G["BINDING_HEADER_OVALE"] = OVALE;
+        let toggleCheckBox = L["Inverser la boîte à cocher "];
+        _G["BINDING_NAME_OVALE_CHECKBOX0"] = toggleCheckBox + "(1)";
+        _G["BINDING_NAME_OVALE_CHECKBOX1"] = toggleCheckBox + "(2)";
+        _G["BINDING_NAME_OVALE_CHECKBOX2"] = toggleCheckBox + "(3)";
+        _G["BINDING_NAME_OVALE_CHECKBOX3"] = toggleCheckBox + "(4)";
+        _G["BINDING_NAME_OVALE_CHECKBOX4"] = toggleCheckBox + "(5)";
+    }
+
     OnEnable() {
         this.playerGUID = API_UnitGUID("player");
         this.RegisterEvent("PLAYER_ENTERING_WORLD");
@@ -76,6 +88,7 @@ class Ovale {
         this.frame = AceGUI.Create(OVALE + "Frame");
         this.UpdateFrame();
     }
+
     OnDisable() {
         this.UnregisterEvent("PLAYER_ENTERING_WORLD");
         this.UnregisterEvent("PLAYER_TARGET_CHANGED");
@@ -131,7 +144,7 @@ class Ovale {
             if (profile.apparence.avecCible && !API_UnitExists("target")) {
                 visible = false;
             }
-            if (profile.apparence.enCombat && !Ovale.OvaleFuture.inCombat) {
+            if (profile.apparence.enCombat && !ovaleFuture.inCombat) {
                 visible = false;
             }
             if (profile.apparence.targetHostileOnly && (API_UnitIsDead("target") || !API_UnitCanAttack("player", "target"))) {
@@ -163,7 +176,7 @@ class Ovale {
                     widget.SetValue(profile.check[name]);
                 }
                 widget.SetUserData("name", name);
-                widget.SetCallback("OnValueChanged", OnCheckBoxValueChanged);
+                widget.SetCallback("OnValueChanged", this.OnCheckBoxValueChanged);
                 this.frame.AddChild(widget);
                 this.checkBoxWidget[name] = widget;
             } else {
@@ -182,7 +195,7 @@ class Ovale {
                     widget.SetValue(profile.list[name]);
                 }
                 widget.SetUserData("name", name);
-                widget.SetCallback("OnValueChanged", OnDropDownValueChanged);
+                widget.SetCallback("OnValueChanged", this.OnDropDownValueChanged);
                 this.frame.AddChild(widget);
                 this.listWidget[name] = widget;
             } else {
@@ -226,7 +239,7 @@ class Ovale {
             let oldValue = widget.GetValue();
             if (oldValue != on) {
                 widget.SetValue(on);
-                OnCheckBoxValueChanged(widget);
+                this.OnCheckBoxValueChanged(widget);
             }
         }
     }
@@ -235,7 +248,7 @@ class Ovale {
         if (widget) {
             let on = !widget.GetValue();
             widget.SetValue(on);
-            OnCheckBoxValueChanged(widget);
+            this.OnCheckBoxValueChanged(widget);
         }
     }
     AddRefreshInterval(milliseconds) {
@@ -268,13 +281,13 @@ class Ovale {
         }
         return s;
     }
-    MakeString(s, ...__args) {
+    MakeString(s?, ...__args) {
         if (s && strlen(s) > 0) {
-            if ((...__args)) {
+            if (__args.length > 0) {
                 if (strfind(s, "%%%.%d") || strfind(s, "%%[%w]")) {
-                    s = format(s, _tostringall(...__args));
+                    s = format(s, ..._tostringall(...__args));
                 } else {
-                    s = _strjoin(" ", s, _tostringall(...__args));
+                    s = _strjoin(" ", s, ..._tostringall(...__args));
                 }
             }
         } else {
@@ -284,11 +297,11 @@ class Ovale {
     }
     Print(...__args) {
         let name = this.GetName();
-        let s = Ovale.MakeString(...__args);
+        let s = this.MakeString(...__args);
         _DEFAULT_CHAT_FRAME.AddMessage(format("|cff33ff99%s|r: %s", name, s));
     }
     Error(...__args) {
-        let s = Ovale.MakeString(...__args);
+        let s = this.MakeString(...__args);
         this.Print("Fatal error: %s", s);
         Ovale.OvaleDebug.bug = true;
     }
@@ -321,6 +334,11 @@ class Ovale {
 {
     const DoNothing = function() {
     }
-    let modulePrototype = { Error: Ovale.Error, Log: DoNothing, Print: Ovale.Print, GetMethod: Ovale.GetMethod }
+    let modulePrototype = {
+        Error: Ovale.Error,
+        Log: DoNothing,
+        Print: Ovale.Print,
+        GetMethod: Ovale.GetMethod
+    }
     Ovale.SetDefaultModulePrototype(modulePrototype);
 }

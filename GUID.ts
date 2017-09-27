@@ -14,7 +14,8 @@ let API_GetTime = GetTime;
 let API_UnitGUID = UnitGUID;
 let API_UnitName = UnitName;
 OvaleDebug.RegisterDebugging(OvaleGUID);
-let PET_UNIT = {  }
+let PET_UNIT = {
+}
 {
     PET_UNIT["player"] = "pet";
     for (let i = 1; i <= 5; i += 1) {
@@ -26,11 +27,14 @@ let PET_UNIT = {  }
     for (let i = 1; i <= 40; i += 1) {
         PET_UNIT["raid" + i] = "raidpet" + i;
     }
-    _setmetatable(PET_UNIT, { __index: function (t, unitId) {
-        return unitId + "pet";
-    } });
+    _setmetatable(PET_UNIT, {
+        __index: function (t, unitId) {
+            return unitId + "pet";
+        }
+    });
 }
-let UNIT_AURA_UNITS = {  }
+let UNIT_AURA_UNITS = {
+}
 {
     tinsert(UNIT_AURA_UNITS, "player");
     tinsert(UNIT_AURA_UNITS, "pet");
@@ -57,22 +61,32 @@ let UNIT_AURA_UNITS = {  }
     }
     tinsert(UNIT_AURA_UNITS, "npc");
 }
-let UNIT_AURA_UNIT = {  }
+let UNIT_AURA_UNIT = {
+}
 {
     for (const [i, unitId] of _ipairs(UNIT_AURA_UNITS)) {
         UNIT_AURA_UNIT[unitId] = i;
     }
-    _setmetatable(UNIT_AURA_UNIT, { __index: function (t, unitId) {
-        return lualength(UNIT_AURA_UNITS) + 1;
-    } });
+    _setmetatable(UNIT_AURA_UNIT, {
+        __index: function (t, unitId) {
+            return lualength(UNIT_AURA_UNITS) + 1;
+        }
+    });
 }
-OvaleGUID.unitGUID = {  }
-OvaleGUID.guidUnit = {  }
-OvaleGUID.unitName = {  }
-OvaleGUID.nameUnit = {  }
-OvaleGUID.guidName = {  }
-OvaleGUID.nameGUID = {  }
-OvaleGUID.petGUID = {  }
+OvaleGUID.unitGUID = {
+}
+OvaleGUID.guidUnit = {
+}
+OvaleGUID.unitName = {
+}
+OvaleGUID.nameUnit = {
+}
+OvaleGUID.guidName = {
+}
+OvaleGUID.nameGUID = {
+}
+OvaleGUID.petGUID = {
+}
 OvaleGUID.UNIT_AURA_UNIT = UNIT_AURA_UNIT;
 let BinaryInsert;
 let BinaryRemove;
@@ -232,7 +246,8 @@ class OvaleGUID {
         if (guid && guid != previousGUID) {
             this.unitGUID[unitId] = guid;
             {
-                let list = this.guidUnit[guid] || {  }
+                let list = this.guidUnit[guid] || {
+                }
                 BinaryInsert(list, unitId, true, CompareUnit);
                 this.guidUnit[guid] = list;
             }
@@ -242,7 +257,8 @@ class OvaleGUID {
         if (name && name != previousName) {
             this.unitName[unitId] = name;
             {
-                let list = this.nameUnit[name] || {  }
+                let list = this.nameUnit[name] || {
+                }
                 BinaryInsert(list, unitId, true, CompareUnit);
                 this.nameUnit[name] = list;
             }
@@ -252,7 +268,8 @@ class OvaleGUID {
             let previousNameFromGUID = this.guidName[guid];
             this.guidName[guid] = name;
             if (name != previousNameFromGUID) {
-                let list = this.nameGUID[name] || {  }
+                let list = this.nameGUID[name] || {
+                }
                 BinaryInsert(list, guid, true);
                 this.nameGUID[name] = list;
                 if (guid == previousGUID) {

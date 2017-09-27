@@ -29,11 +29,63 @@ let _wipe = wipe;
 let yield = coroutine.yield;
 let API_GetItemInfo = GetItemInfo;
 OvaleProfiler.RegisterProfiling(OvaleAST);
-let KEYWORD = { ["and"]: true, ["if"]: true, ["not"]: true, ["or"]: true, ["unless"]: true }
-let DECLARATION_KEYWORD = { ["AddActionIcon"]: true, ["AddCheckBox"]: true, ["AddFunction"]: true, ["AddIcon"]: true, ["AddListItem"]: true, ["Define"]: true, ["Include"]: true, ["ItemInfo"]: true, ["ItemRequire"]: true, ["ItemList"]: true, ["ScoreSpells"]: true, ["SpellInfo"]: true, ["SpellList"]: true, ["SpellRequire"]: true }
-let PARAMETER_KEYWORD = { ["checkbox"]: true, ["help"]: true, ["if_buff"]: true, ["if_equipped"]: true, ["if_spell"]: true, ["if_stance"]: true, ["if_target_debuff"]: true, ["itemcount"]: true, ["itemset"]: true, ["level"]: true, ["listitem"]: true, ["pertrait"]: true, ["specialization"]: true, ["talent"]: true, ["trait"]: true, ["text"]: true, ["wait"]: true }
-let SPELL_AURA_KEYWORD = { ["SpellAddBuff"]: true, ["SpellAddDebuff"]: true, ["SpellAddPetBuff"]: true, ["SpellAddPetDebuff"]: true, ["SpellAddTargetBuff"]: true, ["SpellAddTargetDebuff"]: true, ["SpellDamageBuff"]: true, ["SpellDamageDebuff"]: true }
-let STANCE_KEYWORD = { ["if_stance"]: true, ["stance"]: true, ["to_stance"]: true }
+let KEYWORD = {
+    ["and"]: true,
+    ["if"]: true,
+    ["not"]: true,
+    ["or"]: true,
+    ["unless"]: true
+}
+let DECLARATION_KEYWORD = {
+    ["AddActionIcon"]: true,
+    ["AddCheckBox"]: true,
+    ["AddFunction"]: true,
+    ["AddIcon"]: true,
+    ["AddListItem"]: true,
+    ["Define"]: true,
+    ["Include"]: true,
+    ["ItemInfo"]: true,
+    ["ItemRequire"]: true,
+    ["ItemList"]: true,
+    ["ScoreSpells"]: true,
+    ["SpellInfo"]: true,
+    ["SpellList"]: true,
+    ["SpellRequire"]: true
+}
+let PARAMETER_KEYWORD = {
+    ["checkbox"]: true,
+    ["help"]: true,
+    ["if_buff"]: true,
+    ["if_equipped"]: true,
+    ["if_spell"]: true,
+    ["if_stance"]: true,
+    ["if_target_debuff"]: true,
+    ["itemcount"]: true,
+    ["itemset"]: true,
+    ["level"]: true,
+    ["listitem"]: true,
+    ["pertrait"]: true,
+    ["specialization"]: true,
+    ["talent"]: true,
+    ["trait"]: true,
+    ["text"]: true,
+    ["wait"]: true
+}
+let SPELL_AURA_KEYWORD = {
+    ["SpellAddBuff"]: true,
+    ["SpellAddDebuff"]: true,
+    ["SpellAddPetBuff"]: true,
+    ["SpellAddPetDebuff"]: true,
+    ["SpellAddTargetBuff"]: true,
+    ["SpellAddTargetDebuff"]: true,
+    ["SpellDamageBuff"]: true,
+    ["SpellDamageDebuff"]: true
+}
+let STANCE_KEYWORD = {
+    ["if_stance"]: true,
+    ["stance"]: true,
+    ["to_stance"]: true
+}
 {
     for (const [keyword, value] of _pairs(SPELL_AURA_KEYWORD)) {
         DECLARATION_KEYWORD[keyword] = value;
@@ -46,23 +98,113 @@ let STANCE_KEYWORD = { ["if_stance"]: true, ["stance"]: true, ["to_stance"]: tru
     }
 }
 let MATCHES = undefined;
-let ACTION_PARAMETER_COUNT = { ["item"]: 1, ["macro"]: 1, ["spell"]: 1, ["texture"]: 1, ["setstate"]: 2 }
-let STATE_ACTION = { ["setstate"]: true }
-let STRING_LOOKUP_FUNCTION = { ["ItemName"]: true, ["L"]: true, ["SpellName"]: true }
-let UNARY_OPERATOR = { ["not"]: { 1: "logical", 2: 15 }, ["-"]: { 1: "arithmetic", 2: 50 } }
-let BINARY_OPERATOR = { ["or"]: { 1: "logical", 2: 5, 3: "associative" }, ["xor"]: { 1: "logical", 2: 8, 3: "associative" }, ["and"]: { 1: "logical", 2: 10, 3: "associative" }, ["!="]: { 1: "compare", 2: 20 }, ["<"]: { 1: "compare", 2: 20 }, ["<="]: { 1: "compare", 2: 20 }, ["=="]: { 1: "compare", 2: 20 }, [">"]: { 1: "compare", 2: 20 }, [">="]: { 1: "compare", 2: 20 }, ["+"]: { 1: "arithmetic", 2: 30, 3: "associative" }, ["-"]: { 1: "arithmetic", 2: 30 }, ["%"]: { 1: "arithmetic", 2: 40 }, ["*"]: { 1: "arithmetic", 2: 40, 3: "associative" }, ["/"]: { 1: "arithmetic", 2: 40 }, ["^"]: { 1: "arithmetic", 2: 100 } }
-let INDENT = {  }
+let ACTION_PARAMETER_COUNT = {
+    ["item"]: 1,
+    ["macro"]: 1,
+    ["spell"]: 1,
+    ["texture"]: 1,
+    ["setstate"]: 2
+}
+let STATE_ACTION = {
+    ["setstate"]: true
+}
+let STRING_LOOKUP_FUNCTION = {
+    ["ItemName"]: true,
+    ["L"]: true,
+    ["SpellName"]: true
+}
+let UNARY_OPERATOR = {
+    ["not"]: {
+        1: "logical",
+        2: 15
+    },
+    ["-"]: {
+        1: "arithmetic",
+        2: 50
+    }
+}
+let BINARY_OPERATOR = {
+    ["or"]: {
+        1: "logical",
+        2: 5,
+        3: "associative"
+    },
+    ["xor"]: {
+        1: "logical",
+        2: 8,
+        3: "associative"
+    },
+    ["and"]: {
+        1: "logical",
+        2: 10,
+        3: "associative"
+    },
+    ["!="]: {
+        1: "compare",
+        2: 20
+    },
+    ["<"]: {
+        1: "compare",
+        2: 20
+    },
+    ["<="]: {
+        1: "compare",
+        2: 20
+    },
+    ["=="]: {
+        1: "compare",
+        2: 20
+    },
+    [">"]: {
+        1: "compare",
+        2: 20
+    },
+    [">="]: {
+        1: "compare",
+        2: 20
+    },
+    ["+"]: {
+        1: "arithmetic",
+        2: 30,
+        3: "associative"
+    },
+    ["-"]: {
+        1: "arithmetic",
+        2: 30
+    },
+    ["%"]: {
+        1: "arithmetic",
+        2: 40
+    },
+    ["*"]: {
+        1: "arithmetic",
+        2: 40,
+        3: "associative"
+    },
+    ["/"]: {
+        1: "arithmetic",
+        2: 40
+    },
+    ["^"]: {
+        1: "arithmetic",
+        2: 100
+    }
+}
+let INDENT = {
+}
 {
     INDENT[0] = "";
-    let metatable = { __index: function (tbl, key) {
-        key = _tonumber(key);
-        if (key > 0) {
-            let s = tbl[key - 1] + "\t";
-            _rawset(tbl, key, s);
-            return s;
+    let metatable = {
+        __index: function (tbl, key) {
+            key = _tonumber(key);
+            if (key > 0) {
+                let s = tbl[key - 1] + "\t";
+                _rawset(tbl, key, s);
+                return s;
+            }
+            return INDENT[0];
         }
-        return INDENT[0];
-    } }
+    }
     _setmetatable(INDENT, metatable);
 }
 let self_indent = 0;
@@ -86,8 +228,10 @@ let self_pool = OvalePool("OvaleAST_pool");
 }
 OvaleAST.PARAMETER_KEYWORD = PARAMETER_KEYWORD;
 const print_r = function(node, indent, done, output) {
-    done = done || {  }
-    output = output || {  }
+    done = done || {
+    }
+    output = output || {
+    }
     indent = indent || '';
     for (const [key, value] of _pairs(node)) {
         if (_type(value) == "table") {
@@ -112,7 +256,8 @@ const print_r = function(node, indent, done, output) {
     return output;
 }
 const GetNumberNode = function(value, nodeList, annotation) {
-    annotation.numberFlyweight = annotation.numberFlyweight || {  }
+    annotation.numberFlyweight = annotation.numberFlyweight || {
+    }
     let node = annotation.numberFlyweight[value];
     if (!node) {
         node = OvaleAST.NewNode(nodeList);
@@ -172,10 +317,66 @@ const NoToken = function() {
     return yield(undefined);
 }
 {
-    MATCHES = { 1: { 1: "^%s+", 2: TokenizeWhitespace }, 2: { 1: "^%d+%.?%d*", 2: TokenizeNumber }, 3: { 1: "^[%a_][%w_]*", 2: TokenizeName }, 4: { 1: "^((['\"])%2)", 2: TokenizeString }, 5: { 1: `^(['\"]).-\\%1`, 2: TokenizeString }, 6: { 1: `^(['\"]).-[^\]%1`, 2: TokenizeString }, 7: { 1: "^#.-\n", 2: TokenizeComment }, 8: { 1: "^!=", 2: Tokenize }, 9: { 1: "^==", 2: Tokenize }, 10: { 1: "^<=", 2: Tokenize }, 11: { 1: "^>=", 2: Tokenize }, 12: { 1: "^.", 2: Tokenize }, 13: { 1: "^$", 2: NoToken } }
+    MATCHES = {
+        1: {
+            1: "^%s+",
+            2: TokenizeWhitespace
+        },
+        2: {
+            1: "^%d+%.?%d*",
+            2: TokenizeNumber
+        },
+        3: {
+            1: "^[%a_][%w_]*",
+            2: TokenizeName
+        },
+        4: {
+            1: "^((['\"])%2)",
+            2: TokenizeString
+        },
+        5: {
+            1: `^(['\"]).-\\%1`,
+            2: TokenizeString
+        },
+        6: {
+            1: `^(['\"]).-[^\]%1`,
+            2: TokenizeString
+        },
+        7: {
+            1: "^#.-\n",
+            2: TokenizeComment
+        },
+        8: {
+            1: "^!=",
+            2: Tokenize
+        },
+        9: {
+            1: "^==",
+            2: Tokenize
+        },
+        10: {
+            1: "^<=",
+            2: Tokenize
+        },
+        11: {
+            1: "^>=",
+            2: Tokenize
+        },
+        12: {
+            1: "^.",
+            2: Tokenize
+        },
+        13: {
+            1: "^$",
+            2: NoToken
+        }
+    }
 }
 const GetTokenIterator = function(s) {
-    let exclude = { space: true, comments: true }
+    let exclude = {
+        space: true,
+        comments: true
+    }
     {
         if (exclude.space) {
             exclude[TokenizeWhitespace] = true;
@@ -195,7 +396,8 @@ const FlattenParameterValue = function(parameterValue, annotation) {
             for (const [k, v] of _ipairs(node.csv)) {
                 value[k] = FlattenParameterValue(v, annotation);
             }
-            annotation.parametersList = annotation.parametersList || {  }
+            annotation.parametersList = annotation.parametersList || {
+            }
             annotation.parametersList[lualength(annotation.parametersList) + 1] = value;
         } else {
             let isBang = false;
@@ -525,11 +727,43 @@ UnparseVariable = function (node) {
     return node.name;
 }
 {
-    UNPARSE_VISITOR = { ["action"]: UnparseFunction, ["add_function"]: UnparseAddFunction, ["arithmetic"]: UnparseExpression, ["bang_value"]: UnparseBangValue, ["checkbox"]: UnparseAddCheckBox, ["compare"]: UnparseExpression, ["comma_separated_values"]: UnparseCommaSeparatedValues, ["comment"]: UnparseComment, ["custom_function"]: UnparseFunction, ["define"]: UnparseDefine, ["function"]: UnparseFunction, ["group"]: UnparseGroup, ["icon"]: UnparseAddIcon, ["if"]: UnparseIf, ["item_info"]: UnparseItemInfo, ["item_require"]: UnparseItemRequire, ["list"]: UnparseList, ["list_item"]: UnparseAddListItem, ["logical"]: UnparseExpression, ["score_spells"]: UnparseScoreSpells, ["script"]: UnparseScript, ["spell_aura_list"]: UnparseSpellAuraList, ["spell_info"]: UnparseSpellInfo, ["spell_require"]: UnparseSpellRequire, ["state"]: UnparseFunction, ["string"]: UnparseString, ["unless"]: UnparseUnless, ["value"]: UnparseNumber, ["variable"]: UnparseVariable }
+    UNPARSE_VISITOR = {
+        ["action"]: UnparseFunction,
+        ["add_function"]: UnparseAddFunction,
+        ["arithmetic"]: UnparseExpression,
+        ["bang_value"]: UnparseBangValue,
+        ["checkbox"]: UnparseAddCheckBox,
+        ["compare"]: UnparseExpression,
+        ["comma_separated_values"]: UnparseCommaSeparatedValues,
+        ["comment"]: UnparseComment,
+        ["custom_function"]: UnparseFunction,
+        ["define"]: UnparseDefine,
+        ["function"]: UnparseFunction,
+        ["group"]: UnparseGroup,
+        ["icon"]: UnparseAddIcon,
+        ["if"]: UnparseIf,
+        ["item_info"]: UnparseItemInfo,
+        ["item_require"]: UnparseItemRequire,
+        ["list"]: UnparseList,
+        ["list_item"]: UnparseAddListItem,
+        ["logical"]: UnparseExpression,
+        ["score_spells"]: UnparseScoreSpells,
+        ["script"]: UnparseScript,
+        ["spell_aura_list"]: UnparseSpellAuraList,
+        ["spell_info"]: UnparseSpellInfo,
+        ["spell_require"]: UnparseSpellRequire,
+        ["state"]: UnparseFunction,
+        ["string"]: UnparseString,
+        ["unless"]: UnparseUnless,
+        ["value"]: UnparseNumber,
+        ["variable"]: UnparseVariable
+    }
 }
 const SyntaxError = function(tokenStream, ...__args) {
     OvaleAST.Print(...__args);
-    let context = { 1: "Next tokens:" }
+    let context = {
+        1: "Next tokens:"
+    }
     for (let i = 1; i <= 20; i += 1) {
         let [tokenType, token] = tokenStream.Peek(i);
         if (tokenType) {
@@ -630,7 +864,8 @@ ParseAddCheckBox = function (tokenStream, nodeList, annotation) {
         node.description = descriptionNode;
         node.rawPositionalParams = positionalParams;
         node.rawNamedParams = namedParams;
-        annotation.parametersReference = annotation.parametersReference || {  }
+        annotation.parametersReference = annotation.parametersReference || {
+        }
         annotation.parametersReference[lualength(annotation.parametersReference) + 1] = node;
     }
     return [ok, node];
@@ -668,11 +903,14 @@ ParseAddFunction = function (tokenStream, nodeList, annotation) {
         node.child[1] = bodyNode;
         node.rawPositionalParams = positionalParams;
         node.rawNamedParams = namedParams;
-        annotation.parametersReference = annotation.parametersReference || {  }
+        annotation.parametersReference = annotation.parametersReference || {
+        }
         annotation.parametersReference[lualength(annotation.parametersReference) + 1] = node;
-        annotation.postOrderReference = annotation.postOrderReference || {  }
+        annotation.postOrderReference = annotation.postOrderReference || {
+        }
         annotation.postOrderReference[lualength(annotation.postOrderReference) + 1] = bodyNode;
-        annotation.customFunction = annotation.customFunction || {  }
+        annotation.customFunction = annotation.customFunction || {
+        }
         annotation.customFunction[name] = node;
     }
     return [ok, node];
@@ -699,9 +937,11 @@ ParseAddIcon = function (tokenStream, nodeList, annotation) {
         node.child[1] = bodyNode;
         node.rawPositionalParams = positionalParams;
         node.rawNamedParams = namedParams;
-        annotation.parametersReference = annotation.parametersReference || {  }
+        annotation.parametersReference = annotation.parametersReference || {
+        }
         annotation.parametersReference[lualength(annotation.parametersReference) + 1] = node;
-        annotation.postOrderReference = annotation.postOrderReference || {  }
+        annotation.postOrderReference = annotation.postOrderReference || {
+        }
         annotation.postOrderReference[lualength(annotation.postOrderReference) + 1] = bodyNode;
     }
     return [ok, node];
@@ -766,7 +1006,8 @@ ParseAddListItem = function (tokenStream, nodeList, annotation) {
         node.description = descriptionNode;
         node.rawPositionalParams = positionalParams;
         node.rawNamedParams = namedParams;
-        annotation.parametersReference = annotation.parametersReference || {  }
+        annotation.parametersReference = annotation.parametersReference || {
+        }
         annotation.parametersReference[lualength(annotation.parametersReference) + 1] = node;
     }
     return [ok, node];
@@ -871,7 +1112,8 @@ ParseDefine = function (tokenStream, nodeList, annotation) {
         node.type = "define";
         node.name = name;
         node.value = value;
-        annotation.definition = annotation.definition || {  }
+        annotation.definition = annotation.definition || {
+        }
         annotation.definition[name] = value;
     }
     return [ok, node];
@@ -1045,7 +1287,8 @@ ParseFunction = function (tokenStream, nodeList, annotation) {
         } else if (STRING_LOOKUP_FUNCTION[name]) {
             node.type = "function";
             node.func = name;
-            annotation.stringReference = annotation.stringReference || {  }
+            annotation.stringReference = annotation.stringReference || {
+            }
             annotation.stringReference[lualength(annotation.stringReference) + 1] = node;
         } else if (OvaleCondition.IsCondition(lowername)) {
             node.type = "function";
@@ -1057,11 +1300,14 @@ ParseFunction = function (tokenStream, nodeList, annotation) {
         node.rawPositionalParams = positionalParams;
         node.rawNamedParams = namedParams;
         node.asString = UnparseFunction(node);
-        annotation.parametersReference = annotation.parametersReference || {  }
+        annotation.parametersReference = annotation.parametersReference || {
+        }
         annotation.parametersReference[lualength(annotation.parametersReference) + 1] = node;
-        annotation.functionCall = annotation.functionCall || {  }
+        annotation.functionCall = annotation.functionCall || {
+        }
         annotation.functionCall[node.func] = true;
-        annotation.functionReference = annotation.functionReference || {  }
+        annotation.functionReference = annotation.functionReference || {
+        }
         annotation.functionReference[lualength(annotation.functionReference) + 1] = node;
     }
     return [ok, node];
@@ -1223,10 +1469,12 @@ ParseItemInfo = function (tokenStream, nodeList, annotation) {
         node.name = name;
         node.rawPositionalParams = positionalParams;
         node.rawNamedParams = namedParams;
-        annotation.parametersReference = annotation.parametersReference || {  }
+        annotation.parametersReference = annotation.parametersReference || {
+        }
         annotation.parametersReference[lualength(annotation.parametersReference) + 1] = node;
         if (name) {
-            annotation.nameReference = annotation.nameReference || {  }
+            annotation.nameReference = annotation.nameReference || {
+            }
             annotation.nameReference[lualength(annotation.nameReference) + 1] = node;
         }
     }
@@ -1290,10 +1538,12 @@ ParseItemRequire = function (tokenStream, nodeList, annotation) {
         node.property = property;
         node.rawPositionalParams = positionalParams;
         node.rawNamedParams = namedParams;
-        annotation.parametersReference = annotation.parametersReference || {  }
+        annotation.parametersReference = annotation.parametersReference || {
+        }
         annotation.parametersReference[lualength(annotation.parametersReference) + 1] = node;
         if (name) {
-            annotation.nameReference = annotation.nameReference || {  }
+            annotation.nameReference = annotation.nameReference || {
+            }
             annotation.nameReference[lualength(annotation.nameReference) + 1] = node;
         }
     }
@@ -1347,7 +1597,8 @@ ParseList = function (tokenStream, nodeList, annotation) {
         node.name = name;
         node.rawPositionalParams = positionalParams;
         node.rawNamedParams = namedParams;
-        annotation.parametersReference = annotation.parametersReference || {  }
+        annotation.parametersReference = annotation.parametersReference || {
+        }
         annotation.parametersReference[lualength(annotation.parametersReference) + 1] = node;
     }
     return [ok, node];
@@ -1373,7 +1624,7 @@ ParseNumber = function (tokenStream, nodeList, annotation) {
 ParseParameterValue = function (tokenStream, nodeList, annotation) {
     let ok = true;
     let node;
-    let [tokenType, token];
+    let tokenType, token;
     let parameters;
     do {
         [ok, node] = ParseSimpleParameterValue(tokenStream, nodeList, annotation);
@@ -1393,7 +1644,8 @@ ParseParameterValue = function (tokenStream, nodeList, annotation) {
         node = OvaleAST.NewNode(nodeList);
         node.type = "comma_separated_values";
         node.csv = parameters;
-        annotation.parametersList = annotation.parametersList || {  }
+        annotation.parametersList = annotation.parametersList || {
+        }
         annotation.parametersList[lualength(annotation.parametersList) + 1] = parameters;
     }
     return [ok, node];
@@ -1488,7 +1740,8 @@ ParseParameters = function (tokenStream, nodeList, annotation, isList) {
                         }
                         if (!namedParams[name]) {
                             namedParams[name] = control;
-                            annotation.controlList = annotation.controlList || {  }
+                            annotation.controlList = annotation.controlList || {
+                            }
                             annotation.controlList[lualength(annotation.controlList) + 1] = control;
                         }
                     } else {
@@ -1504,7 +1757,8 @@ ParseParameters = function (tokenStream, nodeList, annotation, isList) {
         }
     }
     if (ok) {
-        annotation.parametersList = annotation.parametersList || {  }
+        annotation.parametersList = annotation.parametersList || {
+        }
         annotation.parametersList[lualength(annotation.parametersList) + 1] = positionalParams;
         annotation.parametersList[lualength(annotation.parametersList) + 1] = namedParams;
     } else {
@@ -1577,7 +1831,8 @@ ParseScoreSpells = function (tokenStream, nodeList, annotation) {
         node.type = "score_spells";
         node.rawPositionalParams = positionalParams;
         node.rawNamedParams = namedParams;
-        annotation.parametersReference = annotation.parametersReference || {  }
+        annotation.parametersReference = annotation.parametersReference || {
+        }
         annotation.parametersReference[lualength(annotation.parametersReference) + 1] = node;
     }
     return [ok, node];
@@ -1716,10 +1971,12 @@ ParseSpellAuraList = function (tokenStream, nodeList, annotation) {
         node.name = name;
         node.rawPositionalParams = positionalParams;
         node.rawNamedParams = namedParams;
-        annotation.parametersReference = annotation.parametersReference || {  }
+        annotation.parametersReference = annotation.parametersReference || {
+        }
         annotation.parametersReference[lualength(annotation.parametersReference) + 1] = node;
         if (name) {
-            annotation.nameReference = annotation.nameReference || {  }
+            annotation.nameReference = annotation.nameReference || {
+            }
             annotation.nameReference[lualength(annotation.nameReference) + 1] = node;
         }
     }
@@ -1773,10 +2030,12 @@ ParseSpellInfo = function (tokenStream, nodeList, annotation) {
         node.name = name;
         node.rawPositionalParams = positionalParams;
         node.rawNamedParams = namedParams;
-        annotation.parametersReference = annotation.parametersReference || {  }
+        annotation.parametersReference = annotation.parametersReference || {
+        }
         annotation.parametersReference[lualength(annotation.parametersReference) + 1] = node;
         if (name) {
-            annotation.nameReference = annotation.nameReference || {  }
+            annotation.nameReference = annotation.nameReference || {
+            }
             annotation.nameReference[lualength(annotation.nameReference) + 1] = node;
         }
     }
@@ -1840,10 +2099,12 @@ ParseSpellRequire = function (tokenStream, nodeList, annotation) {
         node.property = property;
         node.rawPositionalParams = positionalParams;
         node.rawNamedParams = namedParams;
-        annotation.parametersReference = annotation.parametersReference || {  }
+        annotation.parametersReference = annotation.parametersReference || {
+        }
         annotation.parametersReference[lualength(annotation.parametersReference) + 1] = node;
         if (name) {
-            annotation.nameReference = annotation.nameReference || {  }
+            annotation.nameReference = annotation.nameReference || {
+            }
             annotation.nameReference[lualength(annotation.nameReference) + 1] = node;
         }
     }
@@ -1915,7 +2176,8 @@ ParseString = function (tokenStream, nodeList, annotation) {
         node = OvaleAST.NewNode(nodeList);
         node.type = "string";
         node.value = value;
-        annotation.stringReference = annotation.stringReference || {  }
+        annotation.stringReference = annotation.stringReference || {
+        }
         annotation.stringReference[lualength(annotation.stringReference) + 1] = node;
     }
     return [ok, node];
@@ -1962,13 +2224,43 @@ ParseVariable = function (tokenStream, nodeList, annotation) {
         node = OvaleAST.NewNode(nodeList);
         node.type = "variable";
         node.name = name;
-        annotation.nameReference = annotation.nameReference || {  }
+        annotation.nameReference = annotation.nameReference || {
+        }
         annotation.nameReference[lualength(annotation.nameReference) + 1] = node;
     }
     return [ok, node];
 }
 {
-    PARSE_VISITOR = { ["action"]: ParseFunction, ["add_function"]: ParseAddFunction, ["arithmetic"]: ParseExpression, ["bang_value"]: ParseSimpleParameterValue, ["checkbox"]: ParseAddCheckBox, ["compare"]: ParseExpression, ["comment"]: ParseComment, ["custom_function"]: ParseFunction, ["define"]: ParseDefine, ["expression"]: ParseExpression, ["function"]: ParseFunction, ["group"]: ParseGroup, ["icon"]: ParseAddIcon, ["if"]: ParseIf, ["item_info"]: ParseItemInfo, ["item_require"]: ParseItemRequire, ["list"]: ParseList, ["list_item"]: ParseAddListItem, ["logical"]: ParseExpression, ["score_spells"]: ParseScoreSpells, ["script"]: ParseScript, ["spell_aura_list"]: ParseSpellAuraList, ["spell_info"]: ParseSpellInfo, ["spell_require"]: ParseSpellRequire, ["string"]: ParseString, ["unless"]: ParseUnless, ["value"]: ParseNumber, ["variable"]: ParseVariable }
+    PARSE_VISITOR = {
+        ["action"]: ParseFunction,
+        ["add_function"]: ParseAddFunction,
+        ["arithmetic"]: ParseExpression,
+        ["bang_value"]: ParseSimpleParameterValue,
+        ["checkbox"]: ParseAddCheckBox,
+        ["compare"]: ParseExpression,
+        ["comment"]: ParseComment,
+        ["custom_function"]: ParseFunction,
+        ["define"]: ParseDefine,
+        ["expression"]: ParseExpression,
+        ["function"]: ParseFunction,
+        ["group"]: ParseGroup,
+        ["icon"]: ParseAddIcon,
+        ["if"]: ParseIf,
+        ["item_info"]: ParseItemInfo,
+        ["item_require"]: ParseItemRequire,
+        ["list"]: ParseList,
+        ["list_item"]: ParseAddListItem,
+        ["logical"]: ParseExpression,
+        ["score_spells"]: ParseScoreSpells,
+        ["script"]: ParseScript,
+        ["spell_aura_list"]: ParseSpellAuraList,
+        ["spell_info"]: ParseSpellInfo,
+        ["spell_require"]: ParseSpellRequire,
+        ["string"]: ParseString,
+        ["unless"]: ParseUnless,
+        ["value"]: ParseNumber,
+        ["variable"]: ParseVariable
+    }
 }
 class OvaleAST {
     OnInitialize() {
@@ -2032,8 +2324,10 @@ class OvaleAST {
         self_pool.Release(ast);
     }
     ParseCode(nodeType, code, nodeList, annotation) {
-        nodeList = nodeList || {  }
-        annotation = annotation || {  }
+        nodeList = nodeList || {
+        }
+        annotation = annotation || {
+        }
         let tokenStream = OvaleLexer("Ovale", GetTokenIterator(code));
         let [ok, node] = Parse(nodeType, tokenStream, nodeList, annotation);
         tokenStream.Release();
@@ -2043,8 +2337,15 @@ class OvaleAST {
         let code = OvaleScripts.GetScript(name);
         let ast;
         if (code) {
-            options = options || { optimize: true, verify: true }
-            let annotation = { nodeList: {  }, verify: options.verify }
+            options = options || {
+                optimize: true,
+                verify: true
+            }
+            let annotation = {
+                nodeList: {
+                },
+                verify: options.verify
+            }
             ast = this.ParseCode("script", code, annotation.nodeList, annotation);
             if (ast) {
                 ast.annotation = annotation;
@@ -2167,7 +2468,8 @@ class OvaleAST {
                         parameters[key] = FlattenParameterValue(value, annotation);
                     }
                     node.positionalParams = parameters;
-                    annotation.parametersList = annotation.parametersList || {  }
+                    annotation.parametersList = annotation.parametersList || {
+                    }
                     annotation.parametersList[lualength(annotation.parametersList) + 1] = parameters;
                 }
                 if (node.rawNamedParams) {
@@ -2186,7 +2488,8 @@ class OvaleAST {
                             }
                             if (!parameters[key]) {
                                 parameters[key] = control;
-                                annotation.controlList = annotation.controlList || {  }
+                                annotation.controlList = annotation.controlList || {
+                                }
                                 annotation.controlList[lualength(annotation.controlList) + 1] = control;
                             }
                         } else {
@@ -2197,7 +2500,8 @@ class OvaleAST {
                         }
                     }
                     node.namedParams = parameters;
-                    annotation.parametersList = annotation.parametersList || {  }
+                    annotation.parametersList = annotation.parametersList || {
+                    }
                     annotation.parametersList[lualength(annotation.parametersList) + 1] = parameters;
                 }
                 let output = self_outputPool.Get();
@@ -2299,7 +2603,8 @@ class OvaleAST {
         this.StartProfiling("OvaleAST_CommonFunctionElimination");
         if (ast.annotation) {
             if (ast.annotation.functionReference) {
-                let functionHash = ast.annotation.functionHash || {  }
+                let functionHash = ast.annotation.functionHash || {
+                }
                 for (const [_, node] of _ipairs(ast.annotation.functionReference)) {
                     if (node.positionalParams || node.namedParams) {
                         let hash = node.name + "(" + node.paramsAsString + ")";
@@ -2327,7 +2632,8 @@ class OvaleAST {
     CommonSubExpressionElimination(ast) {
         this.StartProfiling("OvaleAST_CommonSubExpressionElimination");
         if (ast && ast.annotation && ast.annotation.nodeList) {
-            let expressionHash = {  }
+            let expressionHash = {
+            }
             for (const [_, node] of _ipairs(ast.annotation.nodeList)) {
                 let hash = node.asString;
                 if (hash) {
