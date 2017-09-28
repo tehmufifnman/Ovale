@@ -40,7 +40,7 @@ function tostring(s: any): string {
     return s.toString();
 }
 
-function type(a: any) : "table" {
+function type(a: any) : "table" | "number" | "string" | "function" {
     return "table";
 }
 
@@ -54,11 +54,11 @@ function wipe(x: any) {
     }
 }
 
-function assert(condition: boolean) {
+function assert(condition) {
 
 }
 
-function unpack() {
+function unpack(t) {
 
 }
 
@@ -67,20 +67,24 @@ function tostringall(...text: object[]){
 }
 
 function select<T>(index: number, t: LuaArray<T>): T{
-
+    return t[index];
 }
 
 function strjoin(separator: string, ...text:string[]) {
     return text.join(separator);
 }
 
+function hooksecurefunc(table, methodName, hook) {
+
+}
 function rawset(table: any, key, value){}
 function setmetatable(table: any, metatable: any){}
-
+function loadstring(t: string):() => void { return undefined; }
 // Global lua objects
 var math = {
     floor: Math.floor,
-    huge: Number.MAX_VALUE
+    huge: Number.MAX_VALUE,
+    abs: Math.abs
 };
 
 var coroutine = {
@@ -119,15 +123,13 @@ var string = {
 }
 
 var table = {
-    concat<T>(...t:LuaArray<T>[]):LuaArray<T> {
-        const result: LuaArray<T> = {};
-        for (const a of t) {
-            for (const i in a) {
-                result[i] = a[i];
-            }
+    concat<T>(t:LuaArray<T>, seperator: string):string {
+        const result: string[] = [];
+        for (let i = 1; t[i] !== undefined; i++) {
+            result.push(t[i].toString());
         }
-        delete result.n;
-        return result;
+
+        return result.join(seperator);
     },
 
     insert<T>(t:LuaArray<T>, indexOrValue:number|T, value?: T) {
@@ -147,7 +149,7 @@ var table = {
         }
         t.n = values.length;
     },
-    remove():void {},
+    remove<T>(t: LuaArray<T>, index?: number):T { return t[t.n] },
 }
 
 // Utility functions
@@ -182,7 +184,7 @@ function UnitAura() {
     return [];
 }
 
-function GetSpellInfo() {
+function GetSpellInfo(spellId: number) {
     return [];
 }
 
@@ -246,9 +248,80 @@ function GetMacroSpell(spellId: number){
     return []
 }
 
+function UnitName(unitId: string) {
+    return "Esside";
+}
+
+function GetActionCooldown(action: string):[number, number, boolean] {
+    return undefined;    
+}
+
+function GetActionTexture(action: string){
+
+}
+
+function GetItemIcon(itemId: number){
+
+}
+
+function GetItemCooldown(itemId: number): [number, number, boolean]{
+    return undefined;
+}
+
+function GetItemSpell(itemId: number){
+
+}
+
+function GetSpellTexture(spellId: number){
+
+}
+
+function IsActionInRange(action: string, target: string){
+
+}
+
+function IsCurrentAction(action: string){
+
+}
+
+function IsItemInRange(itemId: number, target: string){
+
+}
+
+function IsUsableAction(action: string): boolean{
+    return false;
+}
+
+function IsUsableItem(itemId: number){
+
+}
+
+function GetNumGroupMembers(filter: number) {
+    return 0;
+}
+
+function UnitPower(unit: string) { return 0;}
+
+function IsInGroup(filter: number){ return false}
+function IsInInstance(){return false}
+function IsInRaid(filter: number){return false}
+function UnitLevel(target:string){ return 0;}
+var BigWigsLoader;
+
 var Bartender4;
 
 // WoW global variables
+var MAX_COMBO_POINTS = 5;
+var UNKNOWN = -1;
 var DEFAULT_CHAT_FRAME:UIFrame = undefined;
+var SCHOOL_MASK_ARCANE = 1;
+var SCHOOL_MASK_FIRE = 2;
+var SCHOOL_MASK_FROST = 4;
+var SCHOOL_MASK_HOLY = 8;
+var SCHOOL_MASK_NATURE = 16;
+var SCHOOL_MASK_SHADOW = 32;
 
+var LE_PARTY_CATEGORY_INSTANCE = 1;
+var LE_PARTY_CATEGORY_HOME = 2;
 var _G: any;
+var DBM;

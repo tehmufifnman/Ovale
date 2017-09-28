@@ -74,7 +74,7 @@ export class Profiler {
     }
 }
 
-class OvaleProfiler extends OvaleProfilerBase {
+class OvaleProfilerClass extends OvaleProfilerBase {
     self_profilingOutput = undefined;
     profiles: LuaObj<Profiler> = {};
 
@@ -97,7 +97,7 @@ class OvaleProfiler extends OvaleProfilerBase {
         }
         options.defaultDB.global = options.defaultDB.global || {}
         options.defaultDB.global.profiler = {}
-        options.RegisterOptions(OvaleProfiler);
+        options.RegisterOptions(OvaleProfilerClass);
     }
 
     options = {
@@ -234,4 +234,4 @@ class OvaleProfiler extends OvaleProfilerBase {
     }
 }
 
-export const profiler = new OvaleProfiler();
+export const OvaleProfiler = new OvaleProfilerClass();

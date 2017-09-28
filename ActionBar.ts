@@ -2,8 +2,8 @@ import __addon from "addon";
 let [OVALE, Ovale] = __addon;
 let OvaleActionBarBase = Ovale.NewModule("OvaleActionBar", "AceEvent-3.0", "AceTimer-3.0");
 import { L } from "./Localization";
-import { debug, Debug } from "./Debug";
-import { profiler, Profiler } from "./Profiler";
+import { OvaleDebug, Debug } from "./Debug";
+import { OvaleProfiler, Profiler } from "./Profiler";
 import { spellBook } from "./SpellBook";
 let gsub = string.gsub;
 let strlen = string.len;
@@ -21,7 +21,7 @@ let API_GetBonusBarIndex = GetBonusBarIndex;
 let API_GetMacroItem = GetMacroItem;
 let API_GetMacroSpell = GetMacroSpell;
 
-class OvaleActionBar extends OvaleActionBarBase {
+class OvaleActionBarClass extends OvaleActionBarBase {
     debug: Debug;
     profiler: Profiler;
     
@@ -45,10 +45,10 @@ class OvaleActionBar extends OvaleActionBarBase {
     
     constructor(){
         super();
-        this.debug = debug.RegisterDebugging(this);
-        this.profiler = profiler.RegisterProfiling(this);        
+        this.debug = OvaleDebug.RegisterDebugging(this);
+        this.profiler = OvaleProfiler.RegisterProfiling(this);        
         for (const [k, v] of pairs(this.debugOptions)) {
-            debug.options.args[k] = v;
+            OvaleDebug.options.args[k] = v;
         }
     }
     action = {}
@@ -268,3 +268,5 @@ class OvaleActionBar extends OvaleActionBarBase {
         return tconcat(this.output, "\n");
     }
 }
+
+export const OvaleActionBar = new OvaleActionBarClass();

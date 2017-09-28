@@ -2,8 +2,8 @@ import __addon from "addon";
 let [OVALE, Addon] = __addon;
 const OvaleBase = Addon.NewModule("Ovale", "AceEvent-3.0");
 import AceGUI from "AceGUI-3.0";
-import { ovaleFuture } from "./Future";
-import { debug } from "./Debug";
+import { OvaleFuture } from "./Future";
+import { OvaleDebug } from "./Debug";
 let L = undefined;
 let _assert = assert;
 let format = string.format;
@@ -68,14 +68,14 @@ export class Printer {
     Error(...__args) {
         let s = MakeString(...__args);
         this.Print("Fatal error: %s", s);
-        debug.bug = true;
+        OvaleDebug.bug = true;
     }
 }
 
-class Ovale extends OvaleBase {
+class OvaleClass extends OvaleBase {
     L = undefined;
     playerClass = _select(2, API_UnitClass("player"));
-    playerGUID = undefined;
+    playerGUID: string = undefined;
     db = undefined;
     frame = undefined;
     checkBox = {
@@ -89,6 +89,8 @@ class Ovale extends OvaleBase {
     refreshNeeded = {
     }
     MSG_PREFIX = OVALE;
+
+    printer = new Printer(this);
 
     OnCheckBoxValueChanged(widget) {
         let name = widget.GetUserData("name");
@@ -178,7 +180,7 @@ class Ovale extends OvaleBase {
             if (profile.apparence.avecCible && !API_UnitExists("target")) {
                 visible = false;
             }
-            if (profile.apparence.enCombat && !ovaleFuture.inCombat) {
+            if (profile.apparence.enCombat && !OvaleFuture.inCombat) {
                 visible = false;
             }
             if (profile.apparence.targetHostileOnly && (API_UnitIsDead("target") || !API_UnitCanAttack("player", "target"))) {
@@ -328,7 +330,7 @@ class Ovale extends OvaleBase {
     PrintOneTimeMessages() {
         for (const [s] of _pairs(self_oneTimeMessage)) {
             if (self_oneTimeMessage[s] != "printed") {
-                this.Print(s);
+                this.printer.Print(s);
                 self_oneTimeMessage[s] = "printed";
             }
         }
@@ -342,4 +344,6 @@ class Ovale extends OvaleBase {
         return [func, arg];
     }
 }
+
+export const Ovale = new OvaleClass();
 

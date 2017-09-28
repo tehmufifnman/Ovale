@@ -1,23 +1,23 @@
 import __addon from "addon";
 let [OVALE, Ovale] = __addon;
-let OvaleBestAction = Ovale.NewModule("OvaleBestAction", "AceEvent-3.0");
-Ovale.OvaleBestAction = OvaleBestAction;
-import { OvaleDebug } from "./OvaleDebug";
-import { OvalePool } from "./OvalePool";
-import { OvaleProfiler } from "./OvaleProfiler";
-import { OvaleTimeSpan } from "./OvaleTimeSpan";
-let OvaleAST = undefined;
-let OvaleActionBar = undefined;
-let OvaleCompile = undefined;
-let OvaleCondition = undefined;
-let OvaleCooldown = undefined;
-let OvaleData = undefined;
-let OvaleEquipment = undefined;
-let OvaleGUID = undefined;
-let OvaleFuture = undefined;
-let OvalePower = undefined;
-let OvaleSpellBook = undefined;
-let OvaleStance = undefined;
+let OvaleBestActionBase = Ovale.NewModule("OvaleBestAction", "AceEvent-3.0");
+import { OvaleDebug } from "./Debug";
+import { OvalePool, OvalePoolNoClean } from "./Pool";
+import { OvaleProfiler } from "./Profiler";
+import { OvaleTimeSpan } from "./TimeSpan";
+import { OvaleAST } from "./AST";
+import { OvaleActionBar } from "./ActionBar";
+import { OvaleCompile } from "./Compile";
+import { OvaleCondition } from "./Condition";
+import { OvaleCooldown } from "./Cooldown";
+import { OvaleData } from "./Data";
+import { OvaleEquipment } from "./Equipment";
+import { OvaleGUID } from "./Guid";
+import { OvaleFuture } from "./Future";
+import { OvalePower } from "./Power";
+import { OvaleSpellBook } from "./SpellBook";
+import { OvaleStance } from "./Stance";
+import { Printer } from "./Ovale";
 let abs = math.abs;
 let _assert = assert;
 let floor = math.floor;
@@ -51,8 +51,6 @@ let API_IsCurrentAction = IsCurrentAction;
 let API_IsItemInRange = IsItemInRange;
 let API_IsUsableAction = IsUsableAction;
 let API_IsUsableItem = IsUsableItem;
-OvaleDebug.RegisterDebugging(OvaleBestAction);
-OvaleProfiler.RegisterProfiling(OvaleBestAction);
 let COMPUTE_VISITOR = {
     ["action"]: "ComputeAction",
     ["arithmetic"]: "ComputeArithmetic",
@@ -70,10 +68,13 @@ let COMPUTE_VISITOR = {
 let self_serial = 0;
 let self_timeSpan = {
 }
-let self_valuePool = OvalePool("OvaleBestAction_valuePool");
+let self_valuePool = new OvalePoolNoClean("OvaleBestAction_valuePool");
 let self_value = {
 }
-const SetValue = function(node, value, origin, rate) {
+
+export let OvaleBestAction:OvaleBestActionClass = undefined;
+
+const SetValue = function(node, value?, origin?, rate?) {
     let result = self_value[node];
     if (!result) {
         result = self_valuePool.Get();
@@ -85,8 +86,8 @@ const SetValue = function(node, value, origin, rate) {
     result.rate = rate || 0;
     return result;
 }
-const AsValue = function(atTime, timeSpan, node) {
-    let [value, origin, rate];
+const AsValue = function(atTime, timeSpan, node?) {
+    let value, origin, rate;
     if (node && node.type == "value") {
         [value, origin, rate] = [node.value, node.origin, node.rate];
     } else if (timeSpan && HasTime(timeSpan, atTime)) {
@@ -96,21 +97,21 @@ const AsValue = function(atTime, timeSpan, node) {
     }
     return [value, origin, rate, timeSpan];
 }
-const GetTimeSpan = function(node, defaultTimeSpan) {
+const GetTimeSpan = function(node, defaultTimeSpan?) {
     let timeSpan = self_timeSpan[node];
     if (timeSpan) {
         if (defaultTimeSpan) {
             CopyTimeSpan(timeSpan, defaultTimeSpan);
         }
     } else {
-        self_timeSpan[node] = OvaleTimeSpan.New(defaultTimeSpan);
+        self_timeSpan[node] = timeSpan.New(defaultTimeSpan);
         timeSpan = self_timeSpan[node];
     }
     return timeSpan;
 }
 const GetActionItemInfo = function(element, state, atTime, target) {
-    OvaleBestAction.StartProfiling("OvaleBestAction_GetActionItemInfo");
-    let [actionTexture, actionInRange, actionCooldownStart, actionCooldownDuration, actionUsable, actionShortcut, actionIsCurrent, actionEnable, actionType, actionId];
+    OvaleBestAction.profiler.StartProfiling("OvaleBestAction_GetActionItemInfo");
+    let actionTexture, actionInRange, actionCooldownStart, actionCooldownDuration, actionUsable, actionShortcut, actionIsCurrent, actionEnable, actionType, actionId;
     let itemId = element.positionalParams[1];
     if (_type(itemId) != "number") {
         itemId = OvaleEquipment.GetEquippedItem(itemId);
@@ -135,12 +136,12 @@ const GetActionItemInfo = function(element, state, atTime, target) {
         actionType = "item";
         actionId = itemId;
     }
-    OvaleBestAction.StopProfiling("OvaleBestAction_GetActionItemInfo");
+    OvaleBestAction.profiler.StopProfiling("OvaleBestAction_GetActionItemInfo");
     return [actionTexture, actionInRange, actionCooldownStart, actionCooldownDuration, actionUsable, actionShortcut, actionIsCurrent, actionEnable, actionType, actionId, target];
 }
 const GetActionMacroInfo = function(element, state, atTime, target) {
-    OvaleBestAction.StartProfiling("OvaleBestAction_GetActionMacroInfo");
-    let [actionTexture, actionInRange, actionCooldownStart, actionCooldownDuration, actionUsable, actionShortcut, actionIsCurrent, actionEnable, actionType, actionId];
+    OvaleBestAction.profiler.StartProfiling("OvaleBestAction_GetActionMacroInfo");
+    let actionTexture, actionInRange, actionCooldownStart, actionCooldownDuration, actionUsable, actionShortcut, actionIsCurrent, actionEnable, actionType, actionId;
     let macro = element.positionalParams[1];
     let action = OvaleActionBar.GetForMacro(macro);
     if (!action) {
@@ -158,12 +159,12 @@ const GetActionMacroInfo = function(element, state, atTime, target) {
         actionType = "macro";
         actionId = macro;
     }
-    OvaleBestAction.StopProfiling("OvaleBestAction_GetActionMacroInfo");
+    OvaleBestAction.profiler.StopProfiling("OvaleBestAction_GetActionMacroInfo");
     return [actionTexture, actionInRange, actionCooldownStart, actionCooldownDuration, actionUsable, actionShortcut, actionIsCurrent, actionEnable, actionType, actionId, target];
 }
 const GetActionSpellInfo = function(element, state, atTime, target) {
-    OvaleBestAction.StartProfiling("OvaleBestAction_GetActionSpellInfo");
-    let [actionTexture, actionInRange, actionCooldownStart, actionCooldownDuration, actionUsable, actionShortcut, actionIsCurrent, actionEnable, actionType, actionId, actionResourceExtend, actionCharges];
+    OvaleBestAction.profiler.StartProfiling("OvaleBestAction_GetActionSpellInfo");
+    let actionTexture, actionInRange, actionCooldownStart, actionCooldownDuration, actionUsable, actionShortcut, actionIsCurrent, actionEnable, actionType, actionId, actionResourceExtend, actionCharges;
     let targetGUID = OvaleGUID.UnitGUID(target);
     let spellId = element.positionalParams[1];
     let si = OvaleData.spellInfo[spellId];
@@ -226,11 +227,11 @@ const GetActionSpellInfo = function(element, state, atTime, target) {
             }
         }
     }
-    OvaleBestAction.StopProfiling("OvaleBestAction_GetActionSpellInfo");
+    OvaleBestAction.profiler.StopProfiling("OvaleBestAction_GetActionSpellInfo");
     return [actionTexture, actionInRange, actionCooldownStart, actionCooldownDuration, actionUsable, actionShortcut, actionIsCurrent, actionEnable, actionType, actionId, target, actionResourceExtend, actionCharges];
 }
 const GetActionTextureInfo = function(element, state, atTime, target) {
-    OvaleBestAction.StartProfiling("OvaleBestAction_GetActionTextureInfo");
+    OvaleBestAction.profiler.StartProfiling("OvaleBestAction_GetActionTextureInfo");
     let actionTexture;
     {
         let texture = element.positionalParams[1];
@@ -250,23 +251,14 @@ const GetActionTextureInfo = function(element, state, atTime, target) {
     let actionIsCurrent = undefined;
     let actionType = "texture";
     let actionId = actionTexture;
-    OvaleBestAction.StopProfiling("OvaleBestAction_GetActionTextureInfo");
+    OvaleBestAction.profiler.StopProfiling("OvaleBestAction_GetActionTextureInfo");
     return [actionTexture, actionInRange, actionCooldownStart, actionCooldownDuration, actionUsable, actionShortcut, actionIsCurrent, actionEnable, actionType, actionId, target];
 }
-class OvaleBestAction {
+class OvaleBestActionClass extends OvaleBestActionBase {
+    profiler = OvaleProfiler.RegisterProfiling(this);
+    printer = new Printer(this);
+
     OnInitialize() {
-        OvaleAST = Ovale.OvaleAST;
-        OvaleActionBar = Ovale.OvaleActionBar;
-        OvaleCompile = Ovale.OvaleCompile;
-        OvaleCondition = Ovale.OvaleCondition;
-        OvaleCooldown = Ovale.OvaleCooldown;
-        OvaleData = Ovale.OvaleData;
-        OvaleGUID = Ovale.OvaleGUID;
-        OvaleEquipment = Ovale.OvaleEquipment;
-        OvaleFuture = Ovale.OvaleFuture;
-        OvalePower = Ovale.OvalePower;
-        OvaleSpellBook = Ovale.OvaleSpellBook;
-        OvaleStance = Ovale.OvaleStance;
     }
     OnEnable() {
         this.RegisterMessage("Ovale_ScriptChanged");
@@ -310,7 +302,7 @@ class OvaleBestAction {
         return undefined;
     }
     GetAction(node, state, atTime) {
-        this.StartProfiling("OvaleBestAction_GetAction");
+        this.profiler.StartProfiling("OvaleBestAction_GetAction");
         let groupNode = node.child[1];
         let [timeSpan, element] = this.Compute(groupNode, state, atTime);
         if (element && element.type == "state") {
@@ -318,12 +310,12 @@ class OvaleBestAction {
             let isFuture = !HasTime(timeSpan, atTime);
             state.PutState(variable, value, isFuture);
         }
-        this.StopProfiling("OvaleBestAction_GetAction");
+        this.profiler.StopProfiling("OvaleBestAction_GetAction");
         return [timeSpan, element];
     }
     PostOrderCompute(element, state, atTime) {
-        this.StartProfiling("OvaleBestAction_Compute");
-        let [timeSpan, result];
+        this.profiler.StartProfiling("OvaleBestAction_Compute");
+        let timeSpan, result;
         let postOrder = element.postOrder;
         if (postOrder && !(element.serial && element.serial >= self_serial)) {
             let index = 1;
@@ -354,19 +346,19 @@ class OvaleBestAction {
                             index = index + 2;
                         }
                         if (index > N) {
-                            this.Error("Ran off end of postOrder node list for node %d.", element.nodeId);
+                            this.printer.Error("Ran off end of postOrder node list for node %d.", element.nodeId);
                         }
                     }
                 }
             }
         }
         [timeSpan, result] = this.RecursiveCompute(element, state, atTime);
-        this.StartProfiling("OvaleBestAction_Compute");
+        this.profiler.StartProfiling("OvaleBestAction_Compute");
         return [timeSpan, result];
     }
     RecursiveCompute(element, state, atTime) {
-        this.StartProfiling("OvaleBestAction_Compute");
-        let [timeSpan, result];
+        this.profiler.StartProfiling("OvaleBestAction_Compute");
+        let timeSpan, result;
         if (element) {
             if (element.serial && element.serial >= self_serial) {
                 timeSpan = element.timeSpan;
@@ -395,7 +387,7 @@ class OvaleBestAction {
                 }
             }
         }
-        this.StopProfiling("OvaleBestAction_Compute");
+        this.profiler.StopProfiling("OvaleBestAction_Compute");
         return [timeSpan, result];
     }
     ComputeBool(element, state, atTime) {
@@ -407,7 +399,7 @@ class OvaleBestAction {
         }
     }
     ComputeAction(element, state, atTime) {
-        this.StartProfiling("OvaleBestAction_ComputeAction");
+        this.profiler.StartProfiling("OvaleBestAction_ComputeAction");
         let nodeId = element.nodeId;
         let timeSpan = GetTimeSpan(element);
         let result;
@@ -512,11 +504,11 @@ class OvaleBestAction {
             CopyTimeSpan(timeSpan, start, INFINITY);
             result = element;
         }
-        this.StopProfiling("OvaleBestAction_ComputeAction");
+        this.profiler.StopProfiling("OvaleBestAction_ComputeAction");
         return [timeSpan, result];
     }
     ComputeArithmetic(element, state, atTime) {
-        this.StartProfiling("OvaleBestAction_Compute");
+        this.profiler.StartProfiling("OvaleBestAction_Compute");
         let timeSpan = GetTimeSpan(element);
         let result;
         let [a, b, c, timeSpanA] = AsValue(atTime, this.Compute(element.child[1], state, atTime));
@@ -529,7 +521,7 @@ class OvaleBestAction {
             let operator = element.operator;
             let t = atTime;
             state.Log("[%d]    %s+(t-%s)*%s %s %s+(t-%s)*%s", element.nodeId, a, b, c, operator, x, y, z);
-            let [l, m, n];
+            let l, m, n;
             let A = a + (t - b) * c;
             let B = x + (t - y) * z;
             if (operator == "+") {
@@ -568,7 +560,7 @@ class OvaleBestAction {
                     m = t;
                     n = 0;
                 } else {
-                    this.Error("[%d]    Parameters of modulus operator '%' must be constants.", element.nodeId);
+                    this.printer.Error("[%d]    Parameters of modulus operator '%' must be constants.", element.nodeId);
                     l = 0;
                     m = 0;
                     n = 0;
@@ -577,11 +569,11 @@ class OvaleBestAction {
             state.Log("[%d]    arithmetic '%s' returns %s+(t-%s)*%s", element.nodeId, operator, l, m, n);
             result = SetValue(element, l, m, n);
         }
-        this.StopProfiling("OvaleBestAction_Compute");
+        this.profiler.StopProfiling("OvaleBestAction_Compute");
         return [timeSpan, result];
     }
     ComputeCompare(element, state, atTime) {
-        this.StartProfiling("OvaleBestAction_Compute");
+        this.profiler.StartProfiling("OvaleBestAction_Compute");
         let timeSpan = GetTimeSpan(element);
         let [a, b, c, timeSpanA] = AsValue(atTime, this.Compute(element.child[1], state, atTime));
         let [x, y, z, timeSpanB] = AsValue(atTime, this.Compute(element.child[2], state, atTime));
@@ -622,11 +614,11 @@ class OvaleBestAction {
             }
             state.Log("[%d]    compare '%s' returns %s", element.nodeId, operator, timeSpan);
         }
-        this.StopProfiling("OvaleBestAction_Compute");
+        this.profiler.StopProfiling("OvaleBestAction_Compute");
         return timeSpan;
     }
     ComputeCustomFunction(element, state, atTime) {
-        this.StartProfiling("OvaleBestAction_Compute");
+        this.profiler.StartProfiling("OvaleBestAction_Compute");
         let timeSpan = GetTimeSpan(element);
         let result;
         let node = OvaleCompile.GetFunctionNode(element.name);
@@ -637,11 +629,11 @@ class OvaleBestAction {
         } else {
             _wipe(timeSpan);
         }
-        this.StopProfiling("OvaleBestAction_Compute");
+        this.profiler.StopProfiling("OvaleBestAction_Compute");
         return [timeSpan, result];
     }
     ComputeFunction(element, state, atTime) {
-        this.StartProfiling("OvaleBestAction_ComputeFunction");
+        this.profiler.StartProfiling("OvaleBestAction_ComputeFunction");
         let timeSpan = GetTimeSpan(element);
         let result;
         let [start, ending, value, origin, rate] = OvaleCondition.EvaluateCondition(element.func, element.positionalParams, element.namedParams, state, atTime);
@@ -654,15 +646,15 @@ class OvaleBestAction {
             result = SetValue(element, value, origin, rate);
         }
         state.Log("[%d]    condition '%s' returns %s, %s, %s, %s, %s", element.nodeId, element.name, start, ending, value, origin, rate);
-        this.StopProfiling("OvaleBestAction_ComputeFunction");
+        this.profiler.StopProfiling("OvaleBestAction_ComputeFunction");
         return [timeSpan, result];
     }
     ComputeGroup(element, state, atTime) {
-        this.StartProfiling("OvaleBestAction_Compute");
-        let [bestTimeSpan, bestElement, bestCastTime];
+        this.profiler.StartProfiling("OvaleBestAction_Compute");
+        let bestTimeSpan, bestElement, bestCastTime;
         let best = OvaleTimeSpan.New();
         let current = OvaleTimeSpan.New();
-        for (const [_, node] of _ipairs(element.child)) {
+        for (const [_, node] of _ipairs<{nodeId:number}>(element.child)) {
             let [currentTimeSpan, currentElement] = this.Compute(node, state, atTime);
             IntersectInterval(currentTimeSpan, atTime, INFINITY, current);
             if (Measure(current) > 0) {
@@ -709,11 +701,11 @@ class OvaleBestAction {
         } else {
             state.Log("[%d]    group no best action returns %s", element.nodeId, timeSpan);
         }
-        this.StopProfiling("OvaleBestAction_Compute");
+        this.profiler.StopProfiling("OvaleBestAction_Compute");
         return [timeSpan, bestElement];
     }
     ComputeIf(element, state, atTime) {
-        this.StartProfiling("OvaleBestAction_Compute");
+        this.profiler.StartProfiling("OvaleBestAction_Compute");
         let timeSpan = GetTimeSpan(element);
         let result;
         let timeSpanA = this.ComputeBool(element.child[1], state, atTime);
@@ -733,11 +725,11 @@ class OvaleBestAction {
         if (element.type == "unless") {
             ReleaseTimeSpan(conditionTimeSpan);
         }
-        this.StopProfiling("OvaleBestAction_Compute");
+        this.profiler.StopProfiling("OvaleBestAction_Compute");
         return [timeSpan, result];
     }
     ComputeLogical(element, state, atTime) {
-        this.StartProfiling("OvaleBestAction_Compute");
+        this.profiler.StartProfiling("OvaleBestAction_Compute");
         let timeSpan = GetTimeSpan(element);
         let timeSpanA = this.ComputeBool(element.child[1], state, atTime);
         if (element.operator == "and") {
@@ -769,11 +761,11 @@ class OvaleBestAction {
             _wipe(timeSpan);
         }
         state.Log("[%d]    logical '%s' returns %s", element.nodeId, element.operator, timeSpan);
-        this.StopProfiling("OvaleBestAction_Compute");
+        this.profiler.StopProfiling("OvaleBestAction_Compute");
         return timeSpan;
     }
     ComputeLua(element, state, atTime) {
-        this.StartProfiling("OvaleBestAction_ComputeLua");
+        this.profiler.StartProfiling("OvaleBestAction_ComputeLua");
         let value = _loadstring(element.lua)();
         state.Log("[%d]    lua returns %s", element.nodeId, value);
         let result;
@@ -781,24 +773,27 @@ class OvaleBestAction {
             result = SetValue(element, value);
         }
         let timeSpan = GetTimeSpan(element, UNIVERSE);
-        this.StopProfiling("OvaleBestAction_ComputeLua");
+        this.profiler.StopProfiling("OvaleBestAction_ComputeLua");
         return [timeSpan, result];
     }
     ComputeState(element, state, atTime) {
-        this.StartProfiling("OvaleBestAction_Compute");
+        this.profiler.StartProfiling("OvaleBestAction_Compute");
         let result = element;
         _assert(element.func == "setstate");
         state.Log("[%d]    %s: %s = %s", element.nodeId, element.name, element.positionalParams[1], element.positionalParams[2]);
         let timeSpan = GetTimeSpan(element, UNIVERSE);
-        this.StopProfiling("OvaleBestAction_Compute");
+        this.profiler.StopProfiling("OvaleBestAction_Compute");
         return [timeSpan, result];
     }
     ComputeValue(element, state, atTime) {
-        this.StartProfiling("OvaleBestAction_Compute");
+        this.profiler.StartProfiling("OvaleBestAction_Compute");
         state.Log("[%d]    value is %s", element.nodeId, element.value);
         let timeSpan = GetTimeSpan(element, UNIVERSE);
-        this.StopProfiling("OvaleBestAction_Compute");
+        this.profiler.StopProfiling("OvaleBestAction_Compute");
         return [timeSpan, element];
     }
+
+    Compute = this.PostOrderCompute;
 }
-OvaleBestAction.Compute = OvaleBestAction.PostOrderCompute;
+
+OvaleBestAction = new OvaleBestActionClass();

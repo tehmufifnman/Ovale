@@ -1,8 +1,8 @@
 import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvaleGUID = Ovale.NewModule("OvaleGUID", "AceEvent-3.0");
-Ovale.OvaleGUID = OvaleGUID;
-import { OvaleDebug } from "./OvaleDebug";
+let [OVALE, Addon ] = __addon;
+let OvaleGUIDBase = Addon.NewModule("OvaleGUID", "AceEvent-3.0");
+import { OvaleDebug } from "./Debug";
+import { Ovale } from "./Ovale";
 let floor = math.floor;
 let _ipairs = ipairs;
 let _setmetatable = setmetatable;
@@ -13,7 +13,6 @@ let _unpack = unpack;
 let API_GetTime = GetTime;
 let API_UnitGUID = UnitGUID;
 let API_UnitName = UnitName;
-OvaleDebug.RegisterDebugging(OvaleGUID);
 let PET_UNIT = {
 }
 {
@@ -33,7 +32,7 @@ let PET_UNIT = {
         }
     });
 }
-let UNIT_AURA_UNITS = {
+let UNIT_AURA_UNITS: LuaArray<string> = {
 }
 {
     tinsert(UNIT_AURA_UNITS, "player");
@@ -73,21 +72,6 @@ let UNIT_AURA_UNIT = {
         }
     });
 }
-OvaleGUID.unitGUID = {
-}
-OvaleGUID.guidUnit = {
-}
-OvaleGUID.unitName = {
-}
-OvaleGUID.nameUnit = {
-}
-OvaleGUID.guidName = {
-}
-OvaleGUID.nameGUID = {
-}
-OvaleGUID.petGUID = {
-}
-OvaleGUID.UNIT_AURA_UNIT = UNIT_AURA_UNIT;
 let BinaryInsert;
 let BinaryRemove;
 let BinarySearch;
@@ -140,12 +124,23 @@ let BinarySearch;
 const CompareUnit = function(a, b) {
     return UNIT_AURA_UNIT[a] < UNIT_AURA_UNIT[b];
 }
-class OvaleGUID {
+class OvaleGUIDClass extends OvaleGUIDBase {
+
+    unitGUID = {}
+    guidUnit = {}
+    unitName = {}
+    nameUnit = {}
+    guidName = {}
+    nameGUID = {}
+    petGUID = {}
+    UNIT_AURA_UNIT = UNIT_AURA_UNIT;
+    debug = OvaleDebug.RegisterDebugging(this);
+
     OnEnable() {
         this.RegisterEvent("ARENA_OPPONENT_UPDATE");
         this.RegisterEvent("GROUP_ROSTER_UPDATE");
         this.RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT");
-        this.RegisterEvent("PLAYER_ENTERING_WORLD", "UpdateAllUnits");
+        this.RegisterEvent("PLAYER_ENTERING_WORLD", this.UpdateAllUnits);
         this.RegisterEvent("PLAYER_FOCUS_CHANGED");
         this.RegisterEvent("PLAYER_TARGET_CHANGED");
         this.RegisterEvent("UNIT_NAME_UPDATE");
@@ -165,35 +160,35 @@ class OvaleGUID {
     }
     ARENA_OPPONENT_UPDATE(event, unitId, eventType) {
         if (eventType != "cleared" || this.unitGUID[unitId]) {
-            this.Debug(event, unitId, eventType);
+            this.debug.Debug(event, unitId, eventType);
             this.UpdateUnitWithTarget(unitId);
         }
     }
     GROUP_ROSTER_UPDATE(event) {
-        this.Debug(event);
+        this.debug.Debug(event);
         this.UpdateAllUnits();
         this.SendMessage("Ovale_GroupChanged");
     }
     INSTANCE_ENCOUNTER_ENGAGE_UNIT(event) {
-        this.Debug(event);
+        this.debug.Debug(event);
         for (let i = 1; i <= 4; i += 1) {
             this.UpdateUnitWithTarget("boss" + i);
         }
     }
     PLAYER_FOCUS_CHANGED(event) {
-        this.Debug(event);
+        this.debug.Debug(event);
         this.UpdateUnitWithTarget("focus");
     }
     PLAYER_TARGET_CHANGED(event, cause) {
-        this.Debug(event, cause);
+        this.debug.Debug(event, cause);
         this.UpdateUnit("target");
     }
     UNIT_NAME_UPDATE(event, unitId) {
-        this.Debug(event, unitId);
+        this.debug.Debug(event, unitId);
         this.UpdateUnit(unitId);
     }
     UNIT_PET(event, unitId) {
-        this.Debug(event, unitId);
+        this.debug.Debug(event, unitId);
         let pet = PET_UNIT[unitId];
         this.UpdateUnitWithTarget(pet);
         if (unitId == "player") {
@@ -207,7 +202,7 @@ class OvaleGUID {
     }
     UNIT_TARGET(event, unitId) {
         if (unitId != "player") {
-            this.Debug(event, unitId);
+            this.debug.Debug(event, unitId);
             let target = unitId + "target";
             this.UpdateUnit(target);
         }
@@ -251,7 +246,7 @@ class OvaleGUID {
                 BinaryInsert(list, unitId, true, CompareUnit);
                 this.guidUnit[guid] = list;
             }
-            this.Debug("'%s' is '%s'.", unitId, guid);
+            this.debug.Debug("'%s' is '%s'.", unitId, guid);
             Ovale.refreshNeeded[guid] = true;
         }
         if (name && name != previousName) {
@@ -262,7 +257,7 @@ class OvaleGUID {
                 BinaryInsert(list, unitId, true, CompareUnit);
                 this.nameUnit[name] = list;
             }
-            this.Debug("'%s' is '%s'.", unitId, name);
+            this.debug.Debug("'%s' is '%s'.", unitId, name);
         }
         if (guid && name) {
             let previousNameFromGUID = this.guidName[guid];
@@ -273,9 +268,9 @@ class OvaleGUID {
                 BinaryInsert(list, guid, true);
                 this.nameGUID[name] = list;
                 if (guid == previousGUID) {
-                    this.Debug("'%s' changed names to '%s'.", guid, name);
+                    this.debug.Debug("'%s' changed names to '%s'.", guid, name);
                 } else {
-                    this.Debug("'%s' is '%s'.", guid, name);
+                    this.debug.Debug("'%s' is '%s'.", guid, name);
                 }
             }
         }
@@ -328,3 +323,5 @@ class OvaleGUID {
         return undefined;
     }
 }
+
+export const OvaleGUID = new OvaleGUIDClass();

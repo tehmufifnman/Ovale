@@ -2,8 +2,8 @@ import __addon from "addon";
 let [OVALE, Ovale] = __addon;
 let OvaleASTBase = Ovale.NewModule("OvaleAST");
 import { L } from "./Localization";
-import { OvalePool } from "./Pool";
-import { profiler, Profiler } from "./Profiler";
+import { OvalePool, OvalePoolNoClean } from "./Pool";
+import { OvaleProfiler, Profiler } from "./Profiler";
 import { Debug } from "./Debug";
 import { Printer } from "./Ovale";
 let OvaleCondition = undefined;
@@ -191,59 +191,87 @@ let BINARY_OPERATOR = {
         2: 100
     }
 }
-let INDENT = {
-}
-{
-    INDENT[0] = "";
-    let metatable = {
-        __index: function (tbl, key) {
-            key = _tonumber(key);
-            if (key > 0) {
-                let s = tbl[key - 1] + "\t";
-                _rawset(tbl, key, s);
-                return s;
-            }
-            return INDENT[0];
-        }
+
+let indent:LuaArray<string> = {};
+indent[0] = "";
+function INDENT(key: number) {
+    const ret = indent[key];
+    if (ret == undefined) {
+        return indent[key] = INDENT(key - 1) + " ";
     }
-    _setmetatable(INDENT, metatable);
+    return ret;
 }
+
+interface Annotation {
+    controlList: LuaArray<Node>;
+    parametersList: LuaArray<Node>;
+    nodeList: LuaArray<Node>;
+}
+
+type NodeType = "function" | "string" | "variable" | "value" | "number" | "spell_aura_list" | "item_info"
+    | "item_require" | "spell_info" | "spell_require"
+    | "add_function" | "icon" | "script";
 
 interface Node {
     child: LuaArray<Node>;
-    type;
+    type: NodeType;
+    name: string;
+    itemId: number;
+    spellId: number;
+    value: any;
+    key: string;
+    previousType: NodeType;
+    rawPositionalParams: LuaArray<any>;
+    origin: number;
+    rate: number;
+    positionalParams:any;
+    rawNamedParams: LuaObj<any>;
+    namedParams:any;
+    paramsAsString: string;
+    postOrder:LuaArray<Node>;
+    functionHash: string;
+    asString: string;
+    nodeId: number;
 }
 
-class OvaleAST extends OvaleASTBase {
+
+class SelfPool extends OvalePool<Node> {
+    constructor(private ovaleAst: OvaleASTClass) {
+        super("OvaleAST_pool");
+    }
+
+    Clean(node: Node): void {
+        if (node.child) {
+            this.ovaleAst.self_childrenPool.Release(node.child);
+            node.child = undefined;
+        }
+        if (node.postOrder) {
+            this.ovaleAst.self_postOrderPool.Release(node.postOrder);
+            node.postOrder = undefined;
+        }
+    }
+}
+  
+class OvaleASTClass extends OvaleASTBase {
     self_indent:number = 0;
-    self_outputPool = new OvalePool("OvaleAST_outputPool");
-    self_controlPool = new OvalePool("OvaleAST_controlPool");
-    self_parametersPool = new OvalePool("OvaleAST_parametersPool");
-    self_childrenPool = new OvalePool("OvaleAST_childrenPool");
-    self_postOrderPool = new OvalePool("OvaleAST_postOrderPool");
-    self_pool = new OvalePool("OvaleAST_pool");
+    self_outputPool = new OvalePoolNoClean<LuaArray<string>>("OvaleAST_outputPool");
+    self_controlPool = new OvalePoolNoClean<Node>("OvaleAST_controlPool");
+    self_parametersPool = new OvalePoolNoClean<Node>("OvaleAST_parametersPool");
+    self_childrenPool = new OvalePoolNoClean<LuaArray<Node>>("OvaleAST_childrenPool");
+    self_postOrderPool = new OvalePoolNoClean<LuaArray<Node>>("OvaleAST_postOrderPool");
+    postOrderVisitedPool = new OvalePoolNoClean<LuaObj<boolean>>("OvaleAST_postOrderVisitedPool");
+    self_pool = new SelfPool(this);
 
     profiler: Profiler;
     printer: Printer;
-
+  
     constructor() {
         super();
-        this.profiler = profiler.RegisterProfiling(this);
+        this.profiler = OvaleProfiler.RegisterProfiling(this);
         this.printer = new Printer(this);
-
-        this.self_pool.Clean = (self, node) => {
-            if (node.child) {
-                this.self_childrenPool.Release(node.child);
-                node.child = undefined;
-            }
-            if (node.postOrder) {
-                this.self_postOrderPool.Release(node.postOrder);
-                node.postOrder = undefined;
-            }
-        }
     }
     
-    print_r(node, indent, done, output) {
+    print_r(node, indent?, done?, output?) {
         done = done || {}
         output = output || {}
         indent = indent || '';
@@ -284,17 +312,17 @@ class OvaleAST extends OvaleASTBase {
         return node;
     }
 
-    PostOrderTraversal(node: Node, array, visited) {
+    PostOrderTraversal(node: Node, array: LuaArray<Node>, visited: LuaObj<boolean>) {
         if (node.child) {
             for (const [_, childNode] of _ipairs(node.child)) {
-                if (!visited[childNode]) {
+                if (!visited[childNode.nodeId]) {
                     this.PostOrderTraversal(childNode, array, visited);
                     array[lualength(array) + 1] = node;
                 }
             }
         }
         array[lualength(array) + 1] = node;
-        visited[node] = true;
+        visited[node.nodeId] = true;
     }
     TokenizeComment(token) {
         return _yield("comment", token);
@@ -397,10 +425,10 @@ class OvaleAST extends OvaleASTBase {
         }
         {
             if (exclude.space) {
-                exclude[this.TokenizeWhitespace] = true;
+                exclude[this.TokenizeWhitespace.toString()] = true;
             }
             if (exclude.comments) {
-                exclude[this.TokenizeComment] = true;
+                exclude[this.TokenizeComment.toString()] = true;
             }
         }
         return OvaleLexer.scan(s, MATCHES, exclude);
@@ -629,18 +657,18 @@ class OvaleAST extends OvaleASTBase {
     UnparseGroup(node) {
         let output = this.self_outputPool.Get();
         output[lualength(output) + 1] = "";
-        output[lualength(output) + 1] = INDENT[this.self_indent] + "{";
+        output[lualength(output) + 1] = INDENT(this.self_indent) + "{";
         this.self_indent = this.self_indent + 1;
         for (const [_, statementNode] of _ipairs(node.child)) {
             let s = this.Unparse(statementNode);
             if (s == "") {
                 output[lualength(output) + 1] = s;
             } else {
-                output[lualength(output) + 1] = INDENT[this.self_indent] + s;
+                output[lualength(output) + 1] = INDENT(this.self_indent) + s;
             }
         }
         this.self_indent = this.self_indent - 1;
-        output[lualength(output) + 1] = INDENT[this.self_indent] + "}";
+        output[lualength(output) + 1] = INDENT(this.self_indent) + "}";
         let outputString = tconcat(output, "\n");
         this.self_outputPool.Release(output);
         return outputString;
@@ -704,7 +732,7 @@ class OvaleAST extends OvaleASTBase {
                 if (s == "") {
                     output[lualength(output) + 1] = s;
                 } else {
-                    output[lualength(output) + 1] = INDENT[this.self_indent + 1] + s;
+                    output[lualength(output) + 1] = INDENT(this.self_indent + 1) + s;
                 }
             } else {
                 let insertBlank = false;
@@ -800,37 +828,6 @@ class OvaleAST extends OvaleASTBase {
         this.printer.Print(tconcat(context, " "));
     }
 
-// let PARSE_VISITOR = undefined;
-// let Parse = undefined;
-// let ParseAddCheckBox = undefined;
-// let ParseAddFunction = undefined;
-// let ParseAddIcon = undefined;
-// let ParseAddListItem = undefined;
-// let ParseDeclaration = undefined;
-// let ParseDefine = undefined;
-// let ParseExpression = undefined;
-// let ParseFunction = undefined;
-// let ParseGroup = undefined;
-// let ParseIf = undefined;
-// let ParseInclude = undefined;
-// let ParseItemInfo = undefined;
-// let ParseItemRequire = undefined;
-// let ParseList = undefined;
-// let ParseNumber = undefined;
-// let ParseParameterValue = undefined;
-// let ParseParameters = undefined;
-// let ParseParentheses = undefined;
-// let ParseScoreSpells = undefined;
-// let ParseScript = undefined;
-// let ParseSimpleExpression = undefined;
-// let ParseSimpleParameterValue = undefined;
-// let ParseSpellAuraList = undefined;
-// let ParseSpellInfo = undefined;
-// let ParseSpellRequire = undefined;
-// let ParseString = undefined;
-// let ParseStatement = undefined;
-// let ParseUnless = undefined;
-// let ParseVariable = undefined;
     Parse(nodeType, tokenStream, nodeList, annotation) {
         let visitor = this.PARSE_VISITOR[nodeType];
         if (!visitor) {
@@ -844,14 +841,14 @@ class OvaleAST extends OvaleASTBase {
         {
             let [tokenType, token] = tokenStream.Consume();
             if (!(tokenType == "keyword" && token == "AddCheckBox")) {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ADDCHECKBOX; 'AddCheckBox' expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ADDCHECKBOX; 'AddCheckBox' expected.", token);
                 ok = false;
             }
         }
         if (ok) {
             let [tokenType, token] = tokenStream.Consume();
             if (tokenType != "(") {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ADDCHECKBOX; '(' expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ADDCHECKBOX; '(' expected.", token);
                 ok = false;
             }
         }
@@ -861,29 +858,29 @@ class OvaleAST extends OvaleASTBase {
             if (tokenType == "name") {
                 name = token;
             } else {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ADDCHECKBOX; name expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ADDCHECKBOX; name expected.", token);
                 ok = false;
             }
         }
         let descriptionNode;
         if (ok) {
-            [ok, descriptionNode] = ParseString(tokenStream, nodeList, annotation);
+            [ok, descriptionNode] = this.ParseString(tokenStream, nodeList, annotation);
         }
         let parameters;
-        let [positionalParams, namedParams];
+        let positionalParams, namedParams;
         if (ok) {
-            [ok, positionalParams, namedParams] = ParseParameters(tokenStream, nodeList, annotation);
+            [ok, positionalParams, namedParams] = this.ParseParameters(tokenStream, nodeList, annotation);
         }
         if (ok) {
             let [tokenType, token] = tokenStream.Consume();
             if (tokenType != ")") {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ADDCHECKBOX; ')' expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ADDCHECKBOX; ')' expected.", token);
                 ok = false;
             }
         }
         let node;
         if (ok) {
-            node = OvaleAST.NewNode(nodeList);
+            node = this.NewNode(nodeList);
             node.type = "checkbox";
             node.name = name;
             node.description = descriptionNode;
@@ -895,11 +892,11 @@ class OvaleAST extends OvaleASTBase {
         }
         return [ok, node];
     }
-    ParseAddFunction = function (tokenStream, nodeList, annotation) {
+    ParseAddFunction(tokenStream, nodeList, annotation) {
         let ok = true;
         let [tokenType, token] = tokenStream.Consume();
         if (!(tokenType == "keyword" && token == "AddFunction")) {
-            SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ADDFUNCTION; 'AddFunction' expected.", token);
+            this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ADDFUNCTION; 'AddFunction' expected.", token);
             ok = false;
         }
         let name;
@@ -908,21 +905,21 @@ class OvaleAST extends OvaleASTBase {
             if (tokenType == "name") {
                 name = token;
             } else {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ADDFUNCTION; name expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ADDFUNCTION; name expected.", token);
                 ok = false;
             }
         }
-        let [positionalParams, namedParams];
+        let positionalParams, namedParams;
         if (ok) {
-            [ok, positionalParams, namedParams] = ParseParameters(tokenStream, nodeList, annotation);
+            [ok, positionalParams, namedParams] = this.ParseParameters(tokenStream, nodeList, annotation);
         }
         let bodyNode;
         if (ok) {
-            [ok, bodyNode] = ParseGroup(tokenStream, nodeList, annotation);
+            [ok, bodyNode] = this.ParseGroup(tokenStream, nodeList, annotation);
         }
         let node;
         if (ok) {
-            node = OvaleAST.NewNode(nodeList, true);
+            node = this.NewNode(nodeList, true);
             node.type = "add_function";
             node.name = name;
             node.child[1] = bodyNode;
@@ -940,24 +937,24 @@ class OvaleAST extends OvaleASTBase {
         }
         return [ok, node];
     }
-    ParseAddIcon = function (tokenStream, nodeList, annotation) {
+    ParseAddIcon(tokenStream, nodeList, annotation) {
         let ok = true;
         let [tokenType, token] = tokenStream.Consume();
         if (!(tokenType == "keyword" && token == "AddIcon")) {
-            SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ADDICON; 'AddIcon' expected.", token);
+            this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ADDICON; 'AddIcon' expected.", token);
             ok = false;
         }
-        let [positionalParams, namedParams];
+        let positionalParams, namedParams;
         if (ok) {
-            [ok, positionalParams, namedParams] = ParseParameters(tokenStream, nodeList, annotation);
+            [ok, positionalParams, namedParams] = this.ParseParameters(tokenStream, nodeList, annotation);
         }
         let bodyNode;
         if (ok) {
-            [ok, bodyNode] = ParseGroup(tokenStream, nodeList, annotation);
+            [ok, bodyNode] = this.ParseGroup(tokenStream, nodeList, annotation);
         }
         let node;
         if (ok) {
-            node = OvaleAST.NewNode(nodeList, true);
+            node = this.NewNode(nodeList, true);
             node.type = "icon";
             node.child[1] = bodyNode;
             node.rawPositionalParams = positionalParams;
@@ -971,19 +968,19 @@ class OvaleAST extends OvaleASTBase {
         }
         return [ok, node];
     }
-    ParseAddListItem = function (tokenStream, nodeList, annotation) {
+    ParseAddListItem(tokenStream, nodeList, annotation) {
         let ok = true;
         {
             let [tokenType, token] = tokenStream.Consume();
             if (!(tokenType == "keyword" && token == "AddListItem")) {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ADDLISTITEM; 'AddListItem' expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ADDLISTITEM; 'AddListItem' expected.", token);
                 ok = false;
             }
         }
         if (ok) {
             let [tokenType, token] = tokenStream.Consume();
             if (tokenType != "(") {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ADDLISTITEM; '(' expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ADDLISTITEM; '(' expected.", token);
                 ok = false;
             }
         }
@@ -993,7 +990,7 @@ class OvaleAST extends OvaleASTBase {
             if (tokenType == "name") {
                 name = token;
             } else {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ADDLISTITEM; name expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ADDLISTITEM; name expected.", token);
                 ok = false;
             }
         }
@@ -1003,28 +1000,28 @@ class OvaleAST extends OvaleASTBase {
             if (tokenType == "name") {
                 item = token;
             } else {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ADDLISTITEM; name expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ADDLISTITEM; name expected.", token);
                 ok = false;
             }
         }
         let descriptionNode;
         if (ok) {
-            [ok, descriptionNode] = ParseString(tokenStream, nodeList, annotation);
+            [ok, descriptionNode] = this.ParseString(tokenStream, nodeList, annotation);
         }
-        let [positionalParams, namedParams];
+        let positionalParams, namedParams;
         if (ok) {
-            [ok, positionalParams, namedParams] = ParseParameters(tokenStream, nodeList, annotation);
+            [ok, positionalParams, namedParams] = this.ParseParameters(tokenStream, nodeList, annotation);
         }
         if (ok) {
             let [tokenType, token] = tokenStream.Consume();
             if (tokenType != ")") {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ADDLISTITEM; ')' expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ADDLISTITEM; ')' expected.", token);
                 ok = false;
             }
         }
         let node;
         if (ok) {
-            node = OvaleAST.NewNode(nodeList);
+            node = this.NewNode(nodeList);
             node.type = "list_item";
             node.name = name;
             node.item = item;
@@ -1037,60 +1034,63 @@ class OvaleAST extends OvaleASTBase {
         }
         return [ok, node];
     }
-    ParseDeclaration = function (tokenStream, nodeList, annotation) {
+    ParseComment(tokenStream, nodeList, annotation): [boolean, Node] {
+        return undefined;
+    }
+    ParseDeclaration(tokenStream, nodeList, annotation): [boolean, Node] {
         let ok = true;
-        let node;
+        let node: Node;
         let [tokenType, token] = tokenStream.Peek();
         if (tokenType == "keyword" && DECLARATION_KEYWORD[token]) {
             if (token == "AddCheckBox") {
-                [ok, node] = ParseAddCheckBox(tokenStream, nodeList, annotation);
+                [ok, node] = this.ParseAddCheckBox(tokenStream, nodeList, annotation);
             } else if (token == "AddFunction") {
-                [ok, node] = ParseAddFunction(tokenStream, nodeList, annotation);
+                [ok, node] = this.ParseAddFunction(tokenStream, nodeList, annotation);
             } else if (token == "AddIcon") {
-                [ok, node] = ParseAddIcon(tokenStream, nodeList, annotation);
+                [ok, node] = this.ParseAddIcon(tokenStream, nodeList, annotation);
             } else if (token == "AddListItem") {
-                [ok, node] = ParseAddListItem(tokenStream, nodeList, annotation);
+                [ok, node] = this.ParseAddListItem(tokenStream, nodeList, annotation);
             } else if (token == "Define") {
-                [ok, node] = ParseDefine(tokenStream, nodeList, annotation);
+                [ok, node] = this.ParseDefine(tokenStream, nodeList, annotation);
             } else if (token == "Include") {
-                [ok, node] = ParseInclude(tokenStream, nodeList, annotation);
+                [ok, node] = this.ParseInclude(tokenStream, nodeList, annotation);
             } else if (token == "ItemInfo") {
-                [ok, node] = ParseItemInfo(tokenStream, nodeList, annotation);
+                [ok, node] = this.ParseItemInfo(tokenStream, nodeList, annotation);
             } else if (token == "ItemRequire") {
-                [ok, node] = ParseItemRequire(tokenStream, nodeList, annotation);
+                [ok, node] = this.ParseItemRequire(tokenStream, nodeList, annotation);
             } else if (token == "ItemList") {
-                [ok, node] = ParseList(tokenStream, nodeList, annotation);
+                [ok, node] = this.ParseList(tokenStream, nodeList, annotation);
             } else if (token == "ScoreSpells") {
-                [ok, node] = ParseScoreSpells(tokenStream, nodeList, annotation);
+                [ok, node] = this.ParseScoreSpells(tokenStream, nodeList, annotation);
             } else if (SPELL_AURA_KEYWORD[token]) {
-                [ok, node] = ParseSpellAuraList(tokenStream, nodeList, annotation);
+                [ok, node] = this.ParseSpellAuraList(tokenStream, nodeList, annotation);
             } else if (token == "SpellInfo") {
-                [ok, node] = ParseSpellInfo(tokenStream, nodeList, annotation);
+                [ok, node] = this.ParseSpellInfo(tokenStream, nodeList, annotation);
             } else if (token == "SpellList") {
-                [ok, node] = ParseList(tokenStream, nodeList, annotation);
+                [ok, node] = this.ParseList(tokenStream, nodeList, annotation);
             } else if (token == "SpellRequire") {
-                [ok, node] = ParseSpellRequire(tokenStream, nodeList, annotation);
+                [ok, node] = this.ParseSpellRequire(tokenStream, nodeList, annotation);
             }
         } else {
-            SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing DECLARATION; declaration keyword expected.", token);
+            this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing DECLARATION; declaration keyword expected.", token);
             tokenStream.Consume();
             ok = false;
         }
         return [ok, node];
     }
-    ParseDefine = function (tokenStream, nodeList, annotation) {
+    ParseDefine(tokenStream, nodeList, annotation) {
         let ok = true;
         {
             let [tokenType, token] = tokenStream.Consume();
             if (!(tokenType == "keyword" && token == "Define")) {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing DEFINE; 'Define' expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing DEFINE; 'Define' expected.", token);
                 ok = false;
             }
         }
         if (ok) {
             let [tokenType, token] = tokenStream.Consume();
             if (tokenType != "(") {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing DEFINE; '(' expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing DEFINE; '(' expected.", token);
                 ok = false;
             }
         }
@@ -1100,7 +1100,7 @@ class OvaleAST extends OvaleASTBase {
             if (tokenType == "name") {
                 name = token;
             } else {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing DEFINE; name expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing DEFINE; name expected.", token);
                 ok = false;
             }
         }
@@ -1112,7 +1112,7 @@ class OvaleAST extends OvaleASTBase {
                 if (tokenType == "number") {
                     value = -1 * _tonumber(token);
                 } else {
-                    SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing DEFINE; number expected after '-'.", token);
+                    this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing DEFINE; number expected after '-'.", token);
                     ok = false;
                 }
             } else if (tokenType == "number") {
@@ -1120,20 +1120,20 @@ class OvaleAST extends OvaleASTBase {
             } else if (tokenType == "string") {
                 value = token;
             } else {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing DEFINE; number or string expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing DEFINE; number or string expected.", token);
                 ok = false;
             }
         }
         if (ok) {
             let [tokenType, token] = tokenStream.Consume();
             if (tokenType != ")") {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing DEFINE; ')' expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing DEFINE; ')' expected.", token);
                 ok = false;
             }
         }
         let node;
         if (ok) {
-            node = OvaleAST.NewNode(nodeList);
+            node = this.NewNode(nodeList);
             node.type = "define";
             node.name = name;
             node.value = value;
@@ -1143,7 +1143,7 @@ class OvaleAST extends OvaleASTBase {
         }
         return [ok, node];
     }
-    ParseExpression = function (tokenStream, nodeList, annotation, minPrecedence) {
+    ParseExpression(tokenStream, nodeList, annotation, minPrecedence?) {
         minPrecedence = minPrecedence || 0;
         let ok = true;
         let node;
@@ -1156,13 +1156,13 @@ class OvaleAST extends OvaleASTBase {
                     tokenStream.Consume();
                     let operator = token;
                     let rhsNode;
-                    [ok, rhsNode] = ParseExpression(tokenStream, nodeList, annotation, precedence);
+                    [ok, rhsNode] = this.ParseExpression(tokenStream, nodeList, annotation, precedence);
                     if (ok) {
                         if (operator == "-" && rhsNode.type == "value") {
                             let value = -1 * rhsNode.value;
-                            node = GetNumberNode(value, nodeList, annotation);
+                            node = this.GetNumberNode(value, nodeList, annotation);
                         } else {
-                            node = OvaleAST.NewNode(nodeList, true);
+                            node = this.NewNode(nodeList, true);
                             node.type = opType;
                             node.expressionType = "unary";
                             node.operator = operator;
@@ -1171,7 +1171,7 @@ class OvaleAST extends OvaleASTBase {
                         }
                     }
                 } else {
-                    [ok, node] = ParseSimpleExpression(tokenStream, nodeList, annotation);
+                    [ok, node] = this.ParseSimpleExpression(tokenStream, nodeList, annotation);
                 }
             }
         }
@@ -1188,9 +1188,9 @@ class OvaleAST extends OvaleASTBase {
                         let operator = token;
                         let lhsNode = node;
                         let rhsNode;
-                        [ok, rhsNode] = ParseExpression(tokenStream, nodeList, annotation, precedence);
+                        [ok, rhsNode] = this.ParseExpression(tokenStream, nodeList, annotation, precedence);
                         if (ok) {
-                            node = OvaleAST.NewNode(nodeList, true);
+                            node = this.NewNode(nodeList, true);
                             node.type = opType;
                             node.expressionType = "binary";
                             node.operator = operator;
@@ -1201,13 +1201,13 @@ class OvaleAST extends OvaleASTBase {
                             while (node.type == rhsNode.type && node.operator == rhsNode.operator && BINARY_OPERATOR[node.operator][3] == "associative" && rhsNode.expressionType == "binary") {
                                 node.child[2] = rhsNode.child[1];
                                 rhsNode.child[1] = node;
-                                node.asString = UnparseExpression(node);
+                                node.asString = this.UnparseExpression(node);
                                 node = rhsNode;
                                 rhsNode = node.child[2];
                                 rotated = true;
                             }
                             if (rotated) {
-                                node.asString = UnparseExpression(node);
+                                node.asString = this.UnparseExpression(node);
                             }
                         }
                     }
@@ -1218,20 +1218,21 @@ class OvaleAST extends OvaleASTBase {
             }
         }
         if (ok && node) {
-            node.asString = node.asString || Unparse(node);
+            node.asString = node.asString || this.Unparse(node);
         }
         return [ok, node];
     }
-    ParseFunction = function (tokenStream, nodeList, annotation) {
+
+    ParseFunction(tokenStream, nodeList, annotation) {
         let ok = true;
-        let [name, lowername];
+        let name, lowername;
         {
             let [tokenType, token] = tokenStream.Consume();
             if (tokenType == "name") {
                 name = token;
                 lowername = strlower(name);
             } else {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing FUNCTION; name expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing FUNCTION; name expected.", token);
                 ok = false;
             }
         }
@@ -1245,7 +1246,7 @@ class OvaleAST extends OvaleASTBase {
                     name = token;
                     lowername = strlower(name);
                 } else {
-                    SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing FUNCTION; name expected.", token);
+                    this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing FUNCTION; name expected.", token);
                     ok = false;
                 }
             }
@@ -1253,25 +1254,25 @@ class OvaleAST extends OvaleASTBase {
         if (ok) {
             let [tokenType, token] = tokenStream.Consume();
             if (tokenType != "(") {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing FUNCTION; '(' expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing FUNCTION; '(' expected.", token);
                 ok = false;
             }
         }
-        let [positionalParams, namedParams];
+        let positionalParams, namedParams;
         if (ok) {
-            [ok, positionalParams, namedParams] = ParseParameters(tokenStream, nodeList, annotation);
+            [ok, positionalParams, namedParams] = this.ParseParameters(tokenStream, nodeList, annotation);
         }
         if (ok && ACTION_PARAMETER_COUNT[lowername]) {
             let count = ACTION_PARAMETER_COUNT[lowername];
             if (count > lualength(positionalParams)) {
-                SyntaxError(tokenStream, "Syntax error: action '%s' requires at least %d fixed parameter(s).", name, count);
+                this.SyntaxError(tokenStream, "Syntax error: action '%s' requires at least %d fixed parameter(s).", name, count);
                 ok = false;
             }
         }
         if (ok) {
             let [tokenType, token] = tokenStream.Consume();
             if (tokenType != ")") {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing FUNCTION; ')' expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing FUNCTION; ')' expected.", token);
                 ok = false;
             }
         }
@@ -1300,7 +1301,7 @@ class OvaleAST extends OvaleASTBase {
         }
         let node;
         if (ok) {
-            node = OvaleAST.NewNode(nodeList);
+            node = this.NewNode(nodeList);
             node.name = name;
             node.lowername = lowername;
             if (STATE_ACTION[lowername]) {
@@ -1324,7 +1325,7 @@ class OvaleAST extends OvaleASTBase {
             }
             node.rawPositionalParams = positionalParams;
             node.rawNamedParams = namedParams;
-            node.asString = UnparseFunction(node);
+            node.asString = this.UnparseFunction(node);
             annotation.parametersReference = annotation.parametersReference || {
             }
             annotation.parametersReference[lualength(annotation.parametersReference) + 1] = node;
@@ -1337,20 +1338,20 @@ class OvaleAST extends OvaleASTBase {
         }
         return [ok, node];
     }
-    ParseGroup = function (tokenStream, nodeList, annotation) {
+    ParseGroup(tokenStream, nodeList, annotation) {
         let ok = true;
         {
             let [tokenType, token] = tokenStream.Consume();
             if (tokenType != "{") {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing GROUP; '{' expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing GROUP; '{' expected.", token);
                 ok = false;
             }
         }
-        let child = self_childrenPool.Get();
+        let child = this.self_childrenPool.Get();
         let [tokenType, token] = tokenStream.Peek();
         while (ok && tokenType && tokenType != "}") {
             let statementNode;
-            [ok, statementNode] = ParseStatement(tokenStream, nodeList, annotation);
+            [ok, statementNode] = this.ParseStatement(tokenStream, nodeList, annotation);
             if (ok) {
                 child[lualength(child) + 1] = statementNode;
                 [tokenType, token] = tokenStream.Peek();
@@ -1361,17 +1362,17 @@ class OvaleAST extends OvaleASTBase {
         if (ok) {
             let [tokenType, token] = tokenStream.Consume();
             if (tokenType != "}") {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing GROUP; '}' expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing GROUP; '}' expected.", token);
                 ok = false;
             }
         }
         let node;
         if (ok) {
-            node = OvaleAST.NewNode(nodeList);
+            node = this.NewNode(nodeList);
             node.type = "group";
             node.child = child;
         } else {
-            self_childrenPool.Release(child);
+            this.self_childrenPool.Release(child);
         }
         return [ok, node];
     }
@@ -1380,39 +1381,39 @@ class OvaleAST extends OvaleASTBase {
         {
             let [tokenType, token] = tokenStream.Consume();
             if (!(tokenType == "keyword" && token == "if")) {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing IF; 'if' expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing IF; 'if' expected.", token);
                 ok = false;
             }
         }
-        let [conditionNode, bodyNode];
+        let conditionNode, bodyNode;
         if (ok) {
-            [ok, conditionNode] = ParseExpression(tokenStream, nodeList, annotation);
+            [ok, conditionNode] = this.ParseExpression(tokenStream, nodeList, annotation);
         }
         if (ok) {
-            [ok, bodyNode] = ParseStatement(tokenStream, nodeList, annotation);
+            [ok, bodyNode] =this.ParseStatement(tokenStream, nodeList, annotation);
         }
         let node;
         if (ok) {
-            node = OvaleAST.NewNode(nodeList, true);
+            node = this.NewNode(nodeList, true);
             node.type = "if";
             node.child[1] = conditionNode;
             node.child[2] = bodyNode;
         }
         return [ok, node];
     }
-    ParseInclude = function (tokenStream, nodeList, annotation) {
+    ParseInclude(tokenStream, nodeList, annotation) {
         let ok = true;
         {
             let [tokenType, token] = tokenStream.Consume();
             if (!(tokenType == "keyword" && token == "Include")) {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing INCLUDE; 'Include' expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing INCLUDE; 'Include' expected.", token);
                 ok = false;
             }
         }
         if (ok) {
             let [tokenType, token] = tokenStream.Consume();
             if (tokenType != "(") {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing INCLUDE; '(' expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing INCLUDE; '(' expected.", token);
                 ok = false;
             }
         }
@@ -1422,48 +1423,48 @@ class OvaleAST extends OvaleASTBase {
             if (tokenType == "name") {
                 name = token;
             } else {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing INCLUDE; script name expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing INCLUDE; script name expected.", token);
                 ok = false;
             }
         }
         if (ok) {
             let [tokenType, token] = tokenStream.Consume();
             if (tokenType != ")") {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing INCLUDE; ')' expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing INCLUDE; ')' expected.", token);
                 ok = false;
             }
         }
         let code = OvaleScripts.GetScript(name);
         if (!code) {
-            OvaleAST.Error("Script '%s' not found when parsing INCLUDE.", name);
+            this.printer.Error("Script '%s' not found when parsing INCLUDE.", name);
             ok = false;
         }
         let node;
         if (ok) {
-            let includeTokenStream = OvaleLexer(name, GetTokenIterator(code));
-            [ok, node] = ParseScript(includeTokenStream, nodeList, annotation);
+            let includeTokenStream = OvaleLexer(name, this.GetTokenIterator(code));
+            [ok, node] = this.ParseScriptStream(includeTokenStream, nodeList, annotation);
             includeTokenStream.Release();
         }
         return [ok, node];
     }
     ParseItemInfo = function (tokenStream, nodeList, annotation) {
         let ok = true;
-        let [name, lowername];
+        let name, lowername;
         {
             let [tokenType, token] = tokenStream.Consume();
             if (!(tokenType == "keyword" && token == "ItemInfo")) {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ITEMINFO; 'ItemInfo' expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ITEMINFO; 'ItemInfo' expected.", token);
                 ok = false;
             }
         }
         if (ok) {
             let [tokenType, token] = tokenStream.Consume();
             if (tokenType != "(") {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ITEMINFO; '(' expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ITEMINFO; '(' expected.", token);
                 ok = false;
             }
         }
-        let [itemId, name];
+        let itemId;
         if (ok) {
             let [tokenType, token] = tokenStream.Consume();
             if (tokenType == "number") {
@@ -1471,24 +1472,24 @@ class OvaleAST extends OvaleASTBase {
             } else if (tokenType == "name") {
                 name = token;
             } else {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ITEMINFO; number or name expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ITEMINFO; number or name expected.", token);
                 ok = false;
             }
         }
-        let [positionalParams, namedParams];
+        let positionalParams, namedParams;
         if (ok) {
-            [ok, positionalParams, namedParams] = ParseParameters(tokenStream, nodeList, annotation);
+            [ok, positionalParams, namedParams] = this.ParseParameters(tokenStream, nodeList, annotation);
         }
         if (ok) {
             let [tokenType, token] = tokenStream.Consume();
             if (tokenType != ")") {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ITEMINFO; ')' expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ITEMINFO; ')' expected.", token);
                 ok = false;
             }
         }
         let node;
         if (ok) {
-            node = OvaleAST.NewNode(nodeList);
+            node = this.NewNode(nodeList);
             node.type = "item_info";
             node.itemId = itemId;
             node.name = name;
@@ -1505,23 +1506,24 @@ class OvaleAST extends OvaleASTBase {
         }
         return [ok, node];
     }
-    ParseItemRequire = function (tokenStream, nodeList, annotation) {
+
+    ParseItemRequire(tokenStream, nodeList, annotation) {
         let ok = true;
         {
             let [tokenType, token] = tokenStream.Consume();
             if (!(tokenType == "keyword" && token == "ItemRequire")) {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ITEMREQUIRE; keyword expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ITEMREQUIRE; keyword expected.", token);
                 ok = false;
             }
         }
         if (ok) {
             let [tokenType, token] = tokenStream.Consume();
             if (tokenType != "(") {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ITEMREQUIRE; '(' expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ITEMREQUIRE; '(' expected.", token);
                 ok = false;
             }
         }
-        let [itemId, name];
+        let itemId, name;
         if (ok) {
             let [tokenType, token] = tokenStream.Consume();
             if (tokenType == "number") {
@@ -1529,7 +1531,7 @@ class OvaleAST extends OvaleASTBase {
             } else if (tokenType == "name") {
                 name = token;
             } else {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ITEMREQUIRE; number or name expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ITEMREQUIRE; number or name expected.", token);
                 ok = false;
             }
         }
@@ -1539,24 +1541,24 @@ class OvaleAST extends OvaleASTBase {
             if (tokenType == "name") {
                 property = token;
             } else {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ITEMREQUIRE; property name expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ITEMREQUIRE; property name expected.", token);
                 ok = false;
             }
         }
-        let [positionalParams, namedParams];
+        let positionalParams, namedParams;
         if (ok) {
-            [ok, positionalParams, namedParams] = ParseParameters(tokenStream, nodeList, annotation);
+            [ok, positionalParams, namedParams] = this.ParseParameters(tokenStream, nodeList, annotation);
         }
         if (ok) {
             let [tokenType, token] = tokenStream.Consume();
             if (tokenType != ")") {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ITEMREQUIRE; ')' expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing ITEMREQUIRE; ')' expected.", token);
                 ok = false;
             }
         }
         let node;
         if (ok) {
-            node = OvaleAST.NewNode(nodeList);
+            node = this.NewNode(nodeList);
             node.type = "item_require";
             node.itemId = itemId;
             node.name = name;
@@ -1574,7 +1576,7 @@ class OvaleAST extends OvaleASTBase {
         }
         return [ok, node];
     }
-    ParseList = function (tokenStream, nodeList, annotation) {
+    ParseList(tokenStream, nodeList, annotation) {
         let ok = true;
         let keyword;
         {
@@ -1582,14 +1584,14 @@ class OvaleAST extends OvaleASTBase {
             if (tokenType == "keyword" && (token == "ItemList" || token == "SpellList")) {
                 keyword = token;
             } else {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing LIST; keyword expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing LIST; keyword expected.", token);
                 ok = false;
             }
         }
         if (ok) {
             let [tokenType, token] = tokenStream.Consume();
             if (tokenType != "(") {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing LIST; '(' expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing LIST; '(' expected.", token);
                 ok = false;
             }
         }
@@ -1599,24 +1601,24 @@ class OvaleAST extends OvaleASTBase {
             if (tokenType == "name") {
                 name = token;
             } else {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing LIST; name expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing LIST; name expected.", token);
                 ok = false;
             }
         }
-        let [positionalParams, namedParams];
+        let positionalParams, namedParams;
         if (ok) {
-            [ok, positionalParams, namedParams] = ParseParameters(tokenStream, nodeList, annotation);
+            [ok, positionalParams, namedParams] = this.ParseParameters(tokenStream, nodeList, annotation);
         }
         if (ok) {
             let [tokenType, token] = tokenStream.Consume();
             if (tokenType != ")") {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing LIST; ')' expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing LIST; ')' expected.", token);
                 ok = false;
             }
         }
         let node;
         if (ok) {
-            node = OvaleAST.NewNode(nodeList);
+            node = this.NewNode(nodeList);
             node.type = "list";
             node.keyword = keyword;
             node.name = name;
@@ -1628,7 +1630,7 @@ class OvaleAST extends OvaleASTBase {
         }
         return [ok, node];
     }
-    ParseNumber = function (tokenStream, nodeList, annotation) {
+    ParseNumber(tokenStream, nodeList, annotation) {
         let ok = true;
         let value;
         {
@@ -1636,28 +1638,28 @@ class OvaleAST extends OvaleASTBase {
             if (tokenType == "number") {
                 value = _tonumber(token);
             } else {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing NUMBER; number expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing NUMBER; number expected.", token);
                 ok = false;
             }
         }
         let node;
         if (ok) {
-            node = GetNumberNode(value, nodeList, annotation);
+            node = this.GetNumberNode(value, nodeList, annotation);
         }
         return [ok, node];
     }
-    ParseParameterValue = function (tokenStream, nodeList, annotation) {
+    ParseParameterValue(tokenStream, nodeList, annotation) {
         let ok = true;
         let node;
         let tokenType, token;
         let parameters;
         do {
-            [ok, node] = ParseSimpleParameterValue(tokenStream, nodeList, annotation);
+            [ok, node] = this.ParseSimpleParameterValue(tokenStream, nodeList, annotation);
             if (ok && node) {
                 [tokenType, token] = tokenStream.Peek();
                 if (tokenType == ",") {
                     tokenStream.Consume();
-                    parameters = parameters || self_parametersPool.Get();
+                    parameters = parameters || this.self_parametersPool.Get();
                 }
                 if (parameters) {
                     parameters[lualength(parameters) + 1] = node;
@@ -1666,7 +1668,7 @@ class OvaleAST extends OvaleASTBase {
         }
         while (!(!ok || tokenType != ","));
         if (ok && parameters) {
-            node = OvaleAST.NewNode(nodeList);
+            node = this.NewNode(nodeList);
             node.type = "comma_separated_values";
             node.csv = parameters;
             annotation.parametersList = annotation.parametersList || {
@@ -1675,40 +1677,40 @@ class OvaleAST extends OvaleASTBase {
         }
         return [ok, node];
     }
-    ParseParameters = function (tokenStream, nodeList, annotation, isList) {
+    ParseParameters = function (tokenStream, nodeList, annotation, isList?:boolean) {
         let ok = true;
-        let positionalParams = self_parametersPool.Get();
-        let namedParams = self_parametersPool.Get();
+        let positionalParams = this.self_parametersPool.Get();
+        let namedParams = this.self_parametersPool.Get();
         while (ok) {
             let [tokenType, token] = tokenStream.Peek();
             if (tokenType) {
-                let [name, node];
+                let name, node;
                 if (tokenType == "name") {
-                    [ok, node] = ParseVariable(tokenStream, nodeList, annotation);
+                    [ok, node] = this.ParseVariable(tokenStream, nodeList, annotation);
                     if (ok) {
                         name = node.name;
                     }
                 } else if (tokenType == "number") {
-                    [ok, node] = ParseNumber(tokenStream, nodeList, annotation);
+                    [ok, node] = this.ParseNumber(tokenStream, nodeList, annotation);
                     if (ok) {
                         name = node.value;
                     }
                 } else if (tokenType == "-") {
                     tokenStream.Consume();
-                    [ok, node] = ParseNumber(tokenStream, nodeList, annotation);
+                    [ok, node] = this.ParseNumber(tokenStream, nodeList, annotation);
                     if (ok) {
                         let value = -1 * node.value;
-                        node = GetNumberNode(value, nodeList, annotation);
+                        node = this.GetNumberNode(value, nodeList, annotation);
                         name = value;
                     }
                 } else if (tokenType == "string") {
-                    [ok, node] = ParseString(tokenStream, nodeList, annotation);
+                    [ok, node] = this.ParseString(tokenStream, nodeList, annotation);
                     if (ok) {
                         name = node.value;
                     }
                 } else if (PARAMETER_KEYWORD[token]) {
                     if (isList) {
-                        SyntaxError(tokenStream, "Syntax error: unexpected keyword '%s' when parsing PARAMETERS; simple expression expected.", token);
+                        this.SyntaxError(tokenStream, "Syntax error: unexpected keyword '%s' when parsing PARAMETERS; simple expression expected.", token);
                         ok = false;
                     } else {
                         tokenStream.Consume();
@@ -1722,12 +1724,12 @@ class OvaleAST extends OvaleASTBase {
                     if (tokenType == "=") {
                         tokenStream.Consume();
                         if (name == "checkbox" || name == "listitem") {
-                            let control = namedParams[name] || self_controlPool.Get();
+                            let control = namedParams[name] || this.self_controlPool.Get();
                             if (name == "checkbox") {
-                                [ok, node] = ParseSimpleParameterValue(tokenStream, nodeList, annotation);
+                                [ok, node] = this.ParseSimpleParameterValue(tokenStream, nodeList, annotation);
                                 if (ok && node) {
                                     if (!(node.type == "variable" || (node.type == "bang_value" && node.child[1].type == "variable"))) {
-                                        SyntaxError(tokenStream, "Syntax error: 'checkbox' parameter with unexpected value '%s'.", Unparse(node));
+                                        this.SyntaxError(tokenStream, "Syntax error: 'checkbox' parameter with unexpected value '%s'.", this.Unparse(node));
                                         ok = false;
                                     }
                                 }
@@ -1740,22 +1742,22 @@ class OvaleAST extends OvaleASTBase {
                                 if (tokenType == "name") {
                                     list = token;
                                 } else {
-                                    SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing PARAMETERS; name expected.", token);
+                                    this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing PARAMETERS; name expected.", token);
                                     ok = false;
                                 }
                                 if (ok) {
                                     [tokenType, token] = tokenStream.Consume();
                                     if (tokenType != ":") {
-                                        SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing PARAMETERS; ':' expected.", token);
+                                        this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing PARAMETERS; ':' expected.", token);
                                         ok = false;
                                     }
                                 }
                                 if (ok) {
-                                    [ok, node] = ParseSimpleParameterValue(tokenStream, nodeList, annotation);
+                                    [ok, node] = this.ParseSimpleParameterValue(tokenStream, nodeList, annotation);
                                 }
                                 if (ok && node) {
                                     if (!(node.type == "variable" || (node.type == "bang_value" && node.child[1].type == "variable"))) {
-                                        SyntaxError(tokenStream, "Syntax error: 'listitem=%s' parameter with unexpected value '%s'.", Unparse(node));
+                                        this.SyntaxError(tokenStream, "Syntax error: 'listitem=%s' parameter with unexpected value '%s'.", this.Unparse(node));
                                         ok = false;
                                     }
                                 }
@@ -1770,7 +1772,7 @@ class OvaleAST extends OvaleASTBase {
                                 annotation.controlList[lualength(annotation.controlList) + 1] = control;
                             }
                         } else {
-                            [ok, node] = ParseParameterValue(tokenStream, nodeList, annotation);
+                            [ok, node] = this.ParseParameterValue(tokenStream, nodeList, annotation);
                             namedParams[name] = node;
                         }
                     } else {
@@ -1794,7 +1796,7 @@ class OvaleAST extends OvaleASTBase {
     }
     ParseParentheses = function (tokenStream, nodeList, annotation) {
         let ok = true;
-        let [leftToken, rightToken];
+        let leftToken, rightToken;
         {
             let [tokenType, token] = tokenStream.Consume();
             if (tokenType == "(") {
@@ -1802,18 +1804,18 @@ class OvaleAST extends OvaleASTBase {
             } else if (tokenType == "{") {
                 [leftToken, rightToken] = ["{", "}"];
             } else {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing PARENTHESES; '(' or '{' expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing PARENTHESES; '(' or '{' expected.", token);
                 ok = false;
             }
         }
         let node;
         if (ok) {
-            [ok, node] = ParseExpression(tokenStream, nodeList, annotation);
+            [ok, node] = this.ParseExpression(tokenStream, nodeList, annotation);
         }
         if (ok) {
             let [tokenType, token] = tokenStream.Consume();
             if (tokenType != rightToken) {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing PARENTHESES; '%s' expected.", token, rightToken);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing PARENTHESES; '%s' expected.", token, rightToken);
                 ok = false;
             }
         }
@@ -1828,31 +1830,31 @@ class OvaleAST extends OvaleASTBase {
         {
             let [tokenType, token] = tokenStream.Consume();
             if (!(tokenType == "keyword" && token == "ScoreSpells")) {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing SCORESPELLS; 'ScoreSpells' expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing SCORESPELLS; 'ScoreSpells' expected.", token);
                 ok = false;
             }
         }
         if (ok) {
             let [tokenType, token] = tokenStream.Consume();
             if (tokenType != "(") {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing SCORESPELLS; '(' expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing SCORESPELLS; '(' expected.", token);
                 ok = false;
             }
         }
-        let [positionalParams, namedParams];
+        let positionalParams, namedParams;
         if (ok) {
-            [ok, positionalParams, namedParams] = ParseParameters(tokenStream, nodeList, annotation);
+            [ok, positionalParams, namedParams] = this.ParseParameters(tokenStream, nodeList, annotation);
         }
         if (ok) {
             let [tokenType, token] = tokenStream.Consume();
             if (tokenType != ")") {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing SCORESPELLS; ')' expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing SCORESPELLS; ')' expected.", token);
                 ok = false;
             }
         }
         let node;
         if (ok) {
-            node = OvaleAST.NewNode(nodeList);
+            node = this.NewNode(nodeList);
             node.type = "score_spells";
             node.rawPositionalParams = positionalParams;
             node.rawNamedParams = namedParams;
@@ -1862,21 +1864,21 @@ class OvaleAST extends OvaleASTBase {
         }
         return [ok, node];
     }
-    ParseScript = function (tokenStream, nodeList, annotation) {
-        OvaleAST.StartProfiling("OvaleAST_ParseScript");
+    ParseScriptStream(tokenStream, nodeList, annotation) {
+        this.profiler.StartProfiling("OvaleAST_ParseScript");
         let ok = true;
-        let child = self_childrenPool.Get();
+        let child = this.self_childrenPool.Get();
         while (ok) {
             let [tokenType, token] = tokenStream.Peek();
             if (tokenType) {
-                let declarationNode;
-                [ok, declarationNode] = ParseDeclaration(tokenStream, nodeList, annotation);
+                let declarationNode: Node;
+                [ok, declarationNode] = this.ParseDeclaration(tokenStream, nodeList, annotation);
                 if (ok) {
                     if (declarationNode.type == "script") {
                         for (const [_, node] of _ipairs(declarationNode.child)) {
                             child[lualength(child) + 1] = node;
                         }
-                        self_pool.Release(declarationNode);
+                        this.self_pool.Release(declarationNode);
                     } else {
                         child[lualength(child) + 1] = declarationNode;
                     }
@@ -1887,13 +1889,13 @@ class OvaleAST extends OvaleASTBase {
         }
         let ast;
         if (ok) {
-            ast = OvaleAST.NewNode();
+            ast = this.NewNode();
             ast.type = "script";
             ast.child = child;
         } else {
-            self_childrenPool.Release(child);
+            this.self_childrenPool.Release(child);
         }
-        OvaleAST.StopProfiling("OvaleAST_ParseScript");
+        this.profiler.StopProfiling("OvaleAST_ParseScript");
         return [ok, ast];
     }
     ParseSimpleExpression = function (tokenStream, nodeList, annotation) {
@@ -1901,21 +1903,21 @@ class OvaleAST extends OvaleASTBase {
         let node;
         let [tokenType, token] = tokenStream.Peek();
         if (tokenType == "number") {
-            [ok, node] = ParseNumber(tokenStream, nodeList, annotation);
+            [ok, node] = this.ParseNumber(tokenStream, nodeList, annotation);
         } else if (tokenType == "string") {
-            [ok, node] = ParseString(tokenStream, nodeList, annotation);
+            [ok, node] = this.ParseString(tokenStream, nodeList, annotation);
         } else if (tokenType == "name") {
             [tokenType, token] = tokenStream.Peek(2);
             if (tokenType == "." || tokenType == "(") {
-                [ok, node] = ParseFunction(tokenStream, nodeList, annotation);
+                [ok, node] = this.ParseFunction(tokenStream, nodeList, annotation);
             } else {
-                [ok, node] = ParseVariable(tokenStream, nodeList, annotation);
+                [ok, node] = this.ParseVariable(tokenStream, nodeList, annotation);
             }
         } else if (tokenType == "(" || tokenType == "{") {
-            [ok, node] = ParseParentheses(tokenStream, nodeList, annotation);
+            [ok, node] = this.ParseParentheses(tokenStream, nodeList, annotation);
         } else {
             tokenStream.Consume();
-            SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing SIMPLE EXPRESSION", token);
+            this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing SIMPLE EXPRESSION", token);
             ok = false;
         }
         return [ok, node];
@@ -1931,13 +1933,13 @@ class OvaleAST extends OvaleASTBase {
         let expressionNode;
         [tokenType, token] = tokenStream.Peek();
         if (tokenType == "(" || tokenType == "-") {
-            [ok, expressionNode] = ParseExpression(tokenStream, nodeList, annotation);
+            [ok, expressionNode] = this.ParseExpression(tokenStream, nodeList, annotation);
         } else {
-            [ok, expressionNode] = ParseSimpleExpression(tokenStream, nodeList, annotation);
+            [ok, expressionNode] = this.ParseSimpleExpression(tokenStream, nodeList, annotation);
         }
         let node;
         if (isBang) {
-            node = OvaleAST.NewNode(nodeList, true);
+            node = this.NewNode(nodeList, true);
             node.type = "bang_value";
             node.child[1] = expressionNode;
         } else {
@@ -1953,18 +1955,18 @@ class OvaleAST extends OvaleASTBase {
             if (tokenType == "keyword" && SPELL_AURA_KEYWORD[token]) {
                 keyword = token;
             } else {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing SPELLAURALIST; keyword expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing SPELLAURALIST; keyword expected.", token);
                 ok = false;
             }
         }
         if (ok) {
             let [tokenType, token] = tokenStream.Consume();
             if (tokenType != "(") {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing SPELLAURALIST; '(' expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing SPELLAURALIST; '(' expected.", token);
                 ok = false;
             }
         }
-        let [spellId, name];
+        let spellId, name;
         if (ok) {
             let [tokenType, token] = tokenStream.Consume();
             if (tokenType == "number") {
@@ -1972,24 +1974,24 @@ class OvaleAST extends OvaleASTBase {
             } else if (tokenType == "name") {
                 name = token;
             } else {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing SPELLAURALIST; number or name expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing SPELLAURALIST; number or name expected.", token);
                 ok = false;
             }
         }
-        let [positionalParams, namedParams];
+        let positionalParams, namedParams;
         if (ok) {
-            [ok, positionalParams, namedParams] = ParseParameters(tokenStream, nodeList, annotation);
+            [ok, positionalParams, namedParams] = this.ParseParameters(tokenStream, nodeList, annotation);
         }
         if (ok) {
             let [tokenType, token] = tokenStream.Consume();
             if (tokenType != ")") {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing SPELLAURALIST; ')' expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing SPELLAURALIST; ')' expected.", token);
                 ok = false;
             }
         }
         let node;
         if (ok) {
-            node = OvaleAST.NewNode(nodeList);
+            node = this.NewNode(nodeList);
             node.type = "spell_aura_list";
             node.keyword = keyword;
             node.spellId = spellId;
@@ -2013,18 +2015,18 @@ class OvaleAST extends OvaleASTBase {
         {
             let [tokenType, token] = tokenStream.Consume();
             if (!(tokenType == "keyword" && token == "SpellInfo")) {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing SPELLINFO; 'SpellInfo' expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing SPELLINFO; 'SpellInfo' expected.", token);
                 ok = false;
             }
         }
         if (ok) {
             let [tokenType, token] = tokenStream.Consume();
             if (tokenType != "(") {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing SPELLINFO; '(' expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing SPELLINFO; '(' expected.", token);
                 ok = false;
             }
         }
-        let [spellId, name];
+        let spellId;
         if (ok) {
             let [tokenType, token] = tokenStream.Consume();
             if (tokenType == "number") {
@@ -2032,24 +2034,24 @@ class OvaleAST extends OvaleASTBase {
             } else if (tokenType == "name") {
                 name = token;
             } else {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing SPELLINFO; number or name expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing SPELLINFO; number or name expected.", token);
                 ok = false;
             }
         }
-        let [positionalParams, namedParams];
+        let positionalParams, namedParams;
         if (ok) {
-            [ok, positionalParams, namedParams] = ParseParameters(tokenStream, nodeList, annotation);
+            [ok, positionalParams, namedParams] = this.ParseParameters(tokenStream, nodeList, annotation);
         }
         if (ok) {
             let [tokenType, token] = tokenStream.Consume();
             if (tokenType != ")") {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing SPELLINFO; ')' expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing SPELLINFO; ')' expected.", token);
                 ok = false;
             }
         }
         let node;
         if (ok) {
-            node = OvaleAST.NewNode(nodeList);
+            node = this.NewNode(nodeList);
             node.type = "spell_info";
             node.spellId = spellId;
             node.name = name;
@@ -2071,18 +2073,18 @@ class OvaleAST extends OvaleASTBase {
         {
             let [tokenType, token] = tokenStream.Consume();
             if (!(tokenType == "keyword" && token == "SpellRequire")) {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing SPELLREQUIRE; keyword expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing SPELLREQUIRE; keyword expected.", token);
                 ok = false;
             }
         }
         if (ok) {
             let [tokenType, token] = tokenStream.Consume();
             if (tokenType != "(") {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing SPELLREQUIRE; '(' expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing SPELLREQUIRE; '(' expected.", token);
                 ok = false;
             }
         }
-        let [spellId, name];
+        let spellId, name;
         if (ok) {
             let [tokenType, token] = tokenStream.Consume();
             if (tokenType == "number") {
@@ -2090,7 +2092,7 @@ class OvaleAST extends OvaleASTBase {
             } else if (tokenType == "name") {
                 name = token;
             } else {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing SPELLREQUIRE; number or name expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing SPELLREQUIRE; number or name expected.", token);
                 ok = false;
             }
         }
@@ -2100,24 +2102,24 @@ class OvaleAST extends OvaleASTBase {
             if (tokenType == "name") {
                 property = token;
             } else {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing SPELLREQUIRE; property name expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing SPELLREQUIRE; property name expected.", token);
                 ok = false;
             }
         }
-        let [positionalParams, namedParams];
+        let positionalParams, namedParams;
         if (ok) {
-            [ok, positionalParams, namedParams] = ParseParameters(tokenStream, nodeList, annotation);
+            [ok, positionalParams, namedParams] = this.ParseParameters(tokenStream, nodeList, annotation);
         }
         if (ok) {
             let [tokenType, token] = tokenStream.Consume();
             if (tokenType != ")") {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing SPELLREQUIRE; ')' expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing SPELLREQUIRE; ')' expected.", token);
                 ok = false;
             }
         }
         let node;
         if (ok) {
-            node = OvaleAST.NewNode(nodeList);
+            node = this.NewNode(nodeList);
             node.type = "spell_require";
             node.spellId = spellId;
             node.name = name;
@@ -2158,19 +2160,19 @@ class OvaleAST extends OvaleASTBase {
                 }
                 if (tokenType) {
                     if (BINARY_OPERATOR[token]) {
-                        [ok, node] = ParseExpression(tokenStream, nodeList, annotation);
+                        [ok, node] = this.ParseExpression(tokenStream, nodeList, annotation);
                     } else {
-                        [ok, node] = ParseGroup(tokenStream, nodeList, annotation);
+                        [ok, node] = this.ParseGroup(tokenStream, nodeList, annotation);
                     }
                 } else {
-                    SyntaxError(tokenStream, "Syntax error: unexpected end of script.");
+                    this.SyntaxError(tokenStream, "Syntax error: unexpected end of script.");
                 }
             } else if (token == "if") {
-                [ok, node] = ParseIf(tokenStream, nodeList, annotation);
+                [ok, node] = this.ParseIf(tokenStream, nodeList, annotation);
             } else if (token == "unless") {
-                [ok, node] = ParseUnless(tokenStream, nodeList, annotation);
+                [ok, node] = this.ParseUnless(tokenStream, nodeList, annotation);
             } else {
-                [ok, node] = ParseExpression(tokenStream, nodeList, annotation);
+                [ok, node] = this.ParseExpression(tokenStream, nodeList, annotation);
             }
         }
         return [ok, node];
@@ -2186,19 +2188,19 @@ class OvaleAST extends OvaleASTBase {
                 tokenStream.Consume();
             } else if (tokenType == "name") {
                 if (STRING_LOOKUP_FUNCTION[token]) {
-                    [ok, node] = ParseFunction(tokenStream, nodeList, annotation);
+                    [ok, node] = this.ParseFunction(tokenStream, nodeList, annotation);
                 } else {
                     value = token;
                     tokenStream.Consume();
                 }
             } else {
                 tokenStream.Consume();
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing STRING; string, variable, or function expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing STRING; string, variable, or function expected.", token);
                 ok = false;
             }
         }
         if (ok && !node) {
-            node = OvaleAST.NewNode(nodeList);
+            node = this.NewNode(nodeList);
             node.type = "string";
             node.value = value;
             annotation.stringReference = annotation.stringReference || {
@@ -2212,20 +2214,20 @@ class OvaleAST extends OvaleASTBase {
         {
             let [tokenType, token] = tokenStream.Consume();
             if (!(tokenType == "keyword" && token == "unless")) {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing UNLESS; 'unless' expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing UNLESS; 'unless' expected.", token);
                 ok = false;
             }
         }
-        let [conditionNode, bodyNode];
+        let conditionNode, bodyNode;
         if (ok) {
-            [ok, conditionNode] = ParseExpression(tokenStream, nodeList, annotation);
+            [ok, conditionNode] = this.ParseExpression(tokenStream, nodeList, annotation);
         }
         if (ok) {
-            [ok, bodyNode] = ParseStatement(tokenStream, nodeList, annotation);
+            [ok, bodyNode] = this.ParseStatement(tokenStream, nodeList, annotation);
         }
         let node;
         if (ok) {
-            node = OvaleAST.NewNode(nodeList, true);
+            node = this.NewNode(nodeList, true);
             node.type = "unless";
             node.child[1] = conditionNode;
             node.child[2] = bodyNode;
@@ -2240,13 +2242,13 @@ class OvaleAST extends OvaleASTBase {
             if (tokenType == "name") {
                 name = token;
             } else {
-                SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing VARIABLE; name expected.", token);
+                this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing VARIABLE; name expected.", token);
                 ok = false;
             }
         }
         let node;
         if (ok) {
-            node = OvaleAST.NewNode(nodeList);
+            node = this.NewNode(nodeList);
             node.type = "variable";
             node.name = name;
             annotation.nameReference = annotation.nameReference || {
@@ -2256,34 +2258,34 @@ class OvaleAST extends OvaleASTBase {
         return [ok, node];
     }
     PARSE_VISITOR = {
-        ["action"]: ParseFunction,
-        ["add_function"]: ParseAddFunction,
-        ["arithmetic"]: ParseExpression,
-        ["bang_value"]: ParseSimpleParameterValue,
-        ["checkbox"]: ParseAddCheckBox,
-        ["compare"]: ParseExpression,
-        ["comment"]: ParseComment,
-        ["custom_function"]: ParseFunction,
-        ["define"]: ParseDefine,
-        ["expression"]: ParseExpression,
-        ["function"]: ParseFunction,
-        ["group"]: ParseGroup,
-        ["icon"]: ParseAddIcon,
-        ["if"]: ParseIf,
-        ["item_info"]: ParseItemInfo,
-        ["item_require"]: ParseItemRequire,
-        ["list"]: ParseList,
-        ["list_item"]: ParseAddListItem,
-        ["logical"]: ParseExpression,
-        ["score_spells"]: ParseScoreSpells,
-        ["script"]: ParseScript,
-        ["spell_aura_list"]: ParseSpellAuraList,
-        ["spell_info"]: ParseSpellInfo,
-        ["spell_require"]: ParseSpellRequire,
-        ["string"]: ParseString,
-        ["unless"]: ParseUnless,
-        ["value"]: ParseNumber,
-        ["variable"]: ParseVariable
+        ["action"]: this.ParseFunction,
+        ["add_function"]: this.ParseAddFunction,
+        ["arithmetic"]: this.ParseExpression,
+        ["bang_value"]: this.ParseSimpleParameterValue,
+        ["checkbox"]: this.ParseAddCheckBox,
+        ["compare"]: this.ParseExpression,
+        ["comment"]: this.ParseComment,
+        ["custom_function"]: this.ParseFunction,
+        ["define"]: this.ParseDefine,
+        ["expression"]: this.ParseExpression,
+        ["function"]: this.ParseFunction,
+        ["group"]: this.ParseGroup,
+        ["icon"]: this.ParseAddIcon,
+        ["if"]: this.ParseIf,
+        ["item_info"]: this.ParseItemInfo,
+        ["item_require"]: this.ParseItemRequire,
+        ["list"]: this.ParseList,
+        ["list_item"]: this.ParseAddListItem,
+        ["logical"]: this.ParseExpression,
+        ["score_spells"]: this.ParseScoreSpells,
+        ["script"]: this.ParseScript,
+        ["spell_aura_list"]: this.ParseSpellAuraList,
+        ["spell_info"]: this.ParseSpellInfo,
+        ["spell_require"]: this.ParseSpellRequire,
+        ["string"]: this.ParseString,
+        ["unless"]: this.ParseUnless,
+        ["value"]: this.ParseNumber,
+        ["variable"]: this.ParseVariable
     }
 
     OnInitialize() {
@@ -2297,7 +2299,7 @@ class OvaleAST extends OvaleASTBase {
         this.self_outputPool.DebuggingInfo();
     }
 
-    NewNode(nodeList, hasChild) {
+    NewNode(nodeList?, hasChild?: boolean) {
         let node = this.self_pool.Get();
         if (nodeList) {
             let nodeId = lualength(nodeList) + 1;
@@ -2310,23 +2312,23 @@ class OvaleAST extends OvaleASTBase {
         return node;
     }
     NodeToString(node) {
-        let output = print_r(node);
+        let output = this.print_r(node);
         return tconcat(output, "\n");
     }
-    ReleaseAnnotation(annotation) {
+    ReleaseAnnotation(annotation: Annotation) {
         if (annotation.controlList) {
             for (const [_, control] of _ipairs(annotation.controlList)) {
-                self_controlPool.Release(control);
+                this.self_controlPool.Release(control);
             }
         }
         if (annotation.parametersList) {
             for (const [_, parameters] of _ipairs(annotation.parametersList)) {
-                self_parametersPool.Release(parameters);
+                this.self_parametersPool.Release(parameters);
             }
         }
         if (annotation.nodeList) {
             for (const [_, node] of _ipairs(annotation.nodeList)) {
-                self_pool.Release(node);
+                this.self_pool.Release(node);
             }
         }
         for (const [key, value] of _pairs(annotation)) {
@@ -2341,15 +2343,15 @@ class OvaleAST extends OvaleASTBase {
             this.ReleaseAnnotation(ast.annotation);
             ast.annotation = undefined;
         }
-        self_pool.Release(ast);
+        this.self_pool.Release(ast);
     }
     ParseCode(nodeType, code, nodeList, annotation) {
         nodeList = nodeList || {
         }
         annotation = annotation || {
         }
-        let tokenStream = OvaleLexer("Ovale", GetTokenIterator(code));
-        let [ok, node] = Parse(nodeType, tokenStream, nodeList, annotation);
+        let tokenStream = OvaleLexer("Ovale", this.GetTokenIterator(code));
+        let [ok, node] = this.Parse(nodeType, tokenStream, nodeList, annotation);
         tokenStream.Release();
         return [node, nodeList, annotation];
     }
@@ -2387,15 +2389,13 @@ class OvaleAST extends OvaleASTBase {
         }
         return ast;
     }
-    Unparse(node) {
-        return Unparse(node);
-    }
+    
     PropagateConstants(ast) {
-        this.StartProfiling("OvaleAST_PropagateConstants");
+        this.profiler.StartProfiling("OvaleAST_PropagateConstants");
         if (ast.annotation) {
             let dictionary = ast.annotation.definition;
             if (dictionary && ast.annotation.nameReference) {
-                for (const [_, node] of _ipairs(ast.annotation.nameReference)) {
+                for (const [_, node] of _ipairs<Node>(ast.annotation.nameReference)) {
                     if ((node.type == "item_info" || node.type == "item_require") && node.name) {
                         let itemId = dictionary[node.name];
                         if (itemId) {
@@ -2420,12 +2420,12 @@ class OvaleAST extends OvaleASTBase {
                 }
             }
         }
-        this.StopProfiling("OvaleAST_PropagateConstants");
+        this.profiler.StopProfiling("OvaleAST_PropagateConstants");
     }
     PropagateStrings(ast) {
-        this.StartProfiling("OvaleAST_PropagateStrings");
+        this.profiler.StartProfiling("OvaleAST_PropagateStrings");
         if (ast.annotation && ast.annotation.stringReference) {
-            for (const [_, node] of _ipairs(ast.annotation.stringReference)) {
+            for (const [_, node] of _ipairs<Node>(ast.annotation.stringReference)) {
                 if (node.type == "string") {
                     let key = node.value;
                     let value = L[key];
@@ -2474,18 +2474,18 @@ class OvaleAST extends OvaleASTBase {
                 }
             }
         }
-        this.StopProfiling("OvaleAST_PropagateStrings");
+        this.profiler.StopProfiling("OvaleAST_PropagateStrings");
     }
     FlattenParameters(ast) {
-        this.StartProfiling("OvaleAST_FlattenParameters");
+        this.profiler.StartProfiling("OvaleAST_FlattenParameters");
         let annotation = ast.annotation;
         if (annotation && annotation.parametersReference) {
             let dictionary = annotation.definition;
-            for (const [_, node] of _ipairs(annotation.parametersReference)) {
+            for (const [_, node] of _ipairs<Node>(annotation.parametersReference)) {
                 if (node.rawPositionalParams) {
-                    let parameters = self_parametersPool.Get();
+                    let parameters = this.self_parametersPool.Get();
                     for (const [key, value] of _ipairs(node.rawPositionalParams)) {
-                        parameters[key] = FlattenParameterValue(value, annotation);
+                        parameters[key] = this.FlattenParameterValue(value, annotation);
                     }
                     node.positionalParams = parameters;
                     annotation.parametersList = annotation.parametersList || {
@@ -2493,17 +2493,17 @@ class OvaleAST extends OvaleASTBase {
                     annotation.parametersList[lualength(annotation.parametersList) + 1] = parameters;
                 }
                 if (node.rawNamedParams) {
-                    let parameters = self_parametersPool.Get();
-                    for (const [key, value] of _pairs(node.rawNamedParams)) {
+                    let parameters = this.self_parametersPool.Get();
+                    for (let [key, value] of _pairs(node.rawNamedParams)) {
                         if (key == "checkbox" || key == "listitem") {
-                            let control = parameters[key] || self_controlPool.Get();
+                            let control = parameters[key] || this.self_controlPool.Get();
                             if (key == "checkbox") {
                                 for (const [i, name] of _ipairs(value)) {
-                                    control[i] = FlattenParameterValue(name, annotation);
+                                    control[i] = this.FlattenParameterValue(name, annotation);
                                 }
                             } else {
                                 for (const [list, item] of _pairs(value)) {
-                                    control[list] = FlattenParameterValue(item, annotation);
+                                    control[list] = this.FlattenParameterValue(item, annotation);
                                 }
                             }
                             if (!parameters[key]) {
@@ -2516,7 +2516,7 @@ class OvaleAST extends OvaleASTBase {
                             if (_type(key) != "number" && dictionary && dictionary[key]) {
                                 key = dictionary[key];
                             }
-                            parameters[key] = FlattenParameterValue(value, annotation);
+                            parameters[key] = this.FlattenParameterValue(value, annotation);
                         }
                     }
                     node.namedParams = parameters;
@@ -2524,7 +2524,7 @@ class OvaleAST extends OvaleASTBase {
                     }
                     annotation.parametersList[lualength(annotation.parametersList) + 1] = parameters;
                 }
-                let output = self_outputPool.Get();
+                let output = this.self_outputPool.Get();
                 for (const [k, v] of _pairs(node.namedParams)) {
                     if (k == "checkbox") {
                         for (const [_, name] of _ipairs(v)) {
@@ -2549,13 +2549,13 @@ class OvaleAST extends OvaleASTBase {
                 } else {
                     node.paramsAsString = "";
                 }
-                self_outputPool.Release(output);
+                this.self_outputPool.Release(output);
             }
         }
-        this.StopProfiling("OvaleAST_FlattenParameters");
+        this.profiler.StopProfiling("OvaleAST_FlattenParameters");
     }
     VerifyFunctionCalls(ast) {
-        this.StartProfiling("OvaleAST_VerifyFunctionCalls");
+        this.profiler.StartProfiling("OvaleAST_VerifyFunctionCalls");
         if (ast.annotation && ast.annotation.verify) {
             let customFunction = ast.annotation.customFunction;
             let functionCall = ast.annotation.functionCall;
@@ -2566,18 +2566,18 @@ class OvaleAST extends OvaleASTBase {
                     } else if (OvaleCondition.IsCondition(name)) {
                     } else if (customFunction && customFunction[name]) {
                     } else {
-                        this.Error("unknown function '%s'.", name);
+                        this.printer.Error("unknown function '%s'.", name);
                     }
                 }
             }
         }
-        this.StopProfiling("OvaleAST_VerifyFunctionCalls");
+        this.profiler.StopProfiling("OvaleAST_VerifyFunctionCalls");
     }
     VerifyParameterStances(ast) {
-        this.StartProfiling("OvaleAST_VerifyParameterStances");
+        this.profiler.StartProfiling("OvaleAST_VerifyParameterStances");
         let annotation = ast.annotation;
         if (annotation && annotation.verify && annotation.parametersReference) {
-            for (const [_, node] of _ipairs(annotation.parametersReference)) {
+            for (const [_, node] of _ipairs<Node>(annotation.parametersReference)) {
                 if (node.rawNamedParams) {
                     for (const [stanceKeyword] of _pairs(STANCE_KEYWORD)) {
                         let valueNode = node.rawNamedParams[stanceKeyword];
@@ -2588,44 +2588,43 @@ class OvaleAST extends OvaleASTBase {
                             if (valueNode.type == "bang_value") {
                                 valueNode = valueNode.child[1];
                             }
-                            let value = FlattenParameterValue(valueNode, annotation);
+                            let value = this.FlattenParameterValue(valueNode, annotation);
                             if (OvaleStance.STANCE_NAME[value]) {
                             } else if (_type(value) == "number") {
                             } else {
-                                this.Error("unknown stance '%s'.", value);
+                                this.printer.Error("unknown stance '%s'.", value);
                             }
                         }
                     }
                 }
             }
         }
-        this.StopProfiling("OvaleAST_VerifyParameterStances");
+        this.profiler.StopProfiling("OvaleAST_VerifyParameterStances");
     }
     InsertPostOrderTraversal(ast) {
-        this.StartProfiling("OvaleAST_InsertPostOrderTraversal");
+        this.profiler.StartProfiling("OvaleAST_InsertPostOrderTraversal");
         let annotation = ast.annotation;
         if (annotation && annotation.postOrderReference) {
-            for (const [_, node] of _ipairs(annotation.postOrderReference)) {
-                let array = self_postOrderPool.Get();
-                let visited = self_postOrderPool.Get();
-                PostOrderTraversal(node, array, visited);
-                self_postOrderPool.Release(visited);
+            for (const [_, node] of _ipairs<Node>(annotation.postOrderReference)) {
+                let array = this.self_postOrderPool.Get();
+                let visited = this.postOrderVisitedPool.Get();
+                this.PostOrderTraversal(node, array, visited);
+                this.postOrderVisitedPool.Release(visited);
                 node.postOrder = array;
             }
         }
-        this.StopProfiling("OvaleAST_InsertPostOrderTraversal");
+        this.profiler.StopProfiling("OvaleAST_InsertPostOrderTraversal");
     }
     Optimize(ast) {
         this.CommonFunctionElimination(ast);
         this.CommonSubExpressionElimination(ast);
     }
     CommonFunctionElimination(ast) {
-        this.StartProfiling("OvaleAST_CommonFunctionElimination");
+        this.profiler.StartProfiling("OvaleAST_CommonFunctionElimination");
         if (ast.annotation) {
             if (ast.annotation.functionReference) {
-                let functionHash = ast.annotation.functionHash || {
-                }
-                for (const [_, node] of _ipairs(ast.annotation.functionReference)) {
+                let functionHash = ast.annotation.functionHash || {}
+                for (const [_, node] of _ipairs<Node>(ast.annotation.functionReference)) {
                     if (node.positionalParams || node.namedParams) {
                         let hash = node.name + "(" + node.paramsAsString + ")";
                         node.functionHash = hash;
@@ -2636,7 +2635,7 @@ class OvaleAST extends OvaleASTBase {
             }
             if (ast.annotation.functionHash && ast.annotation.nodeList) {
                 let functionHash = ast.annotation.functionHash;
-                for (const [_, node] of _ipairs(ast.annotation.nodeList)) {
+                for (const [_, node] of _ipairs<Node>(ast.annotation.nodeList)) {
                     if (node.child) {
                         for (const [k, childNode] of _ipairs(node.child)) {
                             if (childNode.functionHash) {
@@ -2647,14 +2646,14 @@ class OvaleAST extends OvaleASTBase {
                 }
             }
         }
-        this.StopProfiling("OvaleAST_CommonFunctionElimination");
+        this.profiler.StopProfiling("OvaleAST_CommonFunctionElimination");
     }
     CommonSubExpressionElimination(ast) {
-        this.StartProfiling("OvaleAST_CommonSubExpressionElimination");
+        this.profiler.StartProfiling("OvaleAST_CommonSubExpressionElimination");
         if (ast && ast.annotation && ast.annotation.nodeList) {
             let expressionHash = {
             }
-            for (const [_, node] of _ipairs(ast.annotation.nodeList)) {
+            for (const [_, node] of _ipairs<Node>(ast.annotation.nodeList)) {
                 let hash = node.asString;
                 if (hash) {
                     expressionHash[hash] = expressionHash[hash] || node;
@@ -2675,6 +2674,8 @@ class OvaleAST extends OvaleASTBase {
             }
             ast.annotation.expressionHash = expressionHash;
         }
-        this.StopProfiling("OvaleAST_CommonSubExpressionElimination");
+        this.profiler.StopProfiling("OvaleAST_CommonSubExpressionElimination");
     }
 }
+
+export const OvaleAST = new OvaleASTClass();

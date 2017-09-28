@@ -2,22 +2,22 @@ import __addon from "addon";
 let [OVALE, Ovale] = __addon;
 let LibBabbleCreatureType = LibStub("LibBabble-CreatureType-3.0", true);
 let LibRangeCheck = LibStub("LibRangeCheck-2.0", true);
-import { OvaleBestAction } from "./OvaleBestAction";
-import { OvaleCompile } from "./OvaleCompile";
-import { OvaleCondition } from "./OvaleCondition";
-import { OvaleCooldown } from "./OvaleCooldown";
-import { OvaleDamageTaken } from "./OvaleDamageTaken";
-import { OvaleData } from "./OvaleData";
-import { OvaleEquipment } from "./OvaleEquipment";
-import { OvaleFuture } from "./OvaleFuture";
-import { OvaleGUID } from "./OvaleGUID";
-import { OvaleHealth } from "./OvaleHealth";
-import { OvalePower } from "./OvalePower";
-import { OvaleRunes } from "./OvaleRunes";
-import { OvaleSpellBook } from "./OvaleSpellBook";
-import { OvaleSpellDamage } from "./OvaleSpellDamage";
-import { OvaleArtifact } from "./OvaleArtifact";
-import { OvaleBossMod } from "./OvaleBossMod";
+import { OvaleBestAction } from "./BestAction";
+import { OvaleCompile } from "./Compile";
+import { OvaleCondition } from "./Condition";
+import { OvaleCooldown } from "./Cooldown";
+import { OvaleDamageTaken } from "./DamageTaken";
+import { OvaleData } from "./Data";
+import { OvaleEquipment } from "./Equipment";
+import { OvaleFuture } from "./Future";
+import { OvaleGUID } from "./GUID";
+import { OvaleHealth } from "./Health";
+import { OvalePower } from "./Power";
+import { OvaleRunes } from "./Runes";
+import { OvaleSpellBook } from "./SpellBook";
+import { OvaleSpellDamage } from "./SpellDamage";
+import { OvaleArtifact } from "./Artifact";
+import { OvaleBossMod } from "./BossMod";
 let floor = math.floor;
 let _ipairs = ipairs;
 let _pairs = pairs;
@@ -1684,7 +1684,7 @@ const GetHastedTime = function(seconds, haste, state) {
     const RelativeLevel = function(positionalParams, namedParams, state, atTime) {
         let [comparator, limit] = [positionalParams[1], positionalParams[2]];
         let target = ParseCondition(positionalParams, namedParams, state);
-        let [value, level];
+        let value, level;
         if (target == "player") {
             level = state.level;
         } else {

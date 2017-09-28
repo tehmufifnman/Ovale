@@ -23,7 +23,7 @@ let self_traced = false;
 let self_traceLog = undefined;
 let OVALE_TRACELOG_MAXLINES = 4096;
 
-class OvaleDebug extends OvaleDebugBase {
+class OvaleDebugClass extends OvaleDebugBase {
     options = {
         name: OVALE + " " + L["Debug"],
         type: "group",
@@ -91,7 +91,7 @@ class OvaleDebug extends OvaleDebugBase {
         }
         options.defaultDB.global = options.defaultDB.global || {}
         options.defaultDB.global.debug = {}
-        options.RegisterOptions(OvaleDebug);
+        options.RegisterOptions(OvaleDebugClass);
     }
     
     OnInitialize() {
@@ -145,7 +145,7 @@ class OvaleDebug extends OvaleDebugBase {
     }
 }
 
-export const debug = new OvaleDebug();
+export const OvaleDebug = new OvaleDebugClass();
 
 
 export class Debug {

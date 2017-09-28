@@ -1,18 +1,17 @@
 import __addon from "addon";
 let [OVALE, Ovale] = __addon;
-let OvaleState = Ovale.NewModule("OvaleState");
-Ovale.OvaleState = OvaleState;
-import { L } from "./L";
-import { OvaleDebug } from "./OvaleDebug";
-import { OvaleQueue } from "./OvaleQueue";
+let OvaleStateBase = Ovale.NewModule("OvaleState");
+export let OvaleState: OvaleStateClass;
+import { L } from "./Localization";
+import { OvaleDebug } from "./Debug";
+import { OvaleQueue } from "./Queue";
 let _pairs = pairs;
 let self_statePrototype = {
 }
 let self_stateAddons = OvaleQueue.NewQueue("OvaleState_stateAddons");
-OvaleDebug.RegisterDebugging(OvaleState);
-OvaleState.state = {
-}
-class OvaleState {
+class OvaleStateClass extends OvaleStateBase {
+    debug = OvaleDebug.RegisterDebugging(this);
+    state = { }
     OnEnable() {
         this.RegisterState(this, this.statePrototype);
     }
@@ -53,17 +52,7 @@ class OvaleState {
             }
         }
     }
-}
-OvaleState.statePrototype = {
-}
-let statePrototype = OvaleState.statePrototype;
-statePrototype.isState = true;
-statePrototype.isInitialized = undefined;
-statePrototype.futureVariable = undefined;
-statePrototype.futureLastEnable = undefined;
-statePrototype.variable = undefined;
-statePrototype.lastEnable = undefined;
-class OvaleState {
+
     InitializeState(state) {
         state.futureVariable = {
         }
@@ -102,6 +91,17 @@ class OvaleState {
         }
     }
 }
+
+OvaleState.statePrototype = {
+}
+let statePrototype = OvaleState.statePrototype;
+statePrototype.isState = true;
+statePrototype.isInitialized = undefined;
+statePrototype.futureVariable = undefined;
+statePrototype.futureLastEnable = undefined;
+statePrototype.variable = undefined;
+statePrototype.lastEnable = undefined;
+
 statePrototype.Initialize = function (state) {
     if (!state.isInitialized) {
         OvaleState.InvokeMethod("InitializeState", state);

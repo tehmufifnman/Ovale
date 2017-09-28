@@ -1,12 +1,11 @@
 import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvaleBanditsGuile = Ovale.NewModule("OvaleBanditsGuile", "AceEvent-3.0");
-Ovale.OvaleBanditsGuile = OvaleBanditsGuile;
-import { OvaleDebug } from "./OvaleDebug";
-let OvaleAura = undefined;
+let [OVALE, Addon] = __addon;
+let OvaleBanditsGuileBase = Addon.NewModule("OvaleBanditsGuile", "AceEvent-3.0");
+import { OvaleDebug, Debug } from "./Debug";
+import { Ovale } from "./Ovale";
+import { OvaleAura } from "./Aura";
 let API_GetSpellInfo = GetSpellInfo;
 let API_GetTime = GetTime;
-OvaleDebug.RegisterDebugging(OvaleBanditsGuile);
 let self_playerGUID = undefined;
 let SHALLOW_INSIGHT = 84745;
 let MODERATE_INSIGHT = 84746;
@@ -20,15 +19,17 @@ let BANDITS_GUILE = 84654;
 let BANDITS_GUILE_ATTACK = {
     [1752]: API_GetSpellInfo(1752)
 }
-OvaleBanditsGuile.spellName = "Bandit's Guile";
-OvaleBanditsGuile.spellId = BANDITS_GUILE;
-OvaleBanditsGuile.start = 0;
-OvaleBanditsGuile.ending = 0;
-OvaleBanditsGuile.duration = 15;
-OvaleBanditsGuile.stacks = 0;
-class OvaleBanditsGuile {
+
+class OvaleBanditsGuile extends OvaleBanditsGuileBase {
+    spellName = "Bandit's Guile";
+    spellId = BANDITS_GUILE;
+    start = 0;
+    ending = 0;
+    duration = 15;
+    stacks = 0;
+    debug = new Debug(this);
+
     OnInitialize() {
-        OvaleAura = Ovale.OvaleAura;
     }
     OnEnable() {
         if (Ovale.playerClass == "ROGUE") {
@@ -42,7 +43,7 @@ class OvaleBanditsGuile {
         }
     }
     Ovale_SpecializationChanged(event, specialization, previousSpecialization) {
-        this.Debug(event, specialization, previousSpecialization);
+        this.debug.Debug(event, specialization, previousSpecialization);
         if (specialization == "combat") {
             this.RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
             this.RegisterMessage("Ovale_AuraAdded");
@@ -68,7 +69,7 @@ class OvaleBanditsGuile {
                     this.start = now;
                     this.ending = this.start + this.duration;
                     this.stacks = this.stacks + 1;
-                    this.Debug(cleuEvent, spellName, spellId, this.stacks);
+                    this.debug.Debug(cleuEvent, spellName, spellId, this.stacks);
                     this.GainedAura(now);
                 }
             }
@@ -78,8 +79,8 @@ class OvaleBanditsGuile {
         if (target == self_playerGUID) {
             let auraName = INSIGHT_BUFF[auraId];
             if (auraName) {
-                let aura = OvaleAura.GetAura("player", auraId, "HELPFUL", true);
-                [this.start, this.ending] = [aura.start, aura.ending];
+                let playerAura = OvaleAura.GetAura("player", auraId, "HELPFUL", true);
+                [this.start, this.ending] = [playerAura.start, playerAura.ending];
                 if (auraId == SHALLOW_INSIGHT) {
                     this.stacks = 4;
                 } else if (auraId == MODERATE_INSIGHT) {
@@ -87,7 +88,7 @@ class OvaleBanditsGuile {
                 } else if (auraId == DEEP_INSIGHT) {
                     this.stacks = 12;
                 }
-                this.Debug(event, auraName, this.stacks);
+                this.debug.Debug(event, auraName, this.stacks);
                 this.GainedAura(timestamp);
             }
         }
@@ -96,10 +97,10 @@ class OvaleBanditsGuile {
         if (target == self_playerGUID) {
             let auraName = INSIGHT_BUFF[auraId];
             if (auraName) {
-                let aura = OvaleAura.GetAura("player", auraId, "HELPFUL", true);
-                [this.start, this.ending] = [aura.start, aura.ending];
+                let playerAura = OvaleAura.GetAura("player", auraId, "HELPFUL", true);
+                [this.start, this.ending] = [playerAura.start, playerAura.ending];
                 this.stacks = this.stacks + 1;
-                this.Debug(event, auraName, this.stacks);
+                this.debug.Debug(event, auraName, this.stacks);
                 this.GainedAura(timestamp);
             }
         }
@@ -109,7 +110,7 @@ class OvaleBanditsGuile {
             if (((auraId == SHALLOW_INSIGHT && this.stacks < 8) || (auraId == MODERATE_INSIGHT && this.stacks < 12) || auraId == DEEP_INSIGHT) && timestamp < this.ending) {
                 this.ending = timestamp;
                 this.stacks = 0;
-                this.Debug(event, INSIGHT_BUFF[auraId], this.stacks);
+                this.debug.Debug(event, INSIGHT_BUFF[auraId], this.stacks);
                 OvaleAura.LostAuraOnGUID(self_playerGUID, timestamp, this.spellId, self_playerGUID);
             }
         }
@@ -118,9 +119,11 @@ class OvaleBanditsGuile {
         OvaleAura.GainedAuraOnGUID(self_playerGUID, atTime, this.spellId, self_playerGUID, "HELPFUL", undefined, undefined, this.stacks, undefined, this.duration, this.ending, undefined, this.spellName, undefined, undefined, undefined);
     }
     DebugBanditsGuile() {
-        let aura = OvaleAura.GetAuraByGUID(self_playerGUID, this.spellId, "HELPFUL", true);
-        if (aura) {
-            this.Print("Player has Bandit's Guile aura with start=%s, end=%s, stacks=%d.", aura.start, aura.ending, aura.stacks);
+        let playerAura = OvaleAura.GetAuraByGUID(self_playerGUID, this.spellId, "HELPFUL", true);
+        if (playerAura) {
+            this.Print("Player has Bandit's Guile aura with start=%s, end=%s, stacks=%d.", playerAura.start, playerAura.ending, playerAura.stacks);
         }
     }
 }
+
+export const banditsGuile = new OvaleBanditsGuile();
