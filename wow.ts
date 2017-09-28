@@ -40,8 +40,8 @@ function tostring(s: any): string {
     return s.toString();
 }
 
-function type(a: any) {
-    return typeof(a);
+function type(a: any) : "table" {
+    return "table";
 }
 
 function wipe(x: any) {
@@ -74,12 +74,18 @@ function strjoin(separator: string, ...text:string[]) {
     return text.join(separator);
 }
 
+function rawset(table: any, key, value){}
+function setmetatable(table: any, metatable: any){}
+
 // Global lua objects
 var math = {
     floor: Math.floor,
     huge: Number.MAX_VALUE
 };
 
+var coroutine = {
+    yield(key, value?){}
+}
 
 var bit = {
     band(...other:number[]) {
@@ -106,9 +112,10 @@ var string = {
     format(format: string, ...values) { return format; },
     gmatch(text: string, pattern: string) { return text.match(pattern); },
     gsub(text: string, pattern: string, substitue: string) {
-        text.replace(pattern, substitue);
+        return text.replace(pattern, substitue);
     },
     match(text: string, pattern: string) { return text.match(pattern); },
+    upper(text: string) { return text.toUpperCase()},
 }
 
 var table = {
@@ -122,10 +129,11 @@ var table = {
         delete result.n;
         return result;
     },
-    insert<T>(t:LuaArray<T>, value:T) {
-        const l = lualength(t);
-        t[l + 1] = value;
-        t.n = l + 1;
+
+    insert<T>(t:LuaArray<T>, indexOrValue:number|T, value?: T) {
+        // const l = lualength(t);
+        // t[l + 1] = value;
+        // t.n = l + 1;
     },
     sort<T>(t:LuaArray<T>) {
         let values:T[] = [];
@@ -138,7 +146,8 @@ var table = {
             t[i + 1] = values[i];
         }
         t.n = values.length;
-    }
+    },
+    remove():void {},
 }
 
 // Utility functions
@@ -208,6 +217,36 @@ function UnitIsDead(unit: string) {
 function InterfaceOptionsFrame_OpenToCategory(frameName:string) {
 
 }
+
+function debugprofilestop() {
+    return 10;
+}
+
+function GetActionInfo(slot: string) {
+    return ["a", "b", "c"];
+}
+
+function GetActionText(slot: string) {
+    return "ActioNText";
+}
+
+function GetBindingKey(key:string){
+    return "a";
+}
+
+function GetBonusBarIndex(){
+
+}
+
+function GetMacroItem(spellId: number){
+    return [];
+}
+
+function GetMacroSpell(spellId: number){
+    return []
+}
+
+var Bartender4;
 
 // WoW global variables
 var DEFAULT_CHAT_FRAME:UIFrame = undefined;

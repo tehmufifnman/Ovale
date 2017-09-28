@@ -1,27 +1,54 @@
 import __addon from "addon";
 let [OVALE, Ovale] = __addon;
-let OvaleArtifact = Ovale.NewModule("OvaleArtifact", "AceEvent-3.0");
-let LibArtifactData = LibStub("LibArtifactData-1.0");
-import { OvaleDebug } from "./OvaleDebug";
-Ovale.OvaleArtifact = OvaleArtifact;
-import { L } from "./L";
-let OvaleState = undefined;
+let OvaleArtifactBase = Ovale.NewModule("OvaleArtifact", "AceEvent-3.0");
+import LibArtifactData from "LibArtifactData-1.0";
+import { debug, Debug } from "./Debug";
+import { L } from "./Localization";
+import { state } from "./State";
 let tsort = table.sort;
 let tinsert = table.insert;
 let tremove = table.remove;
 let tconcat = table.concat;
-let self_traits = {
-}
-OvaleDebug.RegisterDebugging(OvaleArtifact);
-class OvaleArtifact {
+
+
+class OvaleArtifact extends OvaleArtifactBase {
+    self_traits = {}
+    debug: Debug;
+
+    debugOptions = {
+        artifacttraits: {
+            name: L["Artifact traits"],
+            type: "group",
+            args: {
+                artifacttraits: {
+                    name: L["Artifact traits"],
+                    type: "input",
+                    multiline: 25,
+                    width: "full",
+                    get: (info) => {
+                        return this.DebugTraits();
+                    }
+                }
+            }
+        }
+    }    
+
+    constructor() {
+        super();
+        this.debug = debug.RegisterDebugging(this);
+        for (const [k, v] of pairs(this.debugOptions)) {
+            debug.options.args[k] = v;
+        }
+    }
+
     OnInitialize() {
     }
     OnEnable() {
-        this.RegisterEvent("SPELLS_CHANGED", "UpdateTraits");
-        LibArtifactData.RegisterCallback(OvaleArtifact, "ARTIFACT_ADDED", "UpdateTraits");
-        LibArtifactData.RegisterCallback(OvaleArtifact, "ARTIFACT_EQUIPPED_CHANGED", "UpdateTraits");
-        LibArtifactData.RegisterCallback(OvaleArtifact, "ARTIFACT_ACTIVE_CHANGED", "UpdateTraits");
-        LibArtifactData.RegisterCallback(OvaleArtifact, "ARTIFACT_TRAITS_CHANGED", "UpdateTraits");
+        this.RegisterEvent("SPELLS_CHANGED", this.UpdateTraits);
+        LibArtifactData.RegisterCallback(OvaleArtifact, "ARTIFACT_ADDED", this.UpdateTraits);
+        LibArtifactData.RegisterCallback(OvaleArtifact, "ARTIFACT_EQUIPPED_CHANGED", this.UpdateTraits);
+        LibArtifactData.RegisterCallback(OvaleArtifact, "ARTIFACT_ACTIVE_CHANGED", this.UpdateTraits);
+        LibArtifactData.RegisterCallback(OvaleArtifact, "ARTIFACT_TRAITS_CHANGED", this.UpdateTraits);
     }
     OnDisable() {
         LibArtifactData.UnregisterCallback(OvaleArtifact, "ARTIFACT_ADDED");
@@ -32,63 +59,35 @@ class OvaleArtifact {
     }
     UpdateTraits(message) {
         let [artifactId, traits] = LibArtifactData.GetArtifactTraits();
-        self_traits = {
-        }
+        this.self_traits = {}
         if (!traits) {
-            break;
+            return;
         }
         for (const [k, v] of ipairs(traits)) {
-            self_traits[v.spellID] = v;
+            this.self_traits[v.spellID] = v;
         }
     }
     HasTrait(spellId) {
-        return self_traits[spellId] && self_traits[spellId].currentRank;
+        return this.self_traits[spellId] && this.self_traits[spellId].currentRank;
     }
     TraitRank(spellId) {
-        if (!self_traits[spellId]) {
+        if (!this.self_traits[spellId]) {
             return 0;
         }
-        return self_traits[spellId].currentRank;
+        return this.self_traits[spellId].currentRank;
     }
-}
-{
-    let output = {
-    }
-class OvaleArtifact {
-        DebugTraits() {
-            wipe(output);
-            let array = {
-            }
-            for (const [k, v] of pairs(self_traits)) {
-                tinsert(array, tostring(v.name) + ": " + tostring(k));
-            }
-            tsort(array);
-            for (const [_, v] of ipairs(array)) {
-                output[lualength(output) + 1] = v;
-            }
-            return tconcat(output, "\n");
+    output = {}
+    DebugTraits() {
+        wipe(this.output);
+        let array = {
         }
-}
-}
-{
-    let debugOptions = {
-        artifacttraits: {
-            name: L["Artifact traits"],
-            type: "group",
-            args: {
-                artifacttraits: {
-                    name: L["Artifact traits"],
-                    type: "input",
-                    multiline: 25,
-                    width: "full",
-                    get: function (info) {
-                        return OvaleArtifact.DebugTraits();
-                    }
-                }
-            }
+        for (const [k, v] of pairs(this.self_traits)) {
+            tinsert(array, tostring(v.name) + ": " + tostring(k));
         }
-    }
-    for (const [k, v] of pairs(debugOptions)) {
-        OvaleDebug.options.args[k] = v;
+        tsort(array);
+        for (const [_, v] of ipairs(array)) {
+            this.output[lualength(this.output) + 1] = v;
+        }
+        return tconcat(this.output, "\n");
     }
 }

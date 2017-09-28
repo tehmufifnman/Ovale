@@ -1,10 +1,9 @@
 import __addon from "addon";
 let [OVALE, Ovale] = __addon;
-let OvaleFuture = Ovale.NewModule("OvaleFuture", "AceEvent-3.0");
-Ovale.OvaleFuture = OvaleFuture;
-import { OvaleDebug } from "./OvaleDebug";
-import { OvalePool } from "./OvalePool";
-import { OvaleProfiler } from "./OvaleProfiler";
+let OvaleFutureBase = Ovale.NewModule("OvaleFuture", "AceEvent-3.0");
+import { debug } from "./Debug";
+import { OvalePool } from "./Pool";
+import { OvaleProfiler } from "./Profiler";
 let OvaleAura = undefined;
 let OvaleCooldown = undefined;
 let OvaleData = undefined;
@@ -28,7 +27,7 @@ let API_UnitChannelInfo = UnitChannelInfo;
 let API_UnitExists = UnitExists;
 let API_UnitGUID = UnitGUID;
 let API_UnitName = UnitName;
-OvaleDebug.RegisterDebugging(OvaleFuture);
+debug.RegisterDebugging(OvaleFuture);
 OvaleProfiler.RegisterProfiling(OvaleFuture);
 let self_playerGUID = undefined;
 let self_pool = OvalePool("OvaleFuture_pool");
@@ -119,7 +118,7 @@ const IsSameSpellcast = function(a, b) {
     }
     return boolean;
 }
-class OvaleFuture {
+class OvaleFuture extends OvaleFutureBase {
     OnInitialize() {
         OvaleAura = Ovale.OvaleAura;
         OvaleCooldown = Ovale.OvaleCooldown;
@@ -1068,3 +1067,5 @@ statePrototype.IsChanneling = function (state, atTime) {
 }
 statePrototype.GetDamageMultiplier = OvaleFuture.GetDamageMultiplier;
 statePrototype.UpdateCounters = OvaleFuture.UpdateCounters;
+
+export const ovaleFuture = new OvaleFuture();

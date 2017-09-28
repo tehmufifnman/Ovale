@@ -14,6 +14,7 @@ declare class AceModule {
 }
 
 interface Addon {
+    NewModule(name:string): new () => AceModule;
     NewModule(name:string, module: "AceEvent-3.0"): new() => (AceEvent & AceModule);
     NewModule(name:string, module: "AceTimer-3.0"): new() => (AceTimerModule & AceModule);
     NewModule(name:string, module: "AceConsole-3.0"): new() => (AceConsole & AceModule);

@@ -6,6 +6,7 @@ import AceConfigDialog from "AceConfigDialog-3.0";
 import { L } from "./Localization";
 import LibTextDump from "LibTextDump-1.0";
 import { options } from "./Options";
+import { Constructor, MakeString } from "./Ovale";
 let format = string.format;
 let gmatch = string.gmatch;
 let gsub = string.gsub;
@@ -126,40 +127,16 @@ class OvaleDebug extends OvaleDebugBase {
             this.trace = false;
         }
     }
-    RegisterDebugging(addon) {
+    RegisterDebugging(addon: AceModule) {
         let name = addon.GetName();
         this.options.args.toggles.args[name] = {
             name: name,
             desc: format(L["Enable debugging messages for the %s module."], name),
             type: "toggle"
         }
-        addon.Debug = this.Debug;
-        addon.DebugTimestamp = this.DebugTimestamp;
+        return new Debug(addon);
     }
-    Debug(...__args) {
-        let name = this.GetName();
-        if (Ovale.db.global.debug[name]) {
-            _DEFAULT_CHAT_FRAME.AddMessage(format("|cff33ff99%s|r: %s", name, Ovale.MakeString(...__args)));
-        }
-    }
-    DebugTimestamp(...__args) {
-        let name = this.GetName();
-        if (Ovale.db.global.debug[name]) {
-            let now = API_GetTime();
-            let s = format("|cffffff00%f|r %s", now, Ovale.MakeString(...__args));
-            _DEFAULT_CHAT_FRAME.AddMessage(format("|cff33ff99%s|r: %s", name, s));
-        }
-    }
-    Log(...__args) {
-        if (this.trace) {
-            let N = self_traceLog.Lines();
-            if (N < OVALE_TRACELOG_MAXLINES - 1) {
-                self_traceLog.AddLine(Ovale.MakeString(...__args));
-            } else if (N == OVALE_TRACELOG_MAXLINES - 1) {
-                self_traceLog.AddLine("WARNING: Maximum length of trace log has been reached.");
-            }
-        }
-    }
+
     DisplayTraceLog() {
         if (self_traceLog.Lines() == 0) {
             self_traceLog.AddLine("Trace log is empty.");
@@ -169,3 +146,36 @@ class OvaleDebug extends OvaleDebugBase {
 }
 
 export const debug = new OvaleDebug();
+
+
+export class Debug {
+    private trace = false; 
+
+    constructor(private module: AceModule) {
+    }
+
+    Debug(...__args) {
+        let name = this.module.GetName();
+        if (Ovale.db.global.debug[name]) {
+            _DEFAULT_CHAT_FRAME.AddMessage(format("|cff33ff99%s|r: %s", name, MakeString(...__args)));
+        }
+    }
+    DebugTimestamp(...__args) {
+        let name = this.module.GetName();
+        if (Ovale.db.global.debug[name]) {
+            let now = API_GetTime();
+            let s = format("|cffffff00%f|r %s", now, MakeString(...__args));
+            _DEFAULT_CHAT_FRAME.AddMessage(format("|cff33ff99%s|r: %s", name, s));
+        }
+    }
+    Log(...__args) {
+        if (this.trace) {
+            let N = self_traceLog.Lines();
+            if (N < OVALE_TRACELOG_MAXLINES - 1) {
+                self_traceLog.AddLine(MakeString(...__args));
+            } else if (N == OVALE_TRACELOG_MAXLINES - 1) {
+                self_traceLog.AddLine("WARNING: Maximum length of trace log has been reached.");
+            }
+        }
+    }
+}

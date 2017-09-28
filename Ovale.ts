@@ -3,6 +3,7 @@ let [OVALE, Addon] = __addon;
 const OvaleBase = Addon.NewModule("Ovale", "AceEvent-3.0");
 import AceGUI from "AceGUI-3.0";
 import { ovaleFuture } from "./Future";
+import { debug } from "./Debug";
 let L = undefined;
 let _assert = assert;
 let format = string.format;
@@ -37,6 +38,39 @@ let MAX_REFRESH_INTERVALS = 500;
 let self_refreshIntervals:LuaArray<number> = {
 }
 let self_refreshIndex = 1;
+
+export type Constructor<T> = new(...args: any[]) => T;
+
+export function MakeString(s?, ...__args) {
+    if (s && strlen(s) > 0) {
+        if (__args.length > 0) {
+            if (strfind(s, "%%%.%d") || strfind(s, "%%[%w]")) {
+                s = format(s, ..._tostringall(...__args));
+            } else {
+                s = _strjoin(" ", s, ..._tostringall(...__args));
+            }
+        }
+    } else {
+        s = _tostring(undefined);
+    }
+    return s;
+}
+
+export class Printer {
+    constructor(private module: AceModule) {
+    }
+
+    Print(...__args) {
+        let name = this.module.GetName();
+        let s = MakeString(...__args);
+        _DEFAULT_CHAT_FRAME.AddMessage(format("|cff33ff99%s|r: %s", name, s));
+    }
+    Error(...__args) {
+        let s = MakeString(...__args);
+        this.Print("Fatal error: %s", s);
+        debug.bug = true;
+    }
+}
 
 class Ovale extends OvaleBase {
     L = undefined;
@@ -281,32 +315,9 @@ class Ovale extends OvaleBase {
         }
         return s;
     }
-    MakeString(s?, ...__args) {
-        if (s && strlen(s) > 0) {
-            if (__args.length > 0) {
-                if (strfind(s, "%%%.%d") || strfind(s, "%%[%w]")) {
-                    s = format(s, ..._tostringall(...__args));
-                } else {
-                    s = _strjoin(" ", s, ..._tostringall(...__args));
-                }
-            }
-        } else {
-            s = _tostring(undefined);
-        }
-        return s;
-    }
-    Print(...__args) {
-        let name = this.GetName();
-        let s = this.MakeString(...__args);
-        _DEFAULT_CHAT_FRAME.AddMessage(format("|cff33ff99%s|r: %s", name, s));
-    }
-    Error(...__args) {
-        let s = this.MakeString(...__args);
-        this.Print("Fatal error: %s", s);
-        Ovale.OvaleDebug.bug = true;
-    }
+    
     OneTimeMessage(...__args) {
-        let s = this.MakeString(...__args);
+        let s = MakeString(...__args);
         if (!self_oneTimeMessage[s]) {
             self_oneTimeMessage[s] = true;
         }
@@ -331,14 +342,4 @@ class Ovale extends OvaleBase {
         return [func, arg];
     }
 }
-{
-    const DoNothing = function() {
-    }
-    let modulePrototype = {
-        Error: Ovale.Error,
-        Log: DoNothing,
-        Print: Ovale.Print,
-        GetMethod: Ovale.GetMethod
-    }
-    Ovale.SetDefaultModulePrototype(modulePrototype);
-}
+
