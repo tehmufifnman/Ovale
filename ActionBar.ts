@@ -1,10 +1,9 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvaleActionBarBase = Ovale.NewModule("OvaleActionBar", "AceEvent-3.0", "AceTimer-3.0");
 import { L } from "./Localization";
 import { OvaleDebug } from "./Debug";
 import { OvaleProfiler } from "./Profiler";
 import { OvaleSpellBook } from "./SpellBook";
+import { Ovale } from "./Ovale";
+let OvaleActionBarBase = Ovale.NewModule("OvaleActionBar", "AceEvent-3.0", "AceTimer-3.0");
 let gsub = string.gsub;
 let strlen = string.len;
 let strmatch = string.match;
@@ -249,7 +248,7 @@ class OvaleActionBarClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Reg
         let array = {
         }
         for (const [k, v] of pairs(this.spell)) {
-            tinsert(array, tostring(this.GetKeyBinding(v)) + ": " + tostring(k) + " " + tostring(spellBook.GetSpellName(k)));
+            tinsert(array, tostring(this.GetKeyBinding(v)) + ": " + tostring(k) + " " + tostring(OvaleSpellBook.GetSpellName(k)));
         }
         tsort(array);
         for (const [_, v] of ipairs(array)) {

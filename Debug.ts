@@ -5,7 +5,7 @@ import AceConfig from "AceConfig-3.0";
 import AceConfigDialog from "AceConfigDialog-3.0";
 import { L } from "./Localization";
 import LibTextDump from "LibTextDump-1.0";
-import { options } from "./Options";
+import { OvaleOptions } from "./Options";
 import { Constructor, MakeString } from "./Ovale";
 let format = string.format;
 let gmatch = string.gmatch;
@@ -87,11 +87,11 @@ class OvaleDebugClass extends OvaleDebugBase {
             }
         }
         for (const [k, v] of _pairs(actions)) {
-            options.options.args.actions.args[k] = v;
+            OvaleOptions.options.args.actions.args[k] = v;
         }
-        options.defaultDB.global = options.defaultDB.global || {}
-        options.defaultDB.global.debug = {}
-        options.RegisterOptions(this);
+        OvaleOptions.defaultDB.global = OvaleOptions.defaultDB.global || {}
+        OvaleOptions.defaultDB.global.debug = {}
+        OvaleOptions.RegisterOptions(this);
     }
     
     OnInitialize() {
@@ -105,7 +105,7 @@ class OvaleDebugClass extends OvaleDebugBase {
     DoTrace(displayLog) {
         self_traceLog.Clear();
         this.trace = true;
-        this.Log("=== Trace @%f", API_GetTime());
+        this.Print("=== Trace @%f", API_GetTime());
         if (displayLog) {
             this.ScheduleTimer("DisplayTraceLog", 0.5);
         }
@@ -155,6 +155,16 @@ class OvaleDebugClass extends OvaleDebugBase {
                     }
                 }
             }
+            Error(...__args) {
+                let s = MakeString(...__args);
+                this.Print("Fatal error: %s", s);
+                OvaleDebug.bug = true;
+            }
+            Print(...__args) {
+                let name = this.GetName();
+                let s = MakeString(...__args);
+                _DEFAULT_CHAT_FRAME.AddMessage(format("|cff33ff99%s|r: %s", name, s));
+            }            
         }
     }
 

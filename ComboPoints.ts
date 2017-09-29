@@ -1,7 +1,3 @@
-import __addon from "addon";
-let [OVALE, Addon] = __addon;
-let OvaleComboPointsBase = Addon.NewModule("OvaleComboPoints", "AceEvent-3.0");
-export let OvaleComboPoints: OvaleComboPointsClass;
 import { L } from "./Localization";
 import { OvaleDebug } from "./Debug";
 import { OvaleProfiler } from "./Profiler";
@@ -15,6 +11,8 @@ import { OvaleSpellBook } from "./SpellBook";
 import { OvaleState } from "./State";
 import { Ovale, RegisterPrinter } from "./Ovale";
 
+let OvaleComboPointsBase = Ovale.NewModule("OvaleComboPoints", "AceEvent-3.0");
+export let OvaleComboPoints: OvaleComboPointsClass;
 let tinsert = table.insert;
 let tremove = table.remove;
 let API_GetTime = GetTime;

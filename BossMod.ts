@@ -1,5 +1,6 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
+import { OvaleDebug } from "./Debug";
+import { OvaleProfiler } from "./Profiler";
+import { Ovale } from "./Ovale";
 let OvaleBossModBase = Ovale.NewModule("OvaleBossMod");
 let API_GetNumGroupMembers = GetNumGroupMembers;
 let API_IsInGroup = IsInGroup;
@@ -9,12 +10,7 @@ let API_UnitExists = UnitExists;
 let API_UnitLevel = UnitLevel;
 let _BigWigsLoader = BigWigsLoader;
 let _DBM = DBM;
-import { OvaleDebug } from "./Debug";
-import { OvaleProfiler } from "./Profiler";
-class OvaleBossModClass extends OvaleBossModBase {
-    debug = OvaleDebug.RegisterDebugging(this);
-    profiler = OvaleProfiler.RegisterProfiling(this);
-
+class OvaleBossModClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.RegisterDebugging(OvaleBossModBase)) {
     EngagedDBM = undefined;
     EngagedBigWigs = undefined;
 
@@ -22,7 +18,7 @@ class OvaleBossModClass extends OvaleBossModBase {
     }
     OnEnable() {
         if (_DBM) {
-            this.debug.Debug("DBM is loaded");
+            this.Debug("DBM is loaded");
             hooksecurefunc(_DBM, "StartCombat", (_DBM, mod, delay, event, ...__args) => {
                 if (event != "TIMER_RECOVERY") {
                     this.EngagedDBM = mod;
@@ -33,7 +29,7 @@ class OvaleBossModClass extends OvaleBossModBase {
             });
         }
         if (_BigWigsLoader) {
-            this.debug.Debug("BigWigs is loaded");
+            this.Debug("BigWigs is loaded");
             _BigWigsLoader.RegisterMessage(OvaleBossMod, "BigWigs_OnBossEngage", (_, mod, diff) => {
                 this.EngagedBigWigs = mod;
             });
@@ -52,21 +48,21 @@ class OvaleBossModClass extends OvaleBossModBase {
         let bigWigsEngaged = (_BigWigsLoader != undefined && this.EngagedBigWigs != undefined && this.EngagedBigWigs.isEngaged);
         let neitherEngaged = (_DBM == undefined && _BigWigsLoader == undefined && this.ScanTargets());
         if (dbmEngaged) {
-            this.debug.Debug("DBM Engaged: [name=%s]", this.EngagedDBM.localization.general.name);
+            this.Debug("DBM Engaged: [name=%s]", this.EngagedDBM.localization.general.name);
         }
         if (bigWigsEngaged) {
-            this.debug.Debug("BigWigs Engaged: [name=%s]", this.EngagedBigWigs.displayName);
+            this.Debug("BigWigs Engaged: [name=%s]", this.EngagedBigWigs.displayName);
         }
         return dbmEngaged || bigWigsEngaged || neitherEngaged;
     }
     ScanTargets() {
-        this.profiler.StartProfiling("OvaleBossMod:ScanTargets");
+        this.StartProfiling("OvaleBossMod:ScanTargets");
         const RecursiveScanTargets = (target, depth?) => {
             let isWorldBoss = false;
             let dep = depth || 1;
             isWorldBoss = target != undefined && API_UnitExists(target) && API_UnitLevel(target) < 0;
             if (isWorldBoss) {
-                this.debug.Debug("%s is worldboss (%s)", target, UnitName(target));
+                this.Debug("%s is worldboss (%s)", target, UnitName(target));
             }
             return isWorldBoss || (dep <= 3 && RecursiveScanTargets(target + "target", dep + 1));
         }
@@ -95,7 +91,7 @@ class OvaleBossModClass extends OvaleBossModBase {
                 }
             }
         }
-        this.profiler.StopProfiling("OvaleBossMod:ScanTargets");
+        this.StopProfiling("OvaleBossMod:ScanTargets");
         return bossEngaged;
     }
 }

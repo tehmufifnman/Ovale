@@ -5,7 +5,7 @@ import AceConfig from "AceConfig-3.0";
 import AceConfigDialog from "AceConfigDialog-3.0";
 import { L } from "./Localization";
 import LibTextDump from "LibTextDump-1.0";
-import { options } from "./Options";
+import { OvaleOptions } from "./Options";
 import { Constructor } from "./Ovale";
 let _debugprofilestop = debugprofilestop;
 let format = string.format;
@@ -43,11 +43,11 @@ class OvaleProfilerClass extends OvaleProfilerBase {
     constructor() {
         super();
         for (const [k, v] of _pairs(this.actions)) {
-            options.options.args.actions.args[k] = v;
+            OvaleOptions.options.args.actions.args[k] = v;
         }
-        options.defaultDB.global = options.defaultDB.global || {}
-        options.defaultDB.global.profiler = {}
-        options.RegisterOptions(OvaleProfilerClass);
+        OvaleOptions.defaultDB.global = OvaleOptions.defaultDB.global || {}
+        OvaleOptions.defaultDB.global.profiler = {}
+        OvaleOptions.RegisterOptions(OvaleProfilerClass);
     }
 
     options = {

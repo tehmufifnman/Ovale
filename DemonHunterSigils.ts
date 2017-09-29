@@ -1,11 +1,10 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvaleSigil = Ovale.NewModule("OvaleSigil", "AceEvent-3.0");
-Ovale.OvaleSigil = OvaleSigil;
-import { OvaleProfiler } from "./OvaleProfiler";
-let OvalePaperDoll = undefined;
-let OvaleSpellBook = undefined;
-let OvaleState = undefined;
+import { OvaleProfiler } from "./Profiler";
+import { Ovale } from "./Ovale";
+import { OvalePaperDoll } from "./PaperDoll";
+import { OvaleSpellBook } from "./SpellBook";
+import { OvaleState } from "./State";
+let OvaleSigilBase = Ovale.NewModule("OvaleSigil", "AceEvent-3.0");
+export let OvaleSigil: OvaleSigilClass;
 let _ipairs = ipairs;
 let tinsert = table.insert;
 let tremove = table.remove;
@@ -13,34 +12,6 @@ let API_GetTime = GetTime;
 let UPDATE_DELAY = 0.5;
 let SIGIL_ACTIVATION_TIME = math.huge;
 let activated_sigils = {
-}
-OvaleProfiler.RegisterProfiling(OvaleSigil);
-class OvaleSigil {
-    OnInitialize() {
-        OvalePaperDoll = Ovale.OvalePaperDoll;
-        OvaleSpellBook = Ovale.OvaleSpellBook;
-        OvaleState = Ovale.OvaleState;
-        activated_sigils["flame"] = {
-        }
-        activated_sigils["silence"] = {
-        }
-        activated_sigils["misery"] = {
-        }
-        activated_sigils["chains"] = {
-        }
-    }
-    OnEnable() {
-        if (Ovale.playerClass == "DEMONHUNTER") {
-            this.RegisterEvent("UNIT_SPELLCAST_SUCCEEDED");
-            OvaleState.RegisterState(this, this.statePrototype);
-        }
-    }
-    OnDisable() {
-        if (Ovale.playerClass == "DEMONHUNTER") {
-            OvaleState.UnregisterState(this);
-            this.UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED");
-        }
-    }
 }
 let sigil_start = {
     [204596]: {
@@ -75,13 +46,36 @@ let sigil_end = {
     }
 }
 let QUICKENED_SIGILS_TALENT = 15;
-class OvaleSigil {
+class OvaleSigilClass extends OvaleProfiler.RegisterProfiling(OvaleSigilBase) {
+    OnInitialize() {
+        activated_sigils["flame"] = {
+        }
+        activated_sigils["silence"] = {
+        }
+        activated_sigils["misery"] = {
+        }
+        activated_sigils["chains"] = {
+        }
+    }
+    OnEnable() {
+        if (Ovale.playerClass == "DEMONHUNTER") {
+            this.RegisterEvent("UNIT_SPELLCAST_SUCCEEDED");
+            OvaleState.RegisterState(this, this.statePrototype);
+        }
+    }
+    OnDisable() {
+        if (Ovale.playerClass == "DEMONHUNTER") {
+            OvaleState.UnregisterState(this);
+            this.UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED");
+        }
+    }
+
     UNIT_SPELLCAST_SUCCEEDED(event, unitId, spellName, spellRank, guid, spellId, ...__args) {
         if ((!OvalePaperDoll.IsSpecialization("vengeance"))) {
-            break;
+            return;
         }
         if ((unitId == undefined || unitId != "player")) {
-            break;
+            return;
         }
         let id = tonumber(spellId);
         if ((sigil_start[id] != undefined)) {
@@ -117,3 +111,4 @@ statePrototype.IsSigilCharging = function (state, type, atTime) {
     }
     return charging;
 }
+OvaleSigil = new OvaleSigilClass();

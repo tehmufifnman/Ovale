@@ -1,5 +1,3 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
 let _rawset = rawset;
 let _setmetatable = setmetatable;
 let _tostring = tostring;
@@ -14,7 +12,6 @@ export let L = undefined;
     }
     L = _setmetatable({
     }, MT);
-    Ovale.L = L;
 }
 let locale = GetLocale();
 if (locale == "deDE") {

@@ -1,12 +1,13 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvaleHealth = Ovale.NewModule("OvaleHealth", "AceEvent-3.0");
-Ovale.OvaleHealth = OvaleHealth;
-import { OvaleDebug } from "./OvaleDebug";
-import { OvaleProfiler } from "./OvaleProfiler";
-let OvaleData = undefined;
-let OvaleGUID = undefined;
-let OvaleState = undefined;
+import { OvaleDebug } from "./Debug";
+import { OvaleProfiler } from "./Profiler";
+import { Ovale } from "./Ovale";
+import { OvaleData } from "./Data";
+import { OvaleGUID } from "./GUID";
+import { OvaleState } from "./State";
+
+let OvaleHealthBase = Ovale.NewModule("OvaleHealth", "AceEvent-3.0");
+export let OvaleHealth: OvaleHealthClass;
+
 let strsub = string.sub;
 let _tonumber = tonumber;
 let _wipe = wipe;
@@ -14,8 +15,6 @@ let API_GetTime = GetTime;
 let API_UnitHealth = UnitHealth;
 let API_UnitHealthMax = UnitHealthMax;
 let INFINITY = math.huge;
-OvaleDebug.RegisterDebugging(OvaleHealth);
-OvaleProfiler.RegisterProfiling(OvaleHealth);
 let CLEU_DAMAGE_EVENT = {
     DAMAGE_SHIELD: true,
     DAMAGE_SPLIT: true,
@@ -30,23 +29,16 @@ let CLEU_HEAL_EVENT = {
     SPELL_HEAL: true,
     SPELL_PERIODIC_HEAL: true
 }
-OvaleHealth.health = {
-}
-OvaleHealth.maxHealth = {
-}
-OvaleHealth.totalDamage = {
-}
-OvaleHealth.totalHealing = {
-}
-OvaleHealth.firstSeen = {
-}
-OvaleHealth.lastUpdated = {
-}
-class OvaleHealth {
+
+class OvaleHealthClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(OvaleHealthBase)) {
+    health = {    }
+    maxHealth = {    }
+    totalDamage = {    }
+    totalHealing = {    }
+    firstSeen = {    }
+    lastUpdated = {    }
+
     OnInitialize() {
-        OvaleData = Ovale.OvaleData;
-        OvaleGUID = Ovale.OvaleGUID;
-        OvaleState = Ovale.OvaleState;
     }
     OnEnable() {
         this.RegisterEvent("PLAYER_REGEN_DISABLED");
@@ -123,7 +115,7 @@ class OvaleHealth {
     }
     UpdateHealth(event, unitId) {
         if (!unitId) {
-            break;
+            return;
         }
         this.StartProfiling("OvaleHealth_UpdateHealth");
         let func = API_UnitHealth;
@@ -222,7 +214,7 @@ class OvaleHealth {
                 threshold = strsub(threshold, 2);
             }
             threshold = _tonumber(threshold) || 0;
-            let [guid, unitId];
+            let guid, unitId;
             if (strsub(requirement, 1, 7) == "target_") {
                 if (targetGUID) {
                     guid = targetGUID;
@@ -258,3 +250,4 @@ OvaleHealth.statePrototype = {
 }
 let statePrototype = OvaleHealth.statePrototype;
 statePrototype.RequireHealthPercentHandler = OvaleHealth.RequireHealthPercentHandler;
+OvaleHealth = new OvaleHealthClass();

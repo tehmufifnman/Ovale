@@ -60,79 +60,75 @@ let UNIT_AURA_UNITS: LuaArray<string> = {
     }
     tinsert(UNIT_AURA_UNITS, "npc");
 }
-let UNIT_AURA_UNIT = {
+
+let UNIT_AURA_UNIT = {}
+
+for (const [i, unitId] of _ipairs(UNIT_AURA_UNITS)) {
+    UNIT_AURA_UNIT[unitId] = i;
 }
-{
-    for (const [i, unitId] of _ipairs(UNIT_AURA_UNITS)) {
-        UNIT_AURA_UNIT[unitId] = i;
+_setmetatable(UNIT_AURA_UNIT, {
+    __index: function (t, unitId) {
+        return lualength(UNIT_AURA_UNITS) + 1;
     }
-    _setmetatable(UNIT_AURA_UNIT, {
-        __index: function (t, unitId) {
-            return lualength(UNIT_AURA_UNITS) + 1;
-        }
-    });
+});
+
+const compareDefault = function(a, b) {
+    return a < b;
 }
-let BinaryInsert;
-let BinaryRemove;
-let BinarySearch;
-{
-    const compareDefault = function(a, b) {
-        return a < b;
+function BinaryInsert<T>(t: LuaArray<T>, value:T, unique, compare?) {
+    if (_type(unique) == "function") {
+        [unique, compare] = [undefined, unique];
     }
-    BinaryInsert = function (t, value, unique, compare) {
-        if (_type(unique) == "function") {
-            [unique, compare] = [undefined, unique];
+    compare = compare || compareDefault;
+    let [low, high] = [1, lualength(t)];
+    while (low <= high) {
+        let mid = floor((low + high) / 2);
+        if (compare(value, t[mid])) {
+            high = mid - 1;
+        } else if (!unique || compare(t[mid], value)) {
+            low = mid + 1;
+        } else {
+            return mid;
         }
-        compare = compare || compareDefault;
-        let [low, high] = [1, lualength(t)];
-        while (low <= high) {
-            let mid = floor((low + high) / 2);
-            if (compare(value, t[mid])) {
-                high = mid - 1;
-            } else if (!unique || compare(t[mid], value)) {
-                low = mid + 1;
-            } else {
-                return mid;
-            }
-        }
-        tinsert(t, low, value);
-        return low;
     }
-    BinaryRemove = function (t, value, compare) {
-        let index = BinarySearch(t, value, compare);
-        if (index) {
-            tremove(t, index);
-        }
-        return index;
-    }
-    BinarySearch = function (t, value, compare) {
-        compare = compare || compareDefault;
-        let [low, high] = [1, lualength(t)];
-        while (low <= high) {
-            let mid = floor((low + high) / 2);
-            if (compare(value, t[mid])) {
-                high = mid - 1;
-            } else if (compare(t[mid], value)) {
-                low = mid + 1;
-            } else {
-                return mid;
-            }
-        }
-        return undefined;
-    }
+    tinsert(t, low, value);
+    return low;
 }
+function BinaryRemove<T>(t: LuaArray<T>, value:T, compare) {
+    let index = BinarySearch(t, value, compare);
+    if (index) {
+        tremove(t, index);
+    }
+    return index;
+}
+function BinarySearch<T>(t: LuaArray<T>, value:T, compare) {
+    compare = compare || compareDefault;
+    let [low, high] = [1, lualength(t)];
+    while (low <= high) {
+        let mid = floor((low + high) / 2);
+        if (compare(value, t[mid])) {
+            high = mid - 1;
+        } else if (compare(t[mid], value)) {
+            low = mid + 1;
+        } else {
+            return mid;
+        }
+    }
+    return undefined;
+}
+
 const CompareUnit = function(a, b) {
     return UNIT_AURA_UNIT[a] < UNIT_AURA_UNIT[b];
 }
 class OvaleGUIDClass extends OvaleDebug.RegisterDebugging(OvaleGUIDBase) {
 
-    unitGUID = {}
-    guidUnit = {}
-    unitName = {}
-    nameUnit = {}
-    guidName = {}
-    nameGUID = {}
-    petGUID = {}
+    unitGUID: LuaObj<string> = {}
+    guidUnit: LuaObj<LuaArray<string>> = {}
+    unitName: LuaObj<string> = {}
+    nameUnit: LuaObj<LuaArray<string>> = {}
+    guidName: LuaObj<string> = {}
+    nameGUID: LuaObj<LuaArray<string>> = {}
+    petGUID: LuaObj<number> = {}
     UNIT_AURA_UNIT = UNIT_AURA_UNIT;
     
     OnEnable() {
@@ -240,8 +236,7 @@ class OvaleGUIDClass extends OvaleDebug.RegisterDebugging(OvaleGUIDBase) {
         if (guid && guid != previousGUID) {
             this.unitGUID[unitId] = guid;
             {
-                let list = this.guidUnit[guid] || {
-                }
+                let list = this.guidUnit[guid] || {}
                 BinaryInsert(list, unitId, true, CompareUnit);
                 this.guidUnit[guid] = list;
             }
@@ -251,8 +246,7 @@ class OvaleGUIDClass extends OvaleDebug.RegisterDebugging(OvaleGUIDBase) {
         if (name && name != previousName) {
             this.unitName[unitId] = name;
             {
-                let list = this.nameUnit[name] || {
-                }
+                let list = this.nameUnit[name] || {}
                 BinaryInsert(list, unitId, true, CompareUnit);
                 this.nameUnit[name] = list;
             }
@@ -262,8 +256,7 @@ class OvaleGUIDClass extends OvaleDebug.RegisterDebugging(OvaleGUIDBase) {
             let previousNameFromGUID = this.guidName[guid];
             this.guidName[guid] = name;
             if (name != previousNameFromGUID) {
-                let list = this.nameGUID[name] || {
-                }
+                let list = this.nameGUID[name] || {}
                 BinaryInsert(list, guid, true);
                 this.nameGUID[name] = list;
                 if (guid == previousGUID) {

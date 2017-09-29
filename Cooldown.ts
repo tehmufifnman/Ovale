@@ -1,16 +1,15 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvaleCooldown = Ovale.NewModule("OvaleCooldown", "AceEvent-3.0");
-Ovale.OvaleCooldown = OvaleCooldown;
-import { OvaleDebug } from "./OvaleDebug";
-import { OvaleProfiler } from "./OvaleProfiler";
-let OvaleData = undefined;
-let OvaleFuture = undefined;
-let OvaleGUID = undefined;
-let OvalePaperDoll = undefined;
-let OvaleSpellBook = undefined;
-let OvaleStance = undefined;
-let OvaleState = undefined;
+import { OvaleDebug } from "./Debug";
+import { OvaleProfiler } from "./Profiler";
+import { OvaleData } from "./Data";
+import { OvaleFuture } from "./Future";
+import { OvaleGUID } from "./GUID";
+import { OvalePaperDoll } from "./PaperDoll";
+import { OvaleSpellBook } from "./SpellBook";
+import { OvaleStance } from "./Stance";
+import { OvaleState } from "./State";
+import { Ovale } from "./Ovale";
+let OvaleCooldownBase = Ovale.NewModule("OvaleCooldown", "AceEvent-3.0");
+export let OvaleCooldown: OvaleCooldownClass;
 let _next = next;
 let _pairs = pairs;
 let API_GetSpellCharges = GetSpellCharges;
@@ -18,8 +17,7 @@ let API_GetSpellCooldown = GetSpellCooldown;
 let API_GetTime = GetTime;
 let GLOBAL_COOLDOWN = 61304;
 let COOLDOWN_THRESHOLD = 0.10;
-OvaleDebug.RegisterDebugging(OvaleCooldown);
-OvaleProfiler.RegisterProfiling(OvaleCooldown);
+let strsub = string.sub;
 let BASE_GCD = {
     ["DEATHKNIGHT"]: {
         1: 1.5,
@@ -70,23 +68,18 @@ let BASE_GCD = {
         2: "melee"
     }
 }
-OvaleCooldown.serial = 0;
-OvaleCooldown.sharedCooldown = {
-}
-OvaleCooldown.gcd = {
-    serial: 0,
-    start: 0,
-    duration: 0
-}
-class OvaleCooldown {
+
+class OvaleCooldownClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(OvaleCooldownBase)) {
+
+    serial = 0;
+    sharedCooldown = {}
+    gcd = {
+        serial: 0,
+        start: 0,
+        duration: 0
+    }
+
     OnInitialize() {
-        OvaleData = Ovale.OvaleData;
-        OvaleFuture = Ovale.OvaleFuture;
-        OvaleGUID = Ovale.OvaleGUID;
-        OvalePaperDoll = Ovale.OvalePaperDoll;
-        OvaleSpellBook = Ovale.OvaleSpellBook;
-        OvaleStance = Ovale.OvaleStance;
-        OvaleState = Ovale.OvaleState;
     }
     OnEnable() {
         this.RegisterEvent("ACTIONBAR_UPDATE_COOLDOWN", "Update");
@@ -152,7 +145,7 @@ class OvaleCooldown {
         }
         this.sharedCooldown[name][spellId] = true;
     }
-    GetGlobalCooldown(now) {
+    GetGlobalCooldown(now?) {
         let cd = this.gcd;
         if (!cd.start || !cd.serial || cd.serial < this.serial) {
             now = now || API_GetTime();
@@ -173,7 +166,7 @@ class OvaleCooldown {
                 }
             }
         } else {
-            let [start, duration, enable];
+            let start, duration, enable;
             let [index, bookType] = OvaleSpellBook.GetSpellBookIndex(spellId);
             if (index && bookType) {
                 [start, duration, enable] = API_GetSpellCooldown(index, bookType);
@@ -196,7 +189,7 @@ class OvaleCooldown {
         return [cdStart - COOLDOWN_THRESHOLD, cdDuration, cdEnable];
     }
     GetBaseGCD() {
-        let [gcd, haste];
+        let gcd, haste;
         let baseGCD = BASE_GCD[Ovale.playerClass];
         if (baseGCD) {
             [gcd, haste] = [baseGCD[1], baseGCD[2]];
@@ -242,12 +235,7 @@ class OvaleCooldown {
         }
         return [verified, requirement, index];
     }
-}
-OvaleCooldown.statePrototype = {
-}
-let statePrototype = OvaleCooldown.statePrototype;
-statePrototype.cd = undefined;
-class OvaleCooldown {
+
     InitializeState(state) {
         state.cd = {
         }
@@ -280,6 +268,12 @@ class OvaleCooldown {
         this.StopProfiling("OvaleCooldown_ApplySpellAfterCast");
     }
 }
+
+OvaleCooldown.statePrototype = {
+}
+let statePrototype = OvaleCooldown.statePrototype;
+statePrototype.cd = undefined;
+
 statePrototype.ApplyCooldown = function (state, spellId, targetGUID, atTime) {
     OvaleCooldown.StartProfiling("OvaleCooldown_state_ApplyCooldown");
     let cd = state.GetCD(spellId);
@@ -459,3 +453,4 @@ statePrototype.ResetSpellCooldown = function (state, spellId, atTime) {
     }
 }
 statePrototype.RequireCooldownHandler = OvaleCooldown.RequireCooldownHandler;
+OvaleCooldown = new OvaleCooldownClass();

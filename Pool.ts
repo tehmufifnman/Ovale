@@ -8,7 +8,7 @@ let _tostring = tostring;
 let tremove = table.remove;
 let _wipe = wipe;
 
-export abstract class OvalePool<T> {
+export class OvalePool<T> {
     pool:LuaArray<T> = undefined;
     size = 0;
     unused = 0;
@@ -41,7 +41,6 @@ export abstract class OvalePool<T> {
         this.unused = this.unused + 1;
        // OvalePool.StopProfiling(this.name);
     }
-    abstract Clean(item:T):void;
     Drain():void {
         //OvalePool.StartProfiling(this.name);
         this.pool = {}
@@ -52,9 +51,6 @@ export abstract class OvalePool<T> {
     DebuggingInfo():void {
         Ovale.Print("Pool %s has size %d with %d item(s).", _tostring(this.name), this.size, this.unused);
     }
-}
-
-export class OvalePoolNoClean<T> extends OvalePool<T> {
     Clean(item: T): void {
     }
 

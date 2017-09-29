@@ -1,11 +1,9 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvaleASTBase = Ovale.NewModule("OvaleAST");
 import { L } from "./Localization";
-import { OvalePool, OvalePoolNoClean } from "./Pool";
+import { OvalePool } from "./Pool";
 import { OvaleProfiler } from "./Profiler";
 import { OvaleDebug } from "./Debug";
-import { Printer } from "./Ovale";
+import { RegisterPrinter, Ovale } from "./Ovale";
+let OvaleASTBase = Ovale.NewModule("OvaleAST");
 let OvaleCondition = undefined;
 let OvaleLexer = undefined;
 let OvaleScripts = undefined;
@@ -208,11 +206,11 @@ interface Annotation {
     nodeList: LuaArray<Node>;
 }
 
-type NodeType = "function" | "string" | "variable" | "value" | "number" | "spell_aura_list" | "item_info"
-    | "item_require" | "spell_info" | "spell_require"
-    | "add_function" | "icon" | "script";
+type NodeType = "function" | "string" | "variable" | "value" | "number" | "spell_aura_list" | "item_info" |
+     "item_require" | "spell_info" | "spell_require" | "score_spells" |
+     "add_function" | "icon" | "script" | "checkbox" | "list_item" | "list";
 
-interface Node {
+export interface Node {
     child: LuaArray<Node>;
     type: NodeType;
     name: string;
@@ -232,6 +230,8 @@ interface Node {
     functionHash: string;
     asString: string;
     nodeId: number;
+    func: string;
+    secure: boolean;
 }
 
 
@@ -252,21 +252,19 @@ class SelfPool extends OvalePool<Node> {
     }
 }
   
-class OvaleASTClass extends OvaleProfiler.RegisterProfiling(OvaleASTBase) {
+class OvaleASTClass extends RegisterPrinter(OvaleProfiler.RegisterProfiling(OvaleASTBase)) {
     self_indent:number = 0;
-    self_outputPool = new OvalePoolNoClean<LuaArray<string>>("OvaleAST_outputPool");
-    self_controlPool = new OvalePoolNoClean<Node>("OvaleAST_controlPool");
-    self_parametersPool = new OvalePoolNoClean<Node>("OvaleAST_parametersPool");
-    self_childrenPool = new OvalePoolNoClean<LuaArray<Node>>("OvaleAST_childrenPool");
-    self_postOrderPool = new OvalePoolNoClean<LuaArray<Node>>("OvaleAST_postOrderPool");
-    postOrderVisitedPool = new OvalePoolNoClean<LuaObj<boolean>>("OvaleAST_postOrderVisitedPool");
+    self_outputPool = new OvalePool<LuaArray<string>>("OvaleAST_outputPool");
+    self_controlPool = new OvalePool<Node>("OvaleAST_controlPool");
+    self_parametersPool = new OvalePool<Node>("OvaleAST_parametersPool");
+    self_childrenPool = new OvalePool<LuaArray<Node>>("OvaleAST_childrenPool");
+    self_postOrderPool = new OvalePool<LuaArray<Node>>("OvaleAST_postOrderPool");
+    postOrderVisitedPool = new OvalePool<LuaObj<boolean>>("OvaleAST_postOrderVisitedPool");
     self_pool = new SelfPool(this);
-
-    printer: Printer;
+    PARAMETER_KEYWORD = PARAMETER_KEYWORD;
   
     constructor() {
         super();
-        this.printer = new Printer(this);
     }
     
     print_r(node, indent?, done?, output?) {
@@ -523,7 +521,7 @@ class OvaleASTClass extends OvaleProfiler.RegisterProfiling(OvaleASTBase) {
                 visitor = this.UNPARSE_VISITOR[node.type];
             }
             if (!visitor) {
-                this.printer.Error("Unable to unparse node of type '%s'.", node.type);
+                this.Error("Unable to unparse node of type '%s'.", node.type);
             } else {
                 return visitor(node);
             }
@@ -810,7 +808,7 @@ class OvaleASTClass extends OvaleProfiler.RegisterProfiling(OvaleASTBase) {
     }
 
     SyntaxError(tokenStream, ...__args) {
-        this.printer.Print(...__args);
+        this.Print(...__args);
         let context = {
             1: "Next tokens:"
         }
@@ -823,13 +821,13 @@ class OvaleASTClass extends OvaleProfiler.RegisterProfiling(OvaleASTBase) {
                 break;
             }
         }
-        this.printer.Print(tconcat(context, " "));
+        this.Print(tconcat(context, " "));
     }
 
     Parse(nodeType, tokenStream, nodeList, annotation) {
         let visitor = this.PARSE_VISITOR[nodeType];
         if (!visitor) {
-            this.printer.Error("Unable to parse node of type '%s'.", nodeType);
+            this.Error("Unable to parse node of type '%s'.", nodeType);
         } else {
             return visitor(tokenStream, nodeList, annotation);
         }
@@ -1434,7 +1432,7 @@ class OvaleASTClass extends OvaleProfiler.RegisterProfiling(OvaleASTBase) {
         }
         let code = OvaleScripts.GetScript(name);
         if (!code) {
-            this.printer.Error("Script '%s' not found when parsing INCLUDE.", name);
+            this.Error("Script '%s' not found when parsing INCLUDE.", name);
             ok = false;
         }
         let node;
@@ -2353,7 +2351,7 @@ class OvaleASTClass extends OvaleProfiler.RegisterProfiling(OvaleASTBase) {
         tokenStream.Release();
         return [node, nodeList, annotation];
     }
-    ParseScript(name, options) {
+    ParseScript(name, options?) {
         let code = OvaleScripts.GetScript(name);
         let ast;
         if (code) {
@@ -2564,7 +2562,7 @@ class OvaleASTClass extends OvaleProfiler.RegisterProfiling(OvaleASTBase) {
                     } else if (OvaleCondition.IsCondition(name)) {
                     } else if (customFunction && customFunction[name]) {
                     } else {
-                        this.printer.Error("unknown function '%s'.", name);
+                        this.Error("unknown function '%s'.", name);
                     }
                 }
             }
@@ -2590,7 +2588,7 @@ class OvaleASTClass extends OvaleProfiler.RegisterProfiling(OvaleASTBase) {
                             if (OvaleStance.STANCE_NAME[value]) {
                             } else if (_type(value) == "number") {
                             } else {
-                                this.printer.Error("unknown stance '%s'.", value);
+                                this.Error("unknown stance '%s'.", value);
                             }
                         }
                     }

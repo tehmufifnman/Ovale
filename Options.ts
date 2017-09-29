@@ -1,12 +1,11 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvaleOptionsBase = Ovale.NewModule("OvaleOptions", "AceConsole-3.0", "AceEvent-3.0");
 import AceConfig from "AceConfig-3.0";
 import AceConfigDialog from "AceConfigDialog-3.0";
 import { L } from "./Localization";
 import AceDB from "AceDB-3.0";
 import AceDBOptions from "AceDBOptions-3.0";
 import LibDualSpec from "LibDualSpec-1.0";
+import { OvaleDb, Ovale } from "./Ovale";
+let OvaleOptionsBase = Ovale.NewModule("OvaleOptions", "AceConsole-3.0", "AceEvent-3.0");
 let _ipairs = ipairs;
 let _pairs = pairs;
 let tinsert = table.insert;
@@ -14,8 +13,8 @@ let _type = type;
 let API_InterfaceOptionsFrame_OpenToCategory = InterfaceOptionsFrame_OpenToCategory;
 let self_register = {  }
 
-class OvaleOptions extends OvaleOptionsBase {
-    defaultDB = {
+class OvaleOptionsClass extends OvaleOptionsBase {
+    defaultDB:OvaleDb = {
         profile: {
             check: {
             },
@@ -483,4 +482,4 @@ class OvaleOptions extends OvaleOptionsBase {
     }
 }
 
-export const options = new OvaleOptions();
+export const OvaleOptions = new OvaleOptionsClass();

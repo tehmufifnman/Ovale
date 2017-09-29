@@ -1,8 +1,8 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvaleCondition = Ovale.NewModule("OvaleCondition");
-Ovale.OvaleCondition = OvaleCondition;
-let OvaleState = undefined;
+import { OvaleState } from "./State";
+import { Ovale } from "./Ovale";
+import { OvaleDebug } from "./Debug";
+let OvaleConditionBase = Ovale.NewModule("OvaleCondition");
+export let OvaleCondition: OvaleConditionClass;
 let _type = type;
 let _wipe = wipe;
 let INFINITY = math.huge;
@@ -13,21 +13,22 @@ let self_spellBookCondition = {
 {
     self_spellBookCondition["spell"] = true;
 }
-OvaleCondition.Compare = undefined;
-OvaleCondition.ParseCondition = undefined;
-OvaleCondition.ParseRuneCondition = undefined;
-OvaleCondition.TestBoolean = undefined;
-OvaleCondition.TestValue = undefined;
-OvaleCondition.COMPARATOR = {
-    atLeast: true,
-    atMost: true,
-    equal: true,
-    less: true,
-    more: true
-}
-class OvaleCondition {
+
+class OvaleConditionClass extends OvaleDebug.RegisterDebugging(OvaleConditionBase) {
+    Compare = undefined;
+    ParseCondition = undefined;
+    ParseRuneCondition = undefined;
+    TestBoolean = undefined;
+    TestValue = undefined;
+    COMPARATOR = {
+        atLeast: true,
+        atMost: true,
+        equal: true,
+        less: true,
+        more: true
+    }
+
     OnInitialize() {
-        OvaleState = Ovale.OvaleState;
     }
     OnEnable() {
         OvaleState.RegisterState(this, this.statePrototype);
@@ -35,7 +36,7 @@ class OvaleCondition {
     OnDisable() {
         OvaleState.UnregisterState(this);
     }
-    RegisterCondition(name, isSpellBookCondition, func, arg) {
+    RegisterCondition(name, isSpellBookCondition, func, arg?) {
         if (arg) {
             if (_type(func) == "string") {
                 func = arg[func];
@@ -62,8 +63,16 @@ class OvaleCondition {
     EvaluateCondition(name, positionalParams, namedParams, state, atTime) {
         return self_condition[name](positionalParams, namedParams, state, atTime);
     }
+
+        InitializeState(state) {
+            state.defaultTarget = "target";
+        }
+        CleanState(state) {
+            state.defaultTarget = undefined;
+        }
 }
-OvaleCondition.ParseCondition = function (positionalParams, namedParams, state, defaultTarget) {
+
+export function ParseCondition(positionalParams, namedParams, state, defaultTarget?) {
     let target = namedParams.target || defaultTarget || "player";
     namedParams.target = namedParams.target || target;
     if (target == "target") {
@@ -87,7 +96,8 @@ OvaleCondition.ParseCondition = function (positionalParams, namedParams, state, 
     }
     return [target, filter, mine];
 }
-OvaleCondition.TestBoolean = function (a, yesno) {
+
+export function TestBoolean(a, yesno) {
     if (!yesno || yesno == "yes") {
         if (a) {
             return [0, INFINITY];
@@ -99,7 +109,7 @@ OvaleCondition.TestBoolean = function (a, yesno) {
     }
     return undefined;
 }
-OvaleCondition.TestValue = function (start, ending, value, origin, rate, comparator, limit) {
+export function TestValue(start, ending, value, origin, rate, comparator, limit) {
     if (!value || !origin || !rate) {
         return undefined;
     }
@@ -130,18 +140,12 @@ OvaleCondition.TestValue = function (start, ending, value, origin, rate, compara
     }
     return undefined;
 }
-OvaleCondition.Compare = function (value, comparator, limit) {
+
+export function Compare(value, comparator, limit) {
     return OvaleCondition.TestValue(0, INFINITY, value, 0, 0, comparator, limit);
 }
 OvaleCondition.statePrototype = {
 }
 let statePrototype = OvaleCondition.statePrototype;
 statePrototype.defaultTarget = undefined;
-class OvaleCondition {
-    InitializeState(state) {
-        state.defaultTarget = "target";
-    }
-    CleanState(state) {
-        state.defaultTarget = undefined;
-    }
-}
+

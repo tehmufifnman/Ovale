@@ -1,14 +1,14 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvaleDataBroker = Ovale.NewModule("OvaleDataBroker", "AceEvent-3.0");
-Ovale.OvaleDataBroker = OvaleDataBroker;
-import { L } from "./L";
-let LibDataBroker = LibStub("LibDataBroker-1.1", true);
-let LibDBIcon = LibStub("LibDBIcon-1.0", true);
-import { OvaleDebug } from "./OvaleDebug";
-import { OvaleOptions } from "./OvaleOptions";
-let OvaleScripts = undefined;
-let OvaleVersion = undefined;
+import { L } from "./Localization";
+import LibDataBroker from "LibDataBroker-1.1";
+import LibDBIcon from "LibDBIcon-1.0";
+import { OvaleDebug } from "./Debug";
+import { OvaleOptions } from "./Options";
+import { Ovale } from "./Ovale";
+import { OvaleScripts } from "./Scripts";
+import { OvaleVersion } from "./Version";
+let OvaleDataBrokerBase = Ovale.NewModule("OvaleDataBroker", "AceEvent-3.0");
+export let OvaleDataBroker: OvaleDataBrokerClass;
+
 let _pairs = pairs;
 let tinsert = table.insert;
 let API_CreateFrame = CreateFrame;
@@ -57,10 +57,16 @@ let self_tooltipTitle = undefined;
     }
     OvaleOptions.RegisterOptions(OvaleDataBroker);
 }
-OvaleDataBroker.broker = undefined;
+
+interface MenuItem {
+    text: string;
+    isTitle?: boolean;
+    func?: () => void;
+}
+
 const OnClick = function(frame, button) {
     if (button == "LeftButton") {
-        let menu = {
+        let menu:LuaArray<MenuItem> = {
             1: {
                 text: L["Script"],
                 isTitle: true
@@ -90,18 +96,16 @@ const OnClick = function(frame, button) {
     }
 }
 const OnTooltipShow = function(tooltip) {
-    self_tooltipTitle = self_tooltipTitle || OVALE + " " + OvaleVersion.version;
+    self_tooltipTitle = self_tooltipTitle || Ovale.GetName() + " " + OvaleVersion.version;
     tooltip.SetText(self_tooltipTitle, 1, 1, 1);
     tooltip.AddLine(L["Click to select the script."]);
     tooltip.AddLine(L["Middle-Click to toggle the script options panel."]);
     tooltip.AddLine(L["Right-Click for options."]);
     tooltip.AddLine(L["Shift-Right-Click for the current trace log."]);
 }
-class OvaleDataBroker {
+class OvaleDataBrokerClass extends OvaleDataBrokerBase {
+    broker = undefined;
     OnInitialize() {
-        OvaleOptions = Ovale.OvaleOptions;
-        OvaleScripts = Ovale.OvaleScripts;
-        OvaleVersion = Ovale.OvaleVersion;
         if (LibDataBroker) {
             let broker = {
                 type: "data source",
@@ -110,9 +114,9 @@ class OvaleDataBroker {
                 OnClick: OnClick,
                 OnTooltipShow: OnTooltipShow
             }
-            this.broker = LibDataBroker.NewDataObject(OVALE, broker);
+            this.broker = LibDataBroker.NewDataObject(Ovale.GetName(), broker);
             if (LibDBIcon) {
-                LibDBIcon.Register(OVALE, this.broker, Ovale.db.profile.apparence.minimap);
+                LibDBIcon.Register(Ovale.GetName(), this.broker, Ovale.db.profile.apparence.minimap);
             }
         }
     }
@@ -132,12 +136,12 @@ class OvaleDataBroker {
     }
     UpdateIcon() {
         if (LibDBIcon && this.broker) {
-            import { minimap } from "./db";
-            LibDBIcon.Refresh(OVALE, minimap);
+            const minimap = Ovale.db.profile.apparence.minimap
+            LibDBIcon.Refresh(Ovale.GetName(), minimap);
             if (minimap.hide) {
-                LibDBIcon.Hide(OVALE);
+                LibDBIcon.Hide(Ovale.GetName());
             } else {
-                LibDBIcon.Show(OVALE);
+                LibDBIcon.Show(Ovale.GetName());
             }
         }
     }
@@ -145,3 +149,5 @@ class OvaleDataBroker {
         this.broker.text = Ovale.db.profile.source;
     }
 }
+
+OvaleDataBroker = new OvaleDataBrokerClass();

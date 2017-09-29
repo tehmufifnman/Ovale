@@ -1,12 +1,12 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvaleEnemies = Ovale.NewModule("OvaleEnemies", "AceEvent-3.0", "AceTimer-3.0");
-Ovale.OvaleEnemies = OvaleEnemies;
-import { L } from "./L";
-import { OvaleDebug } from "./OvaleDebug";
-import { OvaleProfiler } from "./OvaleProfiler";
-let OvaleGUID = undefined;
-let OvaleState = undefined;
+import { L } from "./Localization";
+import { OvaleDebug } from "./Debug";
+import { OvaleProfiler } from "./Profiler";
+import { Ovale } from "./Ovale";
+import { OvaleGUID } from "./GUID";
+import { OvaleState } from "./State";
+
+let OvaleEnemiesBase = Ovale.NewModule("OvaleEnemies", "AceEvent-3.0", "AceTimer-3.0");
+export let OvaleEnemies: OvaleEnemiesClass;
 let bit_band = bit.band;
 let bit_bor = bit.bor;
 let _ipairs = ipairs;
@@ -20,8 +20,6 @@ let _COMBATLOG_OBJECT_AFFILIATION_PARTY = COMBATLOG_OBJECT_AFFILIATION_PARTY;
 let _COMBATLOG_OBJECT_AFFILIATION_RAID = COMBATLOG_OBJECT_AFFILIATION_RAID;
 let _COMBATLOG_OBJECT_REACTION_FRIENDLY = COMBATLOG_OBJECT_REACTION_FRIENDLY;
 let GROUP_MEMBER = bit_bor(_COMBATLOG_OBJECT_AFFILIATION_MINE, _COMBATLOG_OBJECT_AFFILIATION_PARTY, _COMBATLOG_OBJECT_AFFILIATION_RAID);
-OvaleDebug.RegisterDebugging(OvaleEnemies);
-OvaleProfiler.RegisterProfiling(OvaleEnemies);
 let CLEU_TAG_SUFFIXES = {
     1: "_DAMAGE",
     2: "_MISSED",
@@ -56,8 +54,6 @@ let self_taggedEnemyLastSeen = {
 }
 let self_reaperTimer = undefined;
 let REAP_INTERVAL = 3;
-OvaleEnemies.activeEnemies = 0;
-OvaleEnemies.taggedEnemies = 0;
 const IsTagEvent = function(cleuEvent) {
     let isTagEvent = false;
     if (CLEU_AUTOATTACK[cleuEvent]) {
@@ -75,10 +71,12 @@ const IsTagEvent = function(cleuEvent) {
 const IsFriendly = function(unitFlags, isGroupMember) {
     return bit_band(unitFlags, _COMBATLOG_OBJECT_REACTION_FRIENDLY) > 0 && (!isGroupMember || bit_band(unitFlags, GROUP_MEMBER) > 0);
 }
-class OvaleEnemies {
+
+class OvaleEnemiesClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(OvaleEnemiesBase)) {
+    activeEnemies = 0;
+    taggedEnemies = 0;
+
     OnInitialize() {
-        OvaleGUID = Ovale.OvaleGUID;
-        OvaleState = Ovale.OvaleState;
     }
     OnEnable() {
         self_playerGUID = Ovale.playerGUID;
@@ -104,7 +102,7 @@ class OvaleEnemies {
             this.RemoveEnemy(cleuEvent, destGUID, now, true);
         } else if (sourceGUID && sourceGUID != "" && sourceName && sourceFlags && destGUID && destGUID != "" && destName && destFlags) {
             if (!IsFriendly(sourceFlags) && IsFriendly(destFlags, true)) {
-                if (!cleuEvent == "SPELL_PERIODIC_DAMAGE" && IsTagEvent(cleuEvent)) {
+                if (!(cleuEvent == "SPELL_PERIODIC_DAMAGE" && IsTagEvent(cleuEvent))) {
                     let now = API_GetTime();
                     this.AddEnemy(cleuEvent, sourceGUID, sourceName, now);
                 }
@@ -137,7 +135,7 @@ class OvaleEnemies {
         }
         this.StopProfiling("OvaleEnemies_RemoveInactiveEnemies");
     }
-    AddEnemy(cleuEvent, guid, name, timestamp, isTagged) {
+    AddEnemy(cleuEvent, guid, name, timestamp, isTagged?) {
         this.StartProfiling("OvaleEnemies_AddEnemy");
         if (guid) {
             self_enemyName[guid] = name;
@@ -242,3 +240,5 @@ class OvaleEnemies {
         state.enemies = undefined;
     }
 }
+
+OvaleEnemies = new OvaleEnemiesClass();

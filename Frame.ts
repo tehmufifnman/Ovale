@@ -1,81 +1,88 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-{
-    let AceGUI = LibStub("AceGUI-3.0");
-    let Masque = LibStub("Masque", true);
-    import { OvaleBestAction } from "./OvaleBestAction";
-    import { OvaleCompile } from "./OvaleCompile";
-    import { OvaleCooldown } from "./OvaleCooldown";
-    import { OvaleDebug } from "./OvaleDebug";
-    import { OvaleFuture } from "./OvaleFuture";
-    import { OvaleGUID } from "./OvaleGUID";
-    import { OvaleSpellFlash } from "./OvaleSpellFlash";
-    import { OvaleState } from "./OvaleState";
-    import { OvaleTimeSpan } from "./OvaleTimeSpan";
-    let Type = OVALE + "Frame";
-    let Version = 7;
-    let _ipairs = ipairs;
-    let _next = next;
-    let _pairs = pairs;
-    let _tostring = tostring;
-    let _wipe = wipe;
-    let API_CreateFrame = CreateFrame;
-    let API_GetTime = GetTime;
-    let API_RegisterStateDriver = RegisterStateDriver;
-    let NextTime = OvaleTimeSpan.NextTime;
-    let INFINITY = math.huge;
-    let MIN_REFRESH_TIME = 0.05;
-    const frameOnClose = function(self) {
-        this.obj.Fire("OnClose");
+import AceGUI from "AceGUI-3.0";
+import Masque from "Masque";
+import { OvaleBestAction } from "./BestAction";
+import { OvaleCompile } from "./Compile";
+import { OvaleCooldown } from "./Cooldown";
+import { OvaleDebug } from "./Debug";
+import { OvaleFuture } from "./Future";
+import { OvaleGUID } from "./GUID";
+import { OvaleSpellFlash } from "./SpellFlash";
+import { OvaleState } from "./State";
+import { OvaleTimeSpan } from "./TimeSpan";
+import { Ovale } from "./Ovale";
+let Type = Ovale.GetName() + "Frame";
+let Version = 7;
+let _ipairs = ipairs;
+let _next = next;
+let _pairs = pairs;
+let _tostring = tostring;
+let _wipe = wipe;
+let API_CreateFrame = CreateFrame;
+let API_GetTime = GetTime;
+let API_RegisterStateDriver = RegisterStateDriver;
+let NextTime = OvaleTimeSpan.NextTime;
+let INFINITY = math.huge;
+let MIN_REFRESH_TIME = 0.05;
+
+const frameOnClose = function(self) {
+    self.obj.Fire("OnClose");
+}
+const closeOnClick = function(self) {
+    self.obj.Hide();
+}
+const frameOnMouseDown = function(self) {
+    if ((!Ovale.db.profile.apparence.verrouille)) {
+        self.StartMoving();
+        AceGUI.ClearFocus();
     }
-    const closeOnClick = function(self) {
-        this.obj.Hide();
+}
+
+const frameOnMouseUp = function(self) {
+    this.StopMovingOrSizing();
+    const profile = Ovale.db.profile;
+    let [x, y] = this.GetCenter();
+    let [parentX, parentY] = this.GetParent().GetCenter();
+    profile.apparence.offsetX = x - parentX;
+    profile.apparence.offsetY = y - parentY;
+}
+const frameOnEnter = function(self) {
+    const profile = Ovale.db.profile;
+    if (!(profile.apparence.enableIcons && profile.apparence.verrouille)) {
+        this.obj.barre.Show();
     }
-    const frameOnMouseDown = function(self) {
-        if ((!Ovale.db.profile.apparence.verrouille)) {
-            this.StartMoving();
-            AceGUI.ClearFocus();
-        }
-    }
-    const ToggleOptions = function(self) {
+}
+const frameOnLeave = function(self) {
+    this.obj.barre.Hide();
+}
+const frameOnUpdate = function(self, elapsed) {
+    this.obj.OnUpdate(elapsed);
+}
+
+class OvaleFrame {
+    ToggleOptions() {
         if ((this.content.IsShown())) {
             this.content.Hide();
         } else {
             this.content.Show();
         }
     }
-    const frameOnMouseUp = function(self) {
-        this.StopMovingOrSizing();
-        import { profile } from "./db";
-        let [x, y] = this.GetCenter();
-        let [parentX, parentY] = this.GetParent().GetCenter();
-        profile.apparence.offsetX = x - parentX;
-        profile.apparence.offsetY = y - parentY;
-    }
-    const frameOnEnter = function(self) {
-        import { profile } from "./db";
-        if (!(profile.apparence.enableIcons && profile.apparence.verrouille)) {
-            this.obj.barre.Show();
-        }
-    }
-    const frameOnLeave = function(self) {
-        this.obj.barre.Hide();
-    }
-    const frameOnUpdate = function(self, elapsed) {
-        this.obj.OnUpdate(elapsed);
-    }
-    const Hide = function(self) {
+    
+    Hide() {
         this.frame.Hide();
     }
-    const Show = function(self) {
+
+    Show() {
         this.frame.Show();
     }
-    const OnAcquire = function(self) {
+
+    OnAcquire() {
         this.frame.SetParent(UIParent);
     }
-    const OnRelease = function(self) {
+
+    OnRelease() {
     }
-    const OnWidthSet = function(self, width) {
+
+    OnWidthSet(width) {
         let content = this.content;
         let contentwidth = width - 34;
         if (contentwidth < 0) {
@@ -84,7 +91,8 @@ let [OVALE, Ovale] = __addon;
         content.SetWidth(contentwidth);
         content.width = contentwidth;
     }
-    const OnHeightSet = function(self, height) {
+
+    OnHeightSet(height) {
         let content = this.content;
         let contentheight = height - 57;
         if (contentheight < 0) {
@@ -93,14 +101,16 @@ let [OVALE, Ovale] = __addon;
         content.SetHeight(contentheight);
         content.height = contentheight;
     }
-    const OnLayoutFinished = function(self, width, height) {
+
+    OnLayoutFinished(width, height) {
         if ((!width)) {
             width = this.content.GetWidth();
         }
         this.content.SetWidth(width);
         this.content.SetHeight(height + 50);
     }
-    const GetScore = function(self, spellId) {
+        
+    GetScore(spellId) {
         for (const [k, action] of _pairs(this.actions)) {
             if (action.spellId == spellId) {
                 if (!action.waitStart) {
@@ -122,7 +132,7 @@ let [OVALE, Ovale] = __addon;
         }
         return 0;
     }
-    const OnUpdate = function(self, elapsed) {
+    OnUpdate(elapsed) {
         let guid = OvaleGUID.UnitGUID("target") || OvaleGUID.UnitGUID("focus");
         if (guid) {
             Ovale.refreshNeeded[guid] = true;
@@ -136,7 +146,7 @@ let [OVALE, Ovale] = __addon;
             if (OvaleCompile.EvaluateScript()) {
                 Ovale.UpdateFrame();
             }
-            import { profile } from "./db";
+            const profile = Ovale.db.profile;
             let iconNodes = OvaleCompile.GetIconNodes();
             for (const [k, node] of _ipairs(iconNodes)) {
                 if (node.namedParams && node.namedParams.target) {
@@ -175,8 +185,8 @@ let [OVALE, Ovale] = __addon;
             this.timeSinceLastUpdate = 0;
         }
     }
-    const UpdateActionIcon = function(self, state, node, action, element, start, now) {
-        import { profile } from "./db";
+    UpdateActionIcon(state, node, action, element, start, now?) {
+        const profile = Ovale.db.profile;
         let icons = action.secure && action.secureIcons || action.icons;
         now = now || API_GetTime();
         if (element && element.type == "value") {
@@ -194,7 +204,7 @@ let [OVALE, Ovale] = __addon;
                 icons[2].Update(element, undefined);
             }
         } else {
-            let [actionTexture, actionInRange, actionCooldownStart, actionCooldownDuration, actionUsable, actionShortcut, actionIsCurrent, actionEnable, actionType, actionId, actionTarget, actionResourceExtend] = OvaleBestAction.GetActionInfo(element, state);
+            let [actionTexture, actionInRange, actionCooldownStart, actionCooldownDuration, actionUsable, actionShortcut, actionIsCurrent, actionEnable, actionType, actionId, actionTarget, actionResourceExtend] = OvaleBestAction.GetActionInfo(element, state, now);
             if (actionResourceExtend && actionResourceExtend > 0) {
                 if (actionCooldownDuration > 0) {
                     state.Log("Extending cooldown of spell ID '%s' for primary resource by %fs.", actionId, actionResourceExtend);
@@ -244,25 +254,24 @@ let [OVALE, Ovale] = __addon;
                         atTime = state.currentTime;
                     }
                     let [timeSpan, nextElement] = OvaleBestAction.GetAction(node, state, atTime);
-                    let start;
                     if (nextElement && nextElement.offgcd) {
                         start = NextTime(timeSpan, state.currentTime);
                     } else {
                         start = NextTime(timeSpan, atTime);
                     }
-                    icons[2].Update(nextElement, start, OvaleBestAction.GetActionInfo(nextElement, state));
+                    icons[2].Update(nextElement, start, OvaleBestAction.GetActionInfo(nextElement, state, start));
                 } else {
                     icons[2].Update(element, undefined);
                 }
             }
         }
     }
-    const UpdateFrame = function(self) {
-        import { profile } from "./db";
+    UpdateFrame() {
+        const profile = Ovale.db.profile;
         this.frame.SetPoint("CENTER", this.hider, "CENTER", profile.apparence.offsetX, profile.apparence.offsetY);
         this.frame.EnableMouse(!profile.apparence.clickThru);
     }
-    const UpdateIcons = function(self) {
+    UpdateIcons() {
         for (const [k, action] of _pairs(this.actions)) {
             for (const [i, icon] of _pairs(action.icons)) {
                 icon.Hide();
@@ -271,7 +280,7 @@ let [OVALE, Ovale] = __addon;
                 icon.Hide();
             }
         }
-        import { profile } from "./db";
+        const profile = Ovale.db.profile;
         this.frame.EnableMouse(!profile.apparence.clickThru);
         let left = 0;
         let maxHeight = 0;
@@ -290,7 +299,7 @@ let [OVALE, Ovale] = __addon;
                 }
             }
             let action = this.actions[k];
-            let [width, height, newScale];
+            let width, height, newScale;
             let nbIcons;
             if ((node.namedParams != undefined && node.namedParams.size == "small")) {
                 newScale = profile.apparence.smallIconScale;
@@ -328,12 +337,12 @@ let [OVALE, Ovale] = __addon;
                 let icon;
                 if (!node.secure) {
                     if (!action.icons[l]) {
-                        action.icons[l] = API_CreateFrame("CheckButton", "Icon" + k + "n" + l, this.frame, OVALE + "IconTemplate");
+                        action.icons[l] = API_CreateFrame("CheckButton", "Icon" + k + "n" + l, this.frame, Ovale.GetName() + "IconTemplate");
                     }
                     icon = action.icons[l];
                 } else {
                     if (!action.secureIcons[l]) {
-                        action.secureIcons[l] = API_CreateFrame("CheckButton", "SecureIcon" + k + "n" + l, this.frame, "Secure" + OVALE + "IconTemplate");
+                        action.secureIcons[l] = API_CreateFrame("CheckButton", "SecureIcon" + k + "n" + l, this.frame, "Secure" + Ovale.GetName() + "IconTemplate");
                     }
                     icon = action.secureIcons[l];
                 }
@@ -379,37 +388,34 @@ let [OVALE, Ovale] = __addon;
             this.content.SetPoint("TOPLEFT", this.frame, "TOPLEFT", maxWidth + profile.apparence.iconShiftX, profile.apparence.iconShiftY);
         }
     }
-    const Constructor = function() {
-        let hider = API_CreateFrame("Frame", OVALE + "PetBattleFrameHider", UIParent, "SecureHandlerStateTemplate");
+
+    type = "Frame";
+    frame: UIFrame;
+    localstatus = {}
+    actions = {}
+    hider: UIFrame;
+    updateFrame: UIFrame;
+    content: UIFrame;
+    timeSinceLastUpdate: number;
+    obj: OvaleFrame;
+    barre: UITexture;
+    skinGroup: any;
+
+    constructor() {
+        let hider = API_CreateFrame("Frame", Ovale.GetName() + "PetBattleFrameHider", UIParent, "SecureHandlerStateTemplate");
         hider.SetAllPoints(true);
         API_RegisterStateDriver(hider, "visibility", "[petbattle] hide; show");
         let frame = API_CreateFrame("Frame", undefined, hider);
-        let self = {
-        }
-        import { profile } from "./db";
-        this.Hide = Hide;
-        this.Show = Show;
-        this.OnRelease = OnRelease;
-        this.OnAcquire = OnAcquire;
-        this.LayoutFinished = OnLayoutFinished;
-        this.UpdateActionIcon = UpdateActionIcon;
-        this.UpdateFrame = UpdateFrame;
-        this.UpdateIcons = UpdateIcons;
-        this.ToggleOptions = ToggleOptions;
-        this.OnUpdate = OnUpdate;
-        this.GetScore = GetScore;
-        this.type = "Frame";
-        this.localstatus = {
-        }
-        this.actions = {
-        }
+        
+        const profile = Ovale.db.profile;
+        
         this.frame = frame;
         this.hider = hider;
-        this.updateFrame = API_CreateFrame("Frame", OVALE + "UpdateFrame");
+        this.updateFrame = API_CreateFrame("Frame", Ovale.GetName() + "UpdateFrame");
         this.barre = this.frame.CreateTexture();
         this.content = API_CreateFrame("Frame", undefined, this.updateFrame);
         if (Masque) {
-            this.skinGroup = Masque.Group(OVALE);
+            this.skinGroup = Masque.Group(Ovale.GetName());
         }
         this.timeSinceLastUpdate = INFINITY;
         this.obj = undefined;
@@ -437,7 +443,7 @@ let [OVALE, Ovale] = __addon;
         content.Hide();
         content.SetAlpha(profile.apparence.optionsAlpha);
         AceGUI.RegisterAsContainer(this);
-        return this;
     }
-    AceGUI.RegisterWidgetType(Type, Constructor, Version);
 }
+
+AceGUI.RegisterWidgetType(Type, OvaleFrame, Version);

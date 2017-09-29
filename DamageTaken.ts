@@ -1,12 +1,11 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvaleDamageTaken = Ovale.NewModule("OvaleDamageTaken", "AceEvent-3.0");
-Ovale.OvaleDamageTaken = OvaleDamageTaken;
-import { L } from "./L";
-import { OvaleDebug } from "./OvaleDebug";
-import { OvalePool } from "./OvalePool";
-import { OvaleProfiler } from "./OvaleProfiler";
-import { OvaleQueue } from "./OvaleQueue";
+import { L } from "./Localization";
+import { OvaleDebug } from "./Debug";
+import { OvalePool } from "./Pool";
+import { OvaleProfiler } from "./Profiler";
+import { OvaleQueue } from "./Queue";
+import { Ovale, RegisterPrinter } from "./Ovale";
+let OvaleDamageTakenBase = Ovale.NewModule("OvaleDamageTaken", "AceEvent-3.0");
+export let OvaleDamageTaken: OvaleDamageTakenClass;
 let bit_band = bit.band;
 let bit_bor = bit.bor;
 let strsub = string.sub;
@@ -19,14 +18,21 @@ let _SCHOOL_MASK_NATURE = SCHOOL_MASK_NATURE;
 let _SCHOOL_MASK_NONE = SCHOOL_MASK_NONE;
 let _SCHOOL_MASK_PHYSICAL = SCHOOL_MASK_PHYSICAL;
 let _SCHOOL_MASK_SHADOW = SCHOOL_MASK_SHADOW;
-OvaleDebug.RegisterDebugging(OvaleDamageTaken);
-OvaleProfiler.RegisterProfiling(OvaleDamageTaken);
+
+interface Event{
+    timestamp;
+    damage;
+    magic;
+}
 let self_playerGUID = undefined;
-let self_pool = OvalePool("OvaleDamageTaken_pool");
+let self_pool = new OvalePool<Event>("OvaleDamageTaken_pool");
 let DAMAGE_TAKEN_WINDOW = 20;
 let SCHOOL_MASK_MAGIC = bit_bor(_SCHOOL_MASK_ARCANE, _SCHOOL_MASK_FIRE, _SCHOOL_MASK_FROST, _SCHOOL_MASK_HOLY, _SCHOOL_MASK_NATURE, _SCHOOL_MASK_SHADOW);
-OvaleDamageTaken.damageEvent = OvaleQueue.NewDeque("OvaleDamageTaken_damageEvent");
-class OvaleDamageTaken {
+
+
+class OvaleDamageTakenClass extends RegisterPrinter(OvaleProfiler.RegisterProfiling(OvaleDebug.RegisterDebugging(OvaleDamageTakenBase))) {
+    damageEvent = new OvaleQueue<Event>("OvaleDamageTaken_damageEvent");
+
     OnEnable() {
         self_playerGUID = Ovale.playerGUID;
         this.RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
@@ -63,7 +69,7 @@ class OvaleDamageTaken {
     PLAYER_REGEN_ENABLED(event) {
         self_pool.Drain();
     }
-    AddDamageTaken(timestamp, damage, isMagicDamage) {
+    AddDamageTaken(timestamp, damage, isMagicDamage?) {
         this.StartProfiling("OvaleDamageTaken_AddDamageTaken");
         let event = self_pool.Get();
         event.timestamp = timestamp;
@@ -79,7 +85,9 @@ class OvaleDamageTaken {
         let lowerBound = now - interval;
         this.RemoveExpiredEvents(now);
         let [total, totalMagic] = [0, 0];
-        for (const [i, event] of this.damageEvent.FrontToBackIterator()) {
+        const iterator = this.damageEvent.FrontToBackIterator();
+        while (iterator.Next()) {
+            const event = iterator.value;
             if (event.timestamp < lowerBound) {
                 break;
             }
@@ -110,8 +118,12 @@ class OvaleDamageTaken {
     }
     DebugDamageTaken() {
         this.damageEvent.DebuggingInfo();
-        for (const [i, event] of this.damageEvent.BackToFrontIterator()) {
+        const iterator = this.damageEvent.BackToFrontIterator();
+        while (iterator.Next()) {
+            const event = iterator.value;
             this.Print("%d: %d damage", event.timestamp, event.damage);
         }
     }
 }
+
+OvaleDamageTaken = new OvaleDamageTakenClass();

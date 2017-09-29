@@ -2,9 +2,9 @@
 
 local LibStub = LibStub
 local ADDON_NAME, Addon = ...
-Addon = LibStub("AceAddon-3.0"):NewAddon(Addon or {}, ADDON_NAME or "")
+
 if ADDON_NAME then
-  _G[ADDON_NAME] = Addon
+  _G[ADDON_NAME] = Addon or {}
 end
 
 -- Function used by define to call a factory that is ready

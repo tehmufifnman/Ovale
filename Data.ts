@@ -1,11 +1,9 @@
-import __addon from "addon";
-let [OVALE, Addon] = __addon;
-let OvaleDataBase = Addon.NewModule("OvaleData");
 import { Ovale } from "./Ovale";
 import { OvaleGUID } from "./GUID";
 import { OvalePaperDoll } from "./PaperDoll";
 import { OvaleState } from "./State";
 import { OvaleDebug } from "./Debug";
+let OvaleDataBase = Ovale.NewModule("OvaleData");
 let format = string.format;
 let _type = type;
 let _pairs = pairs;

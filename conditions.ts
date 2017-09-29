@@ -1,10 +1,10 @@
 import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let LibBabbleCreatureType = LibStub("LibBabble-CreatureType-3.0", true);
-let LibRangeCheck = LibStub("LibRangeCheck-2.0", true);
+let [OVALE, Addon] = __addon;
+import LibBabbleCreatureType from "LibBabble-CreatureType-3.0";
+import LibRangeCheck from "LibRangeCheck-2.0";
 import { OvaleBestAction } from "./BestAction";
 import { OvaleCompile } from "./Compile";
-import { OvaleCondition } from "./Condition";
+import { OvaleCondition, TestValue, Compare, TestBoolean, ParseCondition } from "./Condition";
 import { OvaleCooldown } from "./Cooldown";
 import { OvaleDamageTaken } from "./DamageTaken";
 import { OvaleData } from "./Data";
@@ -18,6 +18,7 @@ import { OvaleSpellBook } from "./SpellBook";
 import { OvaleSpellDamage } from "./SpellDamage";
 import { OvaleArtifact } from "./Artifact";
 import { OvaleBossMod } from "./BossMod";
+import { Ovale } from "./Ovale";
 let floor = math.floor;
 let _ipairs = ipairs;
 let _pairs = pairs;
@@ -56,10 +57,7 @@ let API_UnitPowerMax = UnitPowerMax;
 let API_UnitRace = UnitRace;
 let API_UnitStagger = UnitStagger;
 let INFINITY = math.huge;
-let Compare = OvaleCondition.Compare;
-let ParseCondition = OvaleCondition.ParseCondition;
-let TestBoolean = OvaleCondition.TestBoolean;
-let TestValue = OvaleCondition.TestValue;
+
 const BossArmorDamageReduction = function(target, state) {
     let armor = 24835;
     let constant = 4037.5 * state.level - 317117.5;
@@ -451,8 +449,8 @@ const GetHastedTime = function(seconds, haste, state) {
 {
     const Casting = function(positionalParams, namedParams, state, atTime) {
         let spellId = positionalParams[1];
-        let target = ParseCondition(positionalParams, namedParams, state);
-        let [start, ending, castSpellId, castSpellName];
+        let [target] = ParseCondition(positionalParams, namedParams, state);
+        let start, ending, castSpellId, castSpellName;
         if (target == "player") {
             start = state.startCast;
             ending = state.endCast;
@@ -515,7 +513,7 @@ const GetHastedTime = function(seconds, haste, state) {
 {
     const Class = function(positionalParams, namedParams, state, atTime) {
         let [className, yesno] = [positionalParams[1], positionalParams[2]];
-        let target = ParseCondition(positionalParams, namedParams, state);
+        let [target] = ParseCondition(positionalParams, namedParams, state);
         let [_, classToken] = API_UnitClass(target);
         let boolean = (classToken == className);
         return TestBoolean(boolean, yesno);
@@ -527,7 +525,7 @@ const GetHastedTime = function(seconds, haste, state) {
     const Classification = function(positionalParams, namedParams, state, atTime) {
         let [classification, yesno] = [positionalParams[1], positionalParams[2]];
         let targetClassification;
-        let target = ParseCondition(positionalParams, namedParams, state);
+        let [target] = ParseCondition(positionalParams, namedParams, state);
         if (API_UnitLevel(target) < 0) {
             targetClassification = "worldboss";
         } else if (API_UnitExists("boss1") && OvaleGUID.UnitGUID(target) == OvaleGUID.UnitGUID("boss1")) {
@@ -569,7 +567,7 @@ const GetHastedTime = function(seconds, haste, state) {
 {
     const CreatureFamily = function(positionalParams, namedParams, state, atTime) {
         let [name, yesno] = [positionalParams[1], positionalParams[2]];
-        let target = ParseCondition(positionalParams, namedParams, state);
+        let [target] = ParseCondition(positionalParams, namedParams, state);
         let family = API_UnitCreatureFamily(target);
         let lookupTable = LibBabbleCreatureType && LibBabbleCreatureType.GetLookupTable();
         let boolean = (lookupTable && family == lookupTable[name]);
@@ -579,11 +577,11 @@ const GetHastedTime = function(seconds, haste, state) {
 }
 {
     const CreatureType = function(positionalParams, namedParams, state, atTime) {
-        let target = ParseCondition(positionalParams, namedParams, state);
+        let [target] = ParseCondition(positionalParams, namedParams, state);
         let creatureType = API_UnitCreatureType(target);
         let lookupTable = LibBabbleCreatureType && LibBabbleCreatureType.GetLookupTable();
         if (lookupTable) {
-            for (const [_, name] of _ipairs(positionalParams)) {
+            for (const [_, name] of _ipairs<string>(positionalParams)) {
                 if (creatureType == lookupTable[name]) {
                     return [0, INFINITY];
                 }
@@ -602,7 +600,7 @@ const GetHastedTime = function(seconds, haste, state) {
         let value = ComputeParameter(spellId, "damage", state, atTime) || 0;
         let si = OvaleData.spellInfo[spellId];
         if (si && si.physical == 1) {
-            value = value * (1 - BossArmorDamageReduction(target));
+            value = value * (1 - BossArmorDamageReduction(target, state));
         }
         let critMultiplier = 2;
         {
@@ -627,7 +625,7 @@ const GetHastedTime = function(seconds, haste, state) {
         let value = ComputeParameter(spellId, "damage", state, atTime) || 0;
         let si = OvaleData.spellInfo[spellId];
         if (si && si.physical == 1) {
-            value = value * (1 - BossArmorDamageReduction(target));
+            value = value * (1 - BossArmorDamageReduction(target, state));
         }
         return Compare(value, comparator, limit);
     }
@@ -783,7 +781,7 @@ const GetHastedTime = function(seconds, haste, state) {
         let [comparator, limit] = [positionalParams[1], positionalParams[2]];
         let value = state.enemies;
         if (!value) {
-            import { useTagged } from "./db";
+            let useTagged = Ovale.db.profile.apparence.taggedEnemies
             if (namedParams.tagged == 0) {
                 useTagged = false;
             } else if (namedParams.tagged == 1) {
@@ -822,7 +820,7 @@ const GetHastedTime = function(seconds, haste, state) {
 {
     const Exists = function(positionalParams, namedParams, state, atTime) {
         let yesno = positionalParams[1];
-        let target = ParseCondition(positionalParams, namedParams, state);
+        let [target] = ParseCondition(positionalParams, namedParams, state);
         let boolean = API_UnitExists(target);
         return TestBoolean(boolean, yesno);
     }
@@ -1046,23 +1044,6 @@ const GetHastedTime = function(seconds, haste, state) {
     }
     OvaleCondition.RegisterCondition("healthpercent", false, HealthPercent);
     OvaleCondition.RegisterCondition("lifepercent", false, HealthPercent);
-    const TimeToHealthPercent = function(positionalParams, namedParams, state, atTime) {
-        let [percent, comparator, limit] = [positionalParams[1], positionalParams[2], positionalParams[3]];
-        let target = ParseCondition(positionalParams, namedParams, state);
-        let now = API_GetTime();
-        let health = OvaleHealth.UnitHealth(target) || 0;
-        let maxHealth = OvaleHealth.UnitHealthMax(target) || 1;
-        let healthPercent = health / maxHealth * 100;
-        let timeToDie = OvaleHealth.UnitTimeToDie(target);
-        let timeToPercent = timeToDie / healthPercent * (healthPercent - percent);
-        if (timeToPercent < 0) {
-            timeToPercent = 0;
-        }
-        let [value, origin, rate] = [timeToPercent, now, -1];
-        let [start, ending] = [now, now + timeToPercent];
-        return TestValue(start, ending, value, origin, rate, comparator, limit);
-    }
-    OvaleCondition.RegisterCondition("timetohealthpercent", false, TimeToHealthPercent);
     const MaxHealth = function(positionalParams, namedParams, state, atTime) {
         let [comparator, limit] = [positionalParams[1], positionalParams[2]];
         let target = ParseCondition(positionalParams, namedParams, state);
@@ -1130,7 +1111,7 @@ const GetHastedTime = function(seconds, haste, state) {
 {
     const IsAggroed = function(positionalParams, namedParams, state, atTime) {
         let yesno = positionalParams[1];
-        let target = ParseCondition(positionalParams, namedParams, state);
+        let [target] = ParseCondition(positionalParams, namedParams, state);
         let boolean = API_UnitDetailedThreatSituation("player", target);
         return TestBoolean(boolean, yesno);
     }
@@ -1139,7 +1120,7 @@ const GetHastedTime = function(seconds, haste, state) {
 {
     const IsDead = function(positionalParams, namedParams, state, atTime) {
         let yesno = positionalParams[1];
-        let target = ParseCondition(positionalParams, namedParams, state);
+        let [target] = ParseCondition(positionalParams, namedParams, state);
         let boolean = API_UnitIsDead(target);
         return TestBoolean(boolean, yesno);
     }
@@ -1165,7 +1146,7 @@ const GetHastedTime = function(seconds, haste, state) {
 {
     const IsFriend = function(positionalParams, namedParams, state, atTime) {
         let yesno = positionalParams[1];
-        let target = ParseCondition(positionalParams, namedParams, state);
+        let [target] = ParseCondition(positionalParams, namedParams, state);
         let boolean = API_UnitIsFriend("player", target);
         return TestBoolean(boolean, yesno);
     }
@@ -1183,10 +1164,10 @@ const GetHastedTime = function(seconds, haste, state) {
 {
     const IsInterruptible = function(positionalParams, namedParams, state, atTime) {
         let yesno = positionalParams[1];
-        let target = ParseCondition(positionalParams, namedParams, state);
-        let [name, _, _, _, _, _, _, _, notInterruptible] = API_UnitCastingInfo(target);
+        let [target] = ParseCondition(positionalParams, namedParams, state);
+        let [name, _1, _2, _3, _4, _5, _6, _7, notInterruptible] = API_UnitCastingInfo(target);
         if (!name) {
-            [name, _, _, _, _, _, _, notInterruptible] = API_UnitChannelInfo(target);
+            [name, _1, _2, _3, _4, _5, _6, notInterruptible] = API_UnitChannelInfo(target);
         }
         let boolean = notInterruptible != undefined && !notInterruptible;
         return TestBoolean(boolean, yesno);
@@ -1196,7 +1177,7 @@ const GetHastedTime = function(seconds, haste, state) {
 {
     const IsPVP = function(positionalParams, namedParams, state, atTime) {
         let yesno = positionalParams[1];
-        let target = ParseCondition(positionalParams, namedParams, state);
+        let [target] = ParseCondition(positionalParams, namedParams, state);
         let boolean = API_UnitIsPVP(target);
         return TestBoolean(boolean, yesno);
     }
@@ -1267,7 +1248,7 @@ const GetHastedTime = function(seconds, haste, state) {
 {
     const Level = function(positionalParams, namedParams, state, atTime) {
         let [comparator, limit] = [positionalParams[1], positionalParams[2]];
-        let target = ParseCondition(positionalParams, namedParams, state);
+        let [target] = ParseCondition(positionalParams, namedParams, state);
         let value;
         if (target == "player") {
             value = state.level;
@@ -1291,7 +1272,7 @@ const GetHastedTime = function(seconds, haste, state) {
 {
     const Name = function(positionalParams, namedParams, state, atTime) {
         let [name, yesno] = [positionalParams[1], positionalParams[2]];
-        let target = ParseCondition(positionalParams, namedParams, state);
+        let [target] = ParseCondition(positionalParams, namedParams, state);
         if (_type(name) == "number") {
             name = OvaleSpellBook.GetSpellName(name);
         }
@@ -1304,7 +1285,7 @@ const GetHastedTime = function(seconds, haste, state) {
 {
     const PTR = function(positionalParams, namedParams, state, atTime) {
         let [comparator, limit] = [positionalParams[1], positionalParams[2]];
-        let [_, _, _, uiVersion] = API_GetBuildInfo();
+        let [_1, _2, _3, uiVersion] = API_GetBuildInfo();
         let value = (uiVersion > 70200) && 1 || 0;
         return Compare(value, comparator, limit);
     }
@@ -1332,7 +1313,7 @@ const GetHastedTime = function(seconds, haste, state) {
 {
     const MaxPower = function(powerType, positionalParams, namedParams, state, atTime) {
         let [comparator, limit] = [positionalParams[1], positionalParams[2]];
-        let target = ParseCondition(positionalParams, namedParams, state);
+        let [target] = ParseCondition(positionalParams, namedParams, state);
         let value;
         if (target == "player") {
             value = OvalePower.maxPower[powerType];
@@ -1344,7 +1325,7 @@ const GetHastedTime = function(seconds, haste, state) {
     }
     const Power = function(powerType, positionalParams, namedParams, state, atTime) {
         let [comparator, limit] = [positionalParams[1], positionalParams[2]];
-        let target = ParseCondition(positionalParams, namedParams, state);
+        let [target] = ParseCondition(positionalParams, namedParams, state);
         if (target == "player") {
             let [value, origin, rate] = [state[powerType], state.currentTime, state.powerRate[powerType]];
             let [start, ending] = [state.currentTime, INFINITY];
@@ -1357,7 +1338,7 @@ const GetHastedTime = function(seconds, haste, state) {
     }
     const PowerDeficit = function(powerType, positionalParams, namedParams, state, atTime) {
         let [comparator, limit] = [positionalParams[1], positionalParams[2]];
-        let target = ParseCondition(positionalParams, namedParams, state);
+        let [target] = ParseCondition(positionalParams, namedParams, state);
         if (target == "player") {
             let powerMax = OvalePower.maxPower[powerType] || 0;
             if (powerMax > 0) {
@@ -1378,7 +1359,7 @@ const GetHastedTime = function(seconds, haste, state) {
     }
     const PowerPercent = function(powerType, positionalParams, namedParams, state, atTime) {
         let [comparator, limit] = [positionalParams[1], positionalParams[2]];
-        let target = ParseCondition(positionalParams, namedParams, state);
+        let [target] = ParseCondition(positionalParams, namedParams, state);
         if (target == "player") {
             let powerMax = OvalePower.maxPower[powerType] || 0;
             if (powerMax > 0) {
@@ -1644,7 +1625,7 @@ const GetHastedTime = function(seconds, haste, state) {
 {
     const Present = function(positionalParams, namedParams, state, atTime) {
         let yesno = positionalParams[1];
-        let target = ParseCondition(positionalParams, namedParams, state);
+        let [target] = ParseCondition(positionalParams, namedParams, state);
         let boolean = API_UnitExists(target) && !API_UnitIsDead(target);
         return TestBoolean(boolean, yesno);
     }
@@ -1683,7 +1664,7 @@ const GetHastedTime = function(seconds, haste, state) {
 {
     const RelativeLevel = function(positionalParams, namedParams, state, atTime) {
         let [comparator, limit] = [positionalParams[1], positionalParams[2]];
-        let target = ParseCondition(positionalParams, namedParams, state);
+        let [target] = ParseCondition(positionalParams, namedParams, state);
         let value, level;
         if (target == "player") {
             level = state.level;
@@ -1718,8 +1699,8 @@ const GetHastedTime = function(seconds, haste, state) {
 {
     const RemainingCastTime = function(positionalParams, namedParams, state, atTime) {
         let [comparator, limit] = [positionalParams[1], positionalParams[2]];
-        let target = ParseCondition(positionalParams, namedParams, state);
-        let [_, _, _, _, startTime, endTime] = API_UnitCastingInfo(target);
+        let [target] = ParseCondition(positionalParams, namedParams, state);
+        let [_1, _2, _3, _4, startTime, endTime] = API_UnitCastingInfo(target);
         if (startTime && endTime) {
             startTime = startTime / 1000;
             endTime = endTime / 1000;
@@ -1849,7 +1830,7 @@ const GetHastedTime = function(seconds, haste, state) {
 {
     const Speed = function(positionalParams, namedParams, state, atTime) {
         let [comparator, limit] = [positionalParams[1], positionalParams[2]];
-        let target = ParseCondition(positionalParams, namedParams, state);
+        let [target] = ParseCondition(positionalParams, namedParams, state);
         let value = API_GetUnitSpeed(target) * 100 / 7;
         return Compare(value, comparator, limit);
     }
@@ -1885,11 +1866,11 @@ const GetHastedTime = function(seconds, haste, state) {
 }
 {
     const SpellCooldown = function(positionalParams, namedParams, state, atTime) {
-        let [comparator, limit];
+        let comparator, limit;
         let usable = (namedParams.usable == 1);
         let target = ParseCondition(positionalParams, namedParams, state, "target");
         let earliest = INFINITY;
-        for (const [i, spellId] of _ipairs(positionalParams)) {
+        for (const [i, spellId] of _ipairs<number>(positionalParams)) {
             if (OvaleCondition.COMPARATOR[spellId]) {
                 [comparator, limit] = [spellId, positionalParams[i + 1]];
                 break;
@@ -2001,7 +1982,7 @@ const GetHastedTime = function(seconds, haste, state) {
     let HEAVY_STAGGER = 124273;
     const StaggerRemaining = function(positionalParams, namedParams, state, atTime) {
         let [comparator, limit] = [positionalParams[1], positionalParams[2]];
-        let target = ParseCondition(positionalParams, namedParams, state);
+        let [target] = ParseCondition(positionalParams, namedParams, state);
         let aura = state.GetAura(target, HEAVY_STAGGER, "HARMFUL");
         if (!state.IsActiveAura(aura, atTime)) {
             aura = state.GetAura(target, MODERATE_STAGGER, "HARMFUL");
@@ -2040,7 +2021,7 @@ const GetHastedTime = function(seconds, haste, state) {
 {
     const LastSwing = function(positionalParams, namedParams, state, atTime) {
         let swing = positionalParams[1];
-        let [comparator, limit];
+        let comparator, limit;
         let start;
         if (swing && swing == "main" || swing == "off") {
             [comparator, limit] = [positionalParams[2], positionalParams[3]];
@@ -2054,7 +2035,7 @@ const GetHastedTime = function(seconds, haste, state) {
     }
     const NextSwing = function(positionalParams, namedParams, state, atTime) {
         let swing = positionalParams[1];
-        let [comparator, limit];
+        let comparator, limit;
         let ending;
         if (swing && swing == "main" || swing == "off") {
             [comparator, limit] = [positionalParams[2], positionalParams[3]];
@@ -2088,7 +2069,7 @@ const GetHastedTime = function(seconds, haste, state) {
 {
     const TargetIsPlayer = function(positionalParams, namedParams, state, atTime) {
         let yesno = positionalParams[1];
-        let target = ParseCondition(positionalParams, namedParams, state);
+        let [target] = ParseCondition(positionalParams, namedParams, state);
         let boolean = API_UnitIsUnit("player", target + "target");
         return TestBoolean(boolean, yesno);
     }
@@ -2098,8 +2079,8 @@ const GetHastedTime = function(seconds, haste, state) {
 {
     const Threat = function(positionalParams, namedParams, state, atTime) {
         let [comparator, limit] = [positionalParams[1], positionalParams[2]];
-        let target = ParseCondition(positionalParams, namedParams, state, "target");
-        let [_, _, value] = API_UnitDetailedThreatSituation("player", target);
+        let [target] = ParseCondition(positionalParams, namedParams, state, "target");
+        let [_1, _2, value] = API_UnitDetailedThreatSituation("player", target);
         return Compare(value, comparator, limit);
     }
     OvaleCondition.RegisterCondition("threat", false, Threat);
@@ -2176,7 +2157,7 @@ const GetHastedTime = function(seconds, haste, state) {
 }
 {
     const TimeToPower = function(powerType, level, comparator, limit, state, atTime) {
-        let level = level || 0;
+        level = level || 0;
         let power = state[powerType] || 0;
         let powerRegen = state.powerRate[powerType] || 1;
         if (powerRegen == 0) {
@@ -2367,7 +2348,7 @@ const GetHastedTime = function(seconds, haste, state) {
 {
     const WeaponDamage = function(positionalParams, namedParams, state, atTime) {
         let hand = positionalParams[1];
-        let [comparator, limit];
+        let comparator, limit;
         let value = 0;
         if (hand == "offhand" || hand == "off") {
             [comparator, limit] = [positionalParams[2], positionalParams[3]];
@@ -2427,7 +2408,7 @@ const GetHastedTime = function(seconds, haste, state) {
         let target = namedParams.target || "player";
         let [_, targetRaceId] = API_UnitRace(target);
         for (const [_, v] of _ipairs(positionalParams)) {
-            isRace = isRace || (v == raceId);
+            isRace = isRace || (v == targetRaceId);
         }
         return TestBoolean(isRace, "yes");
     }
@@ -2437,7 +2418,7 @@ const GetHastedTime = function(seconds, haste, state) {
     const UnitInRaid = function(positionalParams, namedParams, state, atTime) {
         let target = namedParams.target || "player";
         let raidIndex = API_UnitInRaid(target);
-        return TestBoolean(raidIndex != nul, "yes");
+        return TestBoolean(raidIndex != undefined, "yes");
     }
     OvaleCondition.RegisterCondition("unitinraid", false, UnitInRaid);
 }

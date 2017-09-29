@@ -1,8 +1,8 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvaleEquipment = Ovale.NewModule("OvaleEquipment", "AceEvent-3.0");
-Ovale.OvaleEquipment = OvaleEquipment;
-import { OvaleProfiler } from "./OvaleProfiler";
+import { OvaleProfiler } from "./Profiler";
+import { Ovale } from "./Ovale";
+import { OvaleDebug } from "./Debug";
+let OvaleEquipmentBase = Ovale.NewModule("OvaleEquipment", "AceEvent-3.0");
+export let OvaleEquipment: OvaleEquipmentClass;
 let _pairs = pairs;
 let _select = select;
 let strgsub = string.gsub;
@@ -39,7 +39,7 @@ let _INVSLOT_TRINKET1 = INVSLOT_TRINKET1;
 let _INVSLOT_TRINKET2 = INVSLOT_TRINKET2;
 let _INVSLOT_WAIST = INVSLOT_WAIST;
 let _INVSLOT_WRIST = INVSLOT_WRIST;
-OvaleProfiler.RegisterProfiling(OvaleEquipment);
+
 let self_tooltip = undefined;
 let OVALE_ITEM_LEVEL_PATTERN = "^" + strgsub(ITEM_LEVEL, "%%d", "(%%d+)");
 let OVALE_SLOTNAME = {
@@ -1289,29 +1289,17 @@ let OVALE_WEAPON_CLASS = {
 }
 let OVALE_META_GEM = undefined;
 {
-    let [_, _, _, _, _, _, name] = API_GetAuctionItemSubClasses(8);
+    let [_1, _2, _3, _4, _5, _6, name] = API_GetAuctionItemSubClasses(8);
     OVALE_META_GEM = name;
 }
 let OVALE_NORMALIZED_WEAPON_SPEED = {
 }
-OvaleEquipment.ready = false;
-OvaleEquipment.equippedItems = {
-}
-OvaleEquipment.equippedItemLevels = {
-}
-OvaleEquipment.mainHandItemType = undefined;
-OvaleEquipment.offHandItemType = undefined;
-OvaleEquipment.armorSetCount = {
-}
-OvaleEquipment.metaGem = undefined;
-OvaleEquipment.mainHandWeaponSpeed = undefined;
-OvaleEquipment.offHandWeaponSpeed = undefined;
 const GetEquippedItemType = function(slotId) {
     OvaleEquipment.StartProfiling("OvaleEquipment_GetEquippedItemType");
-    let itemId = OvaleEquipment.GetEquippedItem(slotId);
+    let [itemId] = OvaleEquipment.GetEquippedItem(slotId);
     let itemType;
     if (itemId) {
-        let [_, _, _, _, _, _, _, _, inventoryType] = API_GetItemInfo(itemId);
+        let [_1, _2, _3, _4, _5, _6, _7, _8, inventoryType] = API_GetItemInfo(itemId);
         itemType = inventoryType;
     }
     OvaleEquipment.StopProfiling("OvaleEquipment_GetEquippedItemType");
@@ -1338,15 +1326,52 @@ const GetNormalizedWeaponSpeed = function(slotId) {
     OvaleEquipment.StartProfiling("OvaleEquipment_GetNormalizedWeaponSpeed");
     let weaponSpeed;
     if (slotId == _INVSLOT_MAINHAND || slotId == _INVSLOT_OFFHAND) {
-        let itemId = OvaleEquipment.GetEquippedItem(slotId);
+        let [itemId] = OvaleEquipment.GetEquippedItem(slotId);
         if (itemId) {
-            let [_, _, _, _, _, _, weaponClass] = API_GetItemInfo(itemId);
+            let [_1, _2, _3, _4, _5, _6, weaponClass] = API_GetItemInfo(itemId);
         }
     }
     OvaleEquipment.StopProfiling("OvaleEquipment_GetNormalizedWeaponSpeed");
     return weaponSpeed;
 }
-class OvaleEquipment {
+
+let result = {
+}
+let count = 0;
+let armorSetName = {
+    HUNTER: {
+        ["T14"]: "T14_melee",
+        ["T15"]: "T15_melee",
+        ["T16"]: "T16_melee"
+    },
+    MAGE: {
+        ["T14"]: "T14_caster",
+        ["T15"]: "T15_caster",
+        ["T16"]: "T16_caster"
+    },
+    ROGUE: {
+        ["T14"]: "T14_melee",
+        ["T15"]: "T15_melee",
+        ["T16"]: "T16_melee"
+    },
+    WARLOCK: {
+        ["T14"]: "T14_caster",
+        ["T15"]: "T15_caster"
+    }
+}
+class OvaleEquipmentClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(OvaleEquipmentBase)) {
+    ready = false;
+    equippedItems = {    }
+    equippedItemLevels = {    }
+    mainHandItemType = undefined;
+    offHandItemType = undefined;
+    armorSetCount = {
+    }
+    metaGem = undefined;
+    mainHandWeaponSpeed = undefined;
+    offHandWeaponSpeed = undefined;
+
+    
     OnInitialize() {
         self_tooltip = API_CreateFrame("GameTooltip", "OvaleEquipment_ScanningTooltip", undefined, "GameTooltipTemplate");
         self_tooltip.SetOwner(UIParent, "ANCHOR_NONE");
@@ -1402,96 +1427,59 @@ class OvaleEquipment {
         this.SendMessage("Ovale_EquipmentChanged");
         this.StopProfiling("OvaleEquipment_PLAYER_EQUIPMENT_CHANGED");
     }
-}
-{
-    let armorSetName = {
-        HUNTER: {
-            ["T14"]: "T14_melee",
-            ["T15"]: "T15_melee",
-            ["T16"]: "T16_melee"
-        },
-        MAGE: {
-            ["T14"]: "T14_caster",
-            ["T15"]: "T15_caster",
-            ["T16"]: "T16_caster"
-        },
-        ROGUE: {
-            ["T14"]: "T14_melee",
-            ["T15"]: "T15_melee",
-            ["T16"]: "T16_melee"
-        },
-        WARLOCK: {
-            ["T14"]: "T14_caster",
-            ["T15"]: "T15_caster"
-        }
-    }
-class OvaleEquipment {
-        GetArmorSetCount(name) {
-            let count = this.armorSetCount[name];
-            if (!count) {
-                import { className } from "./playerClass";
-                if (armorSetName[className] && armorSetName[className][name]) {
-                    name = armorSetName[className][name];
-                    count = this.armorSetCount[name];
-                }
+
+    GetArmorSetCount(name) {
+        let count = this.armorSetCount[name];
+        if (!count) {
+            const className = Ovale.playerClass;
+            if (armorSetName[className] && armorSetName[className][name]) {
+                name = armorSetName[className][name];
+                count = this.armorSetCount[name];
             }
-            return count || 0;
         }
-}
-}
-{
-    let result = {
+        return count || 0;
     }
-    let count = 0;
-class OvaleEquipment {
-        GetEquippedItem(...__args) {
-            count = _select("#", ...__args);
-            for (let n = 1; n <= count; n += 1) {
-                let slotId = _select(n, ...__args);
-                if (slotId && _type(slotId) != "number") {
-                    slotId = OVALE_SLOTNAME[slotId];
-                }
-                if (slotId) {
-                    result[n] = this.equippedItems[slotId];
-                } else {
-                    result[n] = undefined;
-                }
+
+    GetEquippedItem(...__args):number[] {
+        count = _select("#", __args);
+        for (let n = 1; n <= count; n += 1) {
+            let slotId = _select(n, __args);
+            if (slotId && _type(slotId) != "number") {
+                slotId = OVALE_SLOTNAME[slotId];
             }
-            if (count > 0) {
-                return _unpack(result, 1, count);
+            if (slotId) {
+                result[n] = this.equippedItems[slotId];
             } else {
-                return undefined;
+                result[n] = undefined;
             }
         }
-}
-}
-{
-    let result = {
+        if (count > 0) {
+            return _unpack(result, 1, count);
+        } else {
+            return undefined;
+        }
     }
-    let count = 0;
-class OvaleEquipment {
-        GetEquippedItemLevel(...__args) {
-            count = _select("#", ...__args);
-            for (let n = 1; n <= count; n += 1) {
-                let slotId = _select(n, ...__args);
-                if (slotId && _type(slotId) != "number") {
-                    slotId = OVALE_SLOTNAME[slotId];
-                }
-                if (slotId) {
-                    result[n] = this.equippedItemLevels[slotId];
-                } else {
-                    result[n] = undefined;
-                }
+
+    GetEquippedItemLevel(...__args) {
+        count = _select("#", __args);
+        for (let n = 1; n <= count; n += 1) {
+            let slotId = _select(n, __args);
+            if (slotId && _type(slotId) != "number") {
+                slotId = OVALE_SLOTNAME[slotId];
             }
-            if (count > 0) {
-                return _unpack(result, 1, count);
+            if (slotId) {
+                result[n] = this.equippedItemLevels[slotId];
             } else {
-                return undefined;
+                result[n] = undefined;
             }
         }
-}
-}
-class OvaleEquipment {
+        if (count > 0) {
+            return _unpack(result, 1, count);
+        } else {
+            return undefined;
+        }
+    }
+
     GetEquippedTrinkets() {
         return [this.equippedItems[_INVSLOT_TRINKET1], this.equippedItems[_INVSLOT_TRINKET2]];
     }
@@ -1504,10 +1492,10 @@ class OvaleEquipment {
             if (slotId && this.equippedItems[slotId] == itemId) {
                 return slotId;
             }
-            let additionalSlotsCount = _select("#", ...__args);
+            let additionalSlotsCount = _select("#", __args);
             if (additionalSlotsCount > 0) {
                 for (let n = 1; n <= additionalSlotsCount; n += 1) {
-                    slotId = _select(n, ...__args);
+                    slotId = _select(n, __args);
                     if (slotId && _type(slotId) != "number") {
                         slotId = OVALE_SLOTNAME[slotId];
                     }
@@ -1525,7 +1513,7 @@ class OvaleEquipment {
         }
         return undefined;
     }
-    HasMainHandWeapon(handedness) {
+    HasMainHandWeapon(handedness?) {
         if (handedness) {
             if (handedness == 1) {
                 return this.mainHandItemType == "INVTYPE_WEAPON" || this.mainHandItemType == "INVTYPE_WEAPONMAINHAND";
@@ -1537,7 +1525,7 @@ class OvaleEquipment {
         }
         return false;
     }
-    HasOffHandWeapon(handedness) {
+    HasOffHandWeapon(handedness?) {
         if (handedness) {
             if (handedness == 1) {
                 return this.offHandItemType == "INVTYPE_WEAPON" || this.offHandItemType == "INVTYPE_WEAPONOFFHAND" || this.offHandItemType == "INVTYPE_WEAPONMAINHAND";
@@ -1589,7 +1577,7 @@ class OvaleEquipment {
         this.StartProfiling("OvaleEquipment_UpdateArmorSetCount");
         _wipe(this.armorSetCount);
         for (let i = 1; i <= lualength(OVALE_ARMORSET_SLOT_IDS); i += 1) {
-            let itemId = this.GetEquippedItem(OVALE_ARMORSET_SLOT_IDS[i]);
+            let [itemId] = this.GetEquippedItem(OVALE_ARMORSET_SLOT_IDS[i]);
             if (itemId) {
                 let name = OVALE_ARMORSET[itemId];
                 if (name) {

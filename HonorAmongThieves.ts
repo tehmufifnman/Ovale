@@ -1,24 +1,23 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvaleHonorAmongThieves = Ovale.NewModule("OvaleHonorAmongThieves", "AceEvent-3.0");
-Ovale.OvaleHonorAmongThieves = OvaleHonorAmongThieves;
-let OvaleAura = undefined;
-let OvaleData = undefined;
+import { Ovale } from "./Ovale";
+import { OvaleAura } from "./Aura";
+import {  OvaleData } from "./Data";
+
+let OvaleHonorAmongThievesBase = Ovale.NewModule("OvaleHonorAmongThieves", "AceEvent-3.0");
+export let OvaleHonorAmongThieves: OvaleHonorAmongThievesClass;
 let API_GetTime = GetTime;
 let INFINITY = math.huge;
 let self_playerGUID = undefined;
 let HONOR_AMONG_THIEVES = 51699;
 let MEAN_TIME_TO_HAT = 2.2;
-OvaleHonorAmongThieves.spellName = "Honor Among Thieves Cooldown";
-OvaleHonorAmongThieves.spellId = HONOR_AMONG_THIEVES;
-OvaleHonorAmongThieves.start = 0;
-OvaleHonorAmongThieves.ending = 0;
-OvaleHonorAmongThieves.duration = MEAN_TIME_TO_HAT;
-OvaleHonorAmongThieves.stacks = 0;
-class OvaleHonorAmongThieves {
+class OvaleHonorAmongThievesClass extends OvaleHonorAmongThievesBase {
+    spellName = "Honor Among Thieves Cooldown";
+    spellId = HONOR_AMONG_THIEVES;
+    start = 0;
+    ending = 0;
+    duration = MEAN_TIME_TO_HAT;
+    stacks = 0;
+
     OnInitialize() {
-        OvaleAura = Ovale.OvaleAura;
-        OvaleData = Ovale.OvaleData;
     }
     OnEnable() {
         if (Ovale.playerClass == "ROGUE") {
@@ -54,3 +53,4 @@ class OvaleHonorAmongThieves {
         }
     }
 }
+OvaleHonorAmongThieves = new OvaleHonorAmongThievesClass();

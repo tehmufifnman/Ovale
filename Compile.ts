@@ -1,22 +1,21 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvaleCompile = Ovale.NewModule("OvaleCompile", "AceEvent-3.0");
-Ovale.OvaleCompile = OvaleCompile;
-import { L } from "./L";
-import { OvaleDebug } from "./OvaleDebug";
-import { OvaleProfiler } from "./OvaleProfiler";
-let OvaleArtifact = undefined;
-let OvaleAST = undefined;
-let OvaleCondition = undefined;
-let OvaleCooldown = undefined;
-let OvaleData = undefined;
-let OvaleEquipment = undefined;
-let OvalePaperDoll = undefined;
-let OvalePower = undefined;
-let OvaleScore = undefined;
-let OvaleScripts = undefined;
-let OvaleSpellBook = undefined;
-let OvaleStance = undefined;
+import { L } from "./Localization";
+import { OvaleDebug } from "./Debug";
+import { OvaleProfiler } from "./Profiler";
+import { OvaleArtifact } from "./Artifact";
+import { OvaleAST, Node } from "./AST";
+import { OvaleCondition } from "./Condition";
+import { OvaleCooldown } from "./Cooldown";
+import { OvaleData } from "./Data";
+import { OvaleEquipment } from "./Equipment";
+import { OvalePaperDoll } from "./PaperDoll";
+import { OvalePower } from "./Power";
+import { OvaleScore } from "./Score";
+import { OvaleScripts } from "./Scripts";
+import { OvaleSpellBook } from "./SpellBook";
+import { OvaleStance } from "./Stance";
+import { RegisterPrinter, Ovale } from "./Ovale";
+let OvaleCompileBase = Ovale.NewModule("OvaleCompile", "AceEvent-3.0");
+export let OvaleCompile: OvaleCompileClass;
 let _ipairs = ipairs;
 let _pairs = pairs;
 let _tonumber = tonumber;
@@ -27,8 +26,6 @@ let strmatch = string.match;
 let strsub = string.sub;
 let _wipe = wipe;
 let API_GetSpellInfo = GetSpellInfo;
-OvaleDebug.RegisterDebugging(OvaleCompile);
-OvaleProfiler.RegisterProfiling(OvaleCompile);
 let self_compileOnStances = false;
 let self_canEvaluate = false;
 let self_requirePreload = {
@@ -38,11 +35,9 @@ let self_requirePreload = {
 }
 let self_serial = 0;
 let self_timesEvaluated = 0;
-let self_icon = {
+let self_icon: LuaArray<Node> = {
 }
 let NUMBER_PATTERN = "^%-?%d+%.?%d*$";
-OvaleCompile.serial = undefined;
-OvaleCompile.ast = undefined;
 const HasTalent = function(talentId) {
     if (OvaleSpellBook.IsKnownTalent(talentId)) {
         return OvaleSpellBook.GetTalentPoints(talentId) > 0;
@@ -133,10 +128,10 @@ const TestConditions = function(positionalParams, namedParams) {
         boolean = (equippedCount >= namedParams.itemcount);
     }
     if (boolean && namedParams.checkbox) {
-        import { profile } from "./db";
+        const profile = Ovale.db.profile;
         for (const [_, checkbox] of _ipairs(namedParams.checkbox)) {
             let [name, required] = RequireValue(checkbox);
-            import { control } from "./checkBox";
+            const control = Ovale.checkBox[name] || {}
             control.triggerEvaluation = true;
             Ovale.checkBox[name] = control;
             let isChecked = profile.check[name];
@@ -147,10 +142,10 @@ const TestConditions = function(positionalParams, namedParams) {
         }
     }
     if (boolean && namedParams.listitem) {
-        import { profile } from "./db";
+        const profile = Ovale.db.profile;
         for (const [name, listitem] of _pairs(namedParams.listitem)) {
             let [item, required] = RequireValue(listitem);
-            import { control } from "./list";
+            const control = Ovale.list[name] || { items: {}, default: undefined };
             control.triggerEvaluation = true;
             Ovale.list[name] = control;
             let isSelected = (profile.list[name] == item);
@@ -167,7 +162,7 @@ const EvaluateAddCheckBox = function(node) {
     let ok = true;
     let [name, positionalParams, namedParams] = [node.name, node.positionalParams, node.namedParams];
     if (TestConditions(positionalParams, namedParams)) {
-        import { checkBox } from "./checkBox";
+        let checkBox = Ovale.checkBox[name]
         if (!checkBox) {
             self_serial = self_serial + 1;
             OvaleCompile.Debug("New checkbox '%s': advance age to %d.", name, self_serial);
@@ -197,7 +192,7 @@ const EvaluateAddListItem = function(node) {
     let ok = true;
     let [name, item, positionalParams, namedParams] = [node.name, node.item, node.positionalParams, node.namedParams];
     if (TestConditions(positionalParams, namedParams)) {
-        import { list } from "./list";
+        let list = Ovale.list[name]
         if (!(list && list.items && list.items[item])) {
             self_serial = self_serial + 1;
             OvaleCompile.Debug("New list '%s': advance age to %d.", name, self_serial);
@@ -276,8 +271,8 @@ const EvaluateList = function(node) {
     }
     let list = OvaleData[listDB][name] || {
     }
-    for (const [_, id] of _pairs(positionalParams)) {
-        id = _tonumber(id);
+    for (const [_, _id] of _pairs(positionalParams)) {
+        let id = _tonumber(_id);
         if (id) {
             list[id] = true;
         } else {
@@ -291,8 +286,8 @@ const EvaluateList = function(node) {
 const EvaluateScoreSpells = function(node) {
     let ok = true;
     let [positionalParams, namedParams] = [node.positionalParams, node.namedParams];
-    for (const [_, spellId] of _ipairs(positionalParams)) {
-        spellId = _tonumber(spellId);
+    for (const [_, _spellId] of _ipairs(positionalParams)) {
+        let spellId = _tonumber(_spellId);
         if (spellId) {
             OvaleScore.AddSpell(_tonumber(spellId));
         } else {
@@ -430,7 +425,7 @@ const EvaluateSpellRequire = function(node) {
 }
 const AddMissingVariantSpells = function(annotation) {
     if (annotation.functionReference) {
-        for (const [_, node] of _ipairs(annotation.functionReference)) {
+        for (const [_, node] of _ipairs<Node>(annotation.functionReference)) {
             let [positionalParams, namedParams] = [node.positionalParams, node.namedParams];
             let spellId = positionalParams[1];
             if (spellId && OvaleCondition.IsSpellBookCondition(node.func)) {
@@ -457,7 +452,7 @@ const AddMissingVariantSpells = function(annotation) {
         }
     }
 }
-const AddToBuffList = function(buffId, statName, isStacking) {
+const AddToBuffList = function(buffId, statName?, isStacking?) {
     if (statName) {
         for (const [_, useName] of _pairs(OvaleData.STAT_USE_NAMES)) {
             if (isStacking || !strfind(useName, "_stacking_")) {
@@ -518,20 +513,12 @@ let UpdateTrinketInfo = undefined;
         }
     }
 }
-class OvaleCompile {
+
+class OvaleCompileClass extends RegisterPrinter(OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(OvaleCompileBase))) {
+    serial = undefined;
+    ast = undefined;
+        
     OnInitialize() {
-        OvaleArtifact = Ovale.OvaleArtifact;
-        OvaleAST = Ovale.OvaleAST;
-        OvaleCondition = Ovale.OvaleCondition;
-        OvaleCooldown = Ovale.OvaleCooldown;
-        OvaleData = Ovale.OvaleData;
-        OvaleEquipment = Ovale.OvaleEquipment;
-        OvalePaperDoll = Ovale.OvalePaperDoll;
-        OvalePower = Ovale.OvalePower;
-        OvaleScore = Ovale.OvaleScore;
-        OvaleScripts = Ovale.OvaleScripts;
-        OvaleSpellBook = Ovale.OvaleSpellBook;
-        OvaleStance = Ovale.OvaleStance;
     }
     OnEnable() {
         this.RegisterMessage("Ovale_CheckBoxValueChanged", "ScriptControlChanged");
@@ -593,7 +580,7 @@ class OvaleCompile {
         this.ast = OvaleAST.ParseScript(name);
         Ovale.ResetControls();
     }
-    EvaluateScript(ast, forceEvaluation) {
+    EvaluateScript(ast?, forceEvaluation?) {
         this.StartProfiling("OvaleCompile_EvaluateScript");
         if (_type(ast) != "table") {
             forceEvaluation = ast;
@@ -611,7 +598,7 @@ class OvaleCompile {
             OvaleCooldown.ResetSharedCooldowns();
             self_timesEvaluated = self_timesEvaluated + 1;
             this.serial = self_serial;
-            for (const [_, node] of _ipairs(ast.child)) {
+            for (const [_, node] of _ipairs<Node>(ast.child)) {
                 let nodeType = node.type;
                 if (nodeType == "checkbox") {
                     ok = EvaluateAddCheckBox(node);
@@ -661,3 +648,5 @@ class OvaleCompile {
         this.Print("Total number of times the script was evaluated: %d", self_timesEvaluated);
     }
 }
+
+OvaleCompile = new OvaleCompileClass();

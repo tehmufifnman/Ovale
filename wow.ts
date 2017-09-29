@@ -5,6 +5,7 @@ interface LuaArray<T> {
 }
 
 interface LuaObj<T> {
+    [key: number]:T;
     [key: string]:T;
 }
 
@@ -58,7 +59,7 @@ function assert(condition) {
 
 }
 
-function unpack<T>(t:LuaArray<T>):T[] {
+function unpack<T>(t:LuaArray<T>, first?, count?):T[] {
     return undefined;
 }
 
@@ -66,7 +67,8 @@ function tostringall(...text: object[]){
     return text.map(x => x.toString());
 }
 
-function select<T>(index: number, t: LuaArray<T>): T{
+function select<T>(index: number|"#", t: T[]): T|number{
+    if (index == "#") return t.length;
     return t[index];
 }
 
@@ -167,6 +169,9 @@ function lualength<T>(array: LuaArray<T>):number {
 }
 
 // WoW Class 
+type UIPosition = "TOPLEFT" | "CENTER";
+type UIAnchor = "ANCHOR_BOTTOMLEFT";
+
 interface UIFrame {
     AddMessage(message:string);
     SetLabel(label: string);
@@ -174,6 +179,29 @@ interface UIFrame {
     SetUserData(key: string, value: string);
     SetCallback(event: string, callback: (widget: UIFrame) => void);
     SetList(list: LuaArray<any>):void;
+    SetAllPoints(all:boolean):void;
+    SetAlpha(value:number):void;
+    SetScript(event:string, func):void;
+    SetMovable(movable:boolean):void;
+    SetFrameStrata(strata: "MEDIUM"):void;
+    SetWidth(width:number):void;
+    SetHeight(height:number):void;
+    obj:any;
+    SetPoint(anchor: UIPosition, x:number, y: number):void;
+    SetPoint(anchor: UIPosition, reference: UIFrame, refAnchor: UIPosition, x:number, y: number):void;
+    Show():void;
+    Hide():void;   
+    CreateTexture(): UITexture;
+    EnableMouse(enabled: boolean):void;
+}
+
+interface UITexture extends UIFrame {
+    SetTexture(r, g, b):void;
+}
+interface UITooltip extends UIFrame {
+    SetOwner(frame: UIFrame, anchor: UIAnchor):void;
+    SetText(text: string):void;
+    AddLine(text: string, r: number, g: number, b: number):void;
 }
 
 // WOW global functions
@@ -185,12 +213,12 @@ function UnitAura() {
     return [];
 }
 
-function GetSpellInfo(spellId: number) {
+function GetSpellInfo(spellId: number|string) {
     return [];
 }
 
-function GetItemInfo(itemId: string) {
-
+function GetItemInfo(itemId: number):any[] {
+return undefined;
 }
 
 function UnitCanAttack(unit:string, target: string) {
@@ -307,20 +335,86 @@ function IsInGroup(filter: number){ return false}
 function IsInInstance(){return false}
 function IsInRaid(filter: number){return false}
 function UnitLevel(target:string){ return 0;}
+function GetBuildInfo():any[] { return undefined}
+function GetItemCount(item:string, first?: boolean, second?: boolean){}
+function GetNumTrackingTypes() {return 0}
+function GetTrackingInfo(i:number):any[] {return undefined}
+function GetUnitSpeed(unit: string):number { return 0;}
+function GetWeaponEnchantInfo():any[] {return undefined}
+function HasFullControl() {}
+function IsSpellOverlayed() {}
+function IsStealthed() {}
+function UnitCastingInfo(target: string):any[] { return undefined }
+function UnitChannelInfo(target: string):any[] {return undefined }
+function UnitClassification(target: string){}
+function UnitCreatureFamily(target: string){}
+function UnitCreatureType(target: string){}
+function UnitDetailedThreatSituation(unit: string, target: string):any[]{ return undefined}
+function UnitInRaid(unit: string){return false}
+function UnitIsFriend(unit: string, target: string){}
+function UnitIsPVP(unit: string){return false}
+function UnitIsUnit(unit1: string, unit2: string){ return true}
+function UnitPowerMax(unit: string, power: number, segment: number){}
+function UnitRace(unit: string):any[]{return undefined}
+function UnitStagger(unit: string){return 0}
+function GetSpellCharges() {}
+function GetSpellCooldown(type, book?):[number, number, boolean]{ return [0, 0, false]}
+function GetLocale() { return "en-US"}
+function CreateFrame(type:string, id:string, parent?:UIFrame, template?:string):UIFrame { return undefined}
+function EasyMenu(menu, self_menuFrame, cursor, x, y, menuType) {}
+function IsShiftKeyDown(){}
+function GetSpecialization(){return "havoc"}
+function GetSpecializationInfo(spec: string){ return 1}
+function GetTalentInfoByID(talent:number, spec:number):any[]{return undefined}
+function GetAuctionItemSubClasses(item:number):any[]{return undefined}
+function GetInventoryItemID(unit:string, slot:number){}
+function GetInventoryItemGems(){}
+function RegisterStateDriver(frame, property, state){}
+function UnitHealth(unit:string){return 0}
+function UnitHealthMax(unit:string){return 0}
+function PlaySoundFile(file:string){}
 var BigWigsLoader;
-
+var UIParent;
 var Bartender4;
 
 // WoW global variables
+var GameTooltip:UITooltip = <UITooltip>{}
 var MAX_COMBO_POINTS = 5;
 var UNKNOWN = -1;
 var DEFAULT_CHAT_FRAME:UIFrame = undefined;
+var SCHOOL_MASK_NONE = 0;
 var SCHOOL_MASK_ARCANE = 1;
 var SCHOOL_MASK_FIRE = 2;
 var SCHOOL_MASK_FROST = 4;
 var SCHOOL_MASK_HOLY = 8;
 var SCHOOL_MASK_NATURE = 16;
 var SCHOOL_MASK_SHADOW = 32;
+var SCHOOL_MASK_PHYSICAL = 64;
+
+var INVSLOT_AMMO = 1;
+var INVSLOT_BACK = 2;
+var INVSLOT_BODY = 3;
+var INVSLOT_CHEST = 4;
+var INVSLOT_FEET = 5;
+var INVSLOT_FINGER1 = 6;
+var INVSLOT_FINGER2 = 7;
+var INVSLOT_FIRST_EQUIPPED = 8;
+var INVSLOT_HAND = 9;
+var INVSLOT_HEAD = 10;
+var INVSLOT_LAST_EQUIPPED = 11;
+var INVSLOT_LEGS = 12;
+var INVSLOT_MAINHAND = 13;
+var INVSLOT_NECK = 14;
+var INVSLOT_OFFHAND = 15;
+var INVSLOT_RANGED = 16;
+var INVSLOT_SHOULDER = 17;
+var INVSLOT_TABARD = 18;
+var INVSLOT_TRINKET1 = 19;
+var INVSLOT_TRINKET2 = 20;
+var INVSLOT_WAIST = 21;
+var INVSLOT_WRIST = 22;
+
+var ITEM_LEVEL;
 
 var LE_PARTY_CATEGORY_INSTANCE = 1;
 var LE_PARTY_CATEGORY_HOME = 2;

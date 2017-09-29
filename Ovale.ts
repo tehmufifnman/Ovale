@@ -1,9 +1,5 @@
-import __addon from "addon";
-let [OVALE, Addon] = __addon;
-const OvaleBase = Addon.NewModule("Ovale", "AceEvent-3.0");
+import AceAddon from "AceAddon-3.0";
 import AceGUI from "AceGUI-3.0";
-import { OvaleFuture } from "./Future";
-import { OvaleDebug } from "./Debug";
 import { L } from "./Localization";
 let _assert = assert;
 let format = string.format;
@@ -58,16 +54,6 @@ export function MakeString(s?, ...__args) {
 
 export function RegisterPrinter<T extends Constructor<AceModule>>(base: T) {
     return class extends base {
-        Print(...__args) {
-            let name = this.GetName();
-            let s = MakeString(...__args);
-            _DEFAULT_CHAT_FRAME.AddMessage(format("|cff33ff99%s|r: %s", name, s));
-        }
-        Error(...__args) {
-            let s = MakeString(...__args);
-            this.Print("Fatal error: %s", s);
-            OvaleDebug.bug = true;
-        }
         GetMethod(methodName, subModule) {
             let [func, arg] = [this[methodName], this];
             if (!func) {
@@ -75,16 +61,59 @@ export function RegisterPrinter<T extends Constructor<AceModule>>(base: T) {
             }
             _assert(func != undefined);
             return [func, arg];
-        }
-    
+        }    
     }    
 }
 
-class OvaleClass extends RegisterPrinter(OvaleBase) {
+export interface OvaleDb {
+    profile: {
+        check: {},
+        list: {},
+        standaloneOptions: boolean,
+        apparence: {
+            avecCible: boolean,
+            clickThru: boolean,
+            enCombat: boolean,
+            enableIcons: boolean,
+            hideEmpty: boolean,
+            hideVehicule: boolean,
+            margin: number,
+            offsetX: number,
+            offsetY: number,
+            targetHostileOnly: boolean,
+            verrouille: boolean,
+            vertical: boolean,
+            alpha: number,
+            flashIcon: boolean,
+            remainsFontColor: {
+                r: number,
+                g: number,
+                b: number
+            },
+            fontScale: number,
+            highlightIcon: true,
+            iconScale: number,
+            numeric: false,
+            raccourcis: true,
+            smallIconScale: number,
+            targetText: string,
+            iconShiftX: number,
+            iconShiftY: number,
+            optionsAlpha: number,
+            predictif: boolean,
+            secondIconScale: number,
+            taggedEnemies: boolean,
+            auraLag: number
+        }
+    },
+    global: any;
+}
+
+class OvaleClass extends AceAddon.NewAddon("Ovale", "AceEvent-3.0") {
     L = undefined;
     playerClass = _select(2, API_UnitClass("player"));
     playerGUID: string = undefined;
-    db = undefined;
+    db: OvaleDb = undefined;
     frame = undefined;
     checkBox = {
     }
@@ -96,7 +125,7 @@ class OvaleClass extends RegisterPrinter(OvaleBase) {
     }
     refreshNeeded = {
     }
-    MSG_PREFIX = OVALE;
+    inCombat = false;
 
     OnCheckBoxValueChanged(widget) {
         let name = widget.GetUserData("name");
@@ -111,7 +140,7 @@ class OvaleClass extends RegisterPrinter(OvaleBase) {
     }
 
     OnInitialize() {
-        _G["BINDING_HEADER_OVALE"] = OVALE;
+        _G["BINDING_HEADER_OVALE"] = "Ovale";
         let toggleCheckBox = L["Inverser la boîte à cocher "];
         _G["BINDING_NAME_OVALE_CHECKBOX0"] = toggleCheckBox + "(1)";
         _G["BINDING_NAME_OVALE_CHECKBOX1"] = toggleCheckBox + "(2)";
@@ -126,7 +155,7 @@ class OvaleClass extends RegisterPrinter(OvaleBase) {
         this.RegisterEvent("PLAYER_TARGET_CHANGED");
         this.RegisterMessage("Ovale_CombatStarted");
         this.RegisterMessage("Ovale_OptionChanged");
-        this.frame = AceGUI.Create(OVALE + "Frame");
+        this.frame = AceGUI.Create("OvaleFrame");
         this.UpdateFrame();
     }
 
@@ -185,7 +214,7 @@ class OvaleClass extends RegisterPrinter(OvaleBase) {
             if (profile.apparence.avecCible && !API_UnitExists("target")) {
                 visible = false;
             }
-            if (profile.apparence.enCombat && !OvaleFuture.inCombat) {
+            if (profile.apparence.enCombat && !this.inCombat) {
                 visible = false;
             }
             if (profile.apparence.targetHostileOnly && (API_UnitIsDead("target") || !API_UnitCanAttack("player", "target"))) {

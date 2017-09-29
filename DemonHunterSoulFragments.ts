@@ -1,19 +1,29 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvaleDemonHunterSoulFragments = Ovale.NewModule("OvaleDemonHunterSoulFragments", "AceEvent-3.0");
-Ovale.OvaleDemonHunterSoulFragments = OvaleDemonHunterSoulFragments;
-let OvaleDebug = undefined;
-let OvaleState = undefined;
+import { Ovale } from "./Ovale";
+import { OvaleDebug } from "./Debug";
+import { OvaleState } from "./State";
+
+let OvaleDemonHunterSoulFragmentsBase = Ovale.NewModule("OvaleDemonHunterSoulFragments", "AceEvent-3.0");
+export let OvaleDemonHunterSoulFragments: OvaleDemonHunterSoulFragmentsClass;
 let _ipairs = ipairs;
 let tinsert = table.insert;
 let tremove = table.remove;
 let API_GetTime = GetTime;
 let API_GetSpellCount = GetSpellCount;
-class OvaleDemonHunterSoulFragments {
+
+let SOUL_FRAGMENTS_BUFF_ID = 228477;
+let SOUL_FRAGMENTS_SPELL_HEAL_ID = 203794;
+let SOUL_FRAGMENTS_SPELL_CAST_SUCCESS_ID = 204255;
+let SOUL_FRAGMENT_FINISHERS = {
+    [228477]: true,
+    [247454]: true,
+    [227225]: true
+}
+class OvaleDemonHunterSoulFragmentsClass extends OvaleDebug.RegisterDebugging(OvaleDemonHunterSoulFragmentsBase) {
+    last_checked;
+    soul_fragments;
+    last_soul_fragment_count;
+
     OnInitialize() {
-        OvaleDebug = Ovale.OvaleDebug;
-        OvaleState = Ovale.OvaleState;
-        OvaleDebug.RegisterDebugging(OvaleDemonHunterSoulFragments);
         this.SetCurrentSoulFragments(0);
     }
     OnEnable() {
@@ -32,16 +42,6 @@ class OvaleDemonHunterSoulFragments {
             this.UnregisterEvent("PLAYER_REGEN_DISABLED");
         }
     }
-}
-let SOUL_FRAGMENTS_BUFF_ID = 228477;
-let SOUL_FRAGMENTS_SPELL_HEAL_ID = 203794;
-let SOUL_FRAGMENTS_SPELL_CAST_SUCCESS_ID = 204255;
-let SOUL_FRAGMENT_FINISHERS = {
-    [228477]: true,
-    [247454]: true,
-    [227225]: true
-}
-class OvaleDemonHunterSoulFragments {
     PLAYER_REGEN_ENABLED() {
         this.SetCurrentSoulFragments();
     }
@@ -51,8 +51,9 @@ class OvaleDemonHunterSoulFragments {
         this.last_checked = undefined;
         this.SetCurrentSoulFragments();
     }
+
     COMBAT_LOG_EVENT_UNFILTERED(event, _, subtype, _, sourceGUID, _, _, _, _, _, _, _, spellID, spellName) {
-        import { me } from "./playerGUID";
+        let me = Ovale.playerGUID;
         if (sourceGUID == me) {
             let current_sould_fragment_count = this.last_soul_fragment_count;
             if (subtype == "SPELL_HEAL" && spellID == SOUL_FRAGMENTS_SPELL_HEAL_ID) {
@@ -70,7 +71,7 @@ class OvaleDemonHunterSoulFragments {
             }
         }
     }
-    SetCurrentSoulFragments(count) {
+    SetCurrentSoulFragments(count?) {
         let now = API_GetTime();
         this.last_checked = now;
         this.soul_fragments = this.soul_fragments || {
@@ -92,8 +93,8 @@ class OvaleDemonHunterSoulFragments {
         }
     }
     DebugSoulFragments() {
-        print("Fragments:" + this.last_soul_fragment_count["fragments"]);
-        print("Time:" + this.last_soul_fragment_count["timestamp"]);
+        // print("Fragments:" + this.last_soul_fragment_count["fragments"]);
+        // print("Time:" + this.last_soul_fragment_count["timestamp"]);
     }
 }
 OvaleDemonHunterSoulFragments.statePrototype = {

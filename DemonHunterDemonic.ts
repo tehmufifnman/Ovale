@@ -1,9 +1,9 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvaleDemonHunterDemonic = Ovale.NewModule("OvaleDemonHunterDemonic", "AceEvent-3.0");
-Ovale.OvaleDemonHunterDemonic = OvaleDemonHunterDemonic;
-let OvaleDebug = undefined;
-let OvaleAura = undefined;
+import { Ovale } from "./Ovale";
+import { OvaleDebug } from "./Debug";
+import { OvaleAura } from "./Aura";
+
+let OvaleDemonHunterDemonicBase = Ovale.NewModule("OvaleDemonHunterDemonic", "AceEvent-3.0");
+export let OvaleDemonHunterDemonic: OvaleDemonHunterDemonicClass;
 let API_GetSpecialization = GetSpecialization;
 let API_GetSpecializationInfo = GetSpecializationInfo;
 let API_GetTime = GetTime;
@@ -16,11 +16,13 @@ let HAVOC_META_BUFF_ID = 162264;
 let HIDDEN_BUFF_ID = -HAVOC_DEMONIC_TALENT_ID;
 let HIDDEN_BUFF_DURATION = INFINITY;
 let HIDDEN_BUFF_EXTENDED_BY_DEMONIC = "Extended by Demonic";
-class OvaleDemonHunterDemonic {
+class OvaleDemonHunterDemonicClass extends OvaleDebug.RegisterDebugging(OvaleDemonHunterDemonicBase) {
+    playerGUID:string;
+    isDemonHunter:boolean;
+    isHavoc:boolean;
+    hasDemonic: boolean;
+
     OnInitialize() {
-        OvaleAura = Ovale.OvaleAura;
-        OvaleDebug = Ovale.OvaleDebug;
-        OvaleDebug.RegisterDebugging(OvaleDemonHunterDemonic);
     }
     OnEnable() {
         this.playerGUID = undefined;
