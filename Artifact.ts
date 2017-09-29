@@ -2,7 +2,7 @@ import __addon from "addon";
 let [OVALE, Ovale] = __addon;
 let OvaleArtifactBase = Ovale.NewModule("OvaleArtifact", "AceEvent-3.0");
 import LibArtifactData from "LibArtifactData-1.0";
-import { OvaleDebug, Debug } from "./Debug";
+import { OvaleDebug } from "./Debug";
 import { L } from "./Localization";
 import { OvaleState } from "./State";
 let tsort = table.sort;
@@ -11,9 +11,8 @@ let tremove = table.remove;
 let tconcat = table.concat;
 
 
-class OvaleArtifact extends OvaleArtifactBase {
+class OvaleArtifact extends OvaleDebug.RegisterDebugging(OvaleArtifactBase) {
     self_traits = {}
-    debug: Debug;
 
     debugOptions = {
         artifacttraits: {
@@ -35,7 +34,6 @@ class OvaleArtifact extends OvaleArtifactBase {
 
     constructor() {
         super();
-        this.debug = OvaleDebug.RegisterDebugging(this);
         for (const [k, v] of pairs(this.debugOptions)) {
             OvaleDebug.options.args[k] = v;
         }

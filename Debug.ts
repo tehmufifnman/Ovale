@@ -91,7 +91,7 @@ class OvaleDebugClass extends OvaleDebugBase {
         }
         options.defaultDB.global = options.defaultDB.global || {}
         options.defaultDB.global.debug = {}
-        options.RegisterOptions(OvaleDebugClass);
+        options.RegisterOptions(this);
     }
     
     OnInitialize() {
@@ -127,14 +127,35 @@ class OvaleDebugClass extends OvaleDebugBase {
             this.trace = false;
         }
     }
-    RegisterDebugging(addon: AceModule) {
-        let name = addon.GetName();
-        this.options.args.toggles.args[name] = {
-            name: name,
-            desc: format(L["Enable debugging messages for the %s module."], name),
-            type: "toggle"
+
+    RegisterDebugging<T extends Constructor<AceModule>>(addon: T) {
+        return class extends addon {
+            private trace = false; 
+            Debug(...__args) {
+                let name = this.GetName();
+                if (Ovale.db.global.debug[name]) {
+                    _DEFAULT_CHAT_FRAME.AddMessage(format("|cff33ff99%s|r: %s", name, MakeString(...__args)));
+                }
+            }
+            DebugTimestamp(...__args) {
+                let name = this.GetName();
+                if (Ovale.db.global.debug[name]) {
+                    let now = API_GetTime();
+                    let s = format("|cffffff00%f|r %s", now, MakeString(...__args));
+                    _DEFAULT_CHAT_FRAME.AddMessage(format("|cff33ff99%s|r: %s", name, s));
+                }
+            }
+            Log(...__args) {
+                if (this.trace) {
+                    let N = self_traceLog.Lines();
+                    if (N < OVALE_TRACELOG_MAXLINES - 1) {
+                        self_traceLog.AddLine(MakeString(...__args));
+                    } else if (N == OVALE_TRACELOG_MAXLINES - 1) {
+                        self_traceLog.AddLine("WARNING: Maximum length of trace log has been reached.");
+                    }
+                }
+            }
         }
-        return new Debug(addon);
     }
 
     DisplayTraceLog() {
@@ -147,35 +168,3 @@ class OvaleDebugClass extends OvaleDebugBase {
 
 export const OvaleDebug = new OvaleDebugClass();
 
-
-export class Debug {
-    private trace = false; 
-
-    constructor(private module: AceModule) {
-    }
-
-    Debug(...__args) {
-        let name = this.module.GetName();
-        if (Ovale.db.global.debug[name]) {
-            _DEFAULT_CHAT_FRAME.AddMessage(format("|cff33ff99%s|r: %s", name, MakeString(...__args)));
-        }
-    }
-    DebugTimestamp(...__args) {
-        let name = this.module.GetName();
-        if (Ovale.db.global.debug[name]) {
-            let now = API_GetTime();
-            let s = format("|cffffff00%f|r %s", now, MakeString(...__args));
-            _DEFAULT_CHAT_FRAME.AddMessage(format("|cff33ff99%s|r: %s", name, s));
-        }
-    }
-    Log(...__args) {
-        if (this.trace) {
-            let N = self_traceLog.Lines();
-            if (N < OVALE_TRACELOG_MAXLINES - 1) {
-                self_traceLog.AddLine(MakeString(...__args));
-            } else if (N == OVALE_TRACELOG_MAXLINES - 1) {
-                self_traceLog.AddLine("WARNING: Maximum length of trace log has been reached.");
-            }
-        }
-    }
-}

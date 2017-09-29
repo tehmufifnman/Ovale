@@ -58,8 +58,8 @@ function assert(condition) {
 
 }
 
-function unpack(t) {
-
+function unpack<T>(t:LuaArray<T>):T[] {
+    return undefined;
 }
 
 function tostringall(...text: object[]){
@@ -84,7 +84,8 @@ function loadstring(t: string):() => void { return undefined; }
 var math = {
     floor: Math.floor,
     huge: Number.MAX_VALUE,
-    abs: Math.abs
+    abs: Math.abs,
+    ceil: Math.ceil
 };
 
 var coroutine = {
@@ -300,7 +301,7 @@ function GetNumGroupMembers(filter: number) {
     return 0;
 }
 
-function UnitPower(unit: string) { return 0;}
+function UnitPower(unit: string, type: number) { return 0;}
 
 function IsInGroup(filter: number){ return false}
 function IsInInstance(){return false}

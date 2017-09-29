@@ -2,9 +2,9 @@ import __addon from "addon";
 let [OVALE, Ovale] = __addon;
 let OvaleActionBarBase = Ovale.NewModule("OvaleActionBar", "AceEvent-3.0", "AceTimer-3.0");
 import { L } from "./Localization";
-import { OvaleDebug, Debug } from "./Debug";
-import { OvaleProfiler, Profiler } from "./Profiler";
-import { spellBook } from "./SpellBook";
+import { OvaleDebug } from "./Debug";
+import { OvaleProfiler } from "./Profiler";
+import { OvaleSpellBook } from "./SpellBook";
 let gsub = string.gsub;
 let strlen = string.len;
 let strmatch = string.match;
@@ -21,10 +21,7 @@ let API_GetBonusBarIndex = GetBonusBarIndex;
 let API_GetMacroItem = GetMacroItem;
 let API_GetMacroSpell = GetMacroSpell;
 
-class OvaleActionBarClass extends OvaleActionBarBase {
-    debug: Debug;
-    profiler: Profiler;
-    
+class OvaleActionBarClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.RegisterDebugging(OvaleActionBarBase)) {
     debugOptions = {
         actionbar: {
             name: L["Action bar"],
@@ -45,8 +42,6 @@ class OvaleActionBarClass extends OvaleActionBarBase {
     
     constructor(){
         super();
-        this.debug = OvaleDebug.RegisterDebugging(this);
-        this.profiler = OvaleProfiler.RegisterProfiling(this);        
         for (const [k, v] of pairs(this.debugOptions)) {
             OvaleDebug.options.args[k] = v;
         }
@@ -127,15 +122,15 @@ class OvaleActionBarClass extends OvaleActionBarBase {
         }
     }
     UPDATE_BINDINGS(event) {
-        this.debug.Debug("%s: Updating key bindings.", event);
+        this.Debug("%s: Updating key bindings.", event);
         this.UpdateKeyBindings();
     }
     TimerUpdateActionSlots() {
         this.UpdateActionSlots("TimerUpdateActionSlots");
     }
     UpdateActionSlots(event) {
-        this.profiler.StartProfiling("OvaleActionBar_UpdateActionSlots");
-        this.debug.Debug("%s: Updating all action slot mappings.", event);
+        this.StartProfiling("OvaleActionBar_UpdateActionSlots");
+        this.Debug("%s: Updating all action slot mappings.", event);
         _wipe(this.action);
         _wipe(this.item);
         _wipe(this.macro);
@@ -154,10 +149,10 @@ class OvaleActionBarClass extends OvaleActionBarBase {
         if (event != "TimerUpdateActionSlots") {
             this.ScheduleTimer("TimerUpdateActionSlots", 1);
         }
-        this.profiler.StopProfiling("OvaleActionBar_UpdateActionSlots");
+        this.StopProfiling("OvaleActionBar_UpdateActionSlots");
     }
     UpdateActionSlot(slot) {
-        this.profiler.StartProfiling("OvaleActionBar_UpdateActionSlot");
+        this.StartProfiling("OvaleActionBar_UpdateActionSlot");
         let action = this.action[slot];
         if (this.spell[action] == slot) {
             this.spell[action] = undefined;
@@ -219,19 +214,19 @@ class OvaleActionBarClass extends OvaleActionBarBase {
             }
         }
         if (this.action[slot]) {
-            this.debug.Debug("Mapping button %s to %s.", slot, this.action[slot]);
+            this.Debug("Mapping button %s to %s.", slot, this.action[slot]);
         } else {
-            this.debug.Debug("Clearing mapping for button %s.", slot);
+            this.Debug("Clearing mapping for button %s.", slot);
         }
         this.keybind[slot] = this.GetKeyBinding(slot);
-        this.profiler.StopProfiling("OvaleActionBar_UpdateActionSlot");
+        this.StopProfiling("OvaleActionBar_UpdateActionSlot");
     }
     UpdateKeyBindings() {
-        this.profiler.StartProfiling("OvaleActionBar_UpdateKeyBindings");
+        this.StartProfiling("OvaleActionBar_UpdateKeyBindings");
         for (let slot = 1; slot <= 120; slot += 1) {
             this.keybind[slot] = this.GetKeyBinding(slot);
         }
-        this.profiler.StopProfiling("OvaleActionBar_UpdateKeyBindings");
+        this.StopProfiling("OvaleActionBar_UpdateKeyBindings");
     }
     GetForSpell(spellId) {
         return this.spell[spellId];

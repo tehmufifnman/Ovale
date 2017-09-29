@@ -4,7 +4,7 @@ const OvaleBase = Addon.NewModule("Ovale", "AceEvent-3.0");
 import AceGUI from "AceGUI-3.0";
 import { OvaleFuture } from "./Future";
 import { OvaleDebug } from "./Debug";
-let L = undefined;
+import { L } from "./Localization";
 let _assert = assert;
 let format = string.format;
 let _ipairs = ipairs;
@@ -56,23 +56,31 @@ export function MakeString(s?, ...__args) {
     return s;
 }
 
-export class Printer {
-    constructor(private module: AceModule) {
-    }
-
-    Print(...__args) {
-        let name = this.module.GetName();
-        let s = MakeString(...__args);
-        _DEFAULT_CHAT_FRAME.AddMessage(format("|cff33ff99%s|r: %s", name, s));
-    }
-    Error(...__args) {
-        let s = MakeString(...__args);
-        this.Print("Fatal error: %s", s);
-        OvaleDebug.bug = true;
-    }
+export function RegisterPrinter<T extends Constructor<AceModule>>(base: T) {
+    return class extends base {
+        Print(...__args) {
+            let name = this.GetName();
+            let s = MakeString(...__args);
+            _DEFAULT_CHAT_FRAME.AddMessage(format("|cff33ff99%s|r: %s", name, s));
+        }
+        Error(...__args) {
+            let s = MakeString(...__args);
+            this.Print("Fatal error: %s", s);
+            OvaleDebug.bug = true;
+        }
+        GetMethod(methodName, subModule) {
+            let [func, arg] = [this[methodName], this];
+            if (!func) {
+                [func, arg] = [subModule[methodName], subModule];
+            }
+            _assert(func != undefined);
+            return [func, arg];
+        }
+    
+    }    
 }
 
-class OvaleClass extends OvaleBase {
+class OvaleClass extends RegisterPrinter(OvaleBase) {
     L = undefined;
     playerClass = _select(2, API_UnitClass("player"));
     playerGUID: string = undefined;
@@ -90,8 +98,6 @@ class OvaleClass extends OvaleBase {
     }
     MSG_PREFIX = OVALE;
 
-    printer = new Printer(this);
-
     OnCheckBoxValueChanged(widget) {
         let name = widget.GetUserData("name");
         this.db.profile.check[name] = widget.GetValue();
@@ -105,7 +111,6 @@ class OvaleClass extends OvaleBase {
     }
 
     OnInitialize() {
-        L = this.L;
         _G["BINDING_HEADER_OVALE"] = OVALE;
         let toggleCheckBox = L["Inverser la boîte à cocher "];
         _G["BINDING_NAME_OVALE_CHECKBOX0"] = toggleCheckBox + "(1)";
@@ -330,18 +335,10 @@ class OvaleClass extends OvaleBase {
     PrintOneTimeMessages() {
         for (const [s] of _pairs(self_oneTimeMessage)) {
             if (self_oneTimeMessage[s] != "printed") {
-                this.printer.Print(s);
+                this.Print(s);
                 self_oneTimeMessage[s] = "printed";
             }
         }
-    }
-    GetMethod(methodName, subModule) {
-        let [func, arg] = [this[methodName], this];
-        if (!func) {
-            [func, arg] = [subModule[methodName], subModule];
-        }
-        _assert(func != undefined);
-        return [func, arg];
     }
 }
 

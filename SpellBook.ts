@@ -1,10 +1,9 @@
 import __addon from "addon";
 let [OVALE, Ovale] = __addon;
-let OvaleSpellBook = Ovale.NewModule("OvaleSpellBook", "AceEvent-3.0");
-Ovale.OvaleSpellBook = OvaleSpellBook;
+export let OvaleSpellBook:OvaleSpellBookClass;
 import { L } from "./L";
-import { OvaleDebug } from "./OvaleDebug";
-import { OvaleProfiler } from "./OvaleProfiler";
+import { OvaleDebug } from "./Debug";
+import { OvaleProfiler } from "./Profiler";
 let OvaleCooldown = undefined;
 let OvaleData = undefined;
 let OvalePower = undefined;
@@ -117,13 +116,8 @@ const OutputTableValues = function(output, tbl) {
         output[lualength(output) + 1] = v;
     }
 }
-class OvaleSpellBook {
+class OvaleSpellBookClass extends OvaleDebug.RegisterDebugging(Ovale.NewModule("OvaleSpellBook", "AceEvent-3.0")) {
     OnInitialize() {
-        OvaleCooldown = Ovale.OvaleCooldown;
-        OvaleData = Ovale.OvaleData;
-        OvalePower = Ovale.OvalePower;
-        OvaleRunes = Ovale.OvaleRunes;
-        OvaleState = Ovale.OvaleState;
     }
     OnEnable() {
         this.RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED", "Update");
@@ -497,3 +491,4 @@ statePrototype.GetTimeToSpell = function (state, spellId, atTime, targetGUID, ex
     return timeToSpell;
 }
 statePrototype.RequireSpellCountHandler = OvaleSpellBook.RequireSpellCountHandler;
+OvaleSpellBook = new OvaleSpellBookClass();

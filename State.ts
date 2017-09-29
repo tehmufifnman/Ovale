@@ -5,28 +5,34 @@ export let OvaleState: OvaleStateClass;
 import { L } from "./Localization";
 import { OvaleDebug } from "./Debug";
 import { OvaleQueue } from "./Queue";
+import { Constructor } from "./Ovale";
 let _pairs = pairs;
-let self_statePrototype = {
+let self_statePrototype:LuaObj<OvaleStatePrototype> = {
 }
-let self_stateAddons = OvaleQueue.NewQueue("OvaleState_stateAddons");
-class OvaleStateClass extends OvaleStateBase {
-    debug = OvaleDebug.RegisterDebugging(this);
-    state = { }
-    OnEnable() {
-        this.RegisterState(this, this.statePrototype);
-    }
-    OnDisable() {
-        this.UnregisterState(this);
-    }
-    RegisterState(stateAddon, statePrototype) {
+let self_stateAddons = new OvaleQueue<StateModule>("OvaleState_stateAddons");
+
+export interface StateModule extends AceModule {
+    CleanState(state: OvaleStatePrototype):void;
+    InitializeState(state: OvaleStatePrototype):void;
+    ResetState(state: OvaleStatePrototype):void;
+}
+
+class OvaleStateClass extends OvaleDebug.RegisterDebugging(OvaleStateBase) {
+    state:OvaleStatePrototype = new OvaleStatePrototype();
+
+    OnEnable() {}
+    OnDisable() {}
+    RegisterState(stateAddon: StateModule, statePrototype: ((base:Constructor<OvaleStatePrototype>) => OvaleStatePrototype)) {
         self_stateAddons.Insert(stateAddon);
-        self_statePrototype[stateAddon] = statePrototype;
+        const name = stateAddon.GetName();
+        self_statePrototype[name] = statePrototype;
         for (const [k, v] of _pairs(statePrototype)) {
             this.state[k] = v;
         }
     }
-    UnregisterState(stateAddon) {
-        let stateModules = OvaleQueue.NewQueue("OvaleState_stateModules");
+    UnregisterState(stateAddon: StateModule) {
+        const name = stateAddon.GetName();
+        let stateModules = new OvaleQueue<StateModule>("OvaleState_stateModules");
         while (self_stateAddons.Size() > 0) {
             let addon = self_stateAddons.Remove();
             if (stateAddon != addon) {
@@ -37,23 +43,28 @@ class OvaleStateClass extends OvaleStateBase {
         if (stateAddon.CleanState) {
             stateAddon.CleanState(this.state);
         }
-        let statePrototype = self_statePrototype[stateAddon];
+        let statePrototype = self_statePrototype[name];
         if (statePrototype) {
             for (const [k] of _pairs(statePrototype)) {
                 this.state[k] = undefined;
             }
         }
-        self_statePrototype[stateAddon] = undefined;
+        self_statePrototype[name] = undefined;
     }
-    InvokeMethod(methodName, ...__args) {
-        for (const [_, addon] of self_stateAddons.Iterator()) {
-            if (addon[methodName]) {
-                addon[methodName](addon, ...__args);
-            }
+    InvokeInitializeState(state: OvaleStatePrototype) {
+        const iterator = self_stateAddons.Iterator();
+        while (iterator.Next()) {
+            if (iterator.value.InitializeState) iterator.value.InitializeState(state);
+        }
+    }
+    InvokeResetState(state: OvaleStatePrototype) {
+        const iterator = self_stateAddons.Iterator();
+        while (iterator.Next()) {
+            if (iterator.value.ResetState) iterator.value.ResetState(state);
         }
     }
 
-    InitializeState(state) {
+    InitializeState(state: OvaleStatePrototype) {
         state.futureVariable = {
         }
         state.futureLastEnable = {
@@ -63,7 +74,7 @@ class OvaleStateClass extends OvaleStateBase {
         state.lastEnable = {
         }
     }
-    ResetState(state) {
+    ResetState(state: OvaleStatePrototype) {
         for (const [k] of _pairs(state.futureVariable)) {
             state.futureVariable[k] = undefined;
             state.futureLastEnable[k] = undefined;
@@ -92,51 +103,52 @@ class OvaleStateClass extends OvaleStateBase {
     }
 }
 
-OvaleState.statePrototype = {
-}
-let statePrototype = OvaleState.statePrototype;
-statePrototype.isState = true;
-statePrototype.isInitialized = undefined;
-statePrototype.futureVariable = undefined;
-statePrototype.futureLastEnable = undefined;
-statePrototype.variable = undefined;
-statePrototype.lastEnable = undefined;
+export class OvaleStatePrototype {
+    isState = true;
+    isInitialized = undefined;
+    futureVariable = undefined;
+    futureLastEnable = undefined;
+    variable = undefined;
+    lastEnable = undefined;
+    inCombat: boolean;
 
-statePrototype.Initialize = function (state) {
-    if (!state.isInitialized) {
-        OvaleState.InvokeMethod("InitializeState", state);
-        state.isInitialized = true;
-    }
-}
-statePrototype.Reset = function (state) {
-    OvaleState.InvokeMethod("ResetState", state);
-}
-statePrototype.GetState = function (state, name) {
-    return state.futureVariable[name] || state.variable[name] || 0;
-}
-statePrototype.GetStateDuration = function (state, name) {
-    let lastEnable = state.futureLastEnable[name] || state.lastEnable[name] || state.currentTime;
-    return state.currentTime - lastEnable;
-}
-statePrototype.PutState = function (state, name, value, isFuture) {
-    if (isFuture) {
-        let oldValue = state.GetState(name);
-        if (value != oldValue) {
-            state.Log("Setting future state: %s from %s to %s.", name, oldValue, value);
-            state.futureVariable[name] = value;
-            state.futureLastEnable[name] = state.currentTime;
-        }
-    } else {
-        let oldValue = state.variable[name] || 0;
-        if (value != oldValue) {
-            OvaleState.DebugTimestamp("Advancing combat state: %s from %s to %s.", name, oldValue, value);
-            state.Log("Advancing combat state: %s from %s to %s.", name, oldValue, value);
-            state.variable[name] = value;
-            state.lastEnable[name] = state.currentTime;
+    Initialize() {
+        if (!this.isInitialized) {
+            OvaleState.InvokeInitializeState(this);
+            this.isInitialized = true;
         }
     }
+
+    Reset () {
+        OvaleState.InvokeResetState(this);
+    }
+    GetState(state, name) {
+        return state.futureVariable[name] || state.variable[name] || 0;
+    }
+    GetStateDuration(state, name) {
+        let lastEnable = state.futureLastEnable[name] || state.lastEnable[name] || state.currentTime;
+        return state.currentTime - lastEnable;
+    }
+    PutState (state, name, value, isFuture) {
+        if (isFuture) {
+            let oldValue = state.GetState(name);
+            if (value != oldValue) {
+                state.Log("Setting future state: %s from %s to %s.", name, oldValue, value);
+                state.futureVariable[name] = value;
+                state.futureLastEnable[name] = state.currentTime;
+            }
+        } else {
+            let oldValue = state.variable[name] || 0;
+            if (value != oldValue) {
+                OvaleState.DebugTimestamp("Advancing combat state: %s from %s to %s.", name, oldValue, value);
+                state.Log("Advancing combat state: %s from %s to %s.", name, oldValue, value);
+                state.variable[name] = value;
+                state.lastEnable[name] = state.currentTime;
+            }
+        }
+    }
+
+    Log(...parameters) {
+        OvaleState.Log(...parameters);
+    }
 }
-statePrototype.Log = function (state, ...__args) {
-    return OvaleDebug.Log(...__args);
-}
-statePrototype.GetMethod = Ovale.GetMethod;

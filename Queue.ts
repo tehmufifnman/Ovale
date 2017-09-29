@@ -1,100 +1,133 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvaleQueue = {
+import { Ovale } from "./Ovale";
+
+class BackToFrontIterator<T> {
+    public value:T;
+	constructor(private invariant:OvaleDequeue<T>, public control: number) {
+    }
+	Next() {
+		this.control = this.control - 1;
+        this.value = this.invariant[this.control];
+        return this.control <= this.invariant.last;
+	}
 }
-Ovale.OvaleQueue = OvaleQueue;
-let _setmetatable = setmetatable;
-OvaleQueue.name = "OvaleQueue";
-OvaleQueue.first = 1;
-OvaleQueue.last = 0;
-OvaleQueue.__index = OvaleQueue;
-const BackToFrontIterator = function(invariant, control) {
-    control = control - 1;
-    let element = invariant[control];
-    if (element) {
-        return [control, element];
-    }
+
+class FrontToBackIterator<T> {
+	public value:T;
+	constructor(private invariant:OvaleDequeue<T>, private control: number) {}
+	Next() {
+		this.control = this.control + 1;
+        this.value = this.invariant[this.control];
+        return this.control >= this.invariant.first;
+	}
 }
-const FrontToBackIterator = function(invariant, control) {
-    control = control + 1;
-    let element = invariant[control];
-    if (element) {
-        return [control, element];
-    }
+
+export class OvaleDequeue<T> {
+	first = 0;
+	last = -1;
+	[index:number]:T;
+
+	constructor(public name:string) {
+
+	}
+
+	InsertFront(element:T) {
+		var first = this.first - 1
+		this.first = first
+		this[first] = element
+	}
+
+	InsertBack(element:T) {
+		var last = this.last + 1
+		this.last = last
+		this[last] = element
+	}
+
+	RemoveFront() {
+		var first = this.first
+		var element = this[first]
+		if ( element ) {
+			this[first] = undefined
+			this.first = first + 1
+		}
+		return element
+	}
+
+	RemoveBack() {
+		var last = this.last
+		var element = this[last]
+		if ( element ) {
+			this[last] = undefined
+			this.last = last - 1
+		}
+		return element
+	}
+
+	At(index: number) {
+		if ( index > this.Size() ) {
+			return
+		}
+		return this[this.first + index - 1]
+	}
+
+	Front() {
+		return this[this.first]
+	}
+
+	Back() {
+		return this[this.last]
+	}
+
+	BackToFrontIterator() {
+		return new BackToFrontIterator<T>(this, this.last + 1);
+	}
+
+	FrontToBackIterator() {
+		return new FrontToBackIterator<T>(this, this.first - 1);
+	}
+
+	Reset() {
+		const iterator = this.BackToFrontIterator();
+		while (iterator.Next()) {
+			delete this[iterator.control]
+		}
+		this.first = 0
+		this.last = -1
+	}
+
+	Size() {
+		return this.last - this.first + 1
+	}
+
+	DebuggingInfo() {
+		Ovale.Print("Queue %s has %d item(s), first=%d, last=%d.", this.name, this.Size(), this.first, this.last)
+	}
 }
-class OvaleQueue {
-    NewDeque(name) {
-        return _setmetatable({
-            name: name,
-            first: 0,
-            last: -1
-        }, OvaleQueue);
-    }
-    InsertFront(element) {
-        let first = this.first - 1;
-        this.first = first;
-        this[first] = element;
-    }
-    InsertBack(element) {
-        let last = this.last + 1;
-        this.last = last;
-        this[last] = element;
-    }
-    RemoveFront() {
-        let first = this.first;
-        let element = this[first];
-        if (element) {
-            this[first] = undefined;
-            this.first = first + 1;
-        }
-        return element;
-    }
-    RemoveBack() {
-        let last = this.last;
-        let element = this[last];
-        if (element) {
-            this[last] = undefined;
-            this.last = last - 1;
-        }
-        return element;
-    }
-    At(index) {
-        if (index > this.Size()) {
-            break;
-        }
-        return this[this.first + index - 1];
-    }
-    Front() {
-        return this[this.first];
-    }
-    Back() {
-        return this[this.last];
-    }
-    BackToFrontIterator() {
-        return [BackToFrontIterator, this, this.last + 1];
-    }
-    FrontToBackIterator() {
-        return [FrontToBackIterator, this, this.first - 1];
-    }
-    Reset() {
-        for (const [i] of this.BackToFrontIterator()) {
-            this[i] = undefined;
-        }
-        this.first = 0;
-        this.last = -1;
-    }
-    Size() {
-        return this.last - this.first + 1;
-    }
-    DebuggingInfo() {
-        Ovale.Print("Queue %s has %d item(s), first=%d, last=%d.", this.name, this.Size(), this.first, this.last);
-    }
+
+// Queue (FIFO) methods
+export class OvaleQueue<T> extends OvaleDequeue<T> {
+	Insert(value:T) {
+		this.InsertBack(value);
+	}
+
+	Remove(){
+		return this.RemoveFront();
+	}
+
+	Iterator(){
+		return this.FrontToBackIterator();
+	}
 }
-OvaleQueue.NewQueue = OvaleQueue.NewDeque;
-OvaleQueue.Insert = OvaleQueue.InsertBack;
-OvaleQueue.Remove = OvaleQueue.RemoveFront;
-OvaleQueue.Iterator = OvaleQueue.FrontToBackIterator;
-OvaleQueue.NewStack = OvaleQueue.NewDeque;
-OvaleQueue.Push = OvaleQueue.InsertBack;
-OvaleQueue.Pop = OvaleQueue.RemoveBack;
-OvaleQueue.Top = OvaleQueue.Back;
+
+export class OvaleStack<T> extends OvaleDequeue<T> {
+	Push(value:T) {
+		this.InsertBack(value);
+	}
+
+	Pop() {
+		return this.RemoveBack();
+	}
+
+	Top(){
+		return this.Back();
+	}
+}

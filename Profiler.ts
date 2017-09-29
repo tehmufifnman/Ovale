@@ -6,6 +6,7 @@ import AceConfigDialog from "AceConfigDialog-3.0";
 import { L } from "./Localization";
 import LibTextDump from "LibTextDump-1.0";
 import { options } from "./Options";
+import { Constructor } from "./Ovale";
 let _debugprofilestop = debugprofilestop;
 let format = string.format;
 let _ipairs = ipairs;
@@ -16,67 +17,16 @@ let tinsert = table.insert;
 let tsort = table.sort;
 let _wipe = wipe;
 let API_GetTime = GetTime;
+let self_timestamp = _debugprofilestop();
+let self_timeSpent = {}
+let self_timesInvoked = {}
+let self_stack = {}
+let self_stackSize = 0;
 
-export class Profiler {
-    constructor(private module: AceModule){
-
-    }
-    self_timestamp = _debugprofilestop();
-    self_timeSpent = {}
-    self_timesInvoked = {}
-    self_stack = {}
-    self_stackSize = 0;
-    enabled = false;
-
-    StartProfiling(tag) {
-        if (!this.enabled) return;
-        let newTimestamp = _debugprofilestop();
-        if (this.self_stackSize > 0) {
-            let delta = newTimestamp - this.self_timestamp;
-            let previous = this.self_stack[this.self_stackSize];
-            let timeSpent = this.self_timeSpent[previous] || 0;
-            timeSpent = timeSpent + delta;
-            this.self_timeSpent[previous] = timeSpent;
-        }
-        this.self_timestamp = newTimestamp;
-        this.self_stackSize = this.self_stackSize + 1;
-        this.self_stack[this.self_stackSize] = tag;
-        {
-            let timesInvoked = this.self_timesInvoked[tag] || 0;
-            timesInvoked = timesInvoked + 1;
-            this.self_timesInvoked[tag] = timesInvoked;
-        }
-    }
-
-    StopProfiling(tag) {
-        if (!this.enabled) return;
-        if (this.self_stackSize > 0) {
-            let currentTag = this.self_stack[this.self_stackSize];
-            if (currentTag == tag) {
-                let newTimestamp = _debugprofilestop();
-                let delta = newTimestamp - this.self_timestamp;
-                let timeSpent = this.self_timeSpent[currentTag] || 0;
-                timeSpent = timeSpent + delta;
-                this.self_timeSpent[currentTag] = timeSpent;
-                this.self_timestamp = newTimestamp;
-                this.self_stackSize = this.self_stackSize - 1;
-            }
-        }
-    }
-    
-    ResetProfiling() {
-        for (const [tag] of _pairs(this.self_timeSpent)) {
-            this.self_timeSpent[tag] = undefined;
-        }
-        for (const [tag] of _pairs(this.self_timesInvoked)) {
-            this.self_timesInvoked[tag] = undefined;
-        }
-    }
-}
 
 class OvaleProfilerClass extends OvaleProfilerBase {
     self_profilingOutput = undefined;
-    profiles: LuaObj<Profiler> = {};
+    profiles: LuaObj<{ enabled: boolean }> = {};
 
     actions = {
         profiling: {
@@ -176,14 +126,68 @@ class OvaleProfilerClass extends OvaleProfilerBase {
     OnDisable() {
         this.self_profilingOutput.Clear();
     }
-    RegisterProfiling(module: AceModule, name?: string) {
-        name = name || module.GetName();
-        this.options.args.profiling.args.modules.args[name] = {
-            name: name,
-            desc: format(L["Enable profiling for the %s module."], name),
-            type: "toggle"
+    RegisterProfiling<T extends Constructor<AceModule>>(module: T, name?: string) {
+        const profiler = this;
+        return class extends module {
+            constructor(...rest:any[]) {
+                super(...rest);
+                name = name || this.GetName();
+                profiler.options.args.profiling.args.modules.args[name] = {
+                    name: name,
+                    desc: format(L["Enable profiling for the %s module."], name),
+                    type: "toggle"
+                }
+                profiler.profiles[name] = this;       
+            }
+
+            enabled = false;
+            
+            StartProfiling(tag) {
+                if (!this.enabled) return;
+                let newTimestamp = _debugprofilestop();
+                if (self_stackSize > 0) {
+                    let delta = newTimestamp - self_timestamp;
+                    let previous = self_stack[self_stackSize];
+                    let timeSpent = self_timeSpent[previous] || 0;
+                    timeSpent = timeSpent + delta;
+                    self_timeSpent[previous] = timeSpent;
+                }
+                self_timestamp = newTimestamp;
+                self_stackSize = self_stackSize + 1;
+                self_stack[self_stackSize] = tag;
+                {
+                    let timesInvoked = self_timesInvoked[tag] || 0;
+                    timesInvoked = timesInvoked + 1;
+                    self_timesInvoked[tag] = timesInvoked;
+                }
+            }
+        
+            StopProfiling(tag) {
+                if (!this.enabled) return;
+                if (self_stackSize > 0) {
+                    let currentTag = self_stack[self_stackSize];
+                    if (currentTag == tag) {
+                        let newTimestamp = _debugprofilestop();
+                        let delta = newTimestamp - self_timestamp;
+                        let timeSpent = self_timeSpent[currentTag] || 0;
+                        timeSpent = timeSpent + delta;
+                        self_timeSpent[currentTag] = timeSpent;
+                        self_timestamp = newTimestamp;
+                        self_stackSize = self_stackSize - 1;
+                    }
+                }
+            }
+            
+            ResetProfiling() {
+                for (const [tag] of _pairs(self_timeSpent)) {
+                    self_timeSpent[tag] = undefined;
+                }
+                for (const [tag] of _pairs(self_timesInvoked)) {
+                    self_timesInvoked[tag] = undefined;
+                }
+            }
         }
-        return new Profiler(module);
+        
     }
 
     array = {}

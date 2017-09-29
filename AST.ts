@@ -3,8 +3,8 @@ let [OVALE, Ovale] = __addon;
 let OvaleASTBase = Ovale.NewModule("OvaleAST");
 import { L } from "./Localization";
 import { OvalePool, OvalePoolNoClean } from "./Pool";
-import { OvaleProfiler, Profiler } from "./Profiler";
-import { Debug } from "./Debug";
+import { OvaleProfiler } from "./Profiler";
+import { OvaleDebug } from "./Debug";
 import { Printer } from "./Ovale";
 let OvaleCondition = undefined;
 let OvaleLexer = undefined;
@@ -252,7 +252,7 @@ class SelfPool extends OvalePool<Node> {
     }
 }
   
-class OvaleASTClass extends OvaleASTBase {
+class OvaleASTClass extends OvaleProfiler.RegisterProfiling(OvaleASTBase) {
     self_indent:number = 0;
     self_outputPool = new OvalePoolNoClean<LuaArray<string>>("OvaleAST_outputPool");
     self_controlPool = new OvalePoolNoClean<Node>("OvaleAST_controlPool");
@@ -262,12 +262,10 @@ class OvaleASTClass extends OvaleASTBase {
     postOrderVisitedPool = new OvalePoolNoClean<LuaObj<boolean>>("OvaleAST_postOrderVisitedPool");
     self_pool = new SelfPool(this);
 
-    profiler: Profiler;
     printer: Printer;
   
     constructor() {
         super();
-        this.profiler = OvaleProfiler.RegisterProfiling(this);
         this.printer = new Printer(this);
     }
     
@@ -1865,7 +1863,7 @@ class OvaleASTClass extends OvaleASTBase {
         return [ok, node];
     }
     ParseScriptStream(tokenStream, nodeList, annotation) {
-        this.profiler.StartProfiling("OvaleAST_ParseScript");
+        this.StartProfiling("OvaleAST_ParseScript");
         let ok = true;
         let child = this.self_childrenPool.Get();
         while (ok) {
@@ -1895,7 +1893,7 @@ class OvaleASTClass extends OvaleASTBase {
         } else {
             this.self_childrenPool.Release(child);
         }
-        this.profiler.StopProfiling("OvaleAST_ParseScript");
+        this.StopProfiling("OvaleAST_ParseScript");
         return [ok, ast];
     }
     ParseSimpleExpression = function (tokenStream, nodeList, annotation) {
@@ -2391,7 +2389,7 @@ class OvaleASTClass extends OvaleASTBase {
     }
     
     PropagateConstants(ast) {
-        this.profiler.StartProfiling("OvaleAST_PropagateConstants");
+        this.StartProfiling("OvaleAST_PropagateConstants");
         if (ast.annotation) {
             let dictionary = ast.annotation.definition;
             if (dictionary && ast.annotation.nameReference) {
@@ -2420,10 +2418,10 @@ class OvaleASTClass extends OvaleASTBase {
                 }
             }
         }
-        this.profiler.StopProfiling("OvaleAST_PropagateConstants");
+        this.StopProfiling("OvaleAST_PropagateConstants");
     }
     PropagateStrings(ast) {
-        this.profiler.StartProfiling("OvaleAST_PropagateStrings");
+        this.StartProfiling("OvaleAST_PropagateStrings");
         if (ast.annotation && ast.annotation.stringReference) {
             for (const [_, node] of _ipairs<Node>(ast.annotation.stringReference)) {
                 if (node.type == "string") {
@@ -2474,10 +2472,10 @@ class OvaleASTClass extends OvaleASTBase {
                 }
             }
         }
-        this.profiler.StopProfiling("OvaleAST_PropagateStrings");
+        this.StopProfiling("OvaleAST_PropagateStrings");
     }
     FlattenParameters(ast) {
-        this.profiler.StartProfiling("OvaleAST_FlattenParameters");
+        this.StartProfiling("OvaleAST_FlattenParameters");
         let annotation = ast.annotation;
         if (annotation && annotation.parametersReference) {
             let dictionary = annotation.definition;
@@ -2552,10 +2550,10 @@ class OvaleASTClass extends OvaleASTBase {
                 this.self_outputPool.Release(output);
             }
         }
-        this.profiler.StopProfiling("OvaleAST_FlattenParameters");
+        this.StopProfiling("OvaleAST_FlattenParameters");
     }
     VerifyFunctionCalls(ast) {
-        this.profiler.StartProfiling("OvaleAST_VerifyFunctionCalls");
+        this.StartProfiling("OvaleAST_VerifyFunctionCalls");
         if (ast.annotation && ast.annotation.verify) {
             let customFunction = ast.annotation.customFunction;
             let functionCall = ast.annotation.functionCall;
@@ -2571,10 +2569,10 @@ class OvaleASTClass extends OvaleASTBase {
                 }
             }
         }
-        this.profiler.StopProfiling("OvaleAST_VerifyFunctionCalls");
+        this.StopProfiling("OvaleAST_VerifyFunctionCalls");
     }
     VerifyParameterStances(ast) {
-        this.profiler.StartProfiling("OvaleAST_VerifyParameterStances");
+        this.StartProfiling("OvaleAST_VerifyParameterStances");
         let annotation = ast.annotation;
         if (annotation && annotation.verify && annotation.parametersReference) {
             for (const [_, node] of _ipairs<Node>(annotation.parametersReference)) {
@@ -2599,10 +2597,10 @@ class OvaleASTClass extends OvaleASTBase {
                 }
             }
         }
-        this.profiler.StopProfiling("OvaleAST_VerifyParameterStances");
+        this.StopProfiling("OvaleAST_VerifyParameterStances");
     }
     InsertPostOrderTraversal(ast) {
-        this.profiler.StartProfiling("OvaleAST_InsertPostOrderTraversal");
+        this.StartProfiling("OvaleAST_InsertPostOrderTraversal");
         let annotation = ast.annotation;
         if (annotation && annotation.postOrderReference) {
             for (const [_, node] of _ipairs<Node>(annotation.postOrderReference)) {
@@ -2613,14 +2611,14 @@ class OvaleASTClass extends OvaleASTBase {
                 node.postOrder = array;
             }
         }
-        this.profiler.StopProfiling("OvaleAST_InsertPostOrderTraversal");
+        this.StopProfiling("OvaleAST_InsertPostOrderTraversal");
     }
     Optimize(ast) {
         this.CommonFunctionElimination(ast);
         this.CommonSubExpressionElimination(ast);
     }
     CommonFunctionElimination(ast) {
-        this.profiler.StartProfiling("OvaleAST_CommonFunctionElimination");
+        this.StartProfiling("OvaleAST_CommonFunctionElimination");
         if (ast.annotation) {
             if (ast.annotation.functionReference) {
                 let functionHash = ast.annotation.functionHash || {}
@@ -2646,10 +2644,10 @@ class OvaleASTClass extends OvaleASTBase {
                 }
             }
         }
-        this.profiler.StopProfiling("OvaleAST_CommonFunctionElimination");
+        this.StopProfiling("OvaleAST_CommonFunctionElimination");
     }
     CommonSubExpressionElimination(ast) {
-        this.profiler.StartProfiling("OvaleAST_CommonSubExpressionElimination");
+        this.StartProfiling("OvaleAST_CommonSubExpressionElimination");
         if (ast && ast.annotation && ast.annotation.nodeList) {
             let expressionHash = {
             }
@@ -2674,7 +2672,7 @@ class OvaleASTClass extends OvaleASTBase {
             }
             ast.annotation.expressionHash = expressionHash;
         }
-        this.profiler.StopProfiling("OvaleAST_CommonSubExpressionElimination");
+        this.StopProfiling("OvaleAST_CommonSubExpressionElimination");
     }
 }
 

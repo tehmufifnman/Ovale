@@ -1,9 +1,11 @@
 import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvaleDataBase = Ovale.NewModule("OvaleData");
-let OvaleGUID = undefined;
-let OvalePaperDoll = undefined;
-let OvaleState = undefined;
+let [OVALE, Addon] = __addon;
+let OvaleDataBase = Addon.NewModule("OvaleData");
+import { Ovale } from "./Ovale";
+import { OvaleGUID } from "./GUID";
+import { OvalePaperDoll } from "./PaperDoll";
+import { OvaleState } from "./State";
+import { OvaleDebug } from "./Debug";
 let format = string.format;
 let _type = type;
 let _pairs = pairs;
@@ -11,6 +13,8 @@ let strfind = string.find;
 let _tonumber = tonumber;
 let _wipe = wipe;
 let INFINITY = math.huge;
+let floor = math.floor;
+let ceil = math.ceil;
 let self_requirement = {
 }
 let BLOODELF_CLASSES = {
@@ -83,7 +87,7 @@ let STAT_USE_NAMES = {
     5: "trinket_stack_proc"
 }
 
-class OvaleDataClass extends OvaleDataBase {
+class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
     STAT_NAMES = STAT_NAMES;
     STAT_SHORTNAME = STAT_SHORTNAME;
     STAT_USE_NAMES = STAT_USE_NAMES;
@@ -264,32 +268,28 @@ class OvaleDataClass extends OvaleDataBase {
             let name;
             for (const [_, statName] of _pairs(STAT_NAMES)) {
                 name = useName + "_" + statName + "_buff";
-                OvaleDataClass.buffSpellList[name] = {
+                this.buffSpellList[name] = {
                 }
                 let shortName = STAT_SHORTNAME[statName];
                 if (shortName) {
                     name = useName + "_" + shortName + "_buff";
-                    OvaleDataClass.buffSpellList[name] = {
+                    this.buffSpellList[name] = {
                     }
                 }
             }
             name = useName + "_any_buff";
-            OvaleDataClass.buffSpellList[name] = {
-            }
+            this.buffSpellList[name] = {}
         }
 
         {
-            for (const [name] of _pairs(OvaleDataClass.buffSpellList)) {
-                OvaleDataClass.DEFAULT_SPELL_LIST[name] = true;
+            for (const [name] of _pairs(this.buffSpellList)) {
+                this.DEFAULT_SPELL_LIST[name] = true;
             }
         }        
     }
 
     DEFAULT_SPELL_LIST = {}
     OnInitialize() {
-        OvaleGUID = Ovale.OvaleGUID;
-        OvalePaperDoll = Ovale.OvalePaperDoll;
-        OvaleState = Ovale.OvaleState;
     }
     OnEnable() {
         OvaleState.RegisterState(this, this.statePrototype);
@@ -411,11 +411,11 @@ class OvaleDataClass extends OvaleDataBase {
             }
             return [verified, requirement, index];
         }
-        return true;
+        return [true];
     }
     CheckSpellAuraData(auraId, spellData, atTime, guid) {
         guid = guid || OvaleGUID.UnitGUID("player");
-        let [index, value, data];
+        let index, value, data;
         if (_type(spellData) == "table") {
             value = spellData[1];
             index = 2;
@@ -450,7 +450,7 @@ class OvaleDataClass extends OvaleDataBase {
         }
         let verified = true;
         if (index) {
-            verified = this.CheckRequirements(auraId, atTime, spellData, index, guid);
+            [verified] = this.CheckRequirements(auraId, atTime, spellData, index, guid);
         }
         return [verified, value, data];
     }
@@ -473,8 +473,8 @@ class OvaleDataClass extends OvaleDataBase {
         return [verified, requirement];
     }
     GetItemInfoProperty(itemId, atTime, property) {
-        targetGUID = OvaleGUID.UnitGUID("player");
-        let ii = OvaleDataClass.ItemInfo(itemId);
+        const targetGUID = OvaleGUID.UnitGUID("player");
+        let ii = this.ItemInfo(itemId);
         let value = ii && ii[property];
         let requirements = ii && ii.require[property];
         if (requirements) {
@@ -490,7 +490,7 @@ class OvaleDataClass extends OvaleDataBase {
     }
     GetSpellInfoProperty(spellId, atTime, property, targetGUID) {
         targetGUID = targetGUID || OvaleGUID.UnitGUID(this.defaultTarget || "target");
-        let si = OvaleDataClass.spellInfo[spellId];
+        let si = this.spellInfo[spellId];
         let value = si && si[property];
         let requirements = si && si.require[property];
         if (requirements) {
@@ -581,7 +581,7 @@ class OvaleDataClass extends OvaleDataBase {
         }
         return duration;
     }
-    GetTickLength(auraId, snapshot) {
+    GetTickLength(auraId, snapshot?) {
         let tick = 3;
         let si = OvaleDataClass.spellInfo[auraId];
         if (si) {
