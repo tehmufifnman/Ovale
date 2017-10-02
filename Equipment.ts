@@ -40,7 +40,7 @@ let _INVSLOT_TRINKET2 = INVSLOT_TRINKET2;
 let _INVSLOT_WAIST = INVSLOT_WAIST;
 let _INVSLOT_WRIST = INVSLOT_WRIST;
 
-let self_tooltip: UITooltip = undefined;
+let self_tooltip: UIGameTooltip = undefined;
 let OVALE_ITEM_LEVEL_PATTERN = "^" + strgsub(ITEM_LEVEL, "%%d", "(%%d+)");
 let OVALE_SLOTNAME = {
     AmmoSlot: _INVSLOT_AMMO,

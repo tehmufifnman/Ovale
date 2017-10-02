@@ -2350,7 +2350,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         }
         annotation = annotation || {
         }
-        let tokenStream = OvaleLexer("Ovale", this.GetTokenIterator(code));
+        let tokenStream = new OvaleLexer("Ovale", code, MATCHES);
         let [ok, node] = this.Parse(nodeType, tokenStream, nodeList, annotation);
         tokenStream.Release();
         return [node, nodeList, annotation];

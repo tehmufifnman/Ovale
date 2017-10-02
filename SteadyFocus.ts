@@ -1,9 +1,9 @@
 import { OvaleDebug } from "./Debug";
 import { OvaleProfiler } from "./Profiler";
 import { Ovale } from "./Ovale";
-let OvaleAura = undefined;
-let OvaleSpellBook = undefined;
-let OvaleState = undefined;
+import { OvaleAura, auraState } from "./Aura";
+import { OvaleSpellBook } from "./SpellBook";
+import { OvaleState, StateModule } from "./State";
 
 let OvaleSteadyFocusBase = Ovale.NewModule("OvaleSteadyFocus", "AceEvent-3.0");
 export let OvaleSteadyFocus: OvaleSteadyFocusClass;
@@ -50,12 +50,10 @@ class OvaleSteadyFocusClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.R
         if (Ovale.playerClass == "HUNTER") {
             self_playerGUID = Ovale.playerGUID;
             this.RegisterMessage("Ovale_TalentsChanged");
-            OvaleState.RegisterState(this, this.statePrototype);
         }
     }
     OnDisable() {
         if (Ovale.playerClass == "HUNTER") {
-            OvaleState.UnregisterState(this);
             this.UnregisterMessage("Ovale_TalentsChanged");
         }
     }
@@ -122,36 +120,42 @@ class OvaleSteadyFocusClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.R
         }
     }
 }
-OvaleSteadyFocus.statePrototype = {
-}
-let statePrototype = OvaleSteadyFocus.statePrototype;
-class OvaleSteadyFocus {
-    ApplySpellAfterCast(state, spellId, targetGUID, startCast, endCast, channel, spellcast) {
-        if (this.hasSteadyFocus) {
-            this.StartProfiling("OvaleSteadyFocus_ApplySpellAfterCast");
+
+class SteadyFocusState implements StateModule {
+    CleanState(): void {
+    }
+    InitializeState(): void {
+    }
+    ResetState(): void {
+    }
+    ApplySpellAfterCast(spellId, targetGUID, startCast, endCast, channel, spellcast) {
+        if (OvaleSteadyFocus.hasSteadyFocus) {
+            OvaleSteadyFocus.StartProfiling("OvaleSteadyFocus_ApplySpellAfterCast");
             if (STEADY_SHOT[spellId]) {
-                let aura = state.GetAuraByGUID(self_playerGUID, this.spellId, "HELPFUL", true);
-                if (state.IsActiveAura(aura, endCast)) {
-                    state.RemoveAuraOnGUID(self_playerGUID, this.spellId, "HELPFUL", true, endCast);
-                    aura = state.GetAuraByGUID(self_playerGUID, STEADY_FOCUS, "HELPFUL", true);
+                let aura = auraState.GetAuraByGUID(self_playerGUID, OvaleSteadyFocus.spellId, "HELPFUL", true);
+                if (auraState.IsActiveAura(aura, endCast)) {
+                    auraState.RemoveAuraOnGUID(self_playerGUID, OvaleSteadyFocus.spellId, "HELPFUL", true, endCast);
+                    aura = auraState.GetAuraByGUID(self_playerGUID, STEADY_FOCUS, "HELPFUL", true);
                     if (!aura) {
-                        aura = state.AddAuraToGUID(self_playerGUID, STEADY_FOCUS, self_playerGUID, "HELPFUL", undefined, endCast, undefined, spellcast);
+                        aura = auraState.AddAuraToGUID(self_playerGUID, STEADY_FOCUS, self_playerGUID, "HELPFUL", undefined, endCast, undefined, spellcast);
                     }
                     aura.start = endCast;
                     aura.duration = STEADY_FOCUS_DURATION;
                     aura.ending = endCast + STEADY_FOCUS_DURATION;
                     aura.gain = endCast;
                 } else {
-                    let ending = endCast + this.duration;
-                    aura = state.AddAuraToGUID(self_playerGUID, this.spellId, self_playerGUID, "HELPFUL", undefined, endCast, ending, spellcast);
-                    aura.name = this.spellName;
+                    let ending = endCast + OvaleSteadyFocus.duration;
+                    aura = auraState.AddAuraToGUID(self_playerGUID, OvaleSteadyFocus.spellId, self_playerGUID, "HELPFUL", undefined, endCast, ending, spellcast);
+                    aura.name = OvaleSteadyFocus.spellName;
                 }
             } else if (RANGED_ATTACKS[spellId]) {
-                state.RemoveAuraOnGUID(self_playerGUID, this.spellId, "HELPFUL", true, endCast);
+                auraState.RemoveAuraOnGUID(self_playerGUID, OvaleSteadyFocus.spellId, "HELPFUL", true, endCast);
             }
-            this.StopProfiling("OvaleSteadyFocus_ApplySpellAfterCast");
+            OvaleSteadyFocus.StopProfiling("OvaleSteadyFocus_ApplySpellAfterCast");
         }
     }
 }
 
+export const steadyFocusState = new SteadyFocusState();
+OvaleState.RegisterState(steadyFocusState);
 OvaleSteadyFocus = new OvaleSteadyFocusClass();

@@ -3,7 +3,7 @@ interface AceConfigDialog{
     Open(appName: string):void;
     Close(appName: string):void;
     AddToBlizOptions(appName: string, name?: string, addon?:string):void;
-    OpenFrames:LuaDictionary<any>;
+    OpenFrames:LuaObj<any>;
 }
 
 declare module "AceConfigDialog-3.0" {

@@ -1,4 +1,4 @@
-import { OvaleState } from "./State";
+import { OvaleState, BaseState } from "./State";
 import { Ovale } from "./Ovale";
 import { OvaleDebug } from "./Debug";
 let OvaleConditionBase = Ovale.NewModule("OvaleCondition");
@@ -14,12 +14,14 @@ let self_spellBookCondition = {
     self_spellBookCondition["spell"] = true;
 }
 
+export type ConditionResult = number[];
+export type ConditionFunction = (positionalParams: LuaArray<string>, namedParams: LuaObj<string>, state: BaseState, atTime: number) => ConditionResult;
+
+function isString(s): s is string {
+    return _type(s) == "string";
+}
+
 class OvaleConditionClass extends OvaleDebug.RegisterDebugging(OvaleConditionBase) {
-    Compare = undefined;
-    ParseCondition = undefined;
-    ParseRuneCondition = undefined;
-    TestBoolean = undefined;
-    TestValue = undefined;
     COMPARATOR = {
         atLeast: true,
         atMost: true,
@@ -34,17 +36,17 @@ class OvaleConditionClass extends OvaleDebug.RegisterDebugging(OvaleConditionBas
     }
     OnDisable() {
     }
-    RegisterCondition(name, isSpellBookCondition, func, arg?) {
-        if (arg) {
-            if (_type(func) == "string") {
-                func = arg[func];
-            }
-            self_condition[name] = function (...__args) {
-                func(arg, ...__args);
-            }
-        } else {
+    RegisterCondition(name: string, isSpellBookCondition: boolean, func: ConditionFunction) { //, arg?: LuaObj<ConditionFunction>) {
+        // if (arg) {
+        //     if (isString(func)) {
+        //         func = arg[func];
+        //     }
+        //     self_condition[name] = function (...__args) {
+        //         func(arg, ...__args);
+        //     }
+        // } else {
             self_condition[name] = func;
-        }
+        // }
         if (isSpellBookCondition) {
             self_spellBookCondition[name] = true;
         }
@@ -58,14 +60,14 @@ class OvaleConditionClass extends OvaleDebug.RegisterDebugging(OvaleConditionBas
     IsSpellBookCondition(name) {
         return (self_spellBookCondition[name] != undefined);
     }
-    EvaluateCondition(name, positionalParams, namedParams, state, atTime) {
+    EvaluateCondition(name, positionalParams, namedParams, state: BaseState, atTime) {
         return self_condition[name](positionalParams, namedParams, state, atTime);
     }
 }
 
 OvaleCondition = new OvaleConditionClass();
 
-export function ParseCondition(positionalParams, namedParams, state, defaultTarget?):[string, "HARMFUL" | "HELPFUL", boolean] {
+export function ParseCondition(positionalParams, namedParams, state: BaseState, defaultTarget?):[string, "HARMFUL" | "HELPFUL", boolean] {
     let target = namedParams.target || defaultTarget || "player";
     namedParams.target = namedParams.target || target;
     if (target == "target") {
@@ -90,7 +92,7 @@ export function ParseCondition(positionalParams, namedParams, state, defaultTarg
     return [target, filter, mine];
 }
 
-export function TestBoolean(a, yesno) {
+export function TestBoolean(a: boolean, yesno: "yes" | "no"): ConditionResult {
     if (!yesno || yesno == "yes") {
         if (a) {
             return [0, INFINITY];
@@ -102,7 +104,7 @@ export function TestBoolean(a, yesno) {
     }
     return undefined;
 }
-export function TestValue(start, ending, value, origin, rate, comparator, limit) {
+export function TestValue(start: number, ending: number, value: number, origin: number, rate: number, comparator: string, limit: number): ConditionResult {
     if (!value || !origin || !rate) {
         return undefined;
     }
@@ -135,5 +137,5 @@ export function TestValue(start, ending, value, origin, rate, comparator, limit)
 }
 
 export function Compare(value, comparator, limit) {
-    return OvaleCondition.TestValue(0, INFINITY, value, 0, 0, comparator, limit);
+    return TestValue(0, INFINITY, value, 0, 0, comparator, limit);
 }

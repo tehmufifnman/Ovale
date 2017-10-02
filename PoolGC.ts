@@ -7,11 +7,8 @@ export class OvalePoolGC {
     size = 0;
     __index = OvalePoolGC;
     
-    NewPool(name) {
-        name = name || this.name;
-        return _setmetatable({
-            name: name
-        }, this);
+    constructor(name: string){
+        this.name = name;
     }
     Get() {
         this.size = this.size + 1;

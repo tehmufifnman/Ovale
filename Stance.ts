@@ -2,8 +2,8 @@ import { L } from "./Localization";
 import { OvaleDebug } from "./Debug";
 import { OvaleProfiler } from "./Profiler";
 import { Ovale } from "./Ovale";
-import { OvaleData }from "./Data";
-import { OvaleState } from "./State";
+import { OvaleData, dataState } from "./Data";
+import { OvaleState, StateModule } from "./State";
 
 let OvaleStanceBase = Ovale.NewModule("OvaleStance", "AceEvent-3.0");
 export let OvaleStance: OvaleStanceClass;
@@ -91,10 +91,8 @@ class OvaleStanceClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regist
         this.RegisterMessage("Ovale_SpellsChanged", "UpdateStances");
         this.RegisterMessage("Ovale_TalentsChanged", "UpdateStances");
         OvaleData.RegisterRequirement("stance", "RequireStanceHandler", this);
-        OvaleState.RegisterState(this, this.statePrototype);
     }
     OnDisable() {
-        OvaleState.UnregisterState(this);
         OvaleData.UnregisterRequirement("stance");
         this.UnregisterEvent("PLAYER_ALIVE");
         this.UnregisterEvent("PLAYER_ENTERING_WORLD");
@@ -206,32 +204,38 @@ class OvaleStanceClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regist
     }
 }
 
-OvaleStance.statePrototype = {
-}
-let statePrototype = OvaleStance.statePrototype;
-statePrototype.stance = undefined;
-class OvaleStance {
-    InitializeState(state) {
-        state.stance = undefined;
+class StanceState implements StateModule {
+    stance = undefined;
+    InitializeState() {
+        this.stance = undefined;
     }
-    ResetState(state) {
-        this.StartProfiling("OvaleStance_ResetState");
-        state.stance = this.stance || 0;
-        this.StopProfiling("OvaleStance_ResetState");
+    CleanState(): void {
     }
-    ApplySpellAfterCast(state, spellId, targetGUID, startCast, endCast, isChanneled, spellcast) {
-        this.StartProfiling("OvaleStance_ApplySpellAfterCast");
-        let stance = state.GetSpellInfoProperty(spellId, endCast, "to_stance", targetGUID);
+    ResetState() {
+        OvaleStance.StartProfiling("OvaleStance_ResetState");
+        this.stance = OvaleStance.stance || 0;
+        OvaleStance.StopProfiling("OvaleStance_ResetState");
+    }
+    ApplySpellAfterCast(spellId, targetGUID, startCast, endCast, isChanneled, spellcast) {
+        OvaleStance.StartProfiling("OvaleStance_ApplySpellAfterCast");
+        let stance = dataState.GetSpellInfoProperty(spellId, endCast, "to_stance", targetGUID);
         if (stance) {
             if (_type(stance) == "string") {
-                stance = this.stanceId[stance];
+                stance = OvaleStance.stanceId[stance];
             }
-            state.stance = stance;
+            this.stance = stance;
         }
-        this.StopProfiling("OvaleStance_ApplySpellAfterCast");
+        OvaleStance.StopProfiling("OvaleStance_ApplySpellAfterCast");
+    }
+    IsStance(name) {
+        return OvaleStance.IsStance(name);
+    } 
+    RequireStanceHandler(spellId, atTime, requirement, tokens, index, targetGUID) {
+        return OvaleStance.RequireStanceHandler(spellId, atTime, requirement, tokens, index, targetGUID);
     }
 }
-statePrototype.IsStance = OvaleStance.IsStance;
-statePrototype.RequireStanceHandler = OvaleStance.RequireStanceHandler;
+
+export const stanceState = new StanceState();
+OvaleState.RegisterState(stanceState);
 
 OvaleStance = new OvaleStanceClass();

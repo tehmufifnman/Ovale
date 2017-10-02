@@ -16,6 +16,10 @@ let self_register = {  }
 class OvaleOptionsClass extends OvaleOptionsBase {
     defaultDB:OvaleDb = {
         profile: {
+            source: undefined,
+            code: undefined,
+            showHiddenScripts: false,
+            overrideCode: undefined,
             check: {
             },
             list: {
@@ -54,7 +58,10 @@ class OvaleOptionsClass extends OvaleOptionsBase {
                 predictif: false,
                 secondIconScale: 1,
                 taggedEnemies: false,
-                auraLag: 400
+                auraLag: 400,
+                moving: false,
+                spellFlash: undefined,
+                minimap: undefined
             }
         },
         global:undefined
@@ -64,7 +71,7 @@ class OvaleOptionsClass extends OvaleOptionsBase {
         type: "group",
         args: {
             apparence: {
-                name: OVALE,
+                name: Ovale.GetName(),
                 type: "group",
                 get: function (info) {
                     return Ovale.db.profile.apparence[info[lualength(info)]];
@@ -418,6 +425,7 @@ class OvaleOptionsClass extends OvaleOptionsBase {
     }
 
     OnInitialize() {
+        const ovale = Ovale.GetName();
         const db = AceDB.New("OvaleDB", this.defaultDB);
         this.options.args.profile = AceDBOptions.GetOptionsTable(db);
         // let LibDualSpec = LibStub("LibDualSpec-1.0", true);
@@ -429,13 +437,13 @@ class OvaleOptionsClass extends OvaleOptionsBase {
         db.RegisterCallback(this, "OnProfileReset", "HandleProfileChanges");
         db.RegisterCallback(this, "OnProfileChanged", "HandleProfileChanges");
         db.RegisterCallback(this, "OnProfileCopied", "HandleProfileChanges");
-        Ovale.db = db;
+        Ovale.db = <OvaleDb><any>db;
         this.UpgradeSavedVariables();
-        AceConfig.RegisterOptionsTable(OVALE, this.options.args.apparence);
-        AceConfig.RegisterOptionsTable(OVALE + " Profiles", this.options.args.profile);
-        AceConfig.RegisterOptionsTable(OVALE + " Actions", this.options.args.actions, "Ovale");
-        AceConfigDialog.AddToBlizOptions(OVALE);
-        AceConfigDialog.AddToBlizOptions(OVALE + " Profiles", "Profiles", OVALE);
+        AceConfig.RegisterOptionsTable(ovale, this.options.args.apparence);
+        AceConfig.RegisterOptionsTable(ovale + " Profiles", this.options.args.profile);
+        AceConfig.RegisterOptionsTable(ovale + " Actions", this.options.args.actions, "Ovale");
+        AceConfigDialog.AddToBlizOptions(ovale);
+        AceConfigDialog.AddToBlizOptions(ovale + " Profiles", "Profiles", ovale);
     }
     OnEnable() {
         this.HandleProfileChanges();
@@ -468,16 +476,16 @@ class OvaleOptionsClass extends OvaleOptionsBase {
         this.SendMessage("Ovale_OptionChanged", "visibility");
     }
     ToggleConfig() {
+        let appName = Ovale.GetName();
         if (Ovale.db.profile.standaloneOptions) {
-            let appName = OVALE;
             if (AceConfigDialog.OpenFrames[appName]) {
                 AceConfigDialog.Close(appName);
             } else {
                 AceConfigDialog.Open(appName);
             }
         } else {
-            API_InterfaceOptionsFrame_OpenToCategory(OVALE);
-            API_InterfaceOptionsFrame_OpenToCategory(OVALE);
+            API_InterfaceOptionsFrame_OpenToCategory(appName);
+            API_InterfaceOptionsFrame_OpenToCategory(appName);
         }
     }
 }

@@ -64,7 +64,6 @@ class OvaleSigilClass extends OvaleProfiler.RegisterProfiling(OvaleSigilBase) {
     }
     OnDisable() {
         if (Ovale.playerClass == "DEMONHUNTER") {
-            OvaleState.UnregisterState(this);
             this.UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED");
         }
     }

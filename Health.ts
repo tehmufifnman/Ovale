@@ -3,7 +3,7 @@ import { OvaleProfiler } from "./Profiler";
 import { Ovale } from "./Ovale";
 import { OvaleData } from "./Data";
 import { OvaleGUID } from "./GUID";
-import { OvaleState } from "./State";
+import { OvaleState, baseState, StateModule } from "./State";
 
 let OvaleHealthBase = Ovale.NewModule("OvaleHealth", "AceEvent-3.0");
 export let OvaleHealth: OvaleHealthClass;
@@ -49,10 +49,8 @@ class OvaleHealthClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regist
         OvaleData.RegisterRequirement("health_pct", "RequireHealthPercentHandler", this);
         OvaleData.RegisterRequirement("pet_health_pct", "RequireHealthPercentHandler", this);
         OvaleData.RegisterRequirement("target_health_pct", "RequireHealthPercentHandler", this);
-        OvaleState.RegisterState(this, this.statePrototype);
     }
     OnDisable() {
-        OvaleState.UnregisterState(this);
         OvaleData.UnregisterRequirement("health_pct");
         OvaleData.UnregisterRequirement("pet_health_pct");
         OvaleData.UnregisterRequirement("target_health_pct");
@@ -220,7 +218,7 @@ class OvaleHealthClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regist
                     guid = targetGUID;
                     unitId = OvaleGUID.GUIDUnit(guid);
                 } else {
-                    unitId = this.defaultTarget || "target";
+                    unitId = baseState.defaultTarget || "target";
                 }
             } else if (strsub(requirement, 1, 4) == "pet_") {
                 unitId = "pet";
@@ -246,8 +244,29 @@ class OvaleHealthClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regist
         return [verified, requirement, index];
     }
 }
-OvaleHealth.statePrototype = {
+
+class HealthState implements StateModule{
+    CleanState(): void {
+    }
+    InitializeState(): void {
+    }
+    ResetState(): void {
+    }
+    ApplySpellStartCast?(spellId: any, targetGUID: any, startCast: any, endCast: any, channel: any, spellcast: any): void {
+        throw new Error("Method not implemented.");
+    }
+    ApplySpellAfterCast?(spellId: any, targetGUID: any, startCast: any, endCast: any, channel: any, spellcast: any): void {
+        throw new Error("Method not implemented.");
+    }
+    ApplySpellOnHit?(spellId: any, targetGUID: any, startCast: any, endCast: any, channel: any, spellcast: any): void {
+        throw new Error("Method not implemented.");
+    }
+    RequireHealthPercentHandler(spellId, atTime, requirement, tokens, index, targetGUID) {
+        return OvaleHealth.RequireHealthPercentHandler(spellId, atTime, requirement, tokens, index, targetGUID);
+    }
 }
-let statePrototype = OvaleHealth.statePrototype;
-statePrototype.RequireHealthPercentHandler = OvaleHealth.RequireHealthPercentHandler;
+
+export const healthState = new HealthState();
+OvaleState.RegisterState(healthState);
+
 OvaleHealth = new OvaleHealthClass();

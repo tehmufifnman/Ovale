@@ -1,6 +1,4 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-import { OvaleScripts } from "./OvaleScripts";
+import { OvaleScripts } from "../Scripts";
 {
     let name = "ovale_trinkets_wod";
     let desc = "[6.2] Ovale: Trinkets (Warlords of Draenor)";

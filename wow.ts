@@ -261,7 +261,7 @@ function lualength<T>(array: (LuaArray<T>|string)):number {
 
 // WoW Class 
 type UIPosition = "TOPLEFT" | "CENTER";
-type UIAnchor = "ANCHOR_BOTTOMLEFT";
+type UIAnchor = "ANCHOR_BOTTOMLEFT" | "ANCHOR_NONE";
 
 interface UIRegion {
     SetAllPoints(around: UIFrame):void;
@@ -307,16 +307,16 @@ interface UICheckButton extends UIFrame {
     SetChecked(checked: boolean):void;
 }
 
-interface UIGameTooltip extends UIFrame {}
-
 interface UITexture extends UIFrame {
     SetTexture(r, g, b):void;
 }
-interface UITooltip extends UIFrame {
+interface UIGameTooltip extends UIFrame {
     SetOwner(frame: UIFrame, anchor: UIAnchor):void;
     SetText(text: string):void;
     AddLine(text: string, r?: number, g?: number, b?: number):void;
     ClearLines():void;
+    SetInventoryItem(unit: string, slot: number):void;
+    NumLines():number;
 }
 
 // WOW global functions
@@ -332,7 +332,7 @@ function GetSpellInfo(spellId: number|string, bookType?: number) {
     return [];
 }
 
-function GetItemInfo(itemId: number):any[] {
+function GetItemInfo(itemId: number|string):any[] {
 return undefined;
 }
 
@@ -436,8 +436,8 @@ function IsUsableAction(action: string): boolean{
     return false;
 }
 
-function IsUsableItem(itemId: number){
-
+function IsUsableItem(itemId: number): boolean {
+    return false;
 }
 
 function GetNumGroupMembers(filter: number) {
@@ -445,7 +445,9 @@ function GetNumGroupMembers(filter: number) {
 }
 
 function UnitPower(unit: string, type: number, segments?: number) { return 0;}
-
+function GetPowerRegen():[number, number] {return [0, 0]}
+function GetSpellPowerCost(spellId:number): LuaArray<{cost:number, type:number}> { return {1:{cost:0, type: 0}}}
+function UnitPowerType(unit: string):[number,number] { return [0,0]}
 function IsInGroup(filter?: number){ return false}
 function IsInGuild() { return false;}
 function IsInInstance(){return false}
@@ -457,7 +459,7 @@ function GetNumTrackingTypes() {return 0}
 function GetTrackingInfo(i:number):any[] {return undefined}
 function GetUnitSpeed(unit: string):number { return 0;}
 function GetWeaponEnchantInfo():any[] {return undefined}
-function HasFullControl() {}
+function HasFullControl() {return false}
 function IsSpellOverlayed() {}
 function IsStealthed() {}
 function UnitCastingInfo(target: string):any[] { return undefined }
@@ -470,7 +472,7 @@ function UnitInRaid(unit: string){return false}
 function UnitIsFriend(unit: string, target: string){return 0}
 function UnitIsPVP(unit: string){return false}
 function UnitIsUnit(unit1: string, unit2: string){ return true}
-function UnitPowerMax(unit: string, power: number, segment: number){}
+function UnitPowerMax(unit: string, power: number, segment: number): number{ return 0}
 function UnitRace(unit: string):any[]{return undefined}
 function UnitStagger(unit: string){return 0}
 function GetSpellCharges(spellId: number) {return []}
@@ -512,7 +514,7 @@ function UnitSpellHaste(unitId:string){return 0}
 function UnitStat(unitId:string, stat:number){return 0}
 function GetRuneCooldown(slot: number){return [0, 0, 0]}
 function SendAddonMessage(MSG_PREFIX, message, channel){}
-function print(s: string):void;
+//function print(s: string):void {}
 function GetActiveSpecGroup() {return 0;}
 function GetFlyoutInfo(flyoutId) {return[]}
 function GetFlyoutSlotInfo(flyoutId, flyoutIndex) {return[]}
@@ -531,14 +533,14 @@ function IsUsableSpell(index, bookType?){return [];}
 function GetNumShapeshiftForms() {return 0}
 function GetShapeshiftForm(){}
 function GetShapeshiftFormInfo(index:number){return []}
-function GetTotemInfo() {}
+function GetTotemInfo(slot) {return[]}
 
 var BigWigsLoader;
 var UIParent;
 var Bartender4;
 
 // WoW global variables
-var GameTooltip:UITooltip = <UITooltip>{}
+var GameTooltip:UIGameTooltip = <UIGameTooltip>{}
 var MAX_COMBO_POINTS = 5;
 var UNKNOWN = -1;
 var DEFAULT_CHAT_FRAME:UIFrame = undefined;
@@ -639,3 +641,4 @@ var COMBATLOG_OBJECT_AFFILIATION_MINE = 1;
 var COMBATLOG_OBJECT_AFFILIATION_PARTY = 2;
 var COMBATLOG_OBJECT_AFFILIATION_RAID = 3;
 var COMBATLOG_OBJECT_REACTION_FRIENDLY = 4;
+

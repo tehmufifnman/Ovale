@@ -5,6 +5,7 @@ import { OvaleData } from "./Data";
 import { OvaleFuture } from "./Future";
 import { OvaleSpellBook } from "./SpellBook";
 import { OvaleStance } from "./Stance";
+import { BaseState } from "./State";
 
 let OvaleSpellFlashBase = Ovale.NewModule("OvaleSpellFlash", "AceEvent-3.0");
 export let OvaleSpellFlash: OvaleSpellFlashClass;
@@ -305,7 +306,7 @@ class OvaleSpellFlashClass extends OvaleSpellFlashBase {
         }
         return enabled;
     }
-    Flash(state, node, element, start, now?:number) {
+    Flash(state: BaseState, node, element, start, now?:number) {
         const db = Ovale.db.profile.apparence.spellFlash
         now = now || API_GetTime();
         if (this.IsSpellFlashEnabled() && start && start - now <= db.threshold / 1000) {

@@ -1,12 +1,12 @@
 import { OvaleDebug } from "./Debug";
 import { OvaleProfiler } from "./Profiler";
-import { OvaleData, dataState } from "./Data";
-import { OvaleFuture } from "./Future";
+import { OvaleData, dataState, DataState } from "./Data";
+import { OvaleFuture, futureState } from "./Future";
 import { OvaleGUID } from "./GUID";
 import { OvalePaperDoll, paperDollState } from "./PaperDoll";
 import { OvaleSpellBook } from "./SpellBook";
 import { OvaleStance } from "./Stance";
-import { OvaleState, StateModule, baseState } from "./State";
+import { OvaleState, StateModule, baseState, BaseState } from "./State";
 import { Ovale } from "./Ovale";
 import { auraState } from "./Aura";
 let OvaleCooldownBase = Ovale.NewModule("OvaleCooldown", "AceEvent-3.0");
@@ -202,7 +202,7 @@ class OvaleCooldownClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regi
             dest.offgcd = spellcast.offgcd;
         }
     }
-    SaveSpellcastInfo(spellcast, atTime, state) {
+    SaveSpellcastInfo(spellcast, atTime, state: DataState) {
         let spellId = spellcast.spellId;
         if (spellId) {
             let dataModule = state || OvaleData;
@@ -213,20 +213,6 @@ class OvaleCooldownClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regi
         }
     }
     
-    ApplySpellStartCast(state, spellId, targetGUID, startCast, endCast, isChanneled, spellcast) {
-        this.StartProfiling("OvaleCooldown_ApplySpellStartCast");
-        if (isChanneled) {
-            state.ApplyCooldown(spellId, targetGUID, startCast);
-        }
-        this.StopProfiling("OvaleCooldown_ApplySpellStartCast");
-    }
-    ApplySpellAfterCast(state, spellId, targetGUID, startCast, endCast, isChanneled, spellcast) {
-        this.StartProfiling("OvaleCooldown_ApplySpellAfterCast");
-        if (!isChanneled) {
-            state.ApplyCooldown(spellId, targetGUID, endCast);
-        }
-        this.StopProfiling("OvaleCooldown_ApplySpellAfterCast");
-    }
 }
 
 interface Cooldown {
@@ -242,6 +228,22 @@ interface Cooldown {
 
 class CooldownState implements StateModule {
     cd: LuaObj<Cooldown> = undefined;
+
+    
+    ApplySpellStartCast(spellId, targetGUID, startCast, endCast, isChanneled, spellcast) {
+        OvaleCooldown.StartProfiling("OvaleCooldown_ApplySpellStartCast");
+        if (isChanneled) {
+            this.ApplyCooldown(spellId, targetGUID, startCast);
+        }
+        OvaleCooldown.StopProfiling("OvaleCooldown_ApplySpellStartCast");
+    }
+    ApplySpellAfterCast(spellId, targetGUID, startCast, endCast, isChanneled, spellcast) {
+        OvaleCooldown.StartProfiling("OvaleCooldown_ApplySpellAfterCast");
+        if (!isChanneled) {
+            this.ApplyCooldown(spellId, targetGUID, endCast);
+        }
+        OvaleCooldown.StopProfiling("OvaleCooldown_ApplySpellAfterCast");
+    }
 
     RequireCooldownHandler(spellId, atTime, requirement, tokens, index, targetGUID) {
         let cdSpellId = tokens;
@@ -318,17 +320,17 @@ class CooldownState implements StateModule {
             }
         }
     }
-    GetGCD(this, spellId, atTime, targetGUID) {
-        spellId = spellId || this.currentSpellId;
+    GetGCD(spellId?, atTime?, targetGUID?) {
+        spellId = spellId || futureState.currentSpellId;
         if (!atTime) {
-            if (this.endCast && this.endCast > this.currentTime) {
-                atTime = this.endCast;
+            if (futureState.endCast && futureState.endCast > baseState.currentTime) {
+                atTime = futureState.endCast;
             } else {
-                atTime = this.currentTime;
+                atTime = baseState.currentTime;
             }
         }
-        targetGUID = targetGUID || OvaleGUID.UnitGUID(this.defaultTarget);
-        let gcd = spellId && this.GetSpellInfoProperty(spellId, atTime, "gcd", targetGUID);
+        targetGUID = targetGUID || OvaleGUID.UnitGUID(baseState.defaultTarget);
+        let gcd = spellId && dataState.GetSpellInfoProperty(spellId, atTime, "gcd", targetGUID);
         if (!gcd) {
             let haste;
             [gcd, haste] = OvaleCooldown.GetBaseGCD();
@@ -341,16 +343,16 @@ class CooldownState implements StateModule {
                     haste = false;
                 }
             }
-            let gcdHaste = spellId && this.GetSpellInfoProperty(spellId, atTime, "gcd_haste", targetGUID);
+            let gcdHaste = spellId && dataState.GetSpellInfoProperty(spellId, atTime, "gcd_haste", targetGUID);
             if (gcdHaste) {
                 haste = gcdHaste;
             } else {
-                let siHaste = spellId && this.GetSpellInfoProperty(spellId, atTime, "haste", targetGUID);
+                let siHaste = spellId && dataState.GetSpellInfoProperty(spellId, atTime, "haste", targetGUID);
                 if (siHaste) {
                     haste = siHaste;
                 }
             }
-            let multiplier = this.GetHasteMultiplier(haste);
+            let multiplier = paperDollState.GetHasteMultiplier(haste);
             gcd = gcd / multiplier;
             gcd = (gcd > 0.750) && gcd || 0.750;
         }
@@ -440,7 +442,7 @@ class CooldownState implements StateModule {
         }
         return duration;
     }
-    GetSpellCharges(spellId, atTime) {
+    GetSpellCharges(spellId, atTime?) {
         atTime = atTime || baseState.currentTime;
         let cd = this.GetCD(spellId);
         let [charges, maxCharges, chargeStart, chargeDuration] = [cd.charges, cd.maxCharges, cd.chargeStart, cd.chargeDuration];
@@ -466,7 +468,7 @@ class CooldownState implements StateModule {
 
 OvaleCooldown = new OvaleCooldownClass();
 
-const cooldownState = new CooldownState();
+export const cooldownState = new CooldownState();
 OvaleState.RegisterState(cooldownState);
 
 

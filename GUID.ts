@@ -1,8 +1,6 @@
-import __addon from "addon";
-let [OVALE, Addon ] = __addon;
-let OvaleGUIDBase = Addon.NewModule("OvaleGUID", "AceEvent-3.0");
 import { OvaleDebug } from "./Debug";
 import { Ovale } from "./Ovale";
+let OvaleGUIDBase = Ovale.NewModule("OvaleGUID", "AceEvent-3.0");
 let floor = math.floor;
 let _ipairs = ipairs;
 let _setmetatable = setmetatable;

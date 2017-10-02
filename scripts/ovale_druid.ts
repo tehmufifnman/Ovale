@@ -1,6 +1,4 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-import { OvaleScripts } from "./OvaleScripts";
+import { OvaleScripts } from "../Scripts";
 {
     let name = "icyveins_druid_guardian";
     let desc = "[7.1.5] Icy-Veins: Druid Guardian";

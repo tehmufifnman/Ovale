@@ -1,6 +1,4 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-import { OvaleScripts } from "./OvaleScripts";
+import { OvaleScripts } from "../Scripts";
 {
     let name = "ovale_druid_spells";
     let desc = "[7.3] Ovale: Druid spells";

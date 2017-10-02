@@ -443,7 +443,7 @@ const print_r = function(node, indent?, done?, output?) {
 }
 const debug_r = function(tbl) {
     let output = print_r(tbl);
-    print(tconcat(output, "\n"));
+    OvaleSimulationCraft.Debug(tconcat(output, "\n"));
 }
 const NewNode = function(nodeList: LuaArray<Node>, hasChild?) {
     let node = self_pool.Get();

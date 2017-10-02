@@ -1,6 +1,4 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-import { OvaleScripts } from "./OvaleScripts";
+import { OvaleScripts } from "../Scripts";
 {
     let name = "icyveins_monk_brewmaster";
     let desc = "[7.0] Icy-Veins: Monk Brewmaster";

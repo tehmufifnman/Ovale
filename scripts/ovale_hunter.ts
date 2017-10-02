@@ -1,6 +1,4 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-import { OvaleScripts } from "./OvaleScripts";
+import { OvaleScripts } from "../Scripts";
 {
     let name = "simulationcraft_hunter_bm_t19p";
     let desc = "[7.0] SimulationCraft: Hunter_BM_T19P";

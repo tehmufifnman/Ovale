@@ -4,9 +4,9 @@ import { Ovale } from "./Ovale";
 import { OvaleData } from "./Data";
 import { OvaleEquipment } from "./Equipment";
 import { OvalePower } from "./Power";
-import { OvaleSpellBook } from "./SpellBook";
 import { OvaleStance } from "./Stance";
-import { OvaleState } from "./State";
+import { OvaleState, baseState, StateModule } from "./State";
+import { paperDollState } from "./PaperDoll";
 
 let OvaleRunesBase = Ovale.NewModule("OvaleRunes", "AceEvent-3.0");
 export let OvaleRunes: OvaleRunesClass;
@@ -21,7 +21,13 @@ let INFINITY = math.huge;
 let _sort = table.sort;
 let EMPOWER_RUNE_WEAPON = 47568;
 let RUNE_SLOTS = 6;
-const IsActiveRune = function(rune, atTime) {
+
+interface Rune {
+    startCooldown?: number;
+    endCooldown?: number;
+}
+
+const IsActiveRune = function(rune: Rune, atTime) {
     return (rune.startCooldown == 0 || rune.endCooldown <= atTime);
 }
 class OvaleRunesClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(OvaleRunesBase)) {
@@ -42,7 +48,6 @@ class OvaleRunesClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Registe
             this.RegisterEvent("RUNE_TYPE_UPDATE");
             this.RegisterEvent("UNIT_RANGEDDAMAGE");
             this.RegisterEvent("UNIT_SPELL_HASTE", "UNIT_RANGEDDAMAGE");
-            OvaleState.RegisterState(this, this.statePrototype);
             this.UpdateAllRunes();
         }
     }
@@ -53,9 +58,7 @@ class OvaleRunesClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Registe
             this.UnregisterEvent("RUNE_TYPE_UPDATE");
             this.UnregisterEvent("UNIT_RANGEDDAMAGE");
             this.UnregisterEvent("UNIT_SPELL_HASTE");
-            OvaleState.UnregisterState(this);
-            this.rune = {
-            }
+            this.rune = {}
         }
     }
     RUNE_POWER_UPDATE(event, slot, usable) {
@@ -107,151 +110,148 @@ class OvaleRunesClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Registe
         }
     }
 }
-OvaleRunes.statePrototype = {
+
+let count = {
 }
-let statePrototype = OvaleRunes.statePrototype;
-statePrototype.rune = undefined;
-class OvaleRunes {
-    InitializeState(state) {
-        state.rune = {
-        }
+let usedRune = {
+}
+
+class RunesState implements StateModule {
+    rune: LuaArray<Rune> = undefined;
+    runicpower:number = undefined;
+
+    InitializeState() {
+        this.rune = {}
         for (const [slot] of _ipairs(this.rune)) {
-            state.rune[slot] = {
-            }
+            this.rune[slot] = {}
         }
     }
-    ResetState(state) {
-        this.StartProfiling("OvaleRunes_ResetState");
+    ResetState() {
+        OvaleRunes.StartProfiling("OvaleRunes_ResetState");
         for (const [slot, rune] of _ipairs(this.rune)) {
-            let stateRune = state.rune[slot];
+            let stateRune = this.rune[slot];
             for (const [k, v] of _pairs(rune)) {
                 stateRune[k] = v;
             }
         }
-        this.StopProfiling("OvaleRunes_ResetState");
+        OvaleRunes.StopProfiling("OvaleRunes_ResetState");
     }
-    CleanState(state) {
-        for (const [slot, rune] of _ipairs(state.rune)) {
+    CleanState() {
+        for (const [slot, rune] of _ipairs(this.rune)) {
             for (const [k] of _pairs(rune)) {
                 rune[k] = undefined;
             }
-            state.rune[slot] = undefined;
+            this.rune[slot] = undefined;
         }
     }
-    ApplySpellStartCast(state, spellId, targetGUID, startCast, endCast, isChanneled, spellcast) {
-        this.StartProfiling("OvaleRunes_ApplySpellStartCast");
+    ApplySpellStartCast(spellId, targetGUID, startCast, endCast, isChanneled, spellcast) {
+        OvaleRunes.StartProfiling("OvaleRunes_ApplySpellStartCast");
         if (isChanneled) {
-            state.ApplyRuneCost(spellId, startCast, spellcast);
+            this.ApplyRuneCost(spellId, startCast, spellcast);
         }
-        this.StopProfiling("OvaleRunes_ApplySpellStartCast");
+        OvaleRunes.StopProfiling("OvaleRunes_ApplySpellStartCast");
     }
-    ApplySpellAfterCast(state, spellId, targetGUID, startCast, endCast, isChanneled, spellcast) {
-        this.StartProfiling("OvaleRunes_ApplySpellAfterCast");
+    ApplySpellAfterCast(spellId, targetGUID, startCast, endCast, isChanneled, spellcast) {
+        OvaleRunes.StartProfiling("OvaleRunes_ApplySpellAfterCast");
         if (!isChanneled) {
-            state.ApplyRuneCost(spellId, endCast, spellcast);
+            this.ApplyRuneCost(spellId, endCast, spellcast);
             if (spellId == EMPOWER_RUNE_WEAPON) {
-                for (const [slot] of _ipairs(state.rune)) {
-                    state.ReactivateRune(slot, endCast);
+                for (const [slot] of _ipairs(this.rune)) {
+                    this.ReactivateRune(slot, endCast);
                 }
             }
         }
-        this.StopProfiling("OvaleRunes_ApplySpellAfterCast");
+        OvaleRunes.StopProfiling("OvaleRunes_ApplySpellAfterCast");
     }
-}
-statePrototype.DebugRunes = function (state) {
-    OvaleRunes.Print("Current rune state:");
-    let now = state.currentTime;
-    for (const [slot, rune] of _ipairs(state.rune)) {
-        if (rune.IsActiveRune(now)) {
-            OvaleRunes.Print("    rune[%d] is active.", slot);
-        } else {
-            OvaleRunes.Print("    rune[%d] comes off cooldown in %f seconds.", slot, rune.endCooldown - now);
-        }
-    }
-}
-statePrototype.ApplyRuneCost = function (state, spellId, atTime, spellcast) {
-    let si = OvaleData.spellInfo[spellId];
-    if (si) {
-        let count = si.runes || 0;
-        while (count > 0) {
-            state.ConsumeRune(spellId, atTime, spellcast);
-            count = count - 1;
-        }
-    }
-}
-statePrototype.ReactivateRune = function (state, slot, atTime) {
-    let rune = state.rune[slot];
-    if (atTime < state.currentTime) {
-        atTime = state.currentTime;
-    }
-    if (rune.startCooldown > atTime) {
-        rune.startCooldown = atTime;
-    }
-    rune.endCooldown = atTime;
-}
-statePrototype.ConsumeRune = function (state, spellId, atTime, snapshot) {
-    OvaleRunes.StartProfiling("OvaleRunes_state_ConsumeRune");
-    let consumedRune;
-    for (let slot = 1; slot <= RUNE_SLOTS; slot += 1) {
-        let rune = state.rune[slot];
-        if (rune.IsActiveRune(atTime)) {
-            consumedRune = rune;
-            break;
-        }
-    }
-    if (consumedRune) {
-        let start = atTime;
-        for (let slot = 1; slot <= RUNE_SLOTS; slot += 1) {
-            let rune = state.rune[slot];
-            if (rune.endCooldown > start) {
-                start = rune.endCooldown;
+
+    DebugRunes() {
+        OvaleRunes.Print("Current rune state:");
+        let now = baseState.currentTime;
+        for (const [slot, rune] of _ipairs(this.rune)) {
+            if (IsActiveRune(rune, now)) {
+                OvaleRunes.Print("    rune[%d] is active.", slot);
+            } else {
+                OvaleRunes.Print("    rune[%d] comes off cooldown in %f seconds.", slot, rune.endCooldown - now);
             }
         }
-        let duration = 10 / state.GetSpellHasteMultiplier(snapshot);
-        consumedRune.startCooldown = start;
-        consumedRune.endCooldown = start + duration;
-        let runicpower = state.runicpower;
-        runicpower = runicpower + 10;
-        let maxi = OvalePower.maxPower.runicpower;
-        state.runicpower = (runicpower < maxi) && runicpower || maxi;
-    } 
-    
-    OvaleRunes.StopProfiling("OvaleRunes_state_ConsumeRune");
-}
-statePrototype.RuneCount = function (state, atTime) {
-    OvaleRunes.StartProfiling("OvaleRunes_state_RuneCount");
-    atTime = atTime || state.currentTime;
-    let count = 0;
-    let [startCooldown, endCooldown] = [INFINITY, INFINITY];
-    for (let slot = 1; slot <= RUNE_SLOTS; slot += 1) {
-        let rune = state.rune[slot];
-        if (rune.IsActiveRune(atTime)) {
-            count = count + 1;
-        } else if (rune.endCooldown < endCooldown) {
-            [startCooldown, endCooldown] = [rune.startCooldown, rune.endCooldown];
+    }
+    ApplyRuneCost(spellId, atTime, spellcast) {
+        let si = OvaleData.spellInfo[spellId];
+        if (si) {
+            let count = si.runes || 0;
+            while (count > 0) {
+                this.ConsumeRune(spellId, atTime, spellcast);
+                count = count - 1;
+            }
         }
     }
-    OvaleRunes.StopProfiling("OvaleRunes_state_RuneCount");
-    return [count, startCooldown, endCooldown];
-}
-statePrototype.GetRunesCooldown = undefined;
-{
-    let count = {
+    ReactivateRune(slot, atTime) {
+        let rune = this.rune[slot];
+        if (atTime < baseState.currentTime) {
+            atTime = baseState.currentTime;
+        }
+        if (rune.startCooldown > atTime) {
+            rune.startCooldown = atTime;
+        }
+        rune.endCooldown = atTime;
     }
-    let usedRune = {
+    ConsumeRune(spellId, atTime, snapshot) {
+        OvaleRunes.StartProfiling("OvaleRunes_state_ConsumeRune");
+        let consumedRune: Rune;
+        for (let slot = 1; slot <= RUNE_SLOTS; slot += 1) {
+            let rune = this.rune[slot];
+            if (IsActiveRune(rune, atTime)) {
+                consumedRune = rune;
+                break;
+            }
+        }
+        if (consumedRune) {
+            let start = atTime;
+            for (let slot = 1; slot <= RUNE_SLOTS; slot += 1) {
+                let rune = this.rune[slot];
+                if (rune.endCooldown > start) {
+                    start = rune.endCooldown;
+                }
+            }
+            let duration = 10 / paperDollState.GetSpellHasteMultiplier(snapshot);
+            consumedRune.startCooldown = start;
+            consumedRune.endCooldown = start + duration;
+            let runicpower = this.runicpower;
+            runicpower = runicpower + 10;
+            let maxi = OvalePower.maxPower.runicpower;
+            this.runicpower = (runicpower < maxi) && runicpower || maxi;
+        } 
+        
+        OvaleRunes.StopProfiling("OvaleRunes_state_ConsumeRune");
     }
-    statePrototype.GetRunesCooldown = function (state, atTime, runes) {
+    RuneCount(atTime) {
+        OvaleRunes.StartProfiling("OvaleRunes_state_RuneCount");
+        atTime = atTime || baseState.currentTime;
+        let count = 0;
+        let [startCooldown, endCooldown] = [INFINITY, INFINITY];
+        for (let slot = 1; slot <= RUNE_SLOTS; slot += 1) {
+            let rune = this.rune[slot];
+            if (IsActiveRune(rune, atTime)) {
+                count = count + 1;
+            } else if (rune.endCooldown < endCooldown) {
+                [startCooldown, endCooldown] = [rune.startCooldown, rune.endCooldown];
+            }
+        }
+        OvaleRunes.StopProfiling("OvaleRunes_state_RuneCount");
+        return [count, startCooldown, endCooldown];
+    }
+    GetRunesCooldown(atTime, runes) {
         if (runes <= 0) {
             return 0;
         }
         if (runes > RUNE_SLOTS) {
-            state.Log("Attempt to read %d runes but the maximum is %d", runes, RUNE_SLOTS);
+            OvaleRunes.Log("Attempt to read %d runes but the maximum is %d", runes, RUNE_SLOTS);
             return 0;
         }
         OvaleRunes.StartProfiling("OvaleRunes_state_GetRunesCooldown");
-        atTime = atTime || state.currentTime;
+        atTime = atTime || baseState.currentTime;
         for (let slot = 1; slot <= RUNE_SLOTS; slot += 1) {
-            let rune = state.rune[slot];
+            let rune = this.rune[slot];
             usedRune[slot] = rune.endCooldown - atTime;
         }
         _sort(usedRune);
@@ -259,5 +259,8 @@ statePrototype.GetRunesCooldown = undefined;
         return usedRune[runes];
     }
 }
+
+export const runesState = new RunesState();
+OvaleState.RegisterState(runesState);
 
 OvaleRunes = new OvaleRunesClass();

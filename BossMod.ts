@@ -1,6 +1,7 @@
 import { OvaleDebug } from "./Debug";
 import { OvaleProfiler } from "./Profiler";
 import { Ovale } from "./Ovale";
+import { BaseState } from "./State";
 let OvaleBossModBase = Ovale.NewModule("OvaleBossMod");
 let API_GetNumGroupMembers = GetNumGroupMembers;
 let API_IsInGroup = IsInGroup;
@@ -40,7 +41,7 @@ class OvaleBossModClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Regis
     }
     OnDisable() {
     }
-    IsBossEngaged(state) {
+    IsBossEngaged(state: BaseState) {
         if (!state.inCombat) {
             return false;
         }

@@ -385,7 +385,7 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
         return [tag, invokesGCD];
     }
     CheckRequirements(spellId, atTime, tokens, index, targetGUID):[boolean, string, number] {
-        targetGUID = targetGUID || OvaleGUID.UnitGUID(this.defaultTarget || "target");
+        targetGUID = targetGUID || OvaleGUID.UnitGUID(baseState.defaultTarget || "target");
         let name = tokens[index];
         index = index + 1;
         if (name) {
@@ -451,7 +451,7 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
         return [verified, value, data];
     }
     CheckSpellInfo(spellId, atTime, targetGUID) {
-        targetGUID = targetGUID || OvaleGUID.UnitGUID(this.defaultTarget || "target");
+        targetGUID = targetGUID || OvaleGUID.UnitGUID(baseState.defaultTarget || "target");
         let verified = true;
         let requirement;
         for (const [name, handler] of _pairs(self_requirement)) {
@@ -589,7 +589,7 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
     }
 }
 
-class DataState implements StateModule {
+export class DataState implements StateModule {
     CleanState(): void {
     }
     InitializeState(): void {
@@ -609,7 +609,7 @@ class DataState implements StateModule {
     GetItemInfoProperty(itemId, atTime, property) {
         return OvaleData.GetItemInfoProperty(itemId, atTime, property);
     }
-    GetSpellInfoProperty(spellId, atTime, property, targetGUID) {
+    GetSpellInfoProperty(spellId, atTime, property, targetGUID?) {
         return OvaleData.GetSpellInfoProperty(spellId, atTime, property, targetGUID);
     }    
 }

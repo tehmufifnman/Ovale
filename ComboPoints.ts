@@ -1,15 +1,15 @@
 import { L } from "./Localization";
 import { OvaleDebug } from "./Debug";
 import { OvaleProfiler } from "./Profiler";
-import { OvaleAura } from "./Aura";
-import { OvaleData } from "./Data";
+import { OvaleAura, auraState } from "./Aura";
+import { OvaleData, dataState } from "./Data";
 import { OvaleEquipment } from "./Equipment";
 import { OvaleFuture } from "./Future";
 import { OvalePaperDoll } from "./PaperDoll";
 import { OvalePower } from "./Power";
 import { OvaleSpellBook } from "./SpellBook";
 import { Ovale, RegisterPrinter } from "./Ovale";
-import { OvaleState, StateModule } from "./State";
+import { OvaleState, StateModule, BaseState } from "./State";
 
 let OvaleComboPointsBase = Ovale.NewModule("OvaleComboPoints", "AceEvent-3.0");
 export let OvaleComboPoints: OvaleComboPointsClass;
@@ -258,12 +258,18 @@ class OvaleComboPointsClass extends RegisterPrinter(OvaleProfiler.RegisterProfil
             dest.combo = spellcast.combo;
         }
     }
-    SaveSpellcastInfo(spellcast, atTime, state) {
+    SaveSpellcastInfo(spellcast, atTime, state:ComboPointsState) {
         let spellId = spellcast.spellId;
         if (spellId) {
             let si = OvaleData.spellInfo[spellId];
             if (si) {
-                let dataModule = state || OvaleData;
+                let dataModule
+                
+                if (state !== undefined) {
+                    dataModule = dataState;
+                } else {
+                    dataModule = OvaleData;
+                }
                 let comboPointModule = state || this;
                 if (si.combo == "finisher") {
                     let combo = dataModule.GetSpellInfoProperty(spellId, atTime, "combo", spellcast.target);
@@ -281,26 +287,32 @@ class OvaleComboPointsClass extends RegisterPrinter(OvaleProfiler.RegisterProfil
                 }
             }
         }
-    }
+    }    
+}
 
-    ApplySpellAfterCast(state, spellId, targetGUID, startCast, endCast, isChanneled, spellcast) {
-        this.StartProfiling("OvaleComboPoints_ApplySpellAfterCast");
+OvaleComboPoints = new OvaleComboPointsClass();
+
+export class ComboPointsState implements StateModule {
+    combo = undefined;
+    
+    ApplySpellAfterCast(spellId, targetGUID, startCast, endCast, isChanneled, spellcast) {
+        OvaleComboPoints.StartProfiling("OvaleComboPoints_ApplySpellAfterCast");
         let si = OvaleData.spellInfo[spellId];
         if (si && si.combo) {
-            let [cost, refund] = state.ComboPointCost(spellId, endCast, targetGUID);
-            let power = state.combo;
+            let [cost, refund] = this.ComboPointCost(spellId, endCast, targetGUID);
+            let power = this.combo;
             power = power - cost + refund;
             if (power <= 0) {
                 power = 0;
-                if (self_hasRuthlessness && state.combo == _MAX_COMBO_POINTS) {
-                    state.Log("Spell %d grants one extra combo point from Ruthlessness.", spellId);
+                if (self_hasRuthlessness && this.combo == _MAX_COMBO_POINTS) {
+                    OvaleComboPoints.Log("Spell %d grants one extra combo point from Ruthlessness.", spellId);
                     power = power + 1;
                 }
-                if (self_hasAnticipation && state.combo > 0) {
-                    let aura = state.GetAuraByGUID(self_playerGUID, ANTICIPATION, "HELPFUL", true);
-                    if (state.IsActiveAura(aura, endCast)) {
+                if (self_hasAnticipation && this.combo > 0) {
+                    let aura = auraState.GetAuraByGUID(self_playerGUID, ANTICIPATION, "HELPFUL", true);
+                    if (auraState.IsActiveAura(aura, endCast)) {
                         power = power + aura.stacks;
-                        state.RemoveAuraOnGUID(self_playerGUID, ANTICIPATION, "HELPFUL", true, endCast);
+                        auraState.RemoveAuraOnGUID(self_playerGUID, ANTICIPATION, "HELPFUL", true, endCast);
                         if (power > _MAX_COMBO_POINTS) {
                             power = _MAX_COMBO_POINTS;
                         }
@@ -310,8 +322,8 @@ class OvaleComboPointsClass extends RegisterPrinter(OvaleProfiler.RegisterProfil
             if (power > _MAX_COMBO_POINTS) {
                 if (self_hasAnticipation && !si.temp_combo) {
                     let stacks = power - _MAX_COMBO_POINTS;
-                    let aura = state.GetAuraByGUID(self_playerGUID, ANTICIPATION, "HELPFUL", true);
-                    if (state.IsActiveAura(aura, endCast)) {
+                    let aura = auraState.GetAuraByGUID(self_playerGUID, ANTICIPATION, "HELPFUL", true);
+                    if (auraState.IsActiveAura(aura, endCast)) {
                         stacks = stacks + aura.stacks;
                         if (stacks > _MAX_COMBO_POINTS) {
                             stacks = _MAX_COMBO_POINTS;
@@ -319,23 +331,14 @@ class OvaleComboPointsClass extends RegisterPrinter(OvaleProfiler.RegisterProfil
                     }
                     let start = endCast;
                     let ending = start + ANTICIPATION_DURATION;
-                    aura = state.AddAuraToGUID(self_playerGUID, ANTICIPATION, self_playerGUID, "HELPFUL", undefined, start, ending);
+                    aura = auraState.AddAuraToGUID(self_playerGUID, ANTICIPATION, self_playerGUID, "HELPFUL", undefined, start, ending);
                     aura.stacks = stacks;
                 }
                 power = _MAX_COMBO_POINTS;
             }
-            state.combo = power;
+            this.combo = power;
         }
-        this.StopProfiling("OvaleComboPoints_ApplySpellAfterCast");
-    }
-}
-
-OvaleComboPoints = new OvaleComboPointsClass();
-
-export class ComboPointsState implements StateModule {
-    combo = undefined;
-    
-    constructor() {        
+        OvaleComboPoints.StopProfiling("OvaleComboPoints_ApplySpellAfterCast");
     }
     
     GetComboPoints() {
@@ -357,7 +360,7 @@ export class ComboPointsState implements StateModule {
         for (let k = 1; k <= lualength(self_pendingComboEvents); k += 1) {
             let comboEvent = self_pendingComboEvents[k];
             if (comboEvent.reason == "Anticipation") {
-                state.RemoveAuraOnGUID(self_playerGUID, ANTICIPATION, "HELPFUL", true, comboEvent.atTime);
+                auraState.RemoveAuraOnGUID(self_playerGUID, ANTICIPATION, "HELPFUL", true, comboEvent.atTime);
                 break;
             }
         }

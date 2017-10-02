@@ -4,13 +4,14 @@ import { OvaleBestAction } from "./BestAction";
 import { OvaleCompile } from "./Compile";
 import { OvaleCooldown } from "./Cooldown";
 import { OvaleDebug } from "./Debug";
-import { OvaleFuture } from "./Future";
+import { OvaleFuture, futureState } from "./Future";
 import { OvaleGUID } from "./GUID";
 import { OvaleSpellFlash } from "./SpellFlash";
-import { OvaleState } from "./State";
+import { OvaleState, baseState, BaseState } from "./State";
 import { OvaleTimeSpan } from "./TimeSpan";
 import { Ovale } from "./Ovale";
 import { OvaleIcon } from "./Icon";
+import { enemiesState } from "./Enemies";
 let Type = Ovale.GetName() + "Frame";
 let Version = 7;
 let _ipairs = ipairs;
@@ -89,7 +90,6 @@ class OvaleFrame {
             contentwidth = 0;
         }
         content.SetWidth(contentwidth);
-        content.width = contentwidth;
     }
 
     OnHeightSet(height) {
@@ -99,7 +99,6 @@ class OvaleFrame {
             contentheight = 0;
         }
         content.SetHeight(contentheight);
-        content.height = contentheight;
     }
 
     OnLayoutFinished(width, height) {
@@ -141,8 +140,7 @@ class OvaleFrame {
         let refresh = OvaleDebug.trace || this.timeSinceLastUpdate > MIN_REFRESH_TIME && _next(Ovale.refreshNeeded);
         if (refresh) {
             Ovale.AddRefreshInterval(this.timeSinceLastUpdate * 1000);
-            let state = OvaleState.state;
-            state.Initialize();
+            OvaleState.InitializeState();
             if (OvaleCompile.EvaluateScript()) {
                 Ovale.UpdateFrame();
             }
@@ -150,33 +148,33 @@ class OvaleFrame {
             let iconNodes = OvaleCompile.GetIconNodes();
             for (const [k, node] of _ipairs(iconNodes)) {
                 if (node.namedParams && node.namedParams.target) {
-                    state.defaultTarget = node.namedParams.target;
+                    baseState.defaultTarget = node.namedParams.target;
                 } else {
-                    state.defaultTarget = "target";
+                    baseState.defaultTarget = "target";
                 }
                 if (node.namedParams && node.namedParams.enemies) {
-                    state.enemies = node.namedParams.enemies;
+                    enemiesState.enemies = node.namedParams.enemies;
                 } else {
-                    state.enemies = undefined;
+                    enemiesState.enemies = undefined;
                 }
-                state.Log("+++ Icon %d", k);
-                OvaleBestAction.StartNewAction(state);
-                let atTime = state.nextCast;
-                if (state.lastSpellId != state.lastGCDSpellId) {
-                    atTime = state.currentTime;
+                OvaleState.Log("+++ Icon %d", k);
+                OvaleBestAction.StartNewAction();
+                let atTime = futureState.nextCast;
+                if (futureState.lastSpellId != futureState.lastGCDSpellId) {
+                    atTime = baseState.currentTime;
                 }
-                let [timeSpan, element] = OvaleBestAction.GetAction(node, state, atTime);
+                let [timeSpan, element] = OvaleBestAction.GetAction(node, baseState, atTime);
                 let start;
                 if (element && element.offgcd) {
-                    start = timeSpan.NextTime(state.currentTime);
+                    start = timeSpan.NextTime(baseState.currentTime);
                 } else {
                     start = timeSpan.NextTime(atTime);
                 }
                 if (profile.apparence.enableIcons) {
-                    this.UpdateActionIcon(state, node, this.actions[k], element, start);
+                    this.UpdateActionIcon(baseState, node, this.actions[k], element, start);
                 }
                 if (profile.apparence.spellFlash.enabled) {
-                    OvaleSpellFlash.Flash(state, node, element, start);
+                    OvaleSpellFlash.Flash(baseState, node, element, start);
                 }
             }
             _wipe(Ovale.refreshNeeded);
@@ -185,7 +183,7 @@ class OvaleFrame {
             this.timeSinceLastUpdate = 0;
         }
     }
-    UpdateActionIcon(state, node, action, element, start, now?) {
+    UpdateActionIcon(state: BaseState, node, action, element, start, now?) {
         const profile = Ovale.db.profile;
         let icons = action.secure && action.secureIcons || action.icons;
         now = now || API_GetTime();
@@ -215,8 +213,8 @@ class OvaleFrame {
                 }
             }
             state.Log("GetAction: start=%s, id=%s", start, actionId);
-            if (actionType == "spell" && actionId == state.currentSpellId && start && state.nextCast && start < state.nextCast) {
-                start = state.nextCast;
+            if (actionType == "spell" && actionId == futureState.currentSpellId && start && futureState.nextCast && start < futureState.nextCast) {
+                start = futureState.nextCast;
             }
             if (start && node.namedParams.nocd && now < start - node.namedParams.nocd) {
                 icons[1].Update(element, undefined);
@@ -248,9 +246,9 @@ class OvaleFrame {
             if ((node.namedParams.size != "small" && !node.namedParams.nocd && profile.apparence.predictif)) {
                 if (start) {
                     state.Log("****Second icon %s", start);
-                    state.ApplySpell(actionId, OvaleGUID.UnitGUID(actionTarget), start);
-                    let atTime = state.nextCast;
-                    if (actionId != state.lastGCDSpellId) {
+                    futureState.ApplySpell(actionId, OvaleGUID.UnitGUID(actionTarget), start);
+                    let atTime = futureState.nextCast;
+                    if (actionId != futureState.lastGCDSpellId) {
                         atTime = state.currentTime;
                     }
                     let [timeSpan, nextElement] = OvaleBestAction.GetAction(node, state, atTime);

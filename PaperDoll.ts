@@ -456,7 +456,7 @@ class OvalePaperDollClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
         }
         return multiplier;
     }
-    UpdateSnapshot(tbl, snapshot, updateAllStats?) {
+    UpdateSnapshot(tbl, snapshot?, updateAllStats?) {
         if (_type(snapshot) != "table") {
             [snapshot, updateAllStats] = [this, snapshot];
         }
@@ -468,7 +468,7 @@ class OvalePaperDollClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
     CopySpellcastInfo(spellcast, dest) {
         this.UpdateSnapshot(dest, spellcast, true);
     }
-    SaveSpellcastInfo(spellcast, atTime, state) {
+    SaveSpellcastInfo(spellcast, atTime, state: PaperDollState) {
         let paperDollModule = state || this;
         this.UpdateSnapshot(spellcast, true);
     }
@@ -558,7 +558,7 @@ class PaperDollState implements StateModule {
     GetHasteMultiplier(haste, snapshot?) {
         return OvalePaperDoll.GetHasteMultiplier(haste, snapshot);
     }
-    UpdateSnapshot(target, snapshot, updateAllStats?) {
+    UpdateSnapshot(target, snapshot?, updateAllStats?) {
         OvalePaperDoll.UpdateSnapshot(target, snapshot, updateAllStats);
     }
 }

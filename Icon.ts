@@ -1,6 +1,6 @@
 import { L } from "./Localization";
 import { OvaleSpellBook } from "./SpellBook";
-import { OvaleState } from "./State";
+import { OvaleState, baseState } from "./State";
 import { Ovale } from "./Ovale";
 let format = string.format;
 let _next = next;
@@ -84,7 +84,6 @@ export class OvaleIcon {
         this.actionId = actionId;
         this.value = undefined;
         let now = API_GetTime();
-        let state = OvaleState.state;
         const profile = Ovale.db.profile;
         if (startTime && actionTexture) {
             let cd = this.cd;

@@ -15,6 +15,9 @@ export interface StateModule {
     CleanState():void;
     InitializeState():void;
     ResetState():void;
+    ApplySpellStartCast?(spellId, targetGUID, startCast, endCast, channel, spellcast):void;
+    ApplySpellAfterCast?(spellId, targetGUID, startCast, endCast, channel, spellcast):void;
+    ApplySpellOnHit?(spellId, targetGUID, startCast, endCast, channel, spellcast):void;
 }
 
 class OvaleStateClass extends OvaleDebug.RegisterDebugging(OvaleStateBase) {
@@ -44,6 +47,27 @@ class OvaleStateClass extends OvaleDebug.RegisterDebugging(OvaleStateBase) {
         const iterator = self_stateAddons.Iterator();
         while (iterator.Next()) {
             iterator.value.ResetState();
+        }
+    }
+
+    ApplySpellStartCast(spellId, targetGUID, startCast, endCast, channel, spellcast) {
+        const iterator = self_stateAddons.Iterator();
+        while (iterator.Next()) {
+            iterator.value.ApplySpellStartCast(spellId, targetGUID, startCast, endCast, channel, spellcast);
+        }
+    }
+
+    ApplySpellAfterCast(spellId, targetGUID, startCast, endCast, channel, spellcast) {
+        const iterator = self_stateAddons.Iterator();
+        while (iterator.Next()) {
+            iterator.value.ApplySpellAfterCast(spellId, targetGUID, startCast, endCast, channel, spellcast);
+        }
+    }
+    
+    ApplySpellOnHit(spellId, targetGUID, startCast, endCast, channel, spellcast) {
+        const iterator = self_stateAddons.Iterator();
+        while (iterator.Next()) {
+            iterator.value.ApplySpellOnHit(spellId, targetGUID, startCast, endCast, channel, spellcast);
         }
     }
 }

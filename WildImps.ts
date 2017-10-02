@@ -1,4 +1,4 @@
-import { OvaleState } from "./State";
+import { OvaleState, StateModule } from "./State";
 import { Ovale } from "./Ovale";
 let OvaleWildImpsBase = Ovale.NewModule("OvaleWildImps", "AceEvent-3.0");
 export let OvaleWildImps: OvaleWildImpsClass;
@@ -31,14 +31,11 @@ class OvaleWildImpsClass extends OvaleWildImpsBase {
     OnEnable() {
         if (Ovale.playerClass == "WARLOCK") {
             this.RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
-            OvaleState.RegisterState(this, this.statePrototype);
-            self_demons = {
-            }
+            self_demons = {}
         }
     }
     OnDisable() {
         if (Ovale.playerClass == "WARLOCK") {
-            OvaleState.UnregisterState(this);
             this.UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
         }
     }
@@ -80,38 +77,47 @@ class OvaleWildImpsClass extends OvaleWildImpsBase {
         }
     }
 }
-OvaleWildImps.statePrototype = {
-}
-let statePrototype = OvaleWildImps.statePrototype;
-statePrototype.GetNotDemonicEmpoweredDemonsCount = function (state, creatureId, atTime) {
-    let count = 0;
-    for (const [k, d] of pairs(self_demons)) {
-        if (d.finish >= atTime && d.id == creatureId && !d.de) {
-            count = count + 1;
-        }
+
+class WildImpsState implements StateModule {
+    CleanState(): void {
     }
-    return count;
-}
-statePrototype.GetDemonsCount = function (state, creatureId, atTime) {
-    let count = 0;
-    for (const [k, d] of pairs(self_demons)) {
-        if (d.finish >= atTime && d.id == creatureId) {
-            count = count + 1;
-        }
+    InitializeState(): void {
     }
-    return count;
-}
-statePrototype.GetRemainingDemonDuration = function (state, creatureId, atTime) {
-    let max = 0;
-    for (const [k, d] of pairs(self_demons)) {
-        if (d.finish >= atTime && d.id == creatureId) {
-            let remaining = d.finish - atTime;
-            if (remaining > max) {
-                max = remaining;
+    ResetState(): void {
+    }
+    GetNotDemonicEmpoweredDemonsCount(creatureId, atTime) {
+        let count = 0;
+        for (const [k, d] of pairs(self_demons)) {
+            if (d.finish >= atTime && d.id == creatureId && !d.de) {
+                count = count + 1;
             }
         }
+        return count;
     }
-    return max;
+    GetDemonsCount(creatureId, atTime) {
+        let count = 0;
+        for (const [k, d] of pairs(self_demons)) {
+            if (d.finish >= atTime && d.id == creatureId) {
+                count = count + 1;
+            }
+        }
+        return count;
+    }
+    GetRemainingDemonDuration(creatureId, atTime) {
+        let max = 0;
+        for (const [k, d] of pairs(self_demons)) {
+            if (d.finish >= atTime && d.id == creatureId) {
+                let remaining = d.finish - atTime;
+                if (remaining > max) {
+                    max = remaining;
+                }
+            }
+        }
+        return max;
+    }
 }
+
+export const wildImpsState = new WildImpsState();
+OvaleState.RegisterState(wildImpsState);
 
 OvaleWildImps = new OvaleWildImpsClass();

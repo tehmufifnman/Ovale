@@ -1,8 +1,9 @@
 import { OvaleProfiler } from "./Profiler";
 import { Ovale } from "./Ovale";
-import { OvaleData } from "./Data";
+import { OvaleData, dataState } from "./Data";
 import { OvaleSpellBook }from "./SpellBook";
-import { OvaleState } from "./State";
+import { OvaleState, baseState, StateModule } from "./State";
+import { auraState } from "./Aura";
 
 let OvaleTotemBase = Ovale.NewModule("OvaleTotem", "AceEvent-3.0");
 export let OvaleTotem: OvaleTotemClass;
@@ -44,12 +45,10 @@ class OvaleTotemClass extends OvaleProfiler.RegisterProfiling(OvaleTotemBase) {
             this.RegisterEvent("PLAYER_TALENT_UPDATE", "Update");
             this.RegisterEvent("PLAYER_TOTEM_UPDATE", "Update");
             this.RegisterEvent("UPDATE_SHAPESHIFT_FORM", "Update");
-            OvaleState.RegisterState(this, this.statePrototype);
         }
     }
     OnDisable() {
         if (TOTEM_CLASS[Ovale.playerClass]) {
-            OvaleState.UnregisterState(this);
             this.UnregisterEvent("PLAYER_ENTERING_WORLD");
             this.UnregisterEvent("PLAYER_TALENT_UPDATE");
             this.UnregisterEvent("PLAYER_TOTEM_UPDATE");
@@ -60,185 +59,184 @@ class OvaleTotemClass extends OvaleProfiler.RegisterProfiling(OvaleTotemBase) {
         self_serial = self_serial + 1;
         Ovale.refreshNeeded[Ovale.playerGUID] = true;
     }
-// }
-// OvaleTotem.statePrototype = {
-// }
-// let statePrototype = OvaleTotem.statePrototype;
-// statePrototype.totem = undefined;
-// class OvaleTotem {
-    InitializeState(state) {
-        state.totem = {
-        }
+}
+class TotemState implements StateModule {
+    totem = undefined;
+    InitializeState() {
+        this.totem = {}
         for (let slot = 1; slot <= _MAX_TOTEMS; slot += 1) {
-            state.totem[slot] = {
-            }
+            this.totem[slot] = {}
         }
     }
-    CleanState(state) {
-        for (const [slot, totem] of _pairs(state.totem)) {
+    ResetState(){        
+    }
+    CleanState() {
+        for (const [slot, totem] of _pairs(this.totem)) {
             for (const [k] of _pairs(totem)) {
                 totem[k] = undefined;
             }
-            state.totem[slot] = undefined;
+            this.totem[slot] = undefined;
         }
     }
-    ApplySpellAfterCast(state, spellId, targetGUID, startCast, endCast, isChanneled, spellcast) {
-        this.StartProfiling("OvaleTotem_ApplySpellAfterCast");
+    ApplySpellAfterCast(spellId, targetGUID, startCast, endCast, isChanneled, spellcast) {
+        OvaleTotem.StartProfiling("OvaleTotem_ApplySpellAfterCast");
         if (Ovale.playerClass == "SHAMAN" && spellId == TOTEMIC_RECALL) {
-            for (const [slot] of _ipairs(state.totem)) {
-                state.DestroyTotem(slot, endCast);
+            for (const [slot] of _ipairs(this.totem)) {
+                this.DestroyTotem(slot, endCast);
             }
         } else {
             let atTime = endCast;
-            let slot = state.GetTotemSlot(spellId, atTime);
+            let slot = this.GetTotemSlot(spellId, atTime);
             if (slot) {
-                state.SummonTotem(spellId, slot, atTime);
+                this.SummonTotem(spellId, slot, atTime);
             }
         }
-        this.StopProfiling("OvaleTotem_ApplySpellAfterCast");
+        OvaleTotem.StopProfiling("OvaleTotem_ApplySpellAfterCast");
     }
-}
-statePrototype.IsActiveTotem = function (state, totem, atTime) {
-    atTime = atTime || state.currentTime;
-    let boolean = false;
-    if (totem && (totem.serial == self_serial) && totem.start && totem.duration && totem.start < atTime && atTime < totem.start + totem.duration) {
-        boolean = true;
-    }
-    return boolean;
-}
-statePrototype.GetTotem = function (state, slot) {
-    OvaleTotem.StartProfiling("OvaleTotem_state_GetTotem");
-    slot = TOTEM_SLOT[slot] || slot;
-    let totem = state.totem[slot];
-    if (totem && (!totem.serial || totem.serial < self_serial)) {
-        let [haveTotem, name, startTime, duration, icon] = API_GetTotemInfo(slot);
-        if (haveTotem) {
-            totem.name = name;
-            totem.start = startTime;
-            totem.duration = duration;
-            totem.icon = icon;
-        } else {
-            totem.name = "";
-            totem.start = 0;
-            totem.duration = 0;
-            totem.icon = "";
+
+    IsActiveTotem(totem, atTime?) {
+        atTime = atTime || baseState.currentTime;
+        let boolean = false;
+        if (totem && (totem.serial == self_serial) && totem.start && totem.duration && totem.start < atTime && atTime < totem.start + totem.duration) {
+            boolean = true;
         }
-        totem.serial = self_serial;
+        return boolean;
     }
-    OvaleTotem.StopProfiling("OvaleTotem_state_GetTotem");
-    return totem;
-}
-statePrototype.GetTotemInfo = function (state, slot) {
-    let [haveTotem, name, startTime, duration, icon];
-    slot = TOTEM_SLOT[slot] || slot;
-    let totem = state.GetTotem(slot);
-    if (totem) {
-        haveTotem = state.IsActiveTotem(totem);
-        name = totem.name;
-        startTime = totem.start;
-        duration = totem.duration;
-        icon = totem.icon;
-    }
-    return [haveTotem, name, startTime, duration, icon];
-}
-statePrototype.GetTotemCount = function (state, spellId, atTime) {
-    atTime = atTime || state.currentTime;
-    let [start, ending];
-    let count = 0;
-    let si = OvaleData.spellInfo[spellId];
-    if (si && si.totem) {
-        let buffPresent = true;
-        if (si.buff_totem) {
-            let aura = state.GetAura("player", si.buff_totem);
-            buffPresent = state.IsActiveAura(aura, atTime);
+    GetTotem(slot) {
+        OvaleTotem.StartProfiling("OvaleTotem_state_GetTotem");
+        slot = TOTEM_SLOT[slot] || slot;
+        let totem = this.totem[slot];
+        if (totem && (!totem.serial || totem.serial < self_serial)) {
+            let [haveTotem, name, startTime, duration, icon] = API_GetTotemInfo(slot);
+            if (haveTotem) {
+                totem.name = name;
+                totem.start = startTime;
+                totem.duration = duration;
+                totem.icon = icon;
+            } else {
+                totem.name = "";
+                totem.start = 0;
+                totem.duration = 0;
+                totem.icon = "";
+            }
+            totem.serial = self_serial;
         }
-        if (buffPresent) {
-            let texture = OvaleSpellBook.GetSpellTexture(spellId);
-            let maxTotems = si.max_totems || 1;
-            for (const [slot] of _ipairs(state.totem)) {
-                let totem = state.GetTotem(slot);
-                if (state.IsActiveTotem(totem, atTime) && totem.icon == texture) {
-                    count = count + 1;
-                    if (!start || start > totem.start) {
-                        start = totem.start;
+        OvaleTotem.StopProfiling("OvaleTotem_state_GetTotem");
+        return totem;
+    }
+    GetTotemInfo(slot) {
+        let haveTotem, name, startTime, duration, icon;
+        slot = TOTEM_SLOT[slot] || slot;
+        let totem = this.GetTotem(slot);
+        if (totem) {
+            haveTotem = this.IsActiveTotem(totem);
+            name = totem.name;
+            startTime = totem.start;
+            duration = totem.duration;
+            icon = totem.icon;
+        }
+        return [haveTotem, name, startTime, duration, icon];
+    }
+    GetTotemCount(spellId, atTime) {
+        atTime = atTime || baseState.currentTime;
+        let start, ending;
+        let count = 0;
+        let si = OvaleData.spellInfo[spellId];
+        if (si && si.totem) {
+            let buffPresent = true;
+            if (si.buff_totem) {
+                let aura = auraState.GetAura("player", si.buff_totem);
+                buffPresent = auraState.IsActiveAura(aura, atTime);
+            }
+            if (buffPresent) {
+                let texture = OvaleSpellBook.GetSpellTexture(spellId);
+                let maxTotems = si.max_totems || 1;
+                for (const [slot] of _ipairs(this.totem)) {
+                    let totem = this.GetTotem(slot);
+                    if (this.IsActiveTotem(totem, atTime) && totem.icon == texture) {
+                        count = count + 1;
+                        if (!start || start > totem.start) {
+                            start = totem.start;
+                        }
+                        if (!ending || ending < totem.start + totem.duration) {
+                            ending = totem.start + totem.duration;
+                        }
                     }
-                    if (!ending || ending < totem.start + totem.duration) {
-                        ending = totem.start + totem.duration;
-                    }
-                }
-                if (count >= maxTotems) {
-                    break;
-                }
-            }
-        }
-    }
-    return [count, start, ending];
-}
-statePrototype.GetTotemSlot = function (state, spellId, atTime) {
-    OvaleTotem.StartProfiling("OvaleTotem_state_GetTotemSlot");
-    atTime = atTime || state.currentTime;
-    let totemSlot;
-    let si = OvaleData.spellInfo[spellId];
-    if (si && si.totem) {
-        totemSlot = TOTEM_SLOT[si.totem];
-        if (!totemSlot) {
-            let availableSlot;
-            for (const [slot] of _ipairs(state.totem)) {
-                let totem = state.GetTotem(slot);
-                if (!state.IsActiveTotem(totem, atTime)) {
-                    availableSlot = slot;
-                    break;
-                }
-            }
-            let texture = OvaleSpellBook.GetSpellTexture(spellId);
-            let maxTotems = si.max_totems || 1;
-            let count = 0;
-            let start = INFINITY;
-            for (const [slot] of _ipairs(state.totem)) {
-                let totem = state.GetTotem(slot);
-                if (state.IsActiveTotem(totem, atTime) && totem.icon == texture) {
-                    count = count + 1;
-                    if (start > totem.start) {
-                        start = totem.start;
-                        totemSlot = slot;
+                    if (count >= maxTotems) {
+                        break;
                     }
                 }
             }
-            if (count < maxTotems) {
-                totemSlot = availableSlot;
-            }
         }
-        totemSlot = totemSlot || 1;
+        return [count, start, ending];
     }
-    OvaleTotem.StopProfiling("OvaleTotem_state_GetTotemSlot");
-    return totemSlot;
-}
-statePrototype.SummonTotem = function (state, spellId, slot, atTime) {
-    OvaleTotem.StartProfiling("OvaleTotem_state_SummonTotem");
-    atTime = atTime || state.currentTime;
-    slot = TOTEM_SLOT[slot] || slot;
-    state.Log("Spell %d summons totem into slot %d.", spellId, slot);
-    let [name, _, icon] = OvaleSpellBook.GetSpellInfo(spellId);
-    let duration = state.GetSpellInfoProperty(spellId, atTime, "duration");
-    let totem = state.totem[slot];
-    totem.name = name;
-    totem.start = atTime;
-    totem.duration = duration || 15;
-    totem.icon = icon;
-    OvaleTotem.StopProfiling("OvaleTotem_state_SummonTotem");
-}
-statePrototype.DestroyTotem = function (state, slot, atTime) {
-    OvaleTotem.StartProfiling("OvaleTotem_state_DestroyTotem");
-    atTime = atTime || state.currentTime;
-    slot = TOTEM_SLOT[slot] || slot;
-    state.Log("Destroying totem in slot %d.", slot);
-    let totem = state.totem[slot];
-    let duration = atTime - totem.start;
-    if (duration < 0) {
-        duration = 0;
+    GetTotemSlot(spellId, atTime) {
+        OvaleTotem.StartProfiling("OvaleTotem_state_GetTotemSlot");
+        atTime = atTime || baseState.currentTime;
+        let totemSlot;
+        let si = OvaleData.spellInfo[spellId];
+        if (si && si.totem) {
+            totemSlot = TOTEM_SLOT[si.totem];
+            if (!totemSlot) {
+                let availableSlot;
+                for (const [slot] of _ipairs(this.totem)) {
+                    let totem = this.GetTotem(slot);
+                    if (!this.IsActiveTotem(totem, atTime)) {
+                        availableSlot = slot;
+                        break;
+                    }
+                }
+                let texture = OvaleSpellBook.GetSpellTexture(spellId);
+                let maxTotems = si.max_totems || 1;
+                let count = 0;
+                let start = INFINITY;
+                for (const [slot] of _ipairs(this.totem)) {
+                    let totem = this.GetTotem(slot);
+                    if (this.IsActiveTotem(totem, atTime) && totem.icon == texture) {
+                        count = count + 1;
+                        if (start > totem.start) {
+                            start = totem.start;
+                            totemSlot = slot;
+                        }
+                    }
+                }
+                if (count < maxTotems) {
+                    totemSlot = availableSlot;
+                }
+            }
+            totemSlot = totemSlot || 1;
+        }
+        OvaleTotem.StopProfiling("OvaleTotem_state_GetTotemSlot");
+        return totemSlot;
     }
-    totem.duration = duration;
-    OvaleTotem.StopProfiling("OvaleTotem_state_DestroyTotem");
+    SummonTotem(spellId, slot, atTime) {
+        OvaleTotem.StartProfiling("OvaleTotem_state_SummonTotem");
+        atTime = atTime || baseState.currentTime;
+        slot = TOTEM_SLOT[slot] || slot;
+        let [name, _, icon] = OvaleSpellBook.GetSpellInfo(spellId);
+        let duration = dataState.GetSpellInfoProperty(spellId, atTime, "duration");
+        let totem = this.totem[slot];
+        totem.name = name;
+        totem.start = atTime;
+        totem.duration = duration || 15;
+        totem.icon = icon;
+        OvaleTotem.StopProfiling("OvaleTotem_state_SummonTotem");
+    }
+    DestroyTotem(slot, atTime) {
+        OvaleTotem.StartProfiling("OvaleTotem_state_DestroyTotem");
+        atTime = atTime || baseState.currentTime;
+        slot = TOTEM_SLOT[slot] || slot;
+        let totem = this.totem[slot];
+        let duration = atTime - totem.start;
+        if (duration < 0) {
+            duration = 0;
+        }
+        totem.duration = duration;
+        OvaleTotem.StopProfiling("OvaleTotem_state_DestroyTotem");
+    }
 }
+
+export const totemState = new TotemState();
+OvaleState.RegisterState(totemState);
 
 OvaleTotem = new OvaleTotemClass();
