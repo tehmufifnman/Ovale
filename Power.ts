@@ -328,7 +328,7 @@ class OvalePowerClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Registe
         Ovale.refreshNeeded[self_playerGUID] = true;
         this.StopProfiling("OvalePower_UpdatePowerType");
     }
-    GetSpellCost(spellId, powerType) {
+    GetSpellCost(spellId, powerType?) {
         this.StartProfiling("OvalePower_GetSpellCost");
         let spellPowerCost = API_GetSpellPowerCost(spellId)[1];
         if (spellPowerCost) {

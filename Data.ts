@@ -1,7 +1,7 @@
 import { Ovale } from "./Ovale";
 import { OvaleGUID } from "./GUID";
 import { OvalePaperDoll } from "./PaperDoll";
-import { OvaleState, StateModule } from "./State";
+import { OvaleState, StateModule, baseState } from "./State";
 import { OvaleDebug } from "./Debug";
 let OvaleDataBase = Ovale.NewModule("OvaleData");
 let format = string.format;
@@ -485,7 +485,7 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
         return value;
     }
     GetSpellInfoProperty(spellId, atTime, property, targetGUID) {
-        targetGUID = targetGUID || OvaleGUID.UnitGUID(this.defaultTarget || "target");
+        targetGUID = targetGUID || OvaleGUID.UnitGUID(baseState.defaultTarget || "target");
         let si = this.spellInfo[spellId];
         let value = si && si[property];
         let requirements = si && si.require[property];
@@ -554,7 +554,7 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
         }
         return damage;
     }
-    GetBaseDuration(auraId, spellcast) {
+    GetBaseDuration(auraId, spellcast?) {
         let combo = spellcast && spellcast.combo;
         let holy = spellcast && spellcast.holy;
         let duration = INFINITY;
@@ -611,8 +611,7 @@ class DataState implements StateModule {
     }
     GetSpellInfoProperty(spellId, atTime, property, targetGUID) {
         return OvaleData.GetSpellInfoProperty(spellId, atTime, property, targetGUID);
-    } 
-    
+    }    
 }
 
 export const dataState = new DataState();

@@ -141,7 +141,7 @@ class OvaleHealthClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regist
         }
         this.StopProfiling("OvaleHealth_UpdateHealth");
     }
-    UnitHealth(unitId, guid) {
+    UnitHealth(unitId: string, guid?: string) {
         let amount;
         if (unitId) {
             guid = guid || OvaleGUID.UnitGUID(unitId);
@@ -158,7 +158,7 @@ class OvaleHealthClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regist
         }
         return amount;
     }
-    UnitHealthMax(unitId, guid) {
+    UnitHealthMax(unitId: string, guid?:string) {
         let amount;
         if (unitId) {
             guid = guid || OvaleGUID.UnitGUID(unitId);
@@ -175,7 +175,7 @@ class OvaleHealthClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regist
         }
         return amount;
     }
-    UnitTimeToDie(unitId, guid) {
+    UnitTimeToDie(unitId: string, guid?: string) {
         this.StartProfiling("OvaleHealth_UnitTimeToDie");
         let timeToDie = INFINITY;
         guid = guid || OvaleGUID.UnitGUID(unitId);

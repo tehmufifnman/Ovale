@@ -1,5 +1,6 @@
 declare module "LibRangeCheck-2.0" {
-    export default class LibRangeCheck {
-
+    const LibRangeCheck: {
+        GetRange(target: string):number;
     }
+    export default LibRangeCheck;
 }

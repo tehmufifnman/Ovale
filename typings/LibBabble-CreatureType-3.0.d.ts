@@ -1,5 +1,6 @@
 declare module "LibBabble-CreatureType-3.0" {
-    export default class LibBabbleCreatureType {
-        GetLookupTable();
-    }
+    const LibBabbleCreatureType: {
+        GetLookupTable()
+    };
+    export default LibBabbleCreatureType;
 }

@@ -10,7 +10,7 @@ let tconcat = table.concat;
 
 
 let OvaleArtifactBase = Ovale.NewModule("OvaleArtifact", "AceEvent-3.0");
-class OvaleArtifact extends OvaleDebug.RegisterDebugging(OvaleArtifactBase) {
+class OvaleArtifactClass extends OvaleDebug.RegisterDebugging(OvaleArtifactBase) {
     self_traits = {}
 
     debugOptions = {
@@ -88,3 +88,5 @@ class OvaleArtifact extends OvaleDebug.RegisterDebugging(OvaleArtifactBase) {
         return tconcat(this.output, "\n");
     }
 }
+
+export const OvaleArtifact = new OvaleArtifactClass();

@@ -1,5 +1,3 @@
-import __addon from "addon";
-let [OVALE, Addon] = __addon;
 import LibBabbleCreatureType from "LibBabble-CreatureType-3.0";
 import LibRangeCheck from "LibRangeCheck-2.0";
 import { OvaleBestAction } from "./BestAction";
@@ -457,9 +455,9 @@ const GetHastedTime = function(seconds, haste, state) {
             castSpellId = state.currentSpellId;
             castSpellName = OvaleSpellBook.GetSpellName(castSpellId);
         } else {
-            let [spellName, _, _, _, startTime, endTime] = API_UnitCastingInfo(target);
+            let [spellName, _1, _2, _3, startTime, endTime] = API_UnitCastingInfo(target);
             if (!spellName) {
-                [spellName, _, _, _, startTime, endTime] = API_UnitChannelInfo(target);
+                [spellName, _1, _2, _3, startTime, endTime] = API_UnitChannelInfo(target);
             }
             if (spellName) {
                 castSpellName = spellName;
@@ -676,7 +674,7 @@ const GetHastedTime = function(seconds, haste, state) {
     let BLOOD_PLAGUE_DEBUFF = 55078;
     let FROST_FEVER_DEBUFF = 55095;
     const GetDiseases = function(target, state) {
-        let [npAura, bpAura, ffAura];
+        let npAura, bpAura, ffAura;
         let talented = (OvaleSpellBook.GetTalentPoints(NECROTIC_PLAGUE_TALENT) > 0);
         if (talented) {
             npAura = state.GetAura(target, NECROTIC_PLAGUE_DEBUFF, "HARMFUL", true);
@@ -705,7 +703,7 @@ const GetHastedTime = function(seconds, haste, state) {
     const DiseasesTicking = function(positionalParams, namedParams, state, atTime) {
         let [target, filter, mine] = ParseCondition(positionalParams, namedParams, state);
         let [talented, npAura, bpAura, ffAura] = GetDiseases(target, state);
-        let [gain, start, ending];
+        let gain, start, ending;
         if (talented && npAura) {
             [gain, start, ending] = [npAura.gain, npAura.start, npAura.ending];
         } else if (!talented && bpAura && ffAura) {
@@ -745,7 +743,7 @@ const GetHastedTime = function(seconds, haste, state) {
 {
     const Distance = function(positionalParams, namedParams, state, atTime) {
         let [comparator, limit] = [positionalParams[1], positionalParams[2]];
-        let target = ParseCondition(positionalParams, namedParams, state);
+        let [target] = ParseCondition(positionalParams, namedParams, state);
         let value = LibRangeCheck && LibRangeCheck.GetRange(target) || 0;
         return Compare(value, comparator, limit);
     }
@@ -997,7 +995,7 @@ const GetHastedTime = function(seconds, haste, state) {
 {
     const Health = function(positionalParams, namedParams, state, atTime) {
         let [comparator, limit] = [positionalParams[1], positionalParams[2]];
-        let target = ParseCondition(positionalParams, namedParams, state);
+        let [target] = ParseCondition(positionalParams, namedParams, state);
         let health = OvaleHealth.UnitHealth(target) || 0;
         if (health > 0) {
             let now = API_GetTime();
@@ -1012,7 +1010,7 @@ const GetHastedTime = function(seconds, haste, state) {
     OvaleCondition.RegisterCondition("life", false, Health);
     const HealthMissing = function(positionalParams, namedParams, state, atTime) {
         let [comparator, limit] = [positionalParams[1], positionalParams[2]];
-        let target = ParseCondition(positionalParams, namedParams, state);
+        let [target] = ParseCondition(positionalParams, namedParams, state);
         let health = OvaleHealth.UnitHealth(target) || 0;
         let maxHealth = OvaleHealth.UnitHealthMax(target) || 1;
         if (health > 0) {
@@ -1029,7 +1027,7 @@ const GetHastedTime = function(seconds, haste, state) {
     OvaleCondition.RegisterCondition("lifemissing", false, HealthMissing);
     const HealthPercent = function(positionalParams, namedParams, state, atTime) {
         let [comparator, limit] = [positionalParams[1], positionalParams[2]];
-        let target = ParseCondition(positionalParams, namedParams, state);
+        let [target] = ParseCondition(positionalParams, namedParams, state);
         let health = OvaleHealth.UnitHealth(target) || 0;
         if (health > 0) {
             let now = API_GetTime();
@@ -1046,14 +1044,14 @@ const GetHastedTime = function(seconds, haste, state) {
     OvaleCondition.RegisterCondition("lifepercent", false, HealthPercent);
     const MaxHealth = function(positionalParams, namedParams, state, atTime) {
         let [comparator, limit] = [positionalParams[1], positionalParams[2]];
-        let target = ParseCondition(positionalParams, namedParams, state);
+        let [target] = ParseCondition(positionalParams, namedParams, state);
         let value = OvaleHealth.UnitHealthMax(target);
         return Compare(value, comparator, limit);
     }
     OvaleCondition.RegisterCondition("maxhealth", false, MaxHealth);
     const TimeToDie = function(positionalParams, namedParams, state, atTime) {
         let [comparator, limit] = [positionalParams[1], positionalParams[2]];
-        let target = ParseCondition(positionalParams, namedParams, state);
+        let [target] = ParseCondition(positionalParams, namedParams, state);
         let now = API_GetTime();
         let timeToDie = OvaleHealth.UnitTimeToDie(target);
         let [value, origin, rate] = [timeToDie, now, -1];
@@ -1064,7 +1062,7 @@ const GetHastedTime = function(seconds, haste, state) {
     OvaleCondition.RegisterCondition("timetodie", false, TimeToDie);
     const TimeToHealthPercent = function(positionalParams, namedParams, state, atTime) {
         let [percent, comparator, limit] = [positionalParams[1], positionalParams[2], positionalParams[3]];
-        let target = ParseCondition(positionalParams, namedParams, state);
+        let [target] = ParseCondition(positionalParams, namedParams, state);
         let health = OvaleHealth.UnitHealth(target) || 0;
         if (health > 0) {
             let maxHealth = OvaleHealth.UnitHealthMax(target) || 1;

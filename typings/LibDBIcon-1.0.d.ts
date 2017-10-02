@@ -1,5 +1,5 @@
 interface LibDBIcon {
-    Register(addon:string, broker, minimap:boolean);
+    Register(addon:string, broker, data:any);
     Refresh(OVALE, minimap);
     Hide(OVALE)
     Show(OVALE)

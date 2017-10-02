@@ -1,6 +1,6 @@
 import { Ovale } from "./Ovale";
 import { OvaleDebug } from "./Debug";
-import { OvaleState } from "./State";
+import { OvaleState, StateModule } from "./State";
 
 let OvaleDemonHunterSoulFragmentsBase = Ovale.NewModule("OvaleDemonHunterSoulFragments", "AceEvent-3.0");
 export let OvaleDemonHunterSoulFragments: OvaleDemonHunterSoulFragmentsClass;
@@ -18,10 +18,16 @@ let SOUL_FRAGMENT_FINISHERS = {
     [247454]: true,
     [227225]: true
 }
+
+interface SoulFragments {
+    timestamp: number;
+    fragments: number;
+}
+
 class OvaleDemonHunterSoulFragmentsClass extends OvaleDebug.RegisterDebugging(OvaleDemonHunterSoulFragmentsBase) {
-    last_checked;
-    soul_fragments;
-    last_soul_fragment_count;
+    last_checked: number;
+    soul_fragments: LuaArray<SoulFragments>;
+    last_soul_fragment_count:SoulFragments;
 
     OnInitialize() {
         this.SetCurrentSoulFragments(0);
@@ -31,12 +37,10 @@ class OvaleDemonHunterSoulFragmentsClass extends OvaleDebug.RegisterDebugging(Ov
             this.RegisterEvent("PLAYER_REGEN_ENABLED");
             this.RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
             this.RegisterEvent("PLAYER_REGEN_DISABLED");
-            OvaleState.RegisterState(this, this.statePrototype);
         }
     }
     OnDisable() {
         if (Ovale.playerClass == "DEMONHUNTER") {
-            OvaleState.UnregisterState(this);
             this.UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
             this.UnregisterEvent("PLAYER_REGEN_ENABLED");
             this.UnregisterEvent("PLAYER_REGEN_DISABLED");
@@ -52,7 +56,7 @@ class OvaleDemonHunterSoulFragmentsClass extends OvaleDebug.RegisterDebugging(Ov
         this.SetCurrentSoulFragments();
     }
 
-    COMBAT_LOG_EVENT_UNFILTERED(event, _, subtype, _, sourceGUID, _, _, _, _, _, _, _, spellID, spellName) {
+    COMBAT_LOG_EVENT_UNFILTERED(event, _2, subtype, _4, sourceGUID, _6, _7, _8, _9, _10, _11, _12, spellID, spellName) {
         let me = Ovale.playerGUID;
         if (sourceGUID == me) {
             let current_sould_fragment_count = this.last_soul_fragment_count;
@@ -83,9 +87,9 @@ class OvaleDemonHunterSoulFragmentsClass extends OvaleDebug.RegisterDebugging(Ov
             count = 0;
         }
         if (this.last_soul_fragment_count == undefined || this.last_soul_fragment_count.fragments != count) {
-            let entry = {
-                ["timestamp"]: now,
-                ["fragments"]: count
+            let entry:SoulFragments = {
+                timestamp: now,
+                fragments: count
             }
             this.Debug("Setting current soul fragment count to '%d' (at: %s)", entry.fragments, entry.timestamp);
             this.last_soul_fragment_count = entry;
@@ -97,21 +101,10 @@ class OvaleDemonHunterSoulFragmentsClass extends OvaleDebug.RegisterDebugging(Ov
         // print("Time:" + this.last_soul_fragment_count["timestamp"]);
     }
 }
-OvaleDemonHunterSoulFragments.statePrototype = {
-}
-let statePrototype = OvaleDemonHunterSoulFragments.statePrototype;
-statePrototype.SoulFragments = function (state, atTime) {
-    for (const [k, v] of spairs(OvaleDemonHunterSoulFragments.soul_fragments, function (t, a, b) {
-        return t[a]["timestamp"] > t[b]["timestamp"];
-    })) {
-        if ((atTime >= v["timestamp"])) {
-            return v["fragments"];
-        }
-    }
-    return (OvaleDemonHunterSoulFragments.last_soul_fragment_count != undefined && OvaleDemonHunterSoulFragments.last_soul_fragment_count.fragments) || 0;
-}
-function spairs(t, order) {
-    let keys = {
+
+
+const spairs = function<T>(t:LuaObj<T>, order:(t: LuaObj<T>, a: string, b: string) => boolean) {
+    let keys:LuaArray<string> = {
     }
     for (const [k] of pairs(t)) {
         keys[lualength(keys) + 1] = k;
@@ -131,3 +124,28 @@ function spairs(t, order) {
         }
     };
 }
+
+class DemonHunterSoulFragmentsState implements StateModule {
+    CleanState(): void {
+    }
+    InitializeState(): void {
+    }
+    ResetState(): void {
+    }
+    SoulFragments(atTime: number) {
+        let currentTime:number = undefined;
+        let count: number = undefined;
+        for (const [k, v] of pairs(OvaleDemonHunterSoulFragments.soul_fragments)) {
+            if (v.timestamp >= atTime && (currentTime == undefined || v.timestamp < currentTime)) {
+                currentTime = v.timestamp;
+                count = v.fragments;
+            }
+        }
+        if (count) return count;
+        return (OvaleDemonHunterSoulFragments.last_soul_fragment_count != undefined && OvaleDemonHunterSoulFragments.last_soul_fragment_count.fragments) || 0;
+    }
+
+}
+
+export const demonHunterSoulFragmentsState = new DemonHunterSoulFragmentsState();
+OvaleState.RegisterState(demonHunterSoulFragmentsState);

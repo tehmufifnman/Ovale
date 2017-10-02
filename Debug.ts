@@ -1,12 +1,10 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvaleDebugBase = Ovale.NewModule("OvaleDebug", "AceTimer-3.0");
 import AceConfig from "AceConfig-3.0";
 import AceConfigDialog from "AceConfigDialog-3.0";
 import { L } from "./Localization";
 import LibTextDump from "LibTextDump-1.0";
 import { OvaleOptions } from "./Options";
-import { Constructor, MakeString } from "./Ovale";
+import { Constructor, MakeString, Ovale } from "./Ovale";
+let OvaleDebugBase = Ovale.NewModule("OvaleDebug", "AceTimer-3.0");
 let format = string.format;
 let gmatch = string.gmatch;
 let gsub = string.gsub;
@@ -25,7 +23,7 @@ let OVALE_TRACELOG_MAXLINES = 4096;
 
 class OvaleDebugClass extends OvaleDebugBase {
     options = {
-        name: OVALE + " " + L["Debug"],
+        name: Ovale.GetName() + " " + L["Debug"],
         type: "group",
         args: {
             toggles: {
@@ -97,10 +95,10 @@ class OvaleDebugClass extends OvaleDebugBase {
     OnInitialize() {
         let appName = this.GetName();
         AceConfig.RegisterOptionsTable(appName, this.options);
-        AceConfigDialog.AddToBlizOptions(appName, L["Debug"], OVALE);
+        AceConfigDialog.AddToBlizOptions(appName, L["Debug"], Ovale.GetName());
     }
     OnEnable() {
-        self_traceLog = LibTextDump.New(OVALE + " - " + L["Trace Log"], 750, 500);
+        self_traceLog = LibTextDump.New(Ovale.GetName() + " - " + L["Trace Log"], 750, 500);
     }
     DoTrace(displayLog) {
         self_traceLog.Clear();

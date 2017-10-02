@@ -89,3 +89,5 @@ class OvaleDemonHunterDemonicClass extends OvaleDebug.RegisterDebugging(OvaleDem
         OvaleAura.LostAuraOnGUID(this.playerGUID, now, HIDDEN_BUFF_ID, this.playerGUID);
     }
 }
+
+OvaleDemonHunterDemonic = new OvaleDemonHunterDemonicClass();

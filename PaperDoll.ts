@@ -5,7 +5,7 @@ import { Ovale } from "./Ovale";
 import { OvaleEquipment } from "./Equipment";
 import { OvaleFuture } from "./Future";
 import { OvaleStance } from "./Stance";
-import { OvaleState } from "./State";
+import { OvaleState, StateModule } from "./State";
 
 let OvalePaperDollBase = Ovale.NewModule("OvalePaperDoll", "AceEvent-3.0");
 export let OvalePaperDoll: OvalePaperDollClass;
@@ -207,10 +207,8 @@ class OvalePaperDollClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
         this.RegisterMessage("Ovale_StanceChanged", "UpdateDamage");
         this.RegisterMessage("Ovale_TalentsChanged", "UpdateStats");
         OvaleFuture.RegisterSpellcastInfo(this);
-        OvaleState.RegisterState(this, this.statePrototype);
     }
     OnDisable() {
-        OvaleState.UnregisterState(this);
         OvaleFuture.UnregisterSpellcastInfo(this);
         this.UnregisterEvent("COMBAT_RATING_UPDATE");
         this.UnregisterEvent("MASTERY_UPDATE");
@@ -430,7 +428,7 @@ class OvalePaperDollClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
         }
         return false;
     }
-    GetMasteryMultiplier(snapshot) {
+    GetMasteryMultiplier(snapshot?) {
         snapshot = snapshot || this;
         return 1 + snapshot.masteryEffect / 100;
     }
@@ -438,11 +436,11 @@ class OvalePaperDollClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
         snapshot = snapshot || this;
         return 1 + snapshot.meleeHaste / 100;
     }
-    GetRangedHasteMultiplier(snapshot) {
+    GetRangedHasteMultiplier(snapshot?) {
         snapshot = snapshot || this;
         return 1 + snapshot.rangedHaste / 100;
     }
-    GetSpellHasteMultiplier(snapshot) {
+    GetSpellHasteMultiplier(snapshot?) {
         snapshot = snapshot || this;
         return 1 + snapshot.spellHaste / 100;
     }
@@ -475,80 +473,97 @@ class OvalePaperDollClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
         this.UpdateSnapshot(spellcast, true);
     }
 }
-OvalePaperDoll.statePrototype = {
-}
-let statePrototype = OvalePaperDoll.statePrototype;
-statePrototype.class = undefined;
-statePrototype.level = undefined;
-statePrototype.specialization = undefined;
-statePrototype.snapshotTime = undefined;
-statePrototype.agility = undefined;
-statePrototype.intellect = undefined;
-statePrototype.spirit = undefined;
-statePrototype.stamina = undefined;
-statePrototype.strength = undefined;
-statePrototype.attackPower = undefined;
-statePrototype.rangedAttackPower = undefined;
-statePrototype.spellBonusDamage = undefined;
-statePrototype.spellBonusHealing = undefined;
-statePrototype.masteryEffect = undefined;
-statePrototype.meleeCrit = undefined;
-statePrototype.meleeHaste = undefined;
-statePrototype.rangedCrit = undefined;
-statePrototype.rangedHaste = undefined;
-statePrototype.spellCrit = undefined;
-statePrototype.spellHaste = undefined;
-statePrototype.multistrike = undefined;
-statePrototype.critRating = undefined;
-statePrototype.hasteRating = undefined;
-statePrototype.masteryRating = undefined;
-statePrototype.multistrikeRating = undefined;
-statePrototype.mainHandWeaponDamage = undefined;
-statePrototype.offHandWeaponDamage = undefined;
-statePrototype.baseDamageMultiplier = undefined;
-class OvalePaperDoll {
-    InitializeState(state) {
-        state.class = undefined;
-        state.level = undefined;
-        state.specialization = undefined;
-        state.snapshotTime = 0;
-        state.agility = 0;
-        state.intellect = 0;
-        state.spirit = 0;
-        state.stamina = 0;
-        state.strength = 0;
-        state.attackPower = 0;
-        state.rangedAttackPower = 0;
-        state.spellBonusDamage = 0;
-        state.spellBonusHealing = 0;
-        state.masteryEffect = 0;
-        state.meleeCrit = 0;
-        state.meleeHaste = 0;
-        state.rangedCrit = 0;
-        state.rangedHaste = 0;
-        state.spellCrit = 0;
-        state.spellHaste = 0;
-        state.multistrike = 0;
-        state.critRating = 0;
-        state.hasteRating = 0;
-        state.masteryRating = 0;
-        state.multistrikeRating = 0;
-        state.mainHandWeaponDamage = 0;
-        state.offHandWeaponDamage = 0;
-        state.baseDamageMultiplier = 1;
+class PaperDollState implements StateModule {
+    class = undefined;
+    level = undefined;
+    specialization = undefined;
+    snapshotTime = undefined;
+    agility = undefined;
+    intellect = undefined;
+    spirit = undefined;
+    stamina = undefined;
+    strength = undefined;
+    attackPower = undefined;
+    rangedAttackPower = undefined;
+    spellBonusDamage = undefined;
+    spellBonusHealing = undefined;
+    masteryEffect = undefined;
+    meleeCrit = undefined;
+    meleeHaste = undefined;
+    rangedCrit = undefined;
+    rangedHaste = undefined;
+    spellCrit = undefined;
+    spellHaste = undefined;
+    multistrike = undefined;
+    critRating = undefined;
+    hasteRating = undefined;
+    masteryRating = undefined;
+    multistrikeRating = undefined;
+    mainHandWeaponDamage = undefined;
+    offHandWeaponDamage = undefined;
+    baseDamageMultiplier = undefined;
+    
+    InitializeState() {
+        this.class = undefined;
+        this.level = undefined;
+        this.specialization = undefined;
+        this.snapshotTime = 0;
+        this.agility = 0;
+        this.intellect = 0;
+        this.spirit = 0;
+        this.stamina = 0;
+        this.strength = 0;
+        this.attackPower = 0;
+        this.rangedAttackPower = 0;
+        this.spellBonusDamage = 0;
+        this.spellBonusHealing = 0;
+        this.masteryEffect = 0;
+        this.meleeCrit = 0;
+        this.meleeHaste = 0;
+        this.rangedCrit = 0;
+        this.rangedHaste = 0;
+        this.spellCrit = 0;
+        this.spellHaste = 0;
+        this.multistrike = 0;
+        this.critRating = 0;
+        this.hasteRating = 0;
+        this.masteryRating = 0;
+        this.multistrikeRating = 0;
+        this.mainHandWeaponDamage = 0;
+        this.offHandWeaponDamage = 0;
+        this.baseDamageMultiplier = 1;
     }
-    ResetState(state) {
-        state.class = this.class;
-        state.level = this.level;
-        state.specialization = this.specialization;
-        this.UpdateSnapshot(state, true);
+    CleanState(): void {
+    }
+
+    ResetState() {
+        this.class = this.class;
+        this.level = this.level;
+        this.specialization = this.specialization;
+        this.UpdateSnapshot(this, true);
+    }
+
+    GetMasteryMultiplier(snapshot) {
+        return OvalePaperDoll.GetMasteryMultiplier(snapshot);
+    }
+    GetMeleeHasteMultiplier(snapshot) {
+        return OvalePaperDoll.GetMeleeHasteMultiplier(snapshot);
+    }
+    GetRangedHasteMultiplier(snapshot) {
+        return OvalePaperDoll.GetRangedHasteMultiplier(snapshot);
+    }
+    GetSpellHasteMultiplier(snapshot) {
+        return OvalePaperDoll.GetSpellHasteMultiplier(snapshot);
+    }
+    GetHasteMultiplier(haste, snapshot?) {
+        return OvalePaperDoll.GetHasteMultiplier(haste, snapshot);
+    }
+    UpdateSnapshot(target, snapshot, updateAllStats?) {
+        OvalePaperDoll.UpdateSnapshot(target, snapshot, updateAllStats);
     }
 }
-statePrototype.GetMasteryMultiplier = OvalePaperDoll.GetMasteryMultiplier;
-statePrototype.GetMeleeHasteMultiplier = OvalePaperDoll.GetMeleeHasteMultiplier;
-statePrototype.GetRangedHasteMultiplier = OvalePaperDoll.GetRangedHasteMultiplier;
-statePrototype.GetSpellHasteMultiplier = OvalePaperDoll.GetSpellHasteMultiplier;
-statePrototype.GetHasteMultiplier = OvalePaperDoll.GetHasteMultiplier;
-statePrototype.UpdateSnapshot = OvalePaperDoll.UpdateSnapshot;
+
+export const paperDollState = new PaperDollState();
+OvaleState.RegisterState(paperDollState);
 
 OvalePaperDoll = new OvalePaperDollClass();

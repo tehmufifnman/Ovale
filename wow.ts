@@ -307,6 +307,8 @@ interface UICheckButton extends UIFrame {
     SetChecked(checked: boolean):void;
 }
 
+interface UIGameTooltip extends UIFrame {}
+
 interface UITexture extends UIFrame {
     SetTexture(r, g, b):void;
 }
@@ -471,9 +473,10 @@ function UnitIsUnit(unit1: string, unit2: string){ return true}
 function UnitPowerMax(unit: string, power: number, segment: number){}
 function UnitRace(unit: string):any[]{return undefined}
 function UnitStagger(unit: string){return 0}
-function GetSpellCharges() {}
+function GetSpellCharges(spellId: number) {return []}
 function GetSpellCooldown(type, book?):[number, number, boolean]{ return [0, 0, false]}
 function GetLocale() { return "en-US"}
+function CreateFrame(type:"GameTooltip", id:string, parent?:UIFrame, template?:string):UIGameTooltip;
 function CreateFrame(type:"CheckButton", id:string, parent?:UIFrame, template?:string):UICheckButton;
 function CreateFrame(type:"Frame", id:string, parent?:UIFrame, template?:string):UIFrame;
 function CreateFrame(type:string, id:string, parent?:UIFrame, template?:string):UIFrame { return undefined}
@@ -631,3 +634,8 @@ var EARTH_TOTEM_SLOT = 2;
 var FIRE_TOTEM_SLOT = 3;
 var WATER_TOTEM_SLOT = 4;
 var MAX_TOTEMS = 3;
+
+var COMBATLOG_OBJECT_AFFILIATION_MINE = 1;
+var COMBATLOG_OBJECT_AFFILIATION_PARTY = 2;
+var COMBATLOG_OBJECT_AFFILIATION_RAID = 3;
+var COMBATLOG_OBJECT_REACTION_FRIENDLY = 4;

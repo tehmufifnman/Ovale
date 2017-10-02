@@ -128,6 +128,9 @@ export interface OvaleDb {
                 threshold?: number,
                 size?: number,
                 brightness?: number,
+            },
+            minimap: {
+                hide: boolean
             }
         }
     },

@@ -40,7 +40,7 @@ let _INVSLOT_TRINKET2 = INVSLOT_TRINKET2;
 let _INVSLOT_WAIST = INVSLOT_WAIST;
 let _INVSLOT_WRIST = INVSLOT_WRIST;
 
-let self_tooltip = undefined;
+let self_tooltip: UITooltip = undefined;
 let OVALE_ITEM_LEVEL_PATTERN = "^" + strgsub(ITEM_LEVEL, "%%d", "(%%d+)");
 let OVALE_SLOTNAME = {
     AmmoSlot: _INVSLOT_AMMO,
@@ -1483,7 +1483,7 @@ class OvaleEquipmentClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
     GetEquippedTrinkets() {
         return [this.equippedItems[_INVSLOT_TRINKET1], this.equippedItems[_INVSLOT_TRINKET2]];
     }
-    HasEquippedItem(itemId, slot, ...__args) {
+    HasEquippedItem(itemId, slot?, ...__args) {
         if ((slot != undefined)) {
             let slotId = slot;
             if (_type(slotId) != "number") {

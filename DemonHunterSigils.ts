@@ -2,7 +2,7 @@ import { OvaleProfiler } from "./Profiler";
 import { Ovale } from "./Ovale";
 import { OvalePaperDoll } from "./PaperDoll";
 import { OvaleSpellBook } from "./SpellBook";
-import { OvaleState } from "./State";
+import { OvaleState, StateModule, baseState } from "./State";
 let OvaleSigilBase = Ovale.NewModule("OvaleSigil", "AceEvent-3.0");
 export let OvaleSigil: OvaleSigilClass;
 let _ipairs = ipairs;
@@ -11,7 +11,7 @@ let tremove = table.remove;
 let API_GetTime = GetTime;
 let UPDATE_DELAY = 0.5;
 let SIGIL_ACTIVATION_TIME = math.huge;
-let activated_sigils = {
+let activated_sigils: LuaObj<LuaArray<number>> = {
 }
 let sigil_start = {
     [204596]: {
@@ -60,7 +60,6 @@ class OvaleSigilClass extends OvaleProfiler.RegisterProfiling(OvaleSigilBase) {
     OnEnable() {
         if (Ovale.playerClass == "DEMONHUNTER") {
             this.RegisterEvent("UNIT_SPELLCAST_SUCCEEDED");
-            OvaleState.RegisterState(this, this.statePrototype);
         }
     }
     OnDisable() {
@@ -93,22 +92,30 @@ class OvaleSigilClass extends OvaleProfiler.RegisterProfiling(OvaleSigilBase) {
         }
     }
 }
-OvaleSigil.statePrototype = {
-}
-let statePrototype = OvaleSigil.statePrototype;
-statePrototype.IsSigilCharging = function (state, type, atTime) {
-    atTime = atTime || state.currentTime;
-    if ((lualength(activated_sigils[type]) == 0)) {
-        return false;
+
+class SigilState implements StateModule {
+    CleanState(): void {
     }
-    let charging = false;
-    for (const [_, v] of _ipairs(activated_sigils[type])) {
-        let activation_time = SIGIL_ACTIVATION_TIME + UPDATE_DELAY;
-        if ((OvaleSpellBook.GetTalentPoints(QUICKENED_SIGILS_TALENT) > 0)) {
-            activation_time = activation_time - 1;
+    InitializeState(): void {
+    }
+    ResetState(): void {
+    }
+    IsSigilCharging(type, atTime) {
+        atTime = atTime || baseState.currentTime;
+        if ((lualength(activated_sigils[type]) == 0)) {
+            return false;
         }
-        charging = charging || atTime < v + activation_time;
+        let charging = false;
+        for (const [_, v] of _ipairs(activated_sigils[type])) {
+            let activation_time = SIGIL_ACTIVATION_TIME + UPDATE_DELAY;
+            if ((OvaleSpellBook.GetTalentPoints(QUICKENED_SIGILS_TALENT) > 0)) {
+                activation_time = activation_time - 1;
+            }
+            charging = charging || atTime < v + activation_time;
+        }
+        return charging;
     }
-    return charging;
 }
 OvaleSigil = new OvaleSigilClass();
+export const sigilState = new SigilState();
+OvaleState.RegisterState(sigilState);

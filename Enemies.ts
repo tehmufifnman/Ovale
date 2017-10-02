@@ -3,7 +3,7 @@ import { OvaleDebug } from "./Debug";
 import { OvaleProfiler } from "./Profiler";
 import { Ovale } from "./Ovale";
 import { OvaleGUID } from "./GUID";
-import { OvaleState } from "./State";
+import { OvaleState, StateModule } from "./State";
 
 let OvaleEnemiesBase = Ovale.NewModule("OvaleEnemies", "AceEvent-3.0", "AceTimer-3.0");
 export let OvaleEnemies: OvaleEnemiesClass;
@@ -68,7 +68,7 @@ const IsTagEvent = function(cleuEvent) {
     }
     return isTagEvent;
 }
-const IsFriendly = function(unitFlags, isGroupMember) {
+const IsFriendly = function(unitFlags, isGroupMember?) {
     return bit_band(unitFlags, _COMBATLOG_OBJECT_REACTION_FRIENDLY) > 0 && (!isGroupMember || bit_band(unitFlags, GROUP_MEMBER) > 0);
 }
 
@@ -85,10 +85,8 @@ class OvaleEnemiesClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regis
         }
         this.RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
         this.RegisterEvent("PLAYER_REGEN_DISABLED");
-        OvaleState.RegisterState(this, this.statePrototype);
     }
     OnDisable() {
-        OvaleState.UnregisterState(this);
         if (!self_reaperTimer) {
             this.CancelTimer(self_reaperTimer);
             self_reaperTimer = undefined;
@@ -161,7 +159,7 @@ class OvaleEnemiesClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regis
         }
         this.StopProfiling("OvaleEnemies_AddEnemy");
     }
-    RemoveEnemy(cleuEvent, guid, timestamp, isDead) {
+    RemoveEnemy(cleuEvent, guid, timestamp, isDead?) {
         this.StartProfiling("OvaleEnemies_RemoveEnemy");
         if (guid) {
             let name = self_enemyName[guid];
@@ -218,27 +216,29 @@ class OvaleEnemiesClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regis
         this.Print("Total tagged enemies: %d", this.taggedEnemies);
     }
 }
-OvaleEnemies.statePrototype = {
-}
-let statePrototype = OvaleEnemies.statePrototype;
-statePrototype.activeEnemies = undefined;
-statePrototype.taggedEnemies = undefined;
-statePrototype.enemies = undefined;
-class OvaleEnemies {
-    InitializeState(state) {
-        state.enemies = undefined;
+
+
+class EnemiesState implements StateModule {
+    activeEnemies = undefined;
+    taggedEnemies = undefined;
+    enemies = undefined;
+
+    InitializeState() {
+        this.enemies = undefined;
     }
-    ResetState(state) {
-        this.StartProfiling("OvaleEnemies_ResetState");
-        state.activeEnemies = this.activeEnemies;
-        state.taggedEnemies = this.taggedEnemies;
-        this.StopProfiling("OvaleEnemies_ResetState");
+    ResetState() {
+        OvaleEnemies.StartProfiling("OvaleEnemies_ResetState");
+        this.activeEnemies = OvaleEnemies.activeEnemies;
+        this.taggedEnemies = OvaleEnemies.taggedEnemies;
+        OvaleEnemies.StopProfiling("OvaleEnemies_ResetState");
     }
-    CleanState(state) {
-        state.activeEnemies = undefined;
-        state.taggedEnemies = undefined;
-        state.enemies = undefined;
+    CleanState() {
+        this.activeEnemies = undefined;
+        this.taggedEnemies = undefined;
+        this.enemies = undefined;
     }
 }
 
 OvaleEnemies = new OvaleEnemiesClass();
+export const enemiesState = new EnemiesState();
+OvaleState.RegisterState(enemiesState);

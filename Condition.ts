@@ -63,13 +63,15 @@ class OvaleConditionClass extends OvaleDebug.RegisterDebugging(OvaleConditionBas
     }
 }
 
-export function ParseCondition(positionalParams, namedParams, state, defaultTarget?) {
+OvaleCondition = new OvaleConditionClass();
+
+export function ParseCondition(positionalParams, namedParams, state, defaultTarget?):[string, "HARMFUL" | "HELPFUL", boolean] {
     let target = namedParams.target || defaultTarget || "player";
     namedParams.target = namedParams.target || target;
     if (target == "target") {
         target = state.defaultTarget;
     }
-    let filter;
+    let filter: "HARMFUL" | "HELPFUL";
     if (namedParams.filter) {
         if (namedParams.filter == "debuff") {
             filter = "HARMFUL";
