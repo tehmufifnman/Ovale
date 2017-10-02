@@ -1,12 +1,13 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvaleSteadyFocus = Ovale.NewModule("OvaleSteadyFocus", "AceEvent-3.0");
-Ovale.OvaleSteadyFocus = OvaleSteadyFocus;
-import { OvaleDebug } from "./OvaleDebug";
-import { OvaleProfiler } from "./OvaleProfiler";
+import { OvaleDebug } from "./Debug";
+import { OvaleProfiler } from "./Profiler";
+import { Ovale } from "./Ovale";
 let OvaleAura = undefined;
 let OvaleSpellBook = undefined;
 let OvaleState = undefined;
+
+let OvaleSteadyFocusBase = Ovale.NewModule("OvaleSteadyFocus", "AceEvent-3.0");
+export let OvaleSteadyFocus: OvaleSteadyFocusClass;
+
 let API_GetTime = GetTime;
 let INFINITY = math.huge;
 let self_playerGUID = undefined;
@@ -33,20 +34,17 @@ let RANGED_ATTACKS = {
     [120761]: "Glaive Toss",
     [121414]: "Glaive Toss"
 }
-OvaleDebug.RegisterDebugging(OvaleSteadyFocus);
-OvaleProfiler.RegisterProfiling(OvaleSteadyFocus);
-OvaleSteadyFocus.hasSteadyFocus = undefined;
-OvaleSteadyFocus.spellName = "Pre-Steady Focus";
-OvaleSteadyFocus.spellId = PRE_STEADY_FOCUS;
-OvaleSteadyFocus.start = 0;
-OvaleSteadyFocus.ending = 0;
-OvaleSteadyFocus.duration = INFINITY;
-OvaleSteadyFocus.stacks = 0;
-class OvaleSteadyFocus {
+
+class OvaleSteadyFocusClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(OvaleSteadyFocusBase)) {
+    hasSteadyFocus = undefined;
+    spellName = "Pre-Steady Focus";
+    spellId = PRE_STEADY_FOCUS;
+    start = 0;
+    ending = 0;
+    duration = INFINITY;
+    stacks = 0;
+
     OnInitialize() {
-        OvaleAura = Ovale.OvaleAura;
-        OvaleSpellBook = Ovale.OvaleSpellBook;
-        OvaleState = Ovale.OvaleState;
     }
     OnEnable() {
         if (Ovale.playerClass == "HUNTER") {
@@ -155,3 +153,5 @@ class OvaleSteadyFocus {
         }
     }
 }
+
+OvaleSteadyFocus = new OvaleSteadyFocusClass();

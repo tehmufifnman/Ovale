@@ -1,10 +1,11 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvaleRecount = Ovale.NewModule("OvaleRecount");
-Ovale.OvaleRecount = OvaleRecount;
-let L = undefined;
-let OvaleScore = undefined;
-let Recount = LibStub("AceAddon-3.0").GetAddon("Recount", true);
+import { Ovale } from "./Ovale";
+import { L } from "./Localization";
+import { OvaleScore } from "./Score";
+import AceLocale from "AceLocale-3.0";
+import Recount from "Recount";
+
+let OvaleRecountBase = Ovale.NewModule("OvaleRecount");
+export let OvaleRecount: OvaleRecountClass;
 let _setmetatable = setmetatable;
 const DataModes = function(self, data, num) {
     if (!data) {
@@ -23,26 +24,23 @@ const DataModes = function(self, data, num) {
     return [score, undefined];
 }
 const TooltipFuncs = function(self, name, data) {
-    let [SortedData, total];
+    let SortedData, total;
     GameTooltip.ClearLines();
     GameTooltip.AddLine(name);
 }
-class OvaleRecount {
+class OvaleRecountClass extends OvaleRecountBase {
     OnInitialize() {
-        OvaleScore = Ovale.OvaleScore;
         if (Recount) {
-            let AceLocale = LibStub("AceLocale-3.0", true);
             let L = AceLocale && AceLocale.GetLocale("Recount", true);
             if (!L) {
-                L = _setmetatable({
-                }, {
+                L = _setmetatable<LuaObj<string>>({}, {
                     __index: function (t, k) {
                         t[k] = k;
                         return k;
                     }
                 });
             }
-            Recount.AddModeTooltip(OVALE, DataModes, TooltipFuncs, undefined, undefined, undefined, undefined);
+            Recount.AddModeTooltip(Ovale.GetName(), DataModes, TooltipFuncs, undefined, undefined, undefined, undefined);
         }
     }
     OnEnable() {
@@ -57,8 +55,8 @@ class OvaleRecount {
         if (Recount) {
             let source = Recount.db2.combatants[name];
             if (source) {
-                Recount.AddAmount(source, OVALE, scored);
-                Recount.AddAmount(source, OVALE + "Max", scoreMax);
+                Recount.AddAmount(source, Ovale.GetName(), scored);
+                Recount.AddAmount(source, Ovale.GetName() + "Max", scoreMax);
             }
         }
     }

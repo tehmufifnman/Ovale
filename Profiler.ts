@@ -1,12 +1,12 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvaleProfilerBase = Ovale.NewModule("OvaleProfiler");
 import AceConfig from "AceConfig-3.0";
 import AceConfigDialog from "AceConfigDialog-3.0";
 import { L } from "./Localization";
 import LibTextDump from "LibTextDump-1.0";
 import { OvaleOptions } from "./Options";
-import { Constructor } from "./Ovale";
+import { Constructor, Ovale } from "./Ovale";
+
+let OvaleProfilerBase = Ovale.NewModule("OvaleProfiler");
+
 let _debugprofilestop = debugprofilestop;
 let format = string.format;
 let _ipairs = ipairs;
@@ -51,7 +51,7 @@ class OvaleProfilerClass extends OvaleProfilerBase {
     }
 
     options = {
-        name: OVALE + " " + L["Profiling"],
+        name: Ovale.GetName() + " " + L["Profiling"],
         type: "group",
         args: {
             profiling: {
@@ -115,12 +115,12 @@ class OvaleProfilerClass extends OvaleProfilerBase {
     OnInitialize() {
         let appName = this.GetName();
         AceConfig.RegisterOptionsTable(appName, this.options);
-        AceConfigDialog.AddToBlizOptions(appName, L["Profiling"], OVALE);
+        AceConfigDialog.AddToBlizOptions(appName, L["Profiling"], Ovale.GetName());
     }
     
     OnEnable() {
         if (!this.self_profilingOutput) {
-            this.self_profilingOutput = LibTextDump.New(OVALE + " - " + L["Profiling"], 750, 500);
+            this.self_profilingOutput = LibTextDump.New(Ovale.GetName() + " - " + L["Profiling"], 750, 500);
         }
     }
     OnDisable() {

@@ -1,15 +1,15 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvaleScripts = Ovale.NewModule("OvaleScripts", "AceEvent-3.0");
-Ovale.OvaleScripts = OvaleScripts;
-let AceConfig = LibStub("AceConfig-3.0");
-let AceConfigDialog = LibStub("AceConfigDialog-3.0");
-import { OvaleOptions } from "./OvaleOptions";
-import { L } from "./L";
-let OvaleEquipment = undefined;
-let OvalePaperDoll = undefined;
-let OvaleSpellBook = undefined;
-let OvaleStance = undefined;
+import AceConfig from "AceConfig-3.0";
+import AceConfigDialog from "AceConfigDialog-3.0";
+import { OvaleOptions } from "./Options";
+import { L } from "./Localization";
+import { OvaleEquipment } from "./Equipment";
+import { OvalePaperDoll } from "./PaperDoll";
+import { OvaleSpellBook } from "./SpellBook";
+import { OvaleStance } from "./Stance";
+import { Ovale } from "./Ovale";
+
+let OvaleScriptsBase = Ovale.NewModule("OvaleScripts", "AceEvent-3.0");
+export let OvaleScripts: OvaleScriptsClass;
 let format = string.format;
 let gsub = string.gsub;
 let _pairs = pairs;
@@ -45,14 +45,16 @@ let DISABLED_DESCRIPTION = L["Disabled"];
     }
     OvaleOptions.RegisterOptions(OvaleScripts);
 }
-OvaleScripts.script = {
+
+interface Script {
+
 }
-class OvaleScripts {
+
+class OvaleScriptsClass  extends OvaleScriptsBase {
+
+    script:Script = {}
+
     OnInitialize() {
-        OvaleEquipment = Ovale.OvaleEquipment;
-        OvalePaperDoll = Ovale.OvalePaperDoll;
-        OvaleSpellBook = Ovale.OvaleSpellBook;
-        OvaleStance = Ovale.OvaleStance;
         this.CreateOptions();
         this.RegisterScript(undefined, undefined, DEFAULT_NAME, DEFAULT_DESCRIPTION, undefined, "script");
         this.RegisterScript(Ovale.playerClass, undefined, CUSTOM_NAME, CUSTOM_DESCRIPTION, Ovale.db.profile.code, "script");
@@ -95,7 +97,7 @@ class OvaleScripts {
         this.script[name] = undefined;
     }
     SetScript(name) {
-        import { oldSource } from "./db";
+        const oldSource = Ovale.db.profile.source;
         if (oldSource != name) {
             Ovale.db.profile.source = name;
             this.SendMessage("Ovale_ScriptChanged");
@@ -181,7 +183,7 @@ class OvaleScripts {
     }
     CreateOptions() {
         let options = {
-            name: OVALE + " " + L["Script"],
+            name: Ovale.GetName() + " " + L["Script"],
             type: "group",
             args: {
                 source: {
@@ -189,14 +191,14 @@ class OvaleScripts {
                     type: "select",
                     name: L["Script"],
                     width: "double",
-                    values: function (info) {
+                    values: (info) => {
                         let scriptType = !Ovale.db.profile.showHiddenScripts && "script";
                         return OvaleScripts.GetDescriptions(scriptType);
                     },
-                    get: function (info) {
+                    get: (info) => {
                         return Ovale.db.profile.source;
                     },
-                    set: function (info, v) {
+                    set: (info, v) => {
                         this.SetScript(v);
                     }
                 },
@@ -206,15 +208,15 @@ class OvaleScripts {
                     multiline: 25,
                     name: L["Script"],
                     width: "full",
-                    disabled: function () {
+                    disabled: () => {
                         return Ovale.db.profile.source != CUSTOM_NAME;
                     },
-                    get: function (info) {
+                    get: (info)  => {
                         let code = OvaleScripts.GetScript(Ovale.db.profile.source);
                         code = code || "";
                         return gsub(code, "\t", "    ");
                     },
-                    set: function (info, v) {
+                    set: (info, v) => {
                         OvaleScripts.RegisterScript(Ovale.playerClass, undefined, CUSTOM_NAME, CUSTOM_DESCRIPTION, v, "script");
                         Ovale.db.profile.code = v;
                         this.SendMessage("Ovale_ScriptChanged");
@@ -224,13 +226,13 @@ class OvaleScripts {
                     order: 30,
                     type: "execute",
                     name: L["Copier sur Script personnalisé"],
-                    disabled: function () {
+                    disabled: () => {
                         return Ovale.db.profile.source == CUSTOM_NAME;
                     },
-                    confirm: function () {
+                    confirm: () => {
                         return L["Ecraser le Script personnalisé préexistant?"];
                     },
-                    func: function () {
+                    func: () => {
                         let code = OvaleScripts.GetScript(Ovale.db.profile.source);
                         OvaleScripts.RegisterScript(Ovale.playerClass, undefined, CUSTOM_NAME, CUSTOM_DESCRIPTION, code, "script");
                         Ovale.db.profile.source = CUSTOM_NAME;
@@ -242,10 +244,10 @@ class OvaleScripts {
                     order: 40,
                     type: "toggle",
                     name: L["Show hidden"],
-                    get: function (info) {
+                    get: (info) => {
                         return Ovale.db.profile.showHiddenScripts;
                     },
-                    set: function (info, value) {
+                    set: (info, value) => {
                         Ovale.db.profile.showHiddenScripts = value;
                     }
                 }
@@ -253,6 +255,8 @@ class OvaleScripts {
         }
         let appName = this.GetName();
         AceConfig.RegisterOptionsTable(appName, options);
-        AceConfigDialog.AddToBlizOptions(appName, L["Script"], OVALE);
+        AceConfigDialog.AddToBlizOptions(appName, L["Script"], Ovale.GetName());
     }
 }
+
+OvaleScripts = new OvaleScriptsClass();

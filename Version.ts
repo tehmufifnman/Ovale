@@ -1,10 +1,10 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvaleVersion = Ovale.NewModule("OvaleVersion", "AceComm-3.0", "AceSerializer-3.0", "AceTimer-3.0");
-Ovale.OvaleVersion = OvaleVersion;
-import { L } from "./L";
-import { OvaleDebug } from "./OvaleDebug";
-import { OvaleOptions } from "./OvaleOptions";
+import { L } from "./Localization";
+import { OvaleDebug } from "./Debug";
+import { OvaleOptions } from "./Options";
+import { Ovale } from "./Ovale";
+
+let OvaleVersionBase = Ovale.NewModule("OvaleVersion", "AceComm-3.0", "AceSerializer-3.0", "AceTimer-3.0");
+export let OvaleVersion: OvaleVersionClass;
 let format = string.format;
 let _ipairs = ipairs;
 let _next = next;
@@ -16,14 +16,13 @@ let API_IsInGroup = IsInGroup;
 let API_IsInGuild = IsInGuild;
 let API_IsInRaid = IsInRaid;
 let _LE_PARTY_CATEGORY_INSTANCE = LE_PARTY_CATEGORY_INSTANCE;
-OvaleDebug.RegisterDebugging(OvaleVersion);
 let self_printTable = {
 }
 let self_userVersion = {
 }
 let self_timer;
-import { MSG_PREFIX } from "./MSG_PREFIX";
-let OVALE_VERSION = "7.3.0.2";
+let MSG_PREFIX = Ovale.MSG_PREFIX;
+let OVALE_VERSION = "@project-version@";
 let REPOSITORY_KEYWORD = "@" + "project-version" + "@";
 {
     let actions = {
@@ -47,9 +46,10 @@ let REPOSITORY_KEYWORD = "@" + "project-version" + "@";
     }
     OvaleOptions.RegisterOptions(OvaleVersion);
 }
-OvaleVersion.version = (OVALE_VERSION == REPOSITORY_KEYWORD) && "development version" || OVALE_VERSION;
-OvaleVersion.warned = false;
-class OvaleVersion {
+class OvaleVersionClass extends OvaleDebug.RegisterDebugging(OvaleVersionBase) {
+    version = (OVALE_VERSION == REPOSITORY_KEYWORD) && "development version" || OVALE_VERSION;
+    warned = false;
+    
     OnEnable() {
         this.RegisterComm(MSG_PREFIX);
     }
@@ -103,3 +103,5 @@ class OvaleVersion {
         self_timer = undefined;
     }
 }
+
+OvaleVersion =new OvaleVersionClass();

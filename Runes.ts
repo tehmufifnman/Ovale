@@ -1,15 +1,15 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvaleRunes = Ovale.NewModule("OvaleRunes", "AceEvent-3.0");
-Ovale.OvaleRunes = OvaleRunes;
-import { OvaleDebug } from "./OvaleDebug";
-import { OvaleProfiler } from "./OvaleProfiler";
-let OvaleData = undefined;
-let OvaleEquipment = undefined;
-let OvalePower = undefined;
-let OvaleSpellBook = undefined;
-let OvaleStance = undefined;
-let OvaleState = undefined;
+import { OvaleDebug } from "./Debug";
+import { OvaleProfiler } from "./Profiler";
+import { Ovale } from "./Ovale";
+import { OvaleData } from "./Data";
+import { OvaleEquipment } from "./Equipment";
+import { OvalePower } from "./Power";
+import { OvaleSpellBook } from "./SpellBook";
+import { OvaleStance } from "./Stance";
+import { OvaleState } from "./State";
+
+let OvaleRunesBase = Ovale.NewModule("OvaleRunes", "AceEvent-3.0");
+export let OvaleRunes: OvaleRunesClass;
 let _ipairs = ipairs;
 let _pairs = pairs;
 let _type = type;
@@ -18,24 +18,16 @@ let API_GetRuneCooldown = GetRuneCooldown;
 let API_GetSpellInfo = GetSpellInfo;
 let API_GetTime = GetTime;
 let INFINITY = math.huge;
-let _sort = sort;
-OvaleDebug.RegisterDebugging(OvaleRunes);
-OvaleProfiler.RegisterProfiling(OvaleRunes);
+let _sort = table.sort;
 let EMPOWER_RUNE_WEAPON = 47568;
 let RUNE_SLOTS = 6;
-OvaleRunes.rune = {
-}
 const IsActiveRune = function(rune, atTime) {
     return (rune.startCooldown == 0 || rune.endCooldown <= atTime);
 }
-class OvaleRunes {
+class OvaleRunesClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(OvaleRunesBase)) {
+    rune = {}
+    
     OnInitialize() {
-        OvaleData = Ovale.OvaleData;
-        OvaleEquipment = Ovale.OvaleEquipment;
-        OvalePower = Ovale.OvalePower;
-        OvaleSpellBook = Ovale.OvaleSpellBook;
-        OvaleStance = Ovale.OvaleStance;
-        OvaleState = Ovale.OvaleState;
     }
     OnEnable() {
         if (Ovale.playerClass == "DEATHKNIGHT") {
@@ -98,8 +90,7 @@ class OvaleRunes {
         }
         this.StopProfiling("OvaleRunes_UpdateRune");
     }
-    UpdateAllRunes(event) {
-        this.Debug(event);
+    UpdateAllRunes() {
         for (let slot = 1; slot <= RUNE_SLOTS; slot += 1) {
             this.UpdateRune(slot);
         }
@@ -223,9 +214,8 @@ statePrototype.ConsumeRune = function (state, spellId, atTime, snapshot) {
         runicpower = runicpower + 10;
         let maxi = OvalePower.maxPower.runicpower;
         state.runicpower = (runicpower < maxi) && runicpower || maxi;
-    } else {
-        state.Log("No %s rune available at %f to consume for spell %d!", RUNE_NAME[runeType], atTime, spellId);
-    }
+    } 
+    
     OvaleRunes.StopProfiling("OvaleRunes_state_ConsumeRune");
 }
 statePrototype.RuneCount = function (state, atTime) {
@@ -269,3 +259,5 @@ statePrototype.GetRunesCooldown = undefined;
         return usedRune[runes];
     }
 }
+
+OvaleRunes = new OvaleRunesClass();

@@ -1,14 +1,15 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvalePower = Ovale.NewModule("OvalePower", "AceEvent-3.0");
-Ovale.OvalePower = OvalePower;
-import { L } from "./L";
-import { OvaleDebug } from "./OvaleDebug";
-import { OvaleProfiler } from "./OvaleProfiler";
-let OvaleAura = undefined;
-let OvaleFuture = undefined;
-let OvaleData = undefined;
-let OvaleState = undefined;
+import { L } from "./Localization";
+import { OvaleDebug } from "./Debug";
+import { OvaleProfiler } from "./Profiler";
+import { Ovale } from "./Ovale";
+import { OvaleAura } from "./Aura";
+import { OvaleFuture } from "./Future";
+import { OvaleData } from "./Data";
+import { OvaleState } from "./State";
+
+let OvalePowerBase = Ovale.NewModule("OvalePower", "AceEvent-3.0");
+export let OvalePower:OvalePowerClass;
+
 let ceil = math.ceil;
 let format = string.format;
 let gsub = string.gsub;
@@ -58,138 +59,136 @@ let self_button = undefined;
         OvaleDebug.options.args[k] = v;
     }
 }
-OvalePower.powerType = undefined;
-OvalePower.power = {
-}
-OvalePower.maxPower = {
-}
-OvalePower.activeRegen = 0;
-OvalePower.inactiveRegen = 0;
-OvalePower.POWER_INFO = {
-    alternate: {
-        id: SPELL_POWER_ALTERNATE_POWER,
-        token: "ALTERNATE_RESOURCE_TEXT",
-        mini: 0
-    },
-    chi: {
-        id: SPELL_POWER_CHI,
-        token: "CHI",
-        mini: 0,
-        costString: CHI_COST
-    },
-    combopoints: {
-        id: SPELL_POWER_COMBO_POINTS,
-        token: "COMBO_POINTS",
-        mini: 0,
-        costString: COMBO_POINTS_COST
-    },
-    energy: {
-        id: SPELL_POWER_ENERGY,
-        token: "ENERGY",
-        mini: 0,
-        costString: ENERGY_COST
-    },
-    focus: {
-        id: SPELL_POWER_FOCUS,
-        token: "FOCUS",
-        mini: 0,
-        costString: FOCUS_COST
-    },
-    holy: {
-        id: SPELL_POWER_HOLY_POWER,
-        token: "HOLY_POWER",
-        mini: 0,
-        costString: HOLY_POWER_COST
-    },
-    mana: {
-        id: SPELL_POWER_MANA,
-        token: "MANA",
-        mini: 0,
-        costString: MANA_COST
-    },
-    rage: {
-        id: SPELL_POWER_RAGE,
-        token: "RAGE",
-        mini: 0,
-        costString: RAGE_COST
-    },
-    runicpower: {
-        id: SPELL_POWER_RUNIC_POWER,
-        token: "RUNIC_POWER",
-        mini: 0,
-        costString: RUNIC_POWER_COST
-    },
-    soulshards: {
-        id: SPELL_POWER_SOUL_SHARDS,
-        token: "SOUL_SHARDS",
-        mini: 0,
-        costString: SOUL_SHARDS_COST
-    },
-    astralpower: {
-        id: SPELL_POWER_LUNAR_POWER,
-        token: "LUNAR_POWER",
-        mini: 0,
-        costString: LUNAR_POWER_COST
-    },
-    insanity: {
-        id: SPELL_POWER_INSANITY,
-        token: "INSANITY",
-        mini: 0,
-        costString: INSANITY_COST
-    },
-    maelstrom: {
-        id: SPELL_POWER_MAELSTROM,
-        token: "MAELSTROM",
-        mini: 0,
-        costString: MAELSTROM_COST
-    },
-    arcanecharges: {
-        id: SPELL_POWER_ARCANE_CHARGES,
-        token: "ARCANE_CHARGES",
-        mini: 0,
-        costString: ARCANE_CHARGES_COST
-    },
-    pain: {
-        id: SPELL_POWER_PAIN,
-        token: "PAIN",
-        mini: 0,
-        costString: PAIN_COST
-    },
-    fury: {
-        id: SPELL_POWER_FURY,
-        token: "FURY",
-        mini: 0,
-        costString: FURY_COST
-    }
-}
-OvalePower.PRIMARY_POWER = {
-    energy: true,
-    focus: true,
-    mana: true
-}
-OvalePower.POWER_TYPE = {
-}
-{
-    for (const [powerType, v] of _pairs(OvalePower.POWER_INFO)) {
-        if (!v.id) {
-            OvalePower.Print("Unknown resource %s", v.token);
+
+class OvalePowerClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(OvalePowerBase)) {
+    powerType = undefined;
+    powerRate:number = undefined;
+    power = {}
+    maxPower = {}
+    activeRegen = 0;
+    inactiveRegen = 0;
+    POWER_INFO = {
+        alternate: {
+            id: SPELL_POWER_ALTERNATE_POWER,
+            token: "ALTERNATE_RESOURCE_TEXT",
+            mini: 0
+        },
+        chi: {
+            id: SPELL_POWER_CHI,
+            token: "CHI",
+            mini: 0,
+            costString: CHI_COST
+        },
+        combopoints: {
+            id: SPELL_POWER_COMBO_POINTS,
+            token: "COMBO_POINTS",
+            mini: 0,
+            costString: COMBO_POINTS_COST
+        },
+        energy: {
+            id: SPELL_POWER_ENERGY,
+            token: "ENERGY",
+            mini: 0,
+            costString: ENERGY_COST
+        },
+        focus: {
+            id: SPELL_POWER_FOCUS,
+            token: "FOCUS",
+            mini: 0,
+            costString: FOCUS_COST
+        },
+        holy: {
+            id: SPELL_POWER_HOLY_POWER,
+            token: "HOLY_POWER",
+            mini: 0,
+            costString: HOLY_POWER_COST
+        },
+        mana: {
+            id: SPELL_POWER_MANA,
+            token: "MANA",
+            mini: 0,
+            costString: MANA_COST
+        },
+        rage: {
+            id: SPELL_POWER_RAGE,
+            token: "RAGE",
+            mini: 0,
+            costString: RAGE_COST
+        },
+        runicpower: {
+            id: SPELL_POWER_RUNIC_POWER,
+            token: "RUNIC_POWER",
+            mini: 0,
+            costString: RUNIC_POWER_COST
+        },
+        soulshards: {
+            id: SPELL_POWER_SOUL_SHARDS,
+            token: "SOUL_SHARDS",
+            mini: 0,
+            costString: SOUL_SHARDS_COST
+        },
+        astralpower: {
+            id: SPELL_POWER_LUNAR_POWER,
+            token: "LUNAR_POWER",
+            mini: 0,
+            costString: LUNAR_POWER_COST
+        },
+        insanity: {
+            id: SPELL_POWER_INSANITY,
+            token: "INSANITY",
+            mini: 0,
+            costString: INSANITY_COST
+        },
+        maelstrom: {
+            id: SPELL_POWER_MAELSTROM,
+            token: "MAELSTROM",
+            mini: 0,
+            costString: MAELSTROM_COST
+        },
+        arcanecharges: {
+            id: SPELL_POWER_ARCANE_CHARGES,
+            token: "ARCANE_CHARGES",
+            mini: 0,
+            costString: ARCANE_CHARGES_COST
+        },
+        pain: {
+            id: SPELL_POWER_PAIN,
+            token: "PAIN",
+            mini: 0,
+            costString: PAIN_COST
+        },
+        fury: {
+            id: SPELL_POWER_FURY,
+            token: "FURY",
+            mini: 0,
+            costString: FURY_COST
         }
-        OvalePower.POWER_TYPE[v.id] = powerType;
-        OvalePower.POWER_TYPE[v.token] = powerType;
     }
-}
-OvalePower.POOLED_RESOURCE = {
-    ["DRUID"]: "energy",
-    ["HUNTER"]: "focus",
-    ["MONK"]: "energy",
-    ["ROGUE"]: "energy"
-}
-class OvalePower {
+
+    PRIMARY_POWER = {
+        energy: true,
+        focus: true,
+        mana: true
+    }
+    POWER_TYPE = {}
+
+    constructor() {
+        super();
+        for (const [powerType, v] of _pairs(OvalePower.POWER_INFO)) {
+            if (!v.id) {
+                this.Print("Unknown resource %s", v.token);
+            }
+            OvalePower.POWER_TYPE[v.id] = powerType;
+            OvalePower.POWER_TYPE[v.token] = powerType;
+        }
+    }
+    POOLED_RESOURCE = {
+        ["DRUID"]: "energy",
+        ["HUNTER"]: "focus",
+        ["MONK"]: "energy",
+        ["ROGUE"]: "energy"
+    }
     OnInitialize() {
-        OvaleAura = Ovale.OvaleAura;
-        OvaleData = Ovale.OvaleData;
-        OvaleFuture = Ovale.OvaleFuture;
-        OvaleState = Ovale.OvaleState;
     }
     OnEnable() {
         self_playerGUID = Ovale.playerGUID;
@@ -360,21 +359,14 @@ class OvalePower {
         }
         return power;
     }
-    PowerCost(spellId, powerType, atTime, targetGUID, maximumCost) {
+    PowerCost(spellId, powerType, atTime, targetGUID, maximumCost?) {
         OvalePower.StartProfiling("OvalePower_PowerCost");
         let buffParam = "buff_" + powerType;
         let spellCost = 0;
         let spellRefund = 0;
         let si = OvaleData.spellInfo[spellId];
         if (si && si[powerType]) {
-            let [GetAura, GetAuraByGUID, IsActiveAura];
-            let GetSpellInfoProperty;
-            let [auraModule, dataModule];
-            [GetAura, auraModule] = this.GetMethod("GetAura", OvaleAura);
-            [GetAuraByGUID, auraModule] = this.GetMethod("GetAuraByGUID", OvaleAura);
-            [IsActiveAura, auraModule] = this.GetMethod("IsActiveAura", OvaleAura);
-            [GetSpellInfoProperty, dataModule] = this.GetMethod("GetSpellInfoProperty", OvaleData);
-            let cost = GetSpellInfoProperty(dataModule, spellId, atTime, powerType, targetGUID);
+            let cost = OvaleData.GetSpellInfoProperty(spellId, atTime, powerType, targetGUID);
             if (cost == "finisher") {
                 cost = this.GetPower(powerType, atTime);
                 let minCostParam = "min_" + powerType;
@@ -394,8 +386,8 @@ class OvalePower {
                 let buffAmountParam = buffParam + "_amount";
                 let buffExtra = si[buffExtraParam];
                 if (buffExtra) {
-                    let aura = GetAura(auraModule, "player", buffExtra, undefined, true);
-                    let isActiveAura = IsActiveAura(auraModule, aura, atTime);
+                    let aura = OvaleAura.GetAura("player", buffExtra, undefined, true);
+                    let isActiveAura = OvaleAura.IsActiveAura(aura, atTime);
                     if (isActiveAura) {
                         let buffAmount = 0;
                         if (type(buffAmountParam) == "number") {
@@ -419,10 +411,10 @@ class OvalePower {
                 }
             }
             let extraPowerParam = "extra_" + powerType;
-            let extraPower = GetSpellInfoProperty(dataModule, spellId, atTime, extraPowerParam, targetGUID);
+            let extraPower = OvaleData.GetSpellInfoProperty(spellId, atTime, extraPowerParam, targetGUID);
             if (extraPower) {
                 if (!maximumCost) {
-                    let power = floor(this.GetPower(powerType, atTime));
+                    let power = math.floor(this.GetPower(powerType, atTime));
                     power = power > cost && power - cost || 0;
                     if (extraPower >= power) {
                         extraPower = power;
@@ -432,14 +424,14 @@ class OvalePower {
             }
             spellCost = ceil(cost);
             let refundParam = "refund_" + powerType;
-            let refund = GetSpellInfoProperty(dataModule, spellId, atTime, refundParam, targetGUID);
+            let refund = OvaleData.GetSpellInfoProperty(spellId, atTime, refundParam, targetGUID);
             if (refund == "cost") {
                 refund = spellCost;
             }
             refund = refund || 0;
             spellRefund = ceil(refund);
         } else {
-            let cost = OvalePower.GetSpellCost(spellId, powerType);
+            let [cost] = OvalePower.GetSpellCost(spellId, powerType);
             if (cost) {
                 spellCost = cost;
             }

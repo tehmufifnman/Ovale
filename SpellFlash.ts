@@ -1,13 +1,13 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvaleSpellFlash = Ovale.NewModule("OvaleSpellFlash", "AceEvent-3.0");
-Ovale.OvaleSpellFlash = OvaleSpellFlash;
-import { L } from "./L";
-import { OvaleOptions } from "./OvaleOptions";
-let OvaleData = undefined;
-let OvaleFuture = undefined;
-let OvaleSpellBook = undefined;
-let OvaleStance = undefined;
+import { L } from "./Localization";
+import { OvaleOptions } from "./Options";
+import { Ovale } from "./Ovale";
+import { OvaleData } from "./Data";
+import { OvaleFuture } from "./Future";
+import { OvaleSpellBook } from "./SpellBook";
+import { OvaleStance } from "./Stance";
+
+let OvaleSpellFlashBase = Ovale.NewModule("OvaleSpellFlash", "AceEvent-3.0");
+export let OvaleSpellFlash: OvaleSpellFlashClass;
 let _pairs = pairs;
 let _type = type;
 let API_GetTime = GetTime;
@@ -16,14 +16,10 @@ let API_UnitExists = UnitExists;
 let API_UnitIsDead = UnitIsDead;
 let API_UnitCanAttack = UnitCanAttack;
 let SpellFlashCore = undefined;
-let colorMain = {
-}
-let colorShortCd = {
-}
-let colorCd = {
-}
-let colorInterrupt = {
-}
+let colorMain = { r: undefined, g: undefined, b: undefined }
+let colorShortCd = { r: undefined, g: undefined, b: undefined }
+let colorCd = {  r: undefined, g: undefined, b: undefined }
+let colorInterrupt = {  r: undefined, g: undefined, b: undefined }
 let FLASH_COLOR = {
     main: colorMain,
     cd: colorCd,
@@ -214,11 +210,11 @@ let COLORTABLE = {
                         return !SpellFlashCore || !Ovale.db.profile.apparence.spellFlash.enabled;
                     },
                     get: function (info) {
-                        import { color } from "./db";
+                        const color = Ovale.db.profile.apparence.spellFlash[info[lualength(info)]];
                         return [color.r, color.g, color.b, 1.0];
                     },
                     set: function (info, r, g, b, a) {
-                        import { color } from "./db";
+                        const color = Ovale.db.profile.apparence.spellFlash[info[lualength(info)]];
                         color.r = r;
                         color.g = g;
                         color.b = b;
@@ -262,12 +258,8 @@ let COLORTABLE = {
     }
     OvaleOptions.RegisterOptions(OvaleSpellFlash);
 }
-class OvaleSpellFlash {
+class OvaleSpellFlashClass extends OvaleSpellFlashBase {
     OnInitialize() {
-        OvaleData = Ovale.OvaleData;
-        OvaleFuture = Ovale.OvaleFuture;
-        OvaleSpellBook = Ovale.OvaleSpellBook;
-        OvaleStance = Ovale.OvaleStance;
     }
     OnEnable() {
         SpellFlashCore = _G["SpellFlashCore"];
@@ -279,7 +271,7 @@ class OvaleSpellFlash {
         this.UnregisterMessage("Ovale_OptionChanged");
     }
     Ovale_OptionChanged() {
-        import { db } from "./db";
+        const db = Ovale.db.profile.apparence.spellFlash
         colorMain.r = db.colorMain.r;
         colorMain.g = db.colorMain.g;
         colorMain.b = db.colorMain.b;
@@ -295,7 +287,7 @@ class OvaleSpellFlash {
     }
     IsSpellFlashEnabled() {
         let enabled = (SpellFlashCore != undefined);
-        import { db } from "./db";
+        const db = Ovale.db.profile.apparence.spellFlash
         if (enabled && !db.enabled) {
             enabled = false;
         }
@@ -313,12 +305,12 @@ class OvaleSpellFlash {
         }
         return enabled;
     }
-    Flash(state, node, element, start, now) {
-        import { db } from "./db";
+    Flash(state, node, element, start, now?:number) {
+        const db = Ovale.db.profile.apparence.spellFlash
         now = now || API_GetTime();
         if (this.IsSpellFlashEnabled() && start && start - now <= db.threshold / 1000) {
             if (element && element.type == "action") {
-                let [spellId, spellInfo];
+                let spellId, spellInfo;
                 if (element.lowername == "spell") {
                     spellId = element.positionalParams[1];
                     spellInfo = OvaleData.spellInfo[spellId];
@@ -358,15 +350,6 @@ class OvaleSpellFlash {
                     SpellFlashCore.FlashItem(itemId, color, size, brightness);
                 }
             }
-        }
-    }
-    UpgradeSavedVariables() {
-        import { profile } from "./db";
-        if (profile.apparence.spellFlash && _type(profile.apparence.spellFlash) != "table") {
-            let enabled = profile.apparence.spellFlash;
-            profile.apparence.spellFlash = {
-            }
-            profile.apparence.spellFlash.enabled = enabled;
         }
     }
 }

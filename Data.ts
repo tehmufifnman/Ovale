@@ -1,7 +1,7 @@
 import { Ovale } from "./Ovale";
 import { OvaleGUID } from "./GUID";
 import { OvalePaperDoll } from "./PaperDoll";
-import { OvaleState } from "./State";
+import { OvaleState, StateModule } from "./State";
 import { OvaleDebug } from "./Debug";
 let OvaleDataBase = Ovale.NewModule("OvaleData");
 let format = string.format;
@@ -290,10 +290,8 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
     OnInitialize() {
     }
     OnEnable() {
-        OvaleState.RegisterState(this, this.statePrototype);
     }
     OnDisable() {
-        OvaleState.UnregisterState(this);
     }
     RegisterRequirement(name, method, arg) {
         self_requirement[name] = {
@@ -386,7 +384,7 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
         }
         return [tag, invokesGCD];
     }
-    CheckRequirements(spellId, atTime, tokens, index, targetGUID) {
+    CheckRequirements(spellId, atTime, tokens, index, targetGUID):[boolean, string, number] {
         targetGUID = targetGUID || OvaleGUID.UnitGUID(this.defaultTarget || "target");
         let name = tokens[index];
         index = index + 1;
@@ -409,7 +407,7 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
             }
             return [verified, requirement, index];
         }
-        return [true];
+        return [true, undefined, undefined];
     }
     CheckSpellAuraData(auraId, spellData, atTime, guid) {
         guid = guid || OvaleGUID.UnitGUID("player");
@@ -518,7 +516,7 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
             for (const [v, requirement] of _pairs(multipliers)) {
                 let verified = this.CheckRequirements(spellId, atTime, requirement, 1, targetGUID);
                 if (verified) {
-                    ratio = ratio * (_tonumber(v) || v) / 100;
+                    ratio = ratio * (_tonumber(v) || 0) / 100;
                 }
             }
         }
@@ -560,7 +558,7 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
         let combo = spellcast && spellcast.combo;
         let holy = spellcast && spellcast.holy;
         let duration = INFINITY;
-        let si = OvaleDataClass.spellInfo[auraId];
+        let si = this.spellInfo[auraId];
         if (si && si.duration) {
             duration = si.duration;
             if (si.addduration) {
@@ -581,7 +579,7 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
     }
     GetTickLength(auraId, snapshot?) {
         let tick = 3;
-        let si = OvaleDataClass.spellInfo[auraId];
+        let si = this.spellInfo[auraId];
         if (si) {
             tick = si.tick || tick;
             let hasteMultiplier = OvalePaperDoll.GetHasteMultiplier(si.haste, snapshot);
@@ -590,13 +588,35 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
         return tick;
     }
 }
-OvaleDataClass.statePrototype = {
+
+class DataState implements StateModule {
+    CleanState(): void {
+    }
+    InitializeState(): void {
+    }
+    ResetState(): void {
+    }
+    CheckRequirements(spellId, atTime, tokens, index, targetGUID) {
+        return OvaleData.CheckRequirements(spellId, atTime, tokens, index, targetGUID);
+    }
+
+    CheckSpellAuraData(auraId, spellData, atTime, guid) {
+        return OvaleData.CheckSpellAuraData(auraId, spellData, atTime, guid);
+    }
+    CheckSpellInfo(spellId, atTime, targetGUID) {
+        return OvaleData.CheckSpellInfo(spellId, atTime, targetGUID);
+    }
+    GetItemInfoProperty(itemId, atTime, property) {
+        return OvaleData.GetItemInfoProperty(itemId, atTime, property);
+    }
+    GetSpellInfoProperty(spellId, atTime, property, targetGUID) {
+        return OvaleData.GetSpellInfoProperty(spellId, atTime, property, targetGUID);
+    } 
+    
 }
-let statePrototype = OvaleDataClass.statePrototype;
-statePrototype.CheckRequirements = OvaleDataClass.CheckRequirements;
-statePrototype.CheckSpellAuraData = OvaleDataClass.CheckSpellAuraData;
-statePrototype.CheckSpellInfo = OvaleDataClass.CheckSpellInfo;
-statePrototype.GetItemInfoProperty = OvaleDataClass.GetItemInfoProperty;
-statePrototype.GetSpellInfoProperty = OvaleDataClass.GetSpellInfoProperty;
+
+export const dataState = new DataState();
+
+OvaleState.RegisterState(dataState);
 
 export const OvaleData = new OvaleDataClass();

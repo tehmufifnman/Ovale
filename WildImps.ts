@@ -1,8 +1,7 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvaleWildImps = Ovale.NewModule("OvaleWildImps", "AceEvent-3.0");
-Ovale.OvaleWildImps = OvaleWildImps;
-let OvaleState = undefined;
+import { OvaleState } from "./State";
+import { Ovale } from "./Ovale";
+let OvaleWildImpsBase = Ovale.NewModule("OvaleWildImps", "AceEvent-3.0");
+export let OvaleWildImps: OvaleWildImpsClass;
 let tinsert = table.insert;
 let tremove = table.remove;
 let demonData = {
@@ -26,9 +25,8 @@ let self_demons = {
 }
 let self_serial = 1;
 let API_GetTime = GetTime;
-class OvaleWildImps {
+class OvaleWildImpsClass extends OvaleWildImpsBase {
     OnInitialize() {
-        OvaleState = Ovale.OvaleState;
     }
     OnEnable() {
         if (Ovale.playerClass == "WARLOCK") {
@@ -44,14 +42,14 @@ class OvaleWildImps {
             this.UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
         }
     }
-    COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, cleuEvent, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, ...__args) {
+    COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, cleuEvent, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, spellId: number) {
         self_serial = self_serial + 1;
         Ovale.refreshNeeded[Ovale.playerGUID] = true;
         if (sourceGUID != Ovale.playerGUID) {
-            break;
+            return;
         }
         if (cleuEvent == "SPELL_SUMMON") {
-            let [_, _, _, _, _, _, _, creatureId] = destGUID.find('(%S+)-(%d+)-(%d+)-(%d+)-(%d+)-(%d+)-(%S+)');
+            let [_1, _2, _3, _4, _5, _6, _7, creatureId] = destGUID.find('(%S+)-(%d+)-(%d+)-(%d+)-(%d+)-(%d+)-(%S+)');
             creatureId = tonumber(creatureId);
             let now = API_GetTime();
             for (const [id, v] of pairs(demonData)) {
@@ -74,7 +72,6 @@ class OvaleWildImps {
                 self_demons[destGUID] = undefined;
             }
         } else if (cleuEvent == 'SPELL_CAST_SUCCESS') {
-            let spellId = __args;
             if (spellId == 193396) {
                 for (const [k, d] of pairs(self_demons)) {
                     d.de = true;
@@ -116,3 +113,5 @@ statePrototype.GetRemainingDemonDuration = function (state, creatureId, atTime) 
     }
     return max;
 }
+
+OvaleWildImps = new OvaleWildImpsClass();

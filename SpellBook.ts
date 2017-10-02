@@ -1,14 +1,15 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-export let OvaleSpellBook:OvaleSpellBookClass;
-import { L } from "./L";
+import { L } from "./Localization";
 import { OvaleDebug } from "./Debug";
 import { OvaleProfiler } from "./Profiler";
-let OvaleCooldown = undefined;
-let OvaleData = undefined;
-let OvalePower = undefined;
-let OvaleRunes = undefined;
-let OvaleState = undefined;
+import { OvaleCooldown } from "./Cooldown";
+import { OvaleData } from "./Data";
+import { OvalePower } from "./Power";
+import { OvaleRunes } from "./Runes";
+import { OvaleState } from "./State";
+import { Ovale } from "./Ovale";
+
+export let OvaleSpellBook:OvaleSpellBookClass;
+
 let _ipairs = ipairs;
 let _pairs = pairs;
 let strmatch = string.match;
@@ -19,6 +20,7 @@ let _tostring = tostring;
 let tsort = table.sort;
 let _type = type;
 let _wipe = wipe;
+let _gsub = string.gsub;
 let API_GetActiveSpecGroup = GetActiveSpecGroup;
 let API_GetFlyoutInfo = GetFlyoutInfo;
 let API_GetFlyoutSlotInfo = GetFlyoutSlotInfo;
@@ -43,8 +45,6 @@ let _NUM_TALENT_COLUMNS = NUM_TALENT_COLUMNS;
 let MAX_NUM_TALENTS = _NUM_TALENT_COLUMNS * _MAX_TALENT_TIERS;
 let WARRIOR_INCERCEPT_SPELLID = 198304;
 let WARRIOR_HEROICTHROW_SPELLID = 57755;
-OvaleDebug.RegisterDebugging(OvaleSpellBook);
-OvaleProfiler.RegisterProfiling(OvaleSpellBook);
 {
     let debugOptions = {
         spellbook: {
@@ -82,25 +82,6 @@ OvaleProfiler.RegisterProfiling(OvaleSpellBook);
         OvaleDebug.options.args[k] = v;
     }
 }
-OvaleSpellBook.ready = false;
-OvaleSpellBook.spell = {
-}
-OvaleSpellBook.spellbookId = {
-    [_BOOKTYPE_PET]: {
-    },
-    [_BOOKTYPE_SPELL]: {
-    }
-}
-OvaleSpellBook.isHarmful = {
-}
-OvaleSpellBook.isHelpful = {
-}
-OvaleSpellBook.texture = {
-}
-OvaleSpellBook.talent = {
-}
-OvaleSpellBook.talentPoints = {
-}
 const ParseHyperlink = function(hyperlink) {
     let [color, linkType, linkData, text] = strmatch(hyperlink, "|?c?f?f?(%x*)|?H?([^:]*):?(%d*):?%d?|?h?%[?([^%[%]]*)%]?|?h?|?r?");
     return [color, linkType, linkData, text];
@@ -116,7 +97,25 @@ const OutputTableValues = function(output, tbl) {
         output[lualength(output) + 1] = v;
     }
 }
+
+let output = {}
+
 class OvaleSpellBookClass extends OvaleDebug.RegisterDebugging(Ovale.NewModule("OvaleSpellBook", "AceEvent-3.0")) {
+    ready = false;
+    spell = {    }
+    spellbookId = {
+        [_BOOKTYPE_PET]: {
+        },
+        [_BOOKTYPE_SPELL]: {
+        }
+    }
+    isHarmful = {    }
+    isHelpful = {    }
+    texture = {    }
+    talent = {    }
+    talentPoints = {    }
+
+    
     OnInitialize() {
     }
     OnEnable() {
@@ -158,7 +157,7 @@ class OvaleSpellBookClass extends OvaleDebug.RegisterDebugging(Ovale.NewModule("
         let activeTalentGroup = API_GetActiveSpecGroup();
         for (let i = 1; i <= _MAX_TALENT_TIERS; i += 1) {
             for (let j = 1; j <= _NUM_TALENT_COLUMNS; j += 1) {
-                let [talentId, name, _, selected, _, _, _, _, _, _, selectedByLegendary] = API_GetTalentInfo(i, j, activeTalentGroup);
+                let [talentId, name, _1, selected, _2, _3, _4, _5, _6, _7, selectedByLegendary] = API_GetTalentInfo(i, j, activeTalentGroup);
                 if (talentId) {
                     let combinedSelected = selected || selectedByLegendary;
                     let index = 3 * (i - 1) + j;
@@ -197,7 +196,7 @@ class OvaleSpellBookClass extends OvaleDebug.RegisterDebugging(Ovale.NewModule("
         Ovale.refreshNeeded[Ovale.playerGUID] = true;
         this.SendMessage("Ovale_SpellsChanged");
     }
-    ScanSpellBook(bookType, numSpells, offset) {
+    ScanSpellBook(bookType, numSpells, offset?) {
         offset = offset || 0;
         this.Debug("Updating '%s' spellbook starting at offset %d.", bookType, offset);
         for (let index = offset + 1; index <= offset + numSpells; index += 1) {
@@ -205,9 +204,9 @@ class OvaleSpellBookClass extends OvaleDebug.RegisterDebugging(Ovale.NewModule("
             if (skillType == "SPELL" || skillType == "PETACTION") {
                 let spellLink = API_GetSpellLink(index, bookType);
                 if (spellLink) {
-                    let [_, _, linkData, spellName] = ParseHyperlink(spellLink);
+                    let [_1, _2, linkData, spellName] = ParseHyperlink(spellLink);
                     let id = _tonumber(linkData);
-                    this.Debug("    %s (%d) is at offset %d (%s).", spellName, id, index, gsub(spellLink, "|", "_"));
+                    this.Debug("    %s (%d) is at offset %d (%s).", spellName, id, index, _gsub(spellLink, "|", "_"));
                     this.spell[id] = spellName;
                     this.isHarmful[id] = API_IsHarmfulSpell(index, bookType);
                     this.isHelpful[id] = API_IsHelpfulSpell(index, bookType);
@@ -224,7 +223,7 @@ class OvaleSpellBookClass extends OvaleDebug.RegisterDebugging(Ovale.NewModule("
                 }
             } else if (skillType == "FLYOUT") {
                 let flyoutId = spellId;
-                let [_, _, numSlots, isKnown] = API_GetFlyoutInfo(flyoutId);
+                let [_1, _2, numSlots, isKnown] = API_GetFlyoutInfo(flyoutId);
                 if (numSlots > 0 && isKnown) {
                     for (let flyoutIndex = 1; flyoutIndex <= numSlots; flyoutIndex += 1) {
                         let [id, overrideId, isKnown, spellName] = API_GetFlyoutSlotInfo(flyoutId, flyoutIndex);
@@ -254,7 +253,7 @@ class OvaleSpellBookClass extends OvaleDebug.RegisterDebugging(Ovale.NewModule("
     }
     GetCastTime(spellId) {
         if (spellId) {
-            let [name, _, _, castTime] = this.GetSpellInfo(spellId);
+            let [name, _1, _2, castTime] = this.GetSpellInfo(spellId);
             if (name) {
                 if (castTime) {
                     castTime = castTime / 1000;
@@ -364,29 +363,22 @@ class OvaleSpellBookClass extends OvaleDebug.RegisterDebugging(Ovale.NewModule("
             return API_IsUsableSpell(name);
         }
     }
-}
-{
-    let output = {
+    DebugSpells() {
+        _wipe(output);
+        OutputTableValues(output, this.spell);
+        let total = 0;
+        for (const [_] of _pairs(this.spell)) {
+            total = total + 1;
+        }
+        output[lualength(output) + 1] = "Total spells: " + total;
+        return tconcat(output, "\n");
     }
-class OvaleSpellBook {
-        DebugSpells() {
-            _wipe(output);
-            OutputTableValues(output, this.spell);
-            let total = 0;
-            for (const [_] of _pairs(this.spell)) {
-                total = total + 1;
-            }
-            output[lualength(output) + 1] = "Total spells: " + total;
-            return tconcat(output, "\n");
-        }
-        DebugTalents() {
-            _wipe(output);
-            OutputTableValues(output, this.talent);
-            return tconcat(output, "\n");
-        }
-}
-}
-class OvaleSpellBook {
+    DebugTalents() {
+        _wipe(output);
+        OutputTableValues(output, this.talent);
+        return tconcat(output, "\n");
+    }
+
     RequireSpellCountHandler(spellId, atTime, requirement, tokens, index, targetGUID) {
         let verified = false;
         let count = tokens;

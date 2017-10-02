@@ -1,31 +1,29 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvaleScore = Ovale.NewModule("OvaleScore", "AceEvent-3.0", "AceSerializer-3.0");
-Ovale.OvaleScore = OvaleScore;
-import { L } from "./L";
-import { OvaleDebug } from "./OvaleDebug";
+import { Ovale } from "./Ovale";
+import { L } from "./Localization";
+import { OvaleDebug } from "./Debug";
 let OvaleFuture = undefined;
+
+let OvaleScoreBase = Ovale.NewModule("OvaleScore", "AceEvent-3.0", "AceSerializer-3.0");
+export let OvaleScore: OvaleScoreClass;
 let _pairs = pairs;
 let _type = type;
 let API_IsInGroup = IsInGroup;
 let API_SendAddonMessage = SendAddonMessage;
 let API_UnitName = UnitName;
 let _LE_PARTY_CATEGORY_INSTANCE = LE_PARTY_CATEGORY_INSTANCE;
-import { MSG_PREFIX } from "./MSG_PREFIX";
+let MSG_PREFIX = Ovale.MSG_PREFIX;
 let self_playerGUID = undefined;
 let self_name = undefined;
-OvaleDebug.RegisterDebugging(OvaleScore);
-OvaleScore.damageMeter = {
-}
-OvaleScore.damageMeterMethod = {
-}
-OvaleScore.score = 0;
-OvaleScore.maxScore = 0;
-OvaleScore.scoredSpell = {
-}
-class OvaleScore {
+class OvaleScoreClass extends OvaleDebug.RegisterDebugging(OvaleScoreBase) {
+    damageMeter = {
+    }
+    damageMeterMethod = {
+    }
+    score = 0;
+    maxScore = 0;
+    scoredSpell = {}
+    
     OnInitialize() {
-        OvaleFuture = Ovale.OvaleFuture;
     }
     OnEnable() {
         self_playerGUID = Ovale.playerGUID;
@@ -76,7 +74,7 @@ class OvaleScore {
     }
     ScoreSpell(spellId) {
         if (OvaleFuture.inCombat && this.scoredSpell[spellId]) {
-            import { scored } from "./frame";
+            let scored = Ovale.frame.GetScore(spellId)
             this.DebugTimestamp("Scored %s for %d.", scored, spellId);
             if (scored) {
                 this.score = this.score + scored;
@@ -96,3 +94,5 @@ class OvaleScore {
         }
     }
 }
+
+OvaleScore = new OvaleScoreClass();

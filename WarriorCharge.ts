@@ -1,13 +1,11 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvaleWarriorCharge = Ovale.NewModule("OvaleWarriorCharge", "AceEvent-3.0");
-Ovale.OvaleWarriorCharge = OvaleWarriorCharge;
-import { OvaleDebug } from "./OvaleDebug";
-let OvaleAura = undefined;
+import { OvaleDebug } from "./Debug";
+import { OvaleAura } from "./Aura";
+import { Ovale } from "./Ovale";
+let OvaleWarriorChargeBase = Ovale.NewModule("OvaleWarriorCharge", "AceEvent-3.0");
+export let OvaleWarriorCharge: OvaleWarriorChargeClass;
 let API_GetSpellInfo = GetSpellInfo;
 let API_GetTime = GetTime;
 let INFINITY = math.huge;
-OvaleDebug.RegisterDebugging(OvaleWarriorCharge);
 let self_playerGUID = undefined;
 let CHARGED = 100;
 let CHARGED_NAME = "Charged";
@@ -15,10 +13,9 @@ let CHARGED_DURATION = INFINITY;
 let CHARGED_ATTACKS = {
     [100]: API_GetSpellInfo(100)
 }
-OvaleWarriorCharge.targetGUID = undefined;
-class OvaleWarriorCharge {
+class OvaleWarriorChargeClass extends OvaleDebug.RegisterDebugging(OvaleWarriorChargeBase) {
+    targetGUID = undefined;
     OnInitialize() {
-        OvaleAura = Ovale.OvaleAura;
     }
     OnEnable() {
         if (Ovale.playerClass == "WARRIOR") {
@@ -51,3 +48,5 @@ class OvaleWarriorCharge {
         }
     }
 }
+
+OvaleWarriorCharge = new OvaleWarriorChargeClass();

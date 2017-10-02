@@ -1,13 +1,15 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvaleTotem = Ovale.NewModule("OvaleTotem", "AceEvent-3.0");
-Ovale.OvaleTotem = OvaleTotem;
-import { OvaleProfiler } from "./OvaleProfiler";
-let OvaleData = undefined;
-let OvaleSpellBook = undefined;
-let OvaleState = undefined;
+import { OvaleProfiler } from "./Profiler";
+import { Ovale } from "./Ovale";
+import { OvaleData } from "./Data";
+import { OvaleSpellBook }from "./SpellBook";
+import { OvaleState } from "./State";
+
+let OvaleTotemBase = Ovale.NewModule("OvaleTotem", "AceEvent-3.0");
+export let OvaleTotem: OvaleTotemClass;
+
 let _ipairs = ipairs;
 let _pairs = pairs;
+
 let API_GetTotemInfo = GetTotemInfo;
 let _AIR_TOTEM_SLOT = AIR_TOTEM_SLOT;
 let _EARTH_TOTEM_SLOT = EARTH_TOTEM_SLOT;
@@ -15,7 +17,7 @@ let _FIRE_TOTEM_SLOT = FIRE_TOTEM_SLOT;
 let INFINITY = math.huge;
 let _MAX_TOTEMS = MAX_TOTEMS;
 let _WATER_TOTEM_SLOT = WATER_TOTEM_SLOT;
-OvaleProfiler.RegisterProfiling(OvaleTotem);
+
 let self_serial = 0;
 let TOTEM_CLASS = {
     DRUID: true,
@@ -31,13 +33,10 @@ let TOTEM_SLOT = {
     spirit_wolf: 1
 }
 let TOTEMIC_RECALL = 36936;
-OvaleTotem.totem = {
-}
-class OvaleTotem {
+class OvaleTotemClass extends OvaleProfiler.RegisterProfiling(OvaleTotemBase) {
+    totem = {}
+    
     OnInitialize() {
-        OvaleData = Ovale.OvaleData;
-        OvaleSpellBook = Ovale.OvaleSpellBook;
-        OvaleState = Ovale.OvaleState;
     }
     OnEnable() {
         if (TOTEM_CLASS[Ovale.playerClass]) {
@@ -61,12 +60,12 @@ class OvaleTotem {
         self_serial = self_serial + 1;
         Ovale.refreshNeeded[Ovale.playerGUID] = true;
     }
-}
-OvaleTotem.statePrototype = {
-}
-let statePrototype = OvaleTotem.statePrototype;
-statePrototype.totem = undefined;
-class OvaleTotem {
+// }
+// OvaleTotem.statePrototype = {
+// }
+// let statePrototype = OvaleTotem.statePrototype;
+// statePrototype.totem = undefined;
+// class OvaleTotem {
     InitializeState(state) {
         state.totem = {
         }
@@ -241,3 +240,5 @@ statePrototype.DestroyTotem = function (state, slot, atTime) {
     totem.duration = duration;
     OvaleTotem.StopProfiling("OvaleTotem_state_DestroyTotem");
 }
+
+OvaleTotem = new OvaleTotemClass();

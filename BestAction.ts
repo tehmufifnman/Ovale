@@ -1,7 +1,7 @@
 import { OvaleDebug } from "./Debug";
 import { OvalePool } from "./Pool";
 import { OvaleProfiler } from "./Profiler";
-import { OvaleTimeSpan } from "./TimeSpan";
+import { OvaleTimeSpan, UNIVERSE, newTimeSpanFromArray, EMPTY_SET, newTimeSpan, releaseTimeSpans } from "./TimeSpan";
 import { OvaleAST } from "./AST";
 import { OvaleActionBar } from "./ActionBar";
 import { OvaleCompile } from "./Compile";
@@ -25,17 +25,6 @@ let _pairs = pairs;
 let _tonumber = tonumber;
 let _type = type;
 let _wipe = wipe;
-let Complement = OvaleTimeSpan.Complement;
-let CopyTimeSpan = OvaleTimeSpan.Copy;
-let HasTime = OvaleTimeSpan.HasTime;
-let Intersect = OvaleTimeSpan.Intersect;
-let IntersectInterval = OvaleTimeSpan.IntersectInterval;
-let IsUniverse = OvaleTimeSpan.IsUniverse;
-let Measure = OvaleTimeSpan.Measure;
-let ReleaseTimeSpan = OvaleTimeSpan.Release;
-let Union = OvaleTimeSpan.Union;
-let EMPTY_SET = OvaleTimeSpan.EMPTY_SET;
-let UNIVERSE = OvaleTimeSpan.UNIVERSE;
 let INFINITY = math.huge;
 let API_GetTime = GetTime;
 let API_GetActionCooldown = GetActionCooldown;
@@ -64,9 +53,9 @@ let COMPUTE_VISITOR = {
     ["value"]: "ComputeValue"
 }
 let self_serial = 0;
-let self_timeSpan = {
+let self_timeSpan: LuaObj<OvaleTimeSpan> = {
 }
-let self_valuePool = new OvalePoolNoClean("OvaleBestAction_valuePool");
+let self_valuePool = new OvalePool("OvaleBestAction_valuePool");
 let self_value = {
 }
 
@@ -84,25 +73,25 @@ const SetValue = function(node, value?, origin?, rate?) {
     result.rate = rate || 0;
     return result;
 }
-const AsValue = function(atTime, timeSpan, node?) {
-    let value, origin, rate;
+const AsValue = function(atTime: number, timeSpan: OvaleTimeSpan, node?):[number, number, number, OvaleTimeSpan] {
+    let value: number, origin: number, rate: number;
     if (node && node.type == "value") {
         [value, origin, rate] = [node.value, node.origin, node.rate];
-    } else if (timeSpan && HasTime(timeSpan, atTime)) {
+    } else if (timeSpan && timeSpan.HasTime(atTime)) {
         [value, origin, rate, timeSpan] = [1, 0, 0, UNIVERSE];
     } else {
         [value, origin, rate, timeSpan] = [0, 0, 0, UNIVERSE];
     }
     return [value, origin, rate, timeSpan];
 }
-const GetTimeSpan = function(node, defaultTimeSpan?) {
+const GetTimeSpan = function(node, defaultTimeSpan?: OvaleTimeSpan) {
     let timeSpan = self_timeSpan[node];
     if (timeSpan) {
         if (defaultTimeSpan) {
-            CopyTimeSpan(timeSpan, defaultTimeSpan);
+            timeSpan.copyFromArray(defaultTimeSpan);
         }
     } else {
-        self_timeSpan[node] = timeSpan.New(defaultTimeSpan);
+        self_timeSpan[node] = newTimeSpanFromArray(defaultTimeSpan);
         timeSpan = self_timeSpan[node];
     }
     return timeSpan;
@@ -264,7 +253,7 @@ class OvaleBestActionClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Re
     }
     Ovale_ScriptChanged() {
         for (const [node, timeSpan] of _pairs(self_timeSpan)) {
-            ReleaseTimeSpan(timeSpan);
+            timeSpan.Release();
             self_timeSpan[node] = undefined;
         }
         for (const [node, value] of _pairs(self_value)) {
@@ -297,21 +286,21 @@ class OvaleBestActionClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Re
         }
         return undefined;
     }
-    GetAction(node, state, atTime) {
+    GetAction(node, state, atTime):[OvaleTimeSpan, any] {
         this.StartProfiling("OvaleBestAction_GetAction");
         let groupNode = node.child[1];
         let [timeSpan, element] = this.Compute(groupNode, state, atTime);
         if (element && element.type == "state") {
             let [variable, value] = [element.positionalParams[1], element.positionalParams[2]];
-            let isFuture = !HasTime(timeSpan, atTime);
+            let isFuture = !timeSpan.HasTime(atTime);
             state.PutState(variable, value, isFuture);
         }
         this.StopProfiling("OvaleBestAction_GetAction");
         return [timeSpan, element];
     }
-    PostOrderCompute(element, state, atTime) {
+    PostOrderCompute(element, state, atTime): [OvaleTimeSpan, any] {
         this.StartProfiling("OvaleBestAction_Compute");
-        let timeSpan, result;
+        let timeSpan: OvaleTimeSpan, result;
         let postOrder = element.postOrder;
         if (postOrder && !(element.serial && element.serial >= self_serial)) {
             let index = 1;
@@ -323,16 +312,16 @@ class OvaleBestActionClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Re
                 if (parentNode) {
                     let shortCircuit = false;
                     if (parentNode.child && parentNode.child[1] == childNode) {
-                        if (parentNode.type == "if" && Measure(timeSpan) == 0) {
+                        if (parentNode.type == "if" && timeSpan.Measure() == 0) {
                             state.Log("[%d]    '%s' will trigger short-circuit evaluation of parent node [%d] with zero-measure time span.", element.nodeId, childNode.type, parentNode.nodeId);
                             shortCircuit = true;
-                        } else if (parentNode.type == "unless" && IsUniverse(timeSpan)) {
+                        } else if (parentNode.type == "unless" && timeSpan.IsUniverse()) {
                             state.Log("[%d]    '%s' will trigger short-circuit evaluation of parent node [%d] with universe as time span.", element.nodeId, childNode.type, parentNode.nodeId);
                             shortCircuit = true;
-                        } else if (parentNode.type == "logical" && parentNode.operator == "and" && Measure(timeSpan) == 0) {
+                        } else if (parentNode.type == "logical" && parentNode.operator == "and" && timeSpan.Measure() == 0) {
                             state.Log("[%d]    '%s' will trigger short-circuit evaluation of parent node [%d] with zero measure.", element.nodeId, childNode.type, parentNode.nodeId);
                             shortCircuit = true;
-                        } else if (parentNode.type == "logical" && parentNode.operator == "or" && IsUniverse(timeSpan)) {
+                        } else if (parentNode.type == "logical" && parentNode.operator == "or" && timeSpan.IsUniverse()) {
                             state.Log("[%d]    '%s' will trigger short-circuit evaluation of parent node [%d] with universe as time span.", element.nodeId, childNode.type, parentNode.nodeId);
                             shortCircuit = true;
                         }
@@ -352,7 +341,7 @@ class OvaleBestActionClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Re
         this.StartProfiling("OvaleBestAction_Compute");
         return [timeSpan, result];
     }
-    RecursiveCompute(element, state, atTime) {
+    RecursiveCompute(element, state, atTime): [OvaleTimeSpan, any] {
         this.StartProfiling("OvaleBestAction_Compute");
         let timeSpan, result;
         if (element) {
@@ -394,7 +383,7 @@ class OvaleBestActionClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Re
             return timeSpan;
         }
     }
-    ComputeAction(element, state, atTime) {
+    ComputeAction(element, state, atTime):[OvaleTimeSpan, any] {
         this.StartProfiling("OvaleBestAction_ComputeAction");
         let nodeId = element.nodeId;
         let timeSpan = GetTimeSpan(element);
@@ -437,7 +426,7 @@ class OvaleBestActionClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Re
             } else {
                 element.castTime = 0;
             }
-            let start;
+            let start: number;
             if (actionCooldownStart && actionCooldownStart > 0 && (actionCharges == undefined || actionCharges == 0)) {
                 state.Log("[%d]    Action %s (actionCharges=%s)", nodeId, action, actionCharges || "(nil)");
                 if (actionCooldownDuration && actionCooldownDuration > 0) {
@@ -497,20 +486,22 @@ class OvaleBestActionClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Re
                 }
             }
             state.Log("[%d]    Action %s can start at %f.", nodeId, action, start);
-            CopyTimeSpan(timeSpan, start, INFINITY);
+            timeSpan.Copy(start, INFINITY);
             result = element;
         }
         this.StopProfiling("OvaleBestAction_ComputeAction");
         return [timeSpan, result];
     }
-    ComputeArithmetic(element, state, atTime) {
+    ComputeArithmetic(element, state, atTime):[OvaleTimeSpan, any] {
         this.StartProfiling("OvaleBestAction_Compute");
         let timeSpan = GetTimeSpan(element);
         let result;
-        let [a, b, c, timeSpanA] = AsValue(atTime, this.Compute(element.child[1], state, atTime));
-        let [x, y, z, timeSpanB] = AsValue(atTime, this.Compute(element.child[2], state, atTime));
-        Intersect(timeSpanA, timeSpanB, timeSpan);
-        if (Measure(timeSpan) == 0) {
+        const [rawTimeSpanA] = this.Compute(element.child[1], state, atTime);
+        let [a, b, c, timeSpanA] = AsValue(atTime, rawTimeSpanA);
+        const [rawTimeSpanB] = this.Compute(element.child[2], state, atTime);
+        let [x, y, z, timeSpanB] = AsValue(atTime, rawTimeSpanB);
+        timeSpanA.Intersect(timeSpanB, timeSpan);
+        if (timeSpan.Measure() == 0) {
             state.Log("[%d]    arithmetic '%s' returns %s with zero measure", element.nodeId, element.operator, timeSpan);
             result = SetValue(element, 0);
         } else {
@@ -547,9 +538,9 @@ class OvaleBestActionClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Re
                 } else {
                     bound = abs(B / z);
                 }
-                let scratch = IntersectInterval(timeSpan, t - bound, t + bound);
-                CopyTimeSpan(timeSpan, scratch);
-                ReleaseTimeSpan(scratch);
+                let scratch = timeSpan.IntersectInterval(t - bound, t + bound);
+                timeSpan.copyFromArray(scratch);
+                scratch.Release();
             } else if (operator == "%") {
                 if (c == 0 && z == 0) {
                     l = A % B;
@@ -571,10 +562,12 @@ class OvaleBestActionClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Re
     ComputeCompare(element, state, atTime) {
         this.StartProfiling("OvaleBestAction_Compute");
         let timeSpan = GetTimeSpan(element);
-        let [a, b, c, timeSpanA] = AsValue(atTime, this.Compute(element.child[1], state, atTime));
-        let [x, y, z, timeSpanB] = AsValue(atTime, this.Compute(element.child[2], state, atTime));
-        Intersect(timeSpanA, timeSpanB, timeSpan);
-        if (Measure(timeSpan) == 0) {
+        const [rawTimeSpanA] = this.Compute(element.child[1], state, atTime);
+        let [a, b, c, timeSpanA] = AsValue(atTime, rawTimeSpanA);
+        const [rawTimeSpanB] = this.Compute(element.child[2], state, atTime);
+        let [x, y, z, timeSpanB] = AsValue(atTime, rawTimeSpanB);
+        timeSpanA.Intersect(timeSpanB, timeSpan);
+        if (timeSpan.Measure() == 0) {
             state.Log("[%d]    compare '%s' returns %s with zero measure", element.nodeId, element.operator, timeSpan);
         } else {
             let operator = element.operator;
@@ -595,15 +588,15 @@ class OvaleBestActionClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Re
                 }
                 t = (t > 0) && t || 0;
                 state.Log("[%d]    intersection at t = %s", element.nodeId, t);
-                let scratch;
+                let scratch:OvaleTimeSpan;
                 if ((c > z && operator == "<") || (c > z && operator == "<=") || (c < z && operator == ">") || (c < z && operator == ">=")) {
-                    scratch = IntersectInterval(timeSpan, 0, t);
+                    scratch = timeSpan.IntersectInterval(0, t);
                 } else if ((c < z && operator == "<") || (c < z && operator == "<=") || (c > z && operator == ">") || (c > z && operator == ">=")) {
-                    scratch = IntersectInterval(timeSpan, t, INFINITY);
+                    scratch = timeSpan.IntersectInterval(t, INFINITY);
                 }
                 if (scratch) {
-                    CopyTimeSpan(timeSpan, scratch);
-                    ReleaseTimeSpan(scratch);
+                    timeSpan.copyFromArray(scratch);
+                    scratch.Release();
                 } else {
                     _wipe(timeSpan);
                 }
@@ -613,14 +606,14 @@ class OvaleBestActionClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Re
         this.StopProfiling("OvaleBestAction_Compute");
         return timeSpan;
     }
-    ComputeCustomFunction(element, state, atTime) {
+    ComputeCustomFunction(element, state, atTime): [OvaleTimeSpan, any] {
         this.StartProfiling("OvaleBestAction_Compute");
         let timeSpan = GetTimeSpan(element);
-        let result;
+        let result: OvaleTimeSpan;
         let node = OvaleCompile.GetFunctionNode(element.name);
         if (node) {
             let [timeSpanA, elementA] = this.Compute(node.child[1], state, atTime);
-            CopyTimeSpan(timeSpan, timeSpanA);
+            timeSpan.copyFromArray(timeSpanA);
             result = elementA;
         } else {
             _wipe(timeSpan);
@@ -628,13 +621,13 @@ class OvaleBestActionClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Re
         this.StopProfiling("OvaleBestAction_Compute");
         return [timeSpan, result];
     }
-    ComputeFunction(element, state, atTime) {
+    ComputeFunction(element, state, atTime):[OvaleTimeSpan, any] {
         this.StartProfiling("OvaleBestAction_ComputeFunction");
         let timeSpan = GetTimeSpan(element);
         let result;
         let [start, ending, value, origin, rate] = OvaleCondition.EvaluateCondition(element.func, element.positionalParams, element.namedParams, state, atTime);
         if (start && ending) {
-            CopyTimeSpan(timeSpan, start, ending);
+            timeSpan.Copy(start, ending);
         } else {
             _wipe(timeSpan);
         }
@@ -645,15 +638,15 @@ class OvaleBestActionClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Re
         this.StopProfiling("OvaleBestAction_ComputeFunction");
         return [timeSpan, result];
     }
-    ComputeGroup(element, state, atTime) {
+    ComputeGroup(element, state, atTime):[OvaleTimeSpan, any] {
         this.StartProfiling("OvaleBestAction_Compute");
         let bestTimeSpan, bestElement, bestCastTime;
-        let best = OvaleTimeSpan.New();
-        let current = OvaleTimeSpan.New();
+        let best = newTimeSpan();
+        let current = newTimeSpan();
         for (const [_, node] of _ipairs<{nodeId:number}>(element.child)) {
             let [currentTimeSpan, currentElement] = this.Compute(node, state, atTime);
-            IntersectInterval(currentTimeSpan, atTime, INFINITY, current);
-            if (Measure(current) > 0) {
+            currentTimeSpan.IntersectInterval(atTime, INFINITY, current);
+            if (current.Measure() > 0) {
                 let nodeString = (currentElement && currentElement.nodeId) && " [" + currentElement.nodeId + "]" || "";
                 state.Log("[%d]    group checking [%d]: %s%s", element.nodeId, node.nodeId, current, nodeString);
                 let currentCastTime;
@@ -665,7 +658,7 @@ class OvaleBestActionClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Re
                     currentCastTime = gcd;
                 }
                 let currentIsBetter = false;
-                if (Measure(best) == 0) {
+                if (best.Measure() == 0) {
                     state.Log("[%d]    group first best is [%d]: %s%s", element.nodeId, node.nodeId, current, nodeString);
                     currentIsBetter = true;
                 } else {
@@ -676,14 +669,14 @@ class OvaleBestActionClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Re
                     }
                 }
                 if (currentIsBetter) {
-                    CopyTimeSpan(best, current);
+                    best.copyFromArray(current);
                     bestTimeSpan = currentTimeSpan;
                     bestElement = currentElement;
                     bestCastTime = currentCastTime;
                 }
             }
         }
-        OvaleTimeSpan.Release(best, current);
+        releaseTimeSpans(best, current);
         let timeSpan = GetTimeSpan(element, bestTimeSpan);
         if (!bestTimeSpan) {
             _wipe(timeSpan);
@@ -700,26 +693,26 @@ class OvaleBestActionClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Re
         this.StopProfiling("OvaleBestAction_Compute");
         return [timeSpan, bestElement];
     }
-    ComputeIf(element, state, atTime) {
+    ComputeIf(element, state, atTime):[OvaleTimeSpan, any] {
         this.StartProfiling("OvaleBestAction_Compute");
         let timeSpan = GetTimeSpan(element);
         let result;
         let timeSpanA = this.ComputeBool(element.child[1], state, atTime);
         let conditionTimeSpan = timeSpanA;
         if (element.type == "unless") {
-            conditionTimeSpan = Complement(timeSpanA);
+            conditionTimeSpan = timeSpanA.Complement();
         }
-        if (Measure(conditionTimeSpan) == 0) {
-            CopyTimeSpan(timeSpan, conditionTimeSpan);
+        if (conditionTimeSpan.Measure() == 0) {
+            timeSpan.copyFromArray(conditionTimeSpan);
             state.Log("[%d]    '%s' returns %s with zero measure", element.nodeId, element.type, timeSpan);
         } else {
             let [timeSpanB, elementB] = this.Compute(element.child[2], state, atTime);
-            Intersect(conditionTimeSpan, timeSpanB, timeSpan);
+            conditionTimeSpan.Intersect(timeSpanB, timeSpan);
             state.Log("[%d]    '%s' returns %s (intersection of %s and %s)", element.nodeId, element.type, timeSpan, conditionTimeSpan, timeSpanB);
             result = elementB;
         }
         if (element.type == "unless") {
-            ReleaseTimeSpan(conditionTimeSpan);
+            conditionTimeSpan.Release();
         }
         this.StopProfiling("OvaleBestAction_Compute");
         return [timeSpan, result];
@@ -729,30 +722,30 @@ class OvaleBestActionClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Re
         let timeSpan = GetTimeSpan(element);
         let timeSpanA = this.ComputeBool(element.child[1], state, atTime);
         if (element.operator == "and") {
-            if (Measure(timeSpanA) == 0) {
-                CopyTimeSpan(timeSpan, timeSpanA);
+            if (timeSpanA.Measure() == 0) {
+                timeSpan.copyFromArray(timeSpanA);
                 state.Log("[%d]    logical '%s' short-circuits with zero measure left argument", element.nodeId, element.operator);
             } else {
                 let timeSpanB = this.ComputeBool(element.child[2], state, atTime);
-                Intersect(timeSpanA, timeSpanB, timeSpan);
+                timeSpanA.Intersect(timeSpanB, timeSpan);
             }
         } else if (element.operator == "not") {
-            Complement(timeSpanA, timeSpan);
+            timeSpanA.Complement(timeSpan);
         } else if (element.operator == "or") {
-            if (IsUniverse(timeSpanA)) {
-                CopyTimeSpan(timeSpan, timeSpanA);
+            if (timeSpanA.IsUniverse()) {
+                timeSpan.copyFromArray(timeSpanA);
                 state.Log("[%d]    logical '%s' short-circuits with universe as left argument", element.nodeId, element.operator);
             } else {
                 let timeSpanB = this.ComputeBool(element.child[2], state, atTime);
-                Union(timeSpanA, timeSpanB, timeSpan);
+                timeSpanA.Union(timeSpanB, timeSpan);
             }
         } else if (element.operator == "xor") {
             let timeSpanB = this.ComputeBool(element.child[2], state, atTime);
-            let left = Union(timeSpanA, timeSpanB);
-            let scratch = Intersect(timeSpanA, timeSpanB);
-            let right = Complement(scratch);
-            Intersect(left, right, timeSpan);
-            OvaleTimeSpan.Release(left, scratch, right);
+            let left = timeSpanA.Union(timeSpanB);
+            let scratch = timeSpanA.Intersect(timeSpanB);
+            let right = scratch.Complement();
+            left.Intersect(right, timeSpan);
+            releaseTimeSpans(left, scratch, right);
         } else {
             _wipe(timeSpan);
         }
@@ -760,7 +753,7 @@ class OvaleBestActionClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Re
         this.StopProfiling("OvaleBestAction_Compute");
         return timeSpan;
     }
-    ComputeLua(element, state, atTime) {
+    ComputeLua(element, state, atTime):[OvaleTimeSpan, any] {
         this.StartProfiling("OvaleBestAction_ComputeLua");
         let value = _loadstring(element.lua)();
         state.Log("[%d]    lua returns %s", element.nodeId, value);
@@ -772,7 +765,7 @@ class OvaleBestActionClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Re
         this.StopProfiling("OvaleBestAction_ComputeLua");
         return [timeSpan, result];
     }
-    ComputeState(element, state, atTime) {
+    ComputeState(element, state, atTime):[OvaleTimeSpan, any] {
         this.StartProfiling("OvaleBestAction_Compute");
         let result = element;
         _assert(element.func == "setstate");
@@ -781,7 +774,7 @@ class OvaleBestActionClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Re
         this.StopProfiling("OvaleBestAction_Compute");
         return [timeSpan, result];
     }
-    ComputeValue(element, state, atTime) {
+    ComputeValue(element, state, atTime):[OvaleTimeSpan, any] {
         this.StartProfiling("OvaleBestAction_Compute");
         state.Log("[%d]    value is %s", element.nodeId, element.value);
         let timeSpan = GetTimeSpan(element, UNIVERSE);

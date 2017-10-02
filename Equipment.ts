@@ -1460,7 +1460,7 @@ class OvaleEquipmentClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
         }
     }
 
-    GetEquippedItemLevel(...__args) {
+    GetEquippedItemLevel(...__args):number[] {
         count = _select("#", __args);
         for (let n = 1; n <= count; n += 1) {
             let slotId = _select(n, __args);
@@ -1558,7 +1558,7 @@ class OvaleEquipmentClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
         }
         return false;
     }
-    HasOneHandedWeapon(slotId) {
+    HasOneHandedWeapon(slotId?) {
         if (slotId && _type(slotId) != "number") {
             slotId = OVALE_SLOTNAME[slotId];
         }

@@ -1,8 +1,3 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvaleTimeSpan = {
-}
-Ovale.OvaleTimeSpan = OvaleTimeSpan;
 let _select = select;
 let _setmetatable = setmetatable;
 let format = string.format;
@@ -12,27 +7,14 @@ let tremove = table.remove;
 let _type = type;
 let _wipe = wipe;
 let INFINITY = math.huge;
-let self_pool = {
+let self_pool: LuaArray<OvaleTimeSpan> = {
 }
 let self_poolSize = 0;
 let self_poolUnused = 0;
-let EMPTY_SET = _setmetatable({
-}, OvaleTimeSpan);
-let UNIVERSE = _setmetatable({
-    1: 0,
-    2: INFINITY
-}, OvaleTimeSpan);
-OvaleTimeSpan.__index = OvaleTimeSpan;
-{
-    _setmetatable(OvaleTimeSpan, {
-        __call: function (self, ...__args) {
-            return this.New(...__args);
-        }
-    });
-}
-OvaleTimeSpan.EMPTY_SET = EMPTY_SET;
-OvaleTimeSpan.UNIVERSE = UNIVERSE;
-const CompareIntervals = function(startA, endA, startB, endB) {
+export let EMPTY_SET: OvaleTimeSpan;
+export let UNIVERSE: OvaleTimeSpan;
+
+const CompareIntervals = function(startA: number, endA: number, startB: number, endB: number) {
     if (startA == startB && endA == endB) {
         return 0;
     } else if (startA < startB && endA >= startB && endA <= endB) {
@@ -50,39 +32,49 @@ const CompareIntervals = function(startA, endA, startB, endB) {
     }
     return 99;
 }
-class OvaleTimeSpan {
-    New(...__args) {
-        let obj = tremove(self_pool);
-        if (obj) {
-            self_poolUnused = self_poolUnused - 1;
-        } else {
-            obj = {
-            }
-            self_poolSize = self_poolSize + 1;
-        }
-        _setmetatable(obj, this);
-        obj = OvaleTimeSpan.Copy(obj, ...__args);
-        return obj;
+
+export function newTimeSpan() {
+    let obj = tremove(self_pool);
+    if (obj) {
+        self_poolUnused = self_poolUnused - 1;
+    } else {
+        obj = new OvaleTimeSpan();
+        self_poolSize = self_poolSize + 1;
     }
-    Release(...__args) {
-        let A = __args;
-        if (A) {
-            let argc = _select("#", ...__args);
-            for (let i = 1; i <= argc; i += 1) {
-                A = _select(i, ...__args);
-                _wipe(A);
-                tinsert(self_pool, A);
-            }
-            self_poolUnused = self_poolUnused + argc;
-        } else {
-            _wipe(this);
-            tinsert(self_pool, this);
-            self_poolUnused = self_poolUnused + 1;
-        }
+    return obj;
+}
+
+export function newFromArgs(...__args:number[]){
+    return newTimeSpan().Copy(...__args);
+}
+
+export function newTimeSpanFromArray(a: LuaArray<number>) {
+    return newTimeSpan().copyFromArray(a);
+}
+
+export function releaseTimeSpans(...__args:OvaleTimeSpan[]) {
+    let argc = _select("#", __args);
+    for (let i = 1; i <= argc; i += 1) {
+        const a = _select(i, __args);
+        _wipe(a);
+        tinsert(self_pool, a);
     }
-    GetPoolInfo() {
-        return [self_poolSize, self_poolUnused];
+    self_poolUnused = self_poolUnused + argc;
+}
+
+export function GetPoolInfo() {
+    return [self_poolSize, self_poolUnused];
+}
+
+export class OvaleTimeSpan implements LuaArray<number> {
+    [key:number]: number;
+
+    Release(){
+        _wipe(this);
+        tinsert(self_pool, this);
+        self_poolUnused = self_poolUnused + 1;
     }
+    
     __tostring() {
         if (lualength(this) == 0) {
             return "empty set";
@@ -90,19 +82,22 @@ class OvaleTimeSpan {
             return format("(%s)", tconcat(this, ", "));
         }
     }
-    Copy(...__args) {
-        let A = __args;
-        let count = 0;
-        if (_type(A) == "table") {
-            count = lualength(A);
-            for (let i = 1; i <= count; i += 1) {
-                this[i] = A[i];
-            }
-        } else {
-            count = _select("#", ...__args);
-            for (let i = 1; i <= count; i += 1) {
-                this[i] = _select(i, ...__args);
-            }
+
+    copyFromArray(A: LuaArray<number>) {
+        let count = lualength(A);
+        for (let i = 1; i <= count; i += 1) {
+            this[i] = A[i];
+        }
+        for (let i = count + 1; i <= lualength(this); i += 1) {
+            this[i] = undefined;
+        }
+        return this;
+    }
+
+    Copy(...__args:number[]) {
+        let count = _select("#", __args);
+        for (let i = 1; i <= count; i += 1) {
+            this[i] = _select(i, __args);
         }
         for (let i = count + 1; i <= lualength(this); i += 1) {
             this[i] = undefined;
@@ -115,7 +110,7 @@ class OvaleTimeSpan {
     IsUniverse() {
         return this[1] == 0 && this[2] == INFINITY;
     }
-    Equals(B) {
+    Equals(B: OvaleTimeSpan) {
         let A = this;
         let countA = lualength(A);
         let countB = B && lualength(B) || 0;
@@ -129,7 +124,7 @@ class OvaleTimeSpan {
         }
         return true;
     }
-    HasTime(atTime) {
+    HasTime(atTime: number) {
         let A = this;
         for (let i = 1; i <= lualength(A); i += 2) {
             if (A[i] <= atTime && atTime <= A[i + 1]) {
@@ -138,7 +133,7 @@ class OvaleTimeSpan {
         }
         return false;
     }
-    NextTime(atTime) {
+    NextTime(atTime):number {
         let A = this;
         for (let i = 1; i <= lualength(A); i += 2) {
             if (atTime < A[i]) {
@@ -156,17 +151,17 @@ class OvaleTimeSpan {
         }
         return measure;
     }
-    Complement(result) {
+    Complement(result?:OvaleTimeSpan) {
         let A = this;
         let countA = lualength(A);
         if (countA == 0) {
             if (result) {
-                result.Copy(UNIVERSE);
+                result.copyFromArray(UNIVERSE);
             } else {
-                result = OvaleTimeSpan.New(UNIVERSE);
+                result = newTimeSpanFromArray(UNIVERSE);
             }
         } else {
-            result = result || OvaleTimeSpan.New();
+            result = result || newTimeSpan();
             let countResult = 0;
             let [i, k] = [1, 1];
             if (A[i] == 0) {
@@ -191,10 +186,10 @@ class OvaleTimeSpan {
         }
         return result;
     }
-    IntersectInterval(startB, endB, result) {
+    IntersectInterval(startB: number, endB: number, result?: OvaleTimeSpan) {
         let A = this;
         let countA = lualength(A);
-        result = result || OvaleTimeSpan.New();
+        result = result || newTimeSpan();
         if (countA > 0 && startB && endB) {
             let countResult = 0;
             let [i, k] = [1, 1];
@@ -242,11 +237,11 @@ class OvaleTimeSpan {
         }
         return result;
     }
-    Intersect(B, result) {
+    Intersect(B:OvaleTimeSpan, result?:OvaleTimeSpan) {
         let A = this;
         let countA = lualength(A);
         let countB = B && lualength(B) || 0;
-        result = result || OvaleTimeSpan.New();
+        result = result || newTimeSpan();
         let countResult = 0;
         if (countA > 0 && countB > 0) {
             let [i, j, k] = [1, 1, 1];
@@ -300,33 +295,33 @@ class OvaleTimeSpan {
         }
         return result;
     }
-    Union(B, result) {
+    Union(B: OvaleTimeSpan, result?: OvaleTimeSpan) {
         let A = this;
         let countA = lualength(A);
         let countB = B && lualength(B) || 0;
         if (countA == 0) {
             if (B) {
                 if (result) {
-                    result.Copy(B);
+                    result.copyFromArray(B);
                 } else {
-                    result = OvaleTimeSpan.New(B);
+                    result = newTimeSpanFromArray(B);
                 }
             }
         } else if (countB == 0) {
             if (result) {
-                result.Copy(A);
+                result.copyFromArray(A);
             } else {
-                result = OvaleTimeSpan.New(A);
+                result = newTimeSpanFromArray(A);
             }
         } else {
-            result = result || OvaleTimeSpan.New();
+            result = result || newTimeSpan();
             let countResult = 0;
             let [i, j, k] = [1, 1, 1];
             let [startTemp, endTemp] = [A[i], A[i + 1]];
             let holdingA = true;
             let scanningA = false;
             while (true) {
-                let [startA, endA, startB, endB];
+                let startA, endA, startB, endB;
                 if (i > countA && j > countB) {
                     [result[k], result[k + 1]] = [startTemp, endTemp];
                     countResult = k + 1;
@@ -414,3 +409,6 @@ class OvaleTimeSpan {
         return result;
     }
 }
+
+UNIVERSE = newFromArgs(0, 2);
+EMPTY_SET = newTimeSpan();

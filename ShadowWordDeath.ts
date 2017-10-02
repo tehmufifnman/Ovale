@@ -1,23 +1,24 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvaleShadowWordDeath = Ovale.NewModule("OvaleShadowWordDeath", "AceEvent-3.0");
-Ovale.OvaleShadowWordDeath = OvaleShadowWordDeath;
-let OvaleAura = undefined;
+import { Ovale } from "./Ovale";
+import { OvaleAura } from "./Aura";
+
+let OvaleShadowWordDeathBase = Ovale.NewModule("OvaleShadowWordDeath", "AceEvent-3.0");
+export let OvaleShadowWordDeath: OvaleShadowWordDeathClass;
 let API_GetTime = GetTime;
 let self_playerGUID = undefined;
 let SHADOW_WORD_DEATH = {
     [32379]: true,
     [129176]: true
 }
-OvaleShadowWordDeath.spellName = "Shadow Word: Death Reset Cooldown";
-OvaleShadowWordDeath.spellId = 125927;
-OvaleShadowWordDeath.start = 0;
-OvaleShadowWordDeath.ending = 0;
-OvaleShadowWordDeath.duration = 9;
-OvaleShadowWordDeath.stacks = 0;
-class OvaleShadowWordDeath {
+class OvaleShadowWordDeathClass extends OvaleShadowWordDeathBase {
+
+    spellName = "Shadow Word: Death Reset Cooldown";
+    spellId = 125927;
+    start = 0;
+    ending = 0;
+    duration = 9;
+    stacks = 0;
+
     OnInitialize() {
-        OvaleAura = Ovale.OvaleAura;
     }
     OnEnable() {
         if (Ovale.playerClass == "PRIEST") {
@@ -53,3 +54,5 @@ class OvaleShadowWordDeath {
         }
     }
 }
+
+OvaleShadowWordDeath = new OvaleShadowWordDeathClass();

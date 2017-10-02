@@ -1,6 +1,5 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
 import { OvaleProfiler } from "./Profiler";
+import { Ovale } from "./Ovale";
 let _assert = assert;
 let _setmetatable = setmetatable;
 let tinsert = table.insert;

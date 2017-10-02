@@ -3,12 +3,14 @@ import { OvalePool } from "./Pool";
 import { OvaleProfiler } from "./Profiler";
 import { OvaleDebug } from "./Debug";
 import { RegisterPrinter, Ovale } from "./Ovale";
+import { Tokenizer, TokenizerDefinition } from "./Lexer";
+import { OvaleCondition } from "./Condition";
+import { OvaleLexer, LexerFilter } from "./Lexer";
+import { OvaleScripts } from "./Scripts";
+import { OvaleSpellBook } from "./SpellBook";
+import { OvaleStance } from "./Stance";
+
 let OvaleASTBase = Ovale.NewModule("OvaleAST");
-let OvaleCondition = undefined;
-let OvaleLexer = undefined;
-let OvaleScripts = undefined;
-let OvaleSpellBook = undefined;
-let OvaleStance = undefined;
 let format = string.format;
 let gsub = string.gsub;
 let _ipairs = ipairs;
@@ -25,7 +27,6 @@ let _tostring = tostring;
 let tsort = table.sort;
 let _type = type;
 let _wipe = wipe;
-let _yield = coroutine.yield;
 let API_GetItemInfo = GetItemInfo;
 
 let KEYWORD = {
@@ -96,7 +97,7 @@ let STANCE_KEYWORD = {
         KEYWORD[keyword] = value;
     }
 }
-let MATCHES = undefined;
+
 let ACTION_PARAMETER_COUNT = {
     ["item"]: 1,
     ["macro"]: 1,
@@ -206,9 +207,13 @@ interface Annotation {
     nodeList: LuaArray<Node>;
 }
 
-type NodeType = "function" | "string" | "variable" | "value" | "number" | "spell_aura_list" | "item_info" |
+export type NodeType = "function" | "string" | "variable" | "value" | "number" | "spell_aura_list" | "item_info" |
      "item_require" | "spell_info" | "spell_require" | "score_spells" |
-     "add_function" | "icon" | "script" | "checkbox" | "list_item" | "list";
+     "add_function" | "icon" | "script" | "checkbox" | "list_item" | "list" |
+     "logical" | "group" | "unless" | "comment" | "if" | "simc_pool_resource" |
+     "simc_wait" | "custom_function" | "wait" | "action" | "operand";
+
+export type OperatorType = "not" | "or" | "and";
 
 export interface Node {
     child: LuaArray<Node>;
@@ -232,8 +237,116 @@ export interface Node {
     nodeId: number;
     func: string;
     secure: boolean;
+    operator:OperatorType;
+    expressionType:  "unary" | "binary";
+    simc_pool_resource:boolean;
+    simc_wait: boolean;
+    for_next: boolean;
+    extra_amount: number;
+    comment: string;
+
+    // Not sure (used in EmitActionList)
+    action: string;
+    asType: "boolean" | "value"
 }
 
+
+
+const TokenizeComment:Tokenizer = function(token) {
+    return ["comment", token];
+}
+
+const TokenizeLua:Tokenizer = function(token) {
+    token = strsub(token, 3, -3);
+    return ["lua", token];
+}
+
+const TokenizeName:Tokenizer = function(token) {
+    if (KEYWORD[token]) {
+        return ["keyword", token];
+    } else {
+        return ["name", token];
+    }
+}
+
+const TokenizeNumber:Tokenizer = function(token) {
+    return ["number", token];
+}
+
+const TokenizeString:Tokenizer = function(token) {
+    token = strsub(token, 2, -2);
+    return ["string", token];
+}
+const TokenizeWhitespace:Tokenizer = function(token) {
+    return ["space", token];
+}
+
+const Tokenize:Tokenizer = function(token) {
+    return [token, token];
+}
+const NoToken:Tokenizer = function() {
+    return undefined;
+}
+
+const MATCHES:LuaArray<TokenizerDefinition> = {
+    1: {
+        1: "^%s+",
+        2: TokenizeWhitespace
+    },
+    2: {
+        1: "^%d+%.?%d*",
+        2: TokenizeNumber
+    },
+    3: {
+        1: "^[%a_][%w_]*",
+        2: TokenizeName
+    },
+    4: {
+        1: "^((['\"])%2)",
+        2: TokenizeString
+    },
+    5: {
+        1: `^(['\"]).-\\%1`,
+        2: TokenizeString
+    },
+    6: {
+        1: `^(['\"]).-[^\]%1`,
+        2: TokenizeString
+    },
+    7: {
+        1: "^#.-\n",
+        2: TokenizeComment
+    },
+    8: {
+        1: "^!=",
+        2: Tokenize
+    },
+    9: {
+        1: "^==",
+        2: Tokenize
+    },
+    10: {
+        1: "^<=",
+        2: Tokenize
+    },
+    11: {
+        1: "^>=",
+        2: Tokenize
+    },
+    12: {
+        1: "^.",
+        2: Tokenize
+    },
+    13: {
+        1: "^$",
+        2: NoToken
+    }
+}
+
+const FILTERS:LexerFilter = {
+    comments: TokenizeComment,
+    space: TokenizeWhitespace
+}
 
 class SelfPool extends OvalePool<Node> {
     constructor(private ovaleAst: OvaleASTClass) {
@@ -252,7 +365,7 @@ class SelfPool extends OvalePool<Node> {
     }
 }
   
-class OvaleASTClass extends RegisterPrinter(OvaleProfiler.RegisterProfiling(OvaleASTBase)) {
+class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(OvaleASTBase)) {
     self_indent:number = 0;
     self_outputPool = new OvalePool<LuaArray<string>>("OvaleAST_outputPool");
     self_controlPool = new OvalePool<Node>("OvaleAST_controlPool");
@@ -319,115 +432,6 @@ class OvaleASTClass extends RegisterPrinter(OvaleProfiler.RegisterProfiling(Oval
         }
         array[lualength(array) + 1] = node;
         visited[node.nodeId] = true;
-    }
-    TokenizeComment(token) {
-        return _yield("comment", token);
-    }
-
-    TokenizeLua(token, options) {
-        token = strsub(token, 3, -3);
-        return _yield("lua", token);
-    }
-    TokenizeName(token) {
-        if (KEYWORD[token]) {
-            return _yield("keyword", token);
-        } else {
-            return _yield("name", token);
-        }
-    }
-
-    TokenizeNumber(token, options) {
-        if (options && options.number) {
-            token = _tonumber(token);
-        }
-        return _yield("number", token);
-    }
-
-    TokenizeString(token, options) {
-        if (options && options.string) {
-            token = strsub(token, 2, -2);
-        }
-        return _yield("string", token);
-    }
-    TokenizeWhitespace(token) {
-        return _yield("space", token);
-    }
-    Tokenize(token) {
-        return _yield(token, token);
-    }
-    NoToken() {
-        return _yield(undefined);
-    }
-
-    MATCHES = {
-        1: {
-            1: "^%s+",
-            2: this.TokenizeWhitespace
-        },
-        2: {
-            1: "^%d+%.?%d*",
-            2: this.TokenizeNumber
-        },
-        3: {
-            1: "^[%a_][%w_]*",
-            2: this.TokenizeName
-        },
-        4: {
-            1: "^((['\"])%2)",
-            2: this.TokenizeString
-        },
-        5: {
-            1: `^(['\"]).-\\%1`,
-            2: this.TokenizeString
-        },
-        6: {
-            1: `^(['\"]).-[^\]%1`,
-            2: this.TokenizeString
-        },
-        7: {
-            1: "^#.-\n",
-            2: this.TokenizeComment
-        },
-        8: {
-            1: "^!=",
-            2: this.Tokenize
-        },
-        9: {
-            1: "^==",
-            2: this.Tokenize
-        },
-        10: {
-            1: "^<=",
-            2: this.Tokenize
-        },
-        11: {
-            1: "^>=",
-            2: this.Tokenize
-        },
-        12: {
-            1: "^.",
-            2: this.Tokenize
-        },
-        13: {
-            1: "^$",
-            2: this.NoToken
-        }
-    }
-
-    GetTokenIterator(s) {
-        let exclude = {
-            space: true,
-            comments: true
-        }
-        {
-            if (exclude.space) {
-                exclude[this.TokenizeWhitespace.toString()] = true;
-            }
-            if (exclude.comments) {
-                exclude[this.TokenizeComment.toString()] = true;
-            }
-        }
-        return OvaleLexer.scan(s, MATCHES, exclude);
     }
 
     FlattenParameterValue(parameterValue, annotation) {
@@ -1437,7 +1441,7 @@ class OvaleASTClass extends RegisterPrinter(OvaleProfiler.RegisterProfiling(Oval
         }
         let node;
         if (ok) {
-            let includeTokenStream = OvaleLexer(name, this.GetTokenIterator(code));
+            let includeTokenStream = new OvaleLexer(name, code, MATCHES, FILTERS);
             [ok, node] = this.ParseScriptStream(includeTokenStream, nodeList, annotation);
             includeTokenStream.Release();
         }
@@ -1626,7 +1630,7 @@ class OvaleASTClass extends RegisterPrinter(OvaleProfiler.RegisterProfiling(Oval
         }
         return [ok, node];
     }
-    ParseNumber(tokenStream, nodeList, annotation) {
+    ParseNumber(tokenStream:OvaleLexer, nodeList, annotation) {
         let ok = true;
         let value;
         {
@@ -1860,7 +1864,7 @@ class OvaleASTClass extends RegisterPrinter(OvaleProfiler.RegisterProfiling(Oval
         }
         return [ok, node];
     }
-    ParseScriptStream(tokenStream, nodeList, annotation) {
+    ParseScriptStream(tokenStream: OvaleLexer, nodeList, annotation) {
         this.StartProfiling("OvaleAST_ParseScript");
         let ok = true;
         let child = this.self_childrenPool.Get();
@@ -1894,7 +1898,7 @@ class OvaleASTClass extends RegisterPrinter(OvaleProfiler.RegisterProfiling(Oval
         this.StopProfiling("OvaleAST_ParseScript");
         return [ok, ast];
     }
-    ParseSimpleExpression = function (tokenStream, nodeList, annotation) {
+    ParseSimpleExpression(tokenStream: OvaleLexer, nodeList, annotation) {
         let ok = true;
         let node;
         let [tokenType, token] = tokenStream.Peek();
@@ -2341,7 +2345,7 @@ class OvaleASTClass extends RegisterPrinter(OvaleProfiler.RegisterProfiling(Oval
         }
         this.self_pool.Release(ast);
     }
-    ParseCode(nodeType, code, nodeList, annotation) {
+    ParseCode(nodeType, code, nodeList, annotation): [Node, LuaArray<Node>, any] {
         nodeList = nodeList || {
         }
         annotation = annotation || {

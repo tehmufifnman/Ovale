@@ -1,6 +1,4 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let Skada = LibStub("AceAddon-3.0").GetAddon("Skada", true);
+import Skada from "Skada";
 let OvaleSkada = Skada && Skada.NewModule(OVALE) || Ovale.NewModule("OvaleSkada");
 Ovale.OvaleSkada = OvaleSkada;
 let OvaleScore = undefined;

@@ -1,10 +1,10 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvalePassiveAura = Ovale.NewModule("OvalePassiveAura", "AceEvent-3.0");
-Ovale.OvalePassiveAura = OvalePassiveAura;
-let OvaleAura = undefined;
-let OvaleEquipment = undefined;
-let OvalePaperDoll = undefined;
+import { Ovale } from "./Ovale";
+import { OvaleAura } from "./Aura";
+import { OvaleEquipment } from "./Equipment";
+import { OvalePaperDoll } from "./PaperDoll";
+
+let OvalePassiveAuraBase = Ovale.NewModule("OvalePassiveAura", "AceEvent-3.0");
+export let OvalePassiveAura: OvalePassiveAuraClass;
 let exp = math.exp;
 let log = math.log;
 let _pairs = pairs;
@@ -130,11 +130,8 @@ let READINESS_ROLE = {
         protection: READINESS_TANK
     }
 }
-class OvalePassiveAura {
+class OvalePassiveAuraClass extends OvalePassiveAuraBase {
     OnInitialize() {
-        OvaleAura = Ovale.OvaleAura;
-        OvaleEquipment = Ovale.OvaleEquipment;
-        OvalePaperDoll = Ovale.OvalePaperDoll;
     }
     OnEnable() {
         self_playerGUID = Ovale.playerGUID;
@@ -174,10 +171,12 @@ class OvalePassiveAura {
         let critDamageIncrease = 0;
         let statMultiplier = 1;
         for (const [_, slot] of _pairs(TRINKET_SLOTS)) {
-            let trinket = OvaleEquipment.GetEquippedItem(slot);
+            let [trinket] = OvaleEquipment.GetEquippedItem(slot);
             if (trinket && AMPLIFICATION_TRINKET[trinket]) {
                 hasAmplification = true;
-                let ilevel = OvaleEquipment.GetEquippedItemLevel(slot) || 528;
+                let [ilevel] = OvaleEquipment.GetEquippedItemLevel(slot);
+                if (ilevel == undefined) ilevel = 528;
+
                 let amplificationEffect = exp((ilevel - 528) * 0.009327061882 + 1.713797928);
                 if (OvalePaperDoll.level >= 90) {
                     amplificationEffect = amplificationEffect * (100 - OvalePaperDoll.level) / 10;
@@ -209,11 +208,12 @@ class OvalePassiveAura {
             let hasReadiness = false;
             let cdMultiplier;
             for (const [_, slot] of _pairs(TRINKET_SLOTS)) {
-                let trinket = OvaleEquipment.GetEquippedItem(slot);
+                let [trinket] = OvaleEquipment.GetEquippedItem(slot);
                 let readinessId = trinket && READINESS_TRINKET[trinket];
                 if (readinessId) {
                     hasReadiness = true;
-                    let ilevel = OvaleEquipment.GetEquippedItemLevel(slot) || 528;
+                    let [ilevel] = OvaleEquipment.GetEquippedItemLevel(slot);
+                    ilevel = ilevel || 528;
                     let cdRecoveryRateIncrease = exp((ilevel - 528) * 0.009317881032 + 3.434954478);
                     if (readinessId == READINESS_TANK) {
                         cdRecoveryRateIncrease = cdRecoveryRateIncrease / 2;
@@ -241,3 +241,5 @@ class OvalePassiveAura {
         }
     }
 }
+
+OvalePassiveAura = new OvalePassiveAuraClass();

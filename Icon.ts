@@ -16,8 +16,23 @@ const HasScriptControls = function() {
     return (_next(Ovale.checkBoxWidget) != undefined || _next(Ovale.listWidget) != undefined);
 }
 
-class OvaleIcon {
-    focusText: any;
+export class OvaleIcon {
+    actionHelp: any;
+    actionId: any;
+    actionType: any;
+    actionButton: boolean;
+    namedParams: any;
+    positionalParams: any;
+    texture: any;
+    cooldownStart: any;
+    cooldownEnd: any;
+    lastSound: any;
+    fontScale: any;
+    value: any;
+    help: any;
+    shouldClick: boolean;
+    cdShown: boolean;
+    focusText: UIFontString;
     fontFlags: any;
     fontHeight: any;
     fontName: any;
@@ -27,6 +42,18 @@ class OvaleIcon {
     remains: any;
     shortcut: any;
     icone: any;
+    frame: UICheckButton;
+
+    constructor(name: string, parent: UIFrame, secure: boolean) {
+        if (!secure) {
+            this.frame = CreateFrame("CheckButton", name, parent, "ActionButtonTemplate");
+        }        
+        else{
+            this.frame = CreateFrame("CheckButton", name, parent, "SecureActionButtonTemplate, ActionButtonTemplate");
+        }
+        this.OvaleIcon_OnLoad();
+    }
+
     SetValue(value, actionTexture) {
         this.icone.Show();
         this.icone.SetTexture(actionTexture);
@@ -50,7 +77,7 @@ class OvaleIcon {
         } else {
             this.remains.Hide();
         }
-        this.Show();
+        this.frame.Show();
     }
     Update(element, startTime, actionTexture, actionInRange, actionCooldownStart, actionCooldownDuration, actionUsable, actionShortcut, actionIsCurrent, actionEnable, actionType, actionId, actionTarget, actionResourceExtend) {
         this.actionType = actionType;
@@ -129,15 +156,15 @@ class OvaleIcon {
                 let newShouldClick = (startTime < now + lag);
                 if (this.shouldClick != newShouldClick) {
                     if (newShouldClick) {
-                        this.SetChecked(true);
+                        this.frame.SetChecked(true);
                     } else {
-                        this.SetChecked(false);
+                        this.frame.SetChecked(false);
                     }
                     this.shouldClick = newShouldClick;
                 }
             } else if (this.shouldClick) {
                 this.shouldClick = false;
-                this.SetChecked(false);
+                this.frame.SetChecked(false);
             }
             if ((profile.apparence.numeric || this.namedParams.text == "always") && startTime > now) {
                 this.remains.SetFormattedText("%.1f", startTime - now);
@@ -169,7 +196,7 @@ class OvaleIcon {
             } else {
                 this.focusText.Hide();
             }
-            this.Show();
+            this.frame.Show();
         } else {
             this.icone.Hide();
             this.rangeIndicator.Hide();
@@ -177,12 +204,12 @@ class OvaleIcon {
             this.remains.Hide();
             this.focusText.Hide();
             if (profile.apparence.hideEmpty) {
-                this.Hide();
+                this.frame.Hide();
             } else {
-                this.Show();
+                this.frame.Show();
             }
             if (this.shouldClick) {
-                this.SetChecked(false);
+                this.frame.SetChecked(false);
                 this.shouldClick = false;
             }
         }
@@ -197,13 +224,13 @@ class OvaleIcon {
         this.actionButton = false;
         if (secure) {
             for (const [k, v] of _pairs(namedParams)) {
-                let index = strfind(k, "spell");
+                let [index] = strfind(k, "spell");
                 if (index) {
                     let prefix = strsub(k, 1, index - 1);
                     let suffix = strsub(k, index + 5);
-                    this.SetAttribute(prefix + "type" + suffix, "spell");
-                    this.SetAttribute("unit", this.namedParams.target || "target");
-                    this.SetAttribute(k, OvaleSpellBook.GetSpellName(v));
+                    this.frame.SetAttribute(prefix + "type" + suffix, "spell");
+                    this.frame.SetAttribute("unit", this.namedParams.target || "target");
+                    this.frame.SetAttribute(k, OvaleSpellBook.GetSpellName(v));
                     this.actionButton = true;
                 }
             }
@@ -228,11 +255,11 @@ class OvaleIcon {
         if (!this.actionButton) {
             Ovale.ToggleOptions();
         }
-        this.SetChecked(true);
+        this.frame.SetChecked(true);
     }
     OvaleIcon_OnEnter() {
         if (this.help || this.actionType || HasScriptControls()) {
-            GameTooltip.SetOwner(this, "ANCHOR_BOTTOMLEFT");
+            GameTooltip.SetOwner(this.frame, "ANCHOR_BOTTOMLEFT");
             if (this.help) {
                 GameTooltip.SetText(L[this.help]);
             }
@@ -274,7 +301,7 @@ class OvaleIcon {
         this.fontName = fontName;
         this.fontHeight = fontHeight;
         this.fontFlags = fontFlags;
-        this.focusText = this.CreateFontString(undefined, "OVERLAY");
+        this.focusText = this.frame.CreateFontString(undefined, "OVERLAY");
         this.cdShown = true;
         this.shouldClick = false;
         this.help = undefined;
@@ -290,21 +317,16 @@ class OvaleIcon {
         this.actionType = undefined;
         this.actionId = undefined;
         this.actionHelp = undefined;
-        this.SetScript("OnMouseUp", OvaleIcon_OnMouseUp);
+        this.frame.SetScript("OnMouseUp", () => this.OvaleIcon_OnMouseUp());
+        this.frame.SetScript("OnEnter", () => this.OvaleIcon_OnEnter());
+        this.frame.SetScript("OnLeave", () => this.OvaleIcon_OnLeave());
         this.focusText.SetFontObject("GameFontNormalSmall");
-        this.focusText.SetAllPoints(this);
+        this.focusText.SetAllPoints(this.frame);
         this.focusText.SetTextColor(1, 1, 1);
         this.focusText.SetText(L["Focus"]);
-        this.RegisterForClicks("AnyUp");
-        this.Update = Update;
-        this.SetHelp = SetHelp;
-        this.SetParams = SetParams;
-        this.SetRemainsFont = SetRemainsFont;
-        this.SetFontScale = SetFontScale;
-        this.SetRangeIndicator = SetRangeIndicator;
-        this.SetValue = SetValue;
-        if (profile.clickThru) {
-            this.EnableMouse(false);
+        this.frame.RegisterForClicks("AnyUp");
+        if (profile.apparence.clickThru) {
+            this.frame.EnableMouse(false);
         }
     }
 }

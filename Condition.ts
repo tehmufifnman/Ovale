@@ -31,10 +31,8 @@ class OvaleConditionClass extends OvaleDebug.RegisterDebugging(OvaleConditionBas
     OnInitialize() {
     }
     OnEnable() {
-        OvaleState.RegisterState(this, this.statePrototype);
     }
     OnDisable() {
-        OvaleState.UnregisterState(this);
     }
     RegisterCondition(name, isSpellBookCondition, func, arg?) {
         if (arg) {
@@ -63,13 +61,6 @@ class OvaleConditionClass extends OvaleDebug.RegisterDebugging(OvaleConditionBas
     EvaluateCondition(name, positionalParams, namedParams, state, atTime) {
         return self_condition[name](positionalParams, namedParams, state, atTime);
     }
-
-        InitializeState(state) {
-            state.defaultTarget = "target";
-        }
-        CleanState(state) {
-            state.defaultTarget = undefined;
-        }
 }
 
 export function ParseCondition(positionalParams, namedParams, state, defaultTarget?) {
@@ -144,8 +135,3 @@ export function TestValue(start, ending, value, origin, rate, comparator, limit)
 export function Compare(value, comparator, limit) {
     return OvaleCondition.TestValue(0, INFINITY, value, 0, 0, comparator, limit);
 }
-OvaleCondition.statePrototype = {
-}
-let statePrototype = OvaleCondition.statePrototype;
-statePrototype.defaultTarget = undefined;
-

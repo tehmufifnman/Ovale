@@ -1,21 +1,12 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvalePoolGC = {
-}
-Ovale.OvalePoolGC = OvalePoolGC;
+import { Ovale } from "./Ovale";
+
 let _setmetatable = setmetatable;
 let _tostring = tostring;
-OvalePoolGC.name = "OvalePoolGC";
-OvalePoolGC.size = 0;
-OvalePoolGC.__index = OvalePoolGC;
-{
-    _setmetatable(OvalePoolGC, {
-        __call: function (self, ...__args) {
-            return this.NewPool(...__args);
-        }
-    });
-}
-class OvalePoolGC {
+export class OvalePoolGC {
+    name = "OvalePoolGC";
+    size = 0;
+    __index = OvalePoolGC;
+    
     NewPool(name) {
         name = name || this.name;
         return _setmetatable({

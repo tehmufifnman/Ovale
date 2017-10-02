@@ -10,6 +10,7 @@ import { OvaleSpellFlash } from "./SpellFlash";
 import { OvaleState } from "./State";
 import { OvaleTimeSpan } from "./TimeSpan";
 import { Ovale } from "./Ovale";
+import { OvaleIcon } from "./Icon";
 let Type = Ovale.GetName() + "Frame";
 let Version = 7;
 let _ipairs = ipairs;
@@ -20,7 +21,6 @@ let _wipe = wipe;
 let API_CreateFrame = CreateFrame;
 let API_GetTime = GetTime;
 let API_RegisterStateDriver = RegisterStateDriver;
-let NextTime = OvaleTimeSpan.NextTime;
 let INFINITY = math.huge;
 let MIN_REFRESH_TIME = 0.05;
 
@@ -168,9 +168,9 @@ class OvaleFrame {
                 let [timeSpan, element] = OvaleBestAction.GetAction(node, state, atTime);
                 let start;
                 if (element && element.offgcd) {
-                    start = NextTime(timeSpan, state.currentTime);
+                    start = timeSpan.NextTime(state.currentTime);
                 } else {
-                    start = NextTime(timeSpan, atTime);
+                    start = timeSpan.NextTime(atTime);
                 }
                 if (profile.apparence.enableIcons) {
                     this.UpdateActionIcon(state, node, this.actions[k], element, start);
@@ -255,9 +255,9 @@ class OvaleFrame {
                     }
                     let [timeSpan, nextElement] = OvaleBestAction.GetAction(node, state, atTime);
                     if (nextElement && nextElement.offgcd) {
-                        start = NextTime(timeSpan, state.currentTime);
+                        start = timeSpan.NextTime(state.currentTime);
                     } else {
-                        start = NextTime(timeSpan, atTime);
+                        start = timeSpan.NextTime(atTime);
                     }
                     icons[2].Update(nextElement, start, OvaleBestAction.GetActionInfo(nextElement, state, start));
                 } else {
@@ -337,12 +337,12 @@ class OvaleFrame {
                 let icon;
                 if (!node.secure) {
                     if (!action.icons[l]) {
-                        action.icons[l] = API_CreateFrame("CheckButton", "Icon" + k + "n" + l, this.frame, Ovale.GetName() + "IconTemplate");
+                        action.icons[l] = new OvaleIcon("Icon" + k + "n" + l, this.frame, false);
                     }
                     icon = action.icons[l];
                 } else {
                     if (!action.secureIcons[l]) {
-                        action.secureIcons[l] = API_CreateFrame("CheckButton", "SecureIcon" + k + "n" + l, this.frame, "Secure" + Ovale.GetName() + "IconTemplate");
+                        action.secureIcons[l] = new OvaleIcon("SecureIcon" + k + "n" + l, this.frame, true);
                     }
                     icon = action.secureIcons[l];
                 }
@@ -403,7 +403,7 @@ class OvaleFrame {
 
     constructor() {
         let hider = API_CreateFrame("Frame", Ovale.GetName() + "PetBattleFrameHider", UIParent, "SecureHandlerStateTemplate");
-        hider.SetAllPoints(true);
+        hider.SetAllPoints(this.frame);
         API_RegisterStateDriver(hider, "visibility", "[petbattle] hide; show");
         let frame = API_CreateFrame("Frame", undefined, hider);
         

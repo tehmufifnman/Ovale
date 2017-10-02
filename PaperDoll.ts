@@ -1,14 +1,14 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvalePaperDoll = Ovale.NewModule("OvalePaperDoll", "AceEvent-3.0");
-Ovale.OvalePaperDoll = OvalePaperDoll;
-import { L } from "./L";
-import { OvaleDebug } from "./OvaleDebug";
-import { OvaleProfiler } from "./OvaleProfiler";
-let OvaleEquipment = undefined;
-let OvaleFuture = undefined;
-let OvaleStance = undefined;
-let OvaleState = undefined;
+import { L } from "./Localization";
+import { OvaleDebug } from "./Debug";
+import { OvaleProfiler } from "./Profiler";
+import { Ovale } from "./Ovale";
+import { OvaleEquipment } from "./Equipment";
+import { OvaleFuture } from "./Future";
+import { OvaleStance } from "./Stance";
+import { OvaleState } from "./State";
+
+let OvalePaperDollBase = Ovale.NewModule("OvalePaperDoll", "AceEvent-3.0");
+export let OvalePaperDoll: OvalePaperDollClass;
 let _pairs = pairs;
 let _select = select;
 let _tonumber = tonumber;
@@ -36,8 +36,6 @@ let API_UnitSpellHaste = UnitSpellHaste;
 let API_UnitStat = UnitStat;
 let _CR_CRIT_MELEE = CR_CRIT_MELEE;
 let _CR_HASTE_MELEE = CR_HASTE_MELEE;
-OvaleDebug.RegisterDebugging(OvalePaperDoll);
-OvaleProfiler.RegisterProfiling(OvalePaperDoll);
 let self_playerGUID = undefined;
 let OVALE_SPELLDAMAGE_SCHOOL = {
     DEATHKNIGHT: 4,
@@ -122,72 +120,71 @@ let OVALE_SPECIALIZATION_NAME = {
         3: "protection"
     }
 }
-OvalePaperDoll.class = Ovale.playerClass;
-OvalePaperDoll.level = API_UnitLevel("player");
-OvalePaperDoll.specialization = undefined;
-OvalePaperDoll.STAT_NAME = {
-    snapshotTime: true,
-    agility: true,
-    intellect: true,
-    spirit: true,
-    stamina: true,
-    strength: true,
-    attackPower: true,
-    rangedAttackPower: true,
-    spellBonusDamage: true,
-    spellBonusHealing: true,
-    masteryEffect: true,
-    meleeCrit: true,
-    meleeHaste: true,
-    rangedCrit: true,
-    rangedHaste: true,
-    spellCrit: true,
-    spellHaste: true,
-    multistrike: true,
-    critRating: true,
-    hasteRating: true,
-    masteryRating: true,
-    multistrikeRating: true,
-    mainHandWeaponDamage: true,
-    offHandWeaponDamage: true,
-    baseDamageMultiplier: true
-}
-OvalePaperDoll.SNAPSHOT_STAT_NAME = {
-    snapshotTime: true,
-    masteryEffect: true,
-    baseDamageMultiplier: true
-}
-OvalePaperDoll.snapshotTime = 0;
-OvalePaperDoll.agility = 0;
-OvalePaperDoll.intellect = 0;
-OvalePaperDoll.spirit = 0;
-OvalePaperDoll.stamina = 0;
-OvalePaperDoll.strength = 0;
-OvalePaperDoll.attackPower = 0;
-OvalePaperDoll.rangedAttackPower = 0;
-OvalePaperDoll.spellBonusDamage = 0;
-OvalePaperDoll.spellBonusHealing = 0;
-OvalePaperDoll.masteryEffect = 0;
-OvalePaperDoll.meleeCrit = 0;
-OvalePaperDoll.meleeHaste = 0;
-OvalePaperDoll.rangedCrit = 0;
-OvalePaperDoll.rangedHaste = 0;
-OvalePaperDoll.spellCrit = 0;
-OvalePaperDoll.spellHaste = 0;
-OvalePaperDoll.multistrike = 0;
-OvalePaperDoll.critRating = 0;
-OvalePaperDoll.hasteRating = 0;
-OvalePaperDoll.masteryRating = 0;
-OvalePaperDoll.multistrikeRating = 0;
-OvalePaperDoll.mainHandWeaponDamage = 0;
-OvalePaperDoll.offHandWeaponDamage = 0;
-OvalePaperDoll.baseDamageMultiplier = 1;
-class OvalePaperDoll {
+
+class OvalePaperDollClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(OvalePaperDollBase)) {
+    class = Ovale.playerClass;
+    level = API_UnitLevel("player");
+    specialization = undefined;
+    STAT_NAME = {
+        snapshotTime: true,
+        agility: true,
+        intellect: true,
+        spirit: true,
+        stamina: true,
+        strength: true,
+        attackPower: true,
+        rangedAttackPower: true,
+        spellBonusDamage: true,
+        spellBonusHealing: true,
+        masteryEffect: true,
+        meleeCrit: true,
+        meleeHaste: true,
+        rangedCrit: true,
+        rangedHaste: true,
+        spellCrit: true,
+        spellHaste: true,
+        multistrike: true,
+        critRating: true,
+        hasteRating: true,
+        masteryRating: true,
+        multistrikeRating: true,
+        mainHandWeaponDamage: true,
+        offHandWeaponDamage: true,
+        baseDamageMultiplier: true
+    }
+    SNAPSHOT_STAT_NAME = {
+        snapshotTime: true,
+        masteryEffect: true,
+        baseDamageMultiplier: true
+    }
+    snapshotTime = 0;
+    agility = 0;
+    intellect = 0;
+    spirit = 0;
+    stamina = 0;
+    strength = 0;
+    attackPower = 0;
+    rangedAttackPower = 0;
+    spellBonusDamage = 0;
+    spellBonusHealing = 0;
+    masteryEffect = 0;
+    meleeCrit = 0;
+    meleeHaste = 0;
+    rangedCrit = 0;
+    rangedHaste = 0;
+    spellCrit = 0;
+    spellHaste = 0;
+    multistrike = 0;
+    critRating = 0;
+    hasteRating = 0;
+    masteryRating = 0;
+    multistrikeRating = 0;
+    mainHandWeaponDamage = 0;
+    offHandWeaponDamage = 0;
+    baseDamageMultiplier = 1;
+
+    
     OnInitialize() {
-        OvaleEquipment = Ovale.OvaleEquipment;
-        OvaleFuture = Ovale.OvaleFuture;
-        OvaleStance = Ovale.OvaleStance;
-        OvaleState = Ovale.OvaleState;
     }
     OnEnable() {
         self_playerGUID = Ovale.playerGUID;
@@ -355,7 +352,7 @@ class OvalePaperDoll {
     }
     UpdateDamage(event) {
         this.StartProfiling("OvalePaperDoll_UpdateDamage");
-        let [minDamage, maxDamage, minOffHandDamage, maxOffHandDamage, _, _, damageMultiplier] = API_UnitDamage("player");
+        let [minDamage, maxDamage, minOffHandDamage, maxOffHandDamage, _1, _2, damageMultiplier] = API_UnitDamage("player");
         let [mainHandAttackSpeed, offHandAttackSpeed] = API_UnitAttackSpeed("player");
         this.baseDamageMultiplier = damageMultiplier;
         if (this.class == "DRUID" && OvaleStance.IsStance("druid_cat_form")) {
@@ -419,7 +416,7 @@ class OvalePaperDoll {
         this.UNIT_STATS(event, "player");
         this.UpdateDamage(event);
     }
-    GetSpecialization(specialization) {
+    GetSpecialization(specialization?) {
         specialization = specialization || this.specialization;
         return OVALE_SPECIALIZATION_NAME[this.class][specialization];
     }
@@ -437,7 +434,7 @@ class OvalePaperDoll {
         snapshot = snapshot || this;
         return 1 + snapshot.masteryEffect / 100;
     }
-    GetMeleeHasteMultiplier(snapshot) {
+    GetMeleeHasteMultiplier(snapshot?) {
         snapshot = snapshot || this;
         return 1 + snapshot.meleeHaste / 100;
     }
@@ -461,7 +458,7 @@ class OvalePaperDoll {
         }
         return multiplier;
     }
-    UpdateSnapshot(tbl, snapshot, updateAllStats) {
+    UpdateSnapshot(tbl, snapshot, updateAllStats?) {
         if (_type(snapshot) != "table") {
             [snapshot, updateAllStats] = [this, snapshot];
         }
@@ -553,3 +550,5 @@ statePrototype.GetRangedHasteMultiplier = OvalePaperDoll.GetRangedHasteMultiplie
 statePrototype.GetSpellHasteMultiplier = OvalePaperDoll.GetSpellHasteMultiplier;
 statePrototype.GetHasteMultiplier = OvalePaperDoll.GetHasteMultiplier;
 statePrototype.UpdateSnapshot = OvalePaperDoll.UpdateSnapshot;
+
+OvalePaperDoll = new OvalePaperDollClass();

@@ -65,11 +65,21 @@ export function RegisterPrinter<T extends Constructor<AceModule>>(base: T) {
     }    
 }
 
+interface Color {
+    r:number;
+    g:number;
+    b:number;
+}
+
 export interface OvaleDb {
     profile: {
+        source: string;
+        code: string,
         check: {},
         list: {},
         standaloneOptions: boolean,
+        showHiddenScripts: boolean;
+        overrideCode: string;
         apparence: {
             avecCible: boolean,
             clickThru: boolean,
@@ -103,7 +113,22 @@ export interface OvaleDb {
             predictif: boolean,
             secondIconScale: number,
             taggedEnemies: boolean,
-            auraLag: number
+            auraLag: number,
+            moving: boolean,
+            spellFlash: {
+                enabled: boolean,
+                colorMain?: Color,
+                colorCd?: Color,
+                colorShortCd?: Color,
+                colorInterrupt?: Color,
+                inCombat?: boolean,
+                hideInVehicle?: boolean,
+                hasTarget?: boolean,
+                hasHostileTarget?: boolean,
+                threshold?: number,
+                size?: number,
+                brightness?: number,
+            }
         }
     },
     global: any;
@@ -123,9 +148,9 @@ class OvaleClass extends AceAddon.NewAddon("Ovale", "AceEvent-3.0") {
     }
     listWidget = {
     }
-    refreshNeeded = {
-    }
+    refreshNeeded:LuaObj<boolean> = {}
     inCombat = false;
+    MSG_PREFIX = "Ovale";
 
     OnCheckBoxValueChanged(widget) {
         let name = widget.GetUserData("name");

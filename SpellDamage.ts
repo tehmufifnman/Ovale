@@ -1,17 +1,14 @@
-import __addon from "addon";
-let [OVALE, Ovale] = __addon;
-let OvaleSpellDamage = Ovale.NewModule("OvaleSpellDamage", "AceEvent-3.0");
-Ovale.OvaleSpellDamage = OvaleSpellDamage;
-import { OvaleProfiler } from "./OvaleProfiler";
-OvaleProfiler.RegisterProfiling(OvaleSpellDamage);
+import { OvaleProfiler } from "./Profiler";
+import { Ovale } from "./Ovale";
+
 let CLEU_DAMAGE_EVENT = {
     SPELL_DAMAGE: true,
     SPELL_PERIODIC_AURA: true
 }
-let self_playerGUID = undefined;
-OvaleSpellDamage.value = {
-}
-class OvaleSpellDamage {
+let self_playerGUID:string = undefined;
+
+class OvaleSpellDamageClass extends OvaleProfiler.RegisterProfiling(Ovale.NewModule("OvaleSpellDamage", "AceEvent-3.0")) {
+    value = {}
     OnEnable() {
         self_playerGUID = Ovale.playerGUID;
         this.RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
@@ -35,3 +32,5 @@ class OvaleSpellDamage {
         return this.value[spellId];
     }
 }
+
+export let OvaleSpellDamage = new OvaleSpellDamageClass()
