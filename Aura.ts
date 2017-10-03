@@ -1024,7 +1024,7 @@ class AuraState implements StateModule {
                     let aura = this.GetStateAura(guid, auraId, casterGUID);
                     if (this.IsActiveAura(aura) && aura.filter == filter && !aura.state) {
                         let name = aura.name || "Unknown spell";
-                        tinsert(array, name + ": " + auraId);
+                        tinsert(array, `${name}: ${auraId}`);
                     }
                 }
             }
@@ -1034,7 +1034,7 @@ class AuraState implements StateModule {
                 for (const [casterGUID, aura] of _pairs(whoseTable)) {
                     if (this.IsActiveAura(aura) && aura.filter == filter) {
                         let name = aura.name || "Unknown spell";
-                        tinsert(array, name + ": " + auraId);
+                        tinsert(array, `${name}: ${auraId}`);
                     }
                 }
             }

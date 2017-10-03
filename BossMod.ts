@@ -65,7 +65,7 @@ class OvaleBossModClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Regis
             if (isWorldBoss) {
                 this.Debug("%s is worldboss (%s)", target, UnitName(target));
             }
-            return isWorldBoss || (dep <= 3 && RecursiveScanTargets(target + "target", dep + 1));
+            return isWorldBoss || (dep <= 3 && RecursiveScanTargets(`${target}target`, dep + 1));
         }
         let bossEngaged = false;
         bossEngaged = bossEngaged || API_UnitExists("boss1") || API_UnitExists("boss2") || API_UnitExists("boss3") || API_UnitExists("boss4");
@@ -73,22 +73,22 @@ class OvaleBossModClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Regis
         if (!bossEngaged) {
             if ((API_IsInInstance() && API_IsInGroup(LE_PARTY_CATEGORY_INSTANCE) && API_GetNumGroupMembers(LE_PARTY_CATEGORY_INSTANCE) > 1)) {
                 for (let i = 1; i <= API_GetNumGroupMembers(LE_PARTY_CATEGORY_INSTANCE); i += 1) {
-                    bossEngaged = bossEngaged || RecursiveScanTargets("party" + i) || RecursiveScanTargets("party" + i + "pet");
+                    bossEngaged = bossEngaged || RecursiveScanTargets(`party${i}`) || RecursiveScanTargets(`party${i}pet`);
                 }
             }
             if ((!API_IsInInstance() && API_IsInGroup(LE_PARTY_CATEGORY_HOME) && API_GetNumGroupMembers(LE_PARTY_CATEGORY_HOME) > 1)) {
                 for (let i = 1; i <= API_GetNumGroupMembers(LE_PARTY_CATEGORY_HOME); i += 1) {
-                    bossEngaged = bossEngaged || RecursiveScanTargets("party" + i) || RecursiveScanTargets("party" + i + "pet");
+                    bossEngaged = bossEngaged || RecursiveScanTargets(`party${i}`) || RecursiveScanTargets(`party${i}pet`);
                 }
             }
             if ((API_IsInInstance() && API_IsInRaid(LE_PARTY_CATEGORY_INSTANCE) && API_GetNumGroupMembers(LE_PARTY_CATEGORY_INSTANCE) > 1)) {
                 for (let i = 1; i <= API_GetNumGroupMembers(LE_PARTY_CATEGORY_INSTANCE); i += 1) {
-                    bossEngaged = bossEngaged || RecursiveScanTargets("raid" + i) || RecursiveScanTargets("raid" + i + "pet");
+                    bossEngaged = bossEngaged || RecursiveScanTargets(`raid${i}`) || RecursiveScanTargets(`raid${i}pet`);
                 }
             }
             if ((!API_IsInInstance() && API_IsInRaid(LE_PARTY_CATEGORY_HOME) && API_GetNumGroupMembers(LE_PARTY_CATEGORY_HOME) > 1)) {
                 for (let i = 1; i <= API_GetNumGroupMembers(LE_PARTY_CATEGORY_HOME); i += 1) {
-                    bossEngaged = bossEngaged || RecursiveScanTargets("raid" + i) || RecursiveScanTargets("raid" + i + "pet");
+                    bossEngaged = bossEngaged || RecursiveScanTargets(`raid${i}`) || RecursiveScanTargets(`raid${i}pet`);
                 }
             }
         }

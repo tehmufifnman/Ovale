@@ -194,9 +194,10 @@ let BINARY_OPERATOR = {
 let indent:LuaArray<string> = {};
 indent[0] = "";
 function INDENT(key: number) {
-    const ret = indent[key];
+    let ret = indent[key];
     if (ret == undefined) {
-        return indent[key] = INDENT(key - 1) + " ";
+        ret = `${INDENT(key - 1)} `;
+        indent[key] = ret;
     }
     return ret;
 }
@@ -387,21 +388,21 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         for (const [key, value] of _pairs(node)) {
             if (_type(value) == "table") {
                 if (done[value]) {
-                    tinsert(output, indent + "[" + _tostring(key) + "] => (self_reference)");
+                    tinsert(output, `${indent}[${ _tostring(key)}] => (self_reference)`);
                 } else {
                     done[value] = true;
                     if (value.type) {
-                        tinsert(output, indent + "[" + _tostring(key) + "] =>");
+                        tinsert(output, `${indent}[${_tostring(key)}] =>`);
                     } else {
-                        tinsert(output, indent + "[" + _tostring(key) + "] => {");
+                        tinsert(output, `${indent}[${_tostring(key)}] => {`);
                     }
-                    this.print_r(value, indent + "    ", done, output);
+                    this.print_r(value, `${indent}    `, done, output);
                     if (!value.type) {
-                        tinsert(output, indent + "}");
+                        tinsert(output, `${indent}}`);
                     }
                 }
             } else {
-                tinsert(output, indent + "[" + _tostring(key) + "] => " + _tostring(value));
+                tinsert(output, `${indent}[${_tostring(key)}] => ${_tostring(value)}`);
             }
         }
         return output;
@@ -460,7 +461,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
                     value = node.value;
                 }
                 if (isBang) {
-                    value = "!" + _tostring(value);
+                    value = `!${_tostring(value)}`;
                 }
             }
         }
@@ -569,13 +570,13 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         return s;
     }
     UnparseBangValue = function (node) {
-        return "!" + this.Unparse(node.child[1]);
+        return `!${this.Unparse(node.child[1])}`;
     }
     UnparseComment = function (node) {
         if (!node.comment || node.comment == "") {
             return "";
         } else {
-            return "#" + node.comment;
+            return `#${node.comment}`;
         }
     }
     UnparseCommaSeparatedValues = function (node) {
@@ -598,38 +599,38 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
             let rhsNode = node.child[1];
             let rhsPrecedence = this.GetPrecedence(rhsNode);
             if (rhsPrecedence && precedence >= rhsPrecedence) {
-                rhsExpression = "{ " + this.Unparse(rhsNode) + " }";
+                rhsExpression = `{ ${this.Unparse(rhsNode)} }`;
             } else {
                 rhsExpression = this.Unparse(rhsNode);
             }
             if (node.operator == "-") {
-                expression = "-" + rhsExpression;
+                expression = `-${rhsExpression}`;
             } else {
-                expression = node.operator + " " + rhsExpression;
+                expression = `${node.operator} ${rhsExpression}`;
             }
         } else if (node.expressionType == "binary") {
             let lhsExpression, rhsExpression;
             let lhsNode = node.child[1];
             let lhsPrecedence = this.GetPrecedence(lhsNode);
             if (lhsPrecedence && lhsPrecedence < precedence) {
-                lhsExpression = "{ " + this.Unparse(lhsNode) + " }";
+                lhsExpression = `{ ${this.Unparse(lhsNode)} }`;
             } else {
                 lhsExpression = this.Unparse(lhsNode);
             }
             let rhsNode = node.child[2];
             let rhsPrecedence = this.GetPrecedence(rhsNode);
             if (rhsPrecedence && precedence > rhsPrecedence) {
-                rhsExpression = "{ " + this.Unparse(rhsNode) + " }";
+                rhsExpression = `{ ${this.Unparse(rhsNode)} }`;
             } else if (rhsPrecedence && precedence == rhsPrecedence) {
                 if (BINARY_OPERATOR[node.operator][3] == "associative" && node.operator == rhsNode.operator) {
                     rhsExpression = this.Unparse(rhsNode);
                 } else {
-                    rhsExpression = "{ " + this.Unparse(rhsNode) + " }";
+                    rhsExpression = `{ ${this.Unparse(rhsNode)} }`;
                 }
             } else {
                 rhsExpression = this.Unparse(rhsNode);
             }
-            expression = lhsExpression + " " + node.operator + " " + rhsExpression;
+            expression = `${lhsExpression} ${node.operator} ${rhsExpression}`;
         }
         return expression;
     }
@@ -657,18 +658,18 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
     UnparseGroup(node) {
         let output = this.self_outputPool.Get();
         output[lualength(output) + 1] = "";
-        output[lualength(output) + 1] = INDENT(this.self_indent) + "{";
+        output[lualength(output) + 1] = `${INDENT(this.self_indent)}{`;
         this.self_indent = this.self_indent + 1;
         for (const [_, statementNode] of _ipairs(node.child)) {
             let s = this.Unparse(statementNode);
             if (s == "") {
                 output[lualength(output) + 1] = s;
             } else {
-                output[lualength(output) + 1] = INDENT(this.self_indent) + s;
+                output[lualength(output) + 1] = `${INDENT(this.self_indent)}${s}`;
             }
         }
         this.self_indent = this.self_indent - 1;
-        output[lualength(output) + 1] = INDENT(this.self_indent) + "}";
+        output[lualength(output) + 1] = `${INDENT(this.self_indent)}}`;
         let outputString = tconcat(output, "\n");
         this.self_outputPool.Release(output);
         return outputString;
@@ -732,7 +733,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
                 if (s == "") {
                     output[lualength(output) + 1] = s;
                 } else {
-                    output[lualength(output) + 1] = INDENT(this.self_indent + 1) + s;
+                    output[lualength(output) + 1] = `${INDENT(this.self_indent + 1)}${s}`;
                 }
             } else {
                 let insertBlank = false;
@@ -766,7 +767,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         return format("SpellRequire(%s %s %s)", identifier, node.property, this.UnparseParameters(node.rawPositionalParams, node.rawNamedParams));
     }
     UnparseString(node) {
-        return '"' + node.value + '"';
+        return `"${node.value}"`;
     }
     UnparseUnless(node) {
         if (node.child[2].type == "group") {
@@ -2626,7 +2627,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
                 let functionHash = ast.annotation.functionHash || {}
                 for (const [_, node] of _ipairs<Node>(ast.annotation.functionReference)) {
                     if (node.positionalParams || node.namedParams) {
-                        let hash = node.name + "(" + node.paramsAsString + ")";
+                        let hash = `${node.name}(${node.paramsAsString})`;
                         node.functionHash = hash;
                         functionHash[hash] = functionHash[hash] || node;
                     }

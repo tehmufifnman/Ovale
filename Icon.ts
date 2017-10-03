@@ -227,7 +227,7 @@ export class OvaleIcon {
                 if (index) {
                     let prefix = strsub(k, 1, index - 1);
                     let suffix = strsub(k, index + 5);
-                    this.frame.SetAttribute(prefix + "type" + suffix, "spell");
+                    this.frame.SetAttribute(`${prefix}type${suffix}`, "spell");
                     this.frame.SetAttribute("unit", this.namedParams.target || "target");
                     this.frame.SetAttribute(k, OvaleSpellBook.GetSpellName(v));
                     this.actionButton = true;
@@ -289,13 +289,13 @@ export class OvaleIcon {
     OvaleIcon_OnLoad() {
         let name = Ovale.GetName();
         const profile = Ovale.db.profile;
-        this.icone = _G[name + "Icon"];
-        this.shortcut = _G[name + "HotKey"];
-        this.remains = _G[name + "Name"];
-        this.rangeIndicator = _G[name + "Count"];
+        this.icone = _G[`${name}Icon`];
+        this.shortcut = _G[`${name}HotKey`];
+        this.remains = _G[`${name}Name`];
+        this.rangeIndicator = _G[`${name}Count`];
         this.rangeIndicator.SetText(profile.apparence.targetText);
-        this.cd = _G[name + "Cooldown"];
-        this.normalTexture = _G[name + "NormalTexture"];
+        this.cd = _G[`${name}Cooldown`];
+        this.normalTexture = _G[`${name}NormalTexture`];
         let [fontName, fontHeight, fontFlags] = this.shortcut.GetFont();
         this.fontName = fontName;
         this.fontHeight = fontHeight;

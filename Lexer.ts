@@ -11,7 +11,7 @@ let strsub = string.sub;
 let append = table.insert;
 const assert_arg = function(idx, val, tp) {
     if (_type(val) != tp) {
-        _error("argument " + idx + " must be " + tp, 2);
+        _error(`argument ${idx} must be ${tp}`, 2);
     }
 }
 

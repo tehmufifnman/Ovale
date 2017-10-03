@@ -1,5 +1,5 @@
-local OVALE, Ovale = ...
-require(OVALE, Ovale, "ovale_mage_spells", { "./OvaleScripts" }, function(__exports, __OvaleScripts)
+local __addonName, __addon = ...
+__addon.require(__addonName, __addon, "ovale_mage_spells", { "../Scripts" }, function(__exports, __Scripts)
 do
     local name = "ovale_mage_spells"
     local desc = "[7.0] Ovale: Mage spells"
@@ -299,6 +299,6 @@ Define(zannesu_journey_buff 226852)
 ### Pyroblast
 AddFunction FirePyroblastHitDamage asValue=1 { 2.423 * Spellpower() * { BuffPresent(pyroblast_buff asValue=1) * 1.25 } }
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("MAGE", nil, name, desc, code, "include")
+    __Scripts.OvaleScripts:RegisterScript("MAGE", nil, name, desc, code, "include")
 end
-end))
+end)

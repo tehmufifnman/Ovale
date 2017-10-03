@@ -1,5 +1,5 @@
-local OVALE, Ovale = ...
-require(OVALE, Ovale, "ovale_shaman", { "./OvaleScripts" }, function(__exports, __OvaleScripts)
+local __addonName, __addon = ...
+__addon.require(__addonName, __addon, "ovale_shaman", { "../Scripts" }, function(__exports, __Scripts)
 do
     local name = "simulationcraft_shaman_elemental_t19p"
     local desc = "[7.0] SimulationCraft: Shaman_Elemental_T19P"
@@ -584,7 +584,7 @@ AddIcon checkbox=opt_shaman_elemental_aoe help=cd specialization=elemental
 # war_stomp
 # wind_shear
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("SHAMAN", "elemental", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("SHAMAN", "elemental", name, desc, code, "script")
 end
 do
     local name = "simulationcraft_shaman_enhancement_t19p"
@@ -1246,6 +1246,6 @@ AddIcon checkbox=opt_shaman_enhancement_aoe help=cd specialization=enhancement
 # windsong
 # windstrike
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("SHAMAN", "enhancement", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("SHAMAN", "enhancement", name, desc, code, "script")
 end
-end))
+end)

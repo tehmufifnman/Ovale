@@ -1,5 +1,5 @@
-local OVALE, Ovale = ...
-require(OVALE, Ovale, "ovale_deathknight_spells", { "./OvaleScripts" }, function(__exports, __OvaleScripts)
+local __addonName, __addon = ...
+__addon.require(__addonName, __addon, "ovale_deathknight_spells", { "../Scripts" }, function(__exports, __Scripts)
 do
     local name = "ovale_deathknight_spells"
     local desc = "[7.0] Ovale: Death Knight spells"
@@ -294,6 +294,6 @@ Define(perseverance_of_the_ebon_martyr_debuff 216059)
 	SpellInfo(blood_tap tag=main)
 	SpellInfo(outbreak tag=main)
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("DEATHKNIGHT", nil, name, desc, code, "include")
+    __Scripts.OvaleScripts:RegisterScript("DEATHKNIGHT", nil, name, desc, code, "include")
 end
-end))
+end)

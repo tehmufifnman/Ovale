@@ -1,5 +1,5 @@
-local OVALE, Ovale = ...
-require(OVALE, Ovale, "ovale_demonhunter", { "./OvaleScripts" }, function(__exports, __OvaleScripts)
+local __addonName, __addon = ...
+__addon.require(__addonName, __addon, "ovale_demonhunter", { "../Scripts" }, function(__exports, __Scripts)
 do
     local name = "icyveins_demonhunter_vengeance"
     local desc = "[7.0] Icy-Veins: DemonHunter Vengeance"
@@ -182,7 +182,7 @@ AddIcon help=cd specialization=vengeance
 	VengeanceDefaultCdActions()
 }
 	]]
-    __OvaleScripts.OvaleScripts:RegisterScript("DEMONHUNTER", "vengeance", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("DEMONHUNTER", "vengeance", name, desc, code, "script")
 end
 do
     local name = "simulationcraft_demon_hunter_havoc_t19p"
@@ -667,7 +667,7 @@ AddIcon checkbox=opt_demonhunter_havoc_aoe help=cd specialization=havoc
 # throw_glaive_havoc
 # vengeful_retreat
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("DEMONHUNTER", "havoc", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("DEMONHUNTER", "havoc", name, desc, code, "script")
 end
 do
     local name = "simulationcraft_demon_hunter_vengeance_t19p"
@@ -918,6 +918,6 @@ AddIcon checkbox=opt_demonhunter_vengeance_aoe help=cd specialization=vengeance
 # spirit_bomb
 # unbending_potion
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("DEMONHUNTER", "vengeance", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("DEMONHUNTER", "vengeance", name, desc, code, "script")
 end
-end))
+end)

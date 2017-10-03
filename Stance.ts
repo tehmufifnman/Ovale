@@ -130,7 +130,7 @@ class OvaleStanceClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regist
         _wipe(array);
         for (const [k, v] of _pairs(this.stanceList)) {
             if (this.stance == k) {
-                tinsert(array, v + " (active)");
+                tinsert(array, `${v} (active)`);
             } else {
                 tinsert(array, v);
             }

@@ -1,5 +1,5 @@
-local OVALE, Ovale = ...
-require(OVALE, Ovale, "ovale_druid", { "./OvaleScripts" }, function(__exports, __OvaleScripts)
+local __addonName, __addon = ...
+__addon.require(__addonName, __addon, "ovale_druid", { "../Scripts" }, function(__exports, __Scripts)
 do
     local name = "icyveins_druid_guardian"
     local desc = "[7.1.5] Icy-Veins: Druid Guardian"
@@ -130,7 +130,7 @@ AddIcon help=cd specialization=guardian
 }
 	
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("DRUID", "guardian", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("DRUID", "guardian", name, desc, code, "script")
 end
 do
     local name = "simulationcraft_druid_balance_t19p"
@@ -701,7 +701,7 @@ AddIcon checkbox=opt_druid_balance_aoe help=cd specialization=balance
 # warrior_of_elune
 # warrior_of_elune_buff
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("DRUID", "balance", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("DRUID", "balance", name, desc, code, "script")
 end
 do
     local name = "simulationcraft_druid_feral_t19p"
@@ -1230,7 +1230,7 @@ AddIcon checkbox=opt_druid_feral_aoe help=cd specialization=feral
 # wild_charge_bear
 # wild_charge_cat
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("DRUID", "feral", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("DRUID", "feral", name, desc, code, "script")
 end
 do
     local name = "simulationcraft_druid_guardian_t19p"
@@ -1474,6 +1474,6 @@ AddIcon checkbox=opt_druid_guardian_aoe help=cd specialization=guardian
 # wild_charge_bear
 # wild_charge_cat
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("DRUID", "guardian", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("DRUID", "guardian", name, desc, code, "script")
 end
-end))
+end)

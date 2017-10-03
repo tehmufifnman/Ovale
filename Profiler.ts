@@ -51,7 +51,7 @@ class OvaleProfilerClass extends OvaleProfilerBase {
     }
 
     options = {
-        name: Ovale.GetName() + " " + L["Profiling"],
+        name: `${Ovale.GetName()} ${L["Profiling"]}`,
         type: "group",
         args: {
             profiling: {
@@ -120,7 +120,7 @@ class OvaleProfilerClass extends OvaleProfilerBase {
     
     OnEnable() {
         if (!this.self_profilingOutput) {
-            this.self_profilingOutput = LibTextDump.New(Ovale.GetName() + " - " + L["Profiling"], 750, 500);
+            this.self_profilingOutput = LibTextDump.New(`${Ovale.GetName()} - ${L["Profiling"]}`, 750, 500);
         }
     }
     OnDisable() {

@@ -27,7 +27,7 @@ let API_UnitIsDead = UnitIsDead;
 let _DEFAULT_CHAT_FRAME = DEFAULT_CHAT_FRAME;
 let INFINITY = math.huge;
 let OVALE_VERSION = "7.3.0.2";
-let REPOSITORY_KEYWORD = "@" + "project-version" + "@";
+let REPOSITORY_KEYWORD = `@${"project-version"}@`;
 let self_oneTimeMessage = {
 }
 let MAX_REFRESH_INTERVALS = 500;
@@ -39,7 +39,7 @@ export type Constructor<T> = new(...args: any[]) => T;
 
 export function MakeString(s?, ...__args) {
     if (s && strlen(s) > 0) {
-        if (__args.length > 0) {
+        if (__args) {
             if (strfind(s, "%%%.%d") || strfind(s, "%%[%w]")) {
                 s = format(s, ..._tostringall(...__args));
             } else {
@@ -170,11 +170,11 @@ class OvaleClass extends AceAddon.NewAddon("Ovale", "AceEvent-3.0") {
     OnInitialize() {
         _G["BINDING_HEADER_OVALE"] = "Ovale";
         let toggleCheckBox = L["Inverser la boîte à cocher "];
-        _G["BINDING_NAME_OVALE_CHECKBOX0"] = toggleCheckBox + "(1)";
-        _G["BINDING_NAME_OVALE_CHECKBOX1"] = toggleCheckBox + "(2)";
-        _G["BINDING_NAME_OVALE_CHECKBOX2"] = toggleCheckBox + "(3)";
-        _G["BINDING_NAME_OVALE_CHECKBOX3"] = toggleCheckBox + "(4)";
-        _G["BINDING_NAME_OVALE_CHECKBOX4"] = toggleCheckBox + "(5)";
+        _G["BINDING_NAME_OVALE_CHECKBOX0"] = `${toggleCheckBox}(1)`;
+        _G["BINDING_NAME_OVALE_CHECKBOX1"] = `${toggleCheckBox}(2)`;
+        _G["BINDING_NAME_OVALE_CHECKBOX2"] = `${toggleCheckBox}(3)`;
+        _G["BINDING_NAME_OVALE_CHECKBOX3"] = `${toggleCheckBox}(4)`;
+        _G["BINDING_NAME_OVALE_CHECKBOX4"] = `${toggleCheckBox}(5)`;
     }
 
     OnEnable() {

@@ -1,5 +1,5 @@
-local OVALE, Ovale = ...
-require(OVALE, Ovale, "ovale_monk", { "./OvaleScripts" }, function(__exports, __OvaleScripts)
+local __addonName, __addon = ...
+__addon.require(__addonName, __addon, "ovale_monk", { "../Scripts" }, function(__exports, __Scripts)
 do
     local name = "icyveins_monk_brewmaster"
     local desc = "[7.0] Icy-Veins: Monk Brewmaster"
@@ -202,7 +202,7 @@ AddIcon help=cd specialization=brewmaster
 }
 	
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("MONK", "brewmaster", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("MONK", "brewmaster", name, desc, code, "script")
 end
 do
     local name = "simulationcraft_monk_windwalker_t19p"
@@ -874,6 +874,6 @@ AddIcon checkbox=opt_monk_windwalker_aoe help=cd specialization=windwalker
 # war_stomp
 # whirling_dragon_punch
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("MONK", "windwalker", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("MONK", "windwalker", name, desc, code, "script")
 end
-end))
+end)

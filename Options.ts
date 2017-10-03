@@ -440,10 +440,10 @@ class OvaleOptionsClass extends OvaleOptionsBase {
         Ovale.db = <OvaleDb><any>db;
         this.UpgradeSavedVariables();
         AceConfig.RegisterOptionsTable(ovale, this.options.args.apparence);
-        AceConfig.RegisterOptionsTable(ovale + " Profiles", this.options.args.profile);
-        AceConfig.RegisterOptionsTable(ovale + " Actions", this.options.args.actions, "Ovale");
+        AceConfig.RegisterOptionsTable(`${ovale} Profiles`, this.options.args.profile);
+        AceConfig.RegisterOptionsTable(`${ovale} Actions`, this.options.args.actions, "Ovale");
         AceConfigDialog.AddToBlizOptions(ovale);
-        AceConfigDialog.AddToBlizOptions(ovale + " Profiles", "Profiles", ovale);
+        AceConfigDialog.AddToBlizOptions(`${ovale} Profiles`, "Profiles", ovale);
     }
     OnEnable() {
         this.HandleProfileChanges();

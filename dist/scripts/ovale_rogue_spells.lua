@@ -1,5 +1,5 @@
-local OVALE, Ovale = ...
-require(OVALE, Ovale, "ovale_rogue_spells", { "./OvaleScripts" }, function(__exports, __OvaleScripts)
+local __addonName, __addon = ...
+__addon.require(__addonName, __addon, "ovale_rogue_spells", { "../Scripts" }, function(__exports, __Scripts)
 do
     local name = "ovale_rogue_spells"
     local desc = "[7.0] Ovale: Rogue spells"
@@ -440,6 +440,6 @@ Define(vigor_talent 9)
 	SpellInfo(premeditation tag=main)
 	SpellInfo(vanish tag=shortcd)
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("ROGUE", nil, name, desc, code, "include")
+    __Scripts.OvaleScripts:RegisterScript("ROGUE", nil, name, desc, code, "include")
 end
-end))
+end)

@@ -1,5 +1,5 @@
-local OVALE, Ovale = ...
-require(OVALE, Ovale, "ovale_paladin", { "./OvaleScripts" }, function(__exports, __OvaleScripts)
+local __addonName, __addon = ...
+__addon.require(__addonName, __addon, "ovale_paladin", { "../Scripts" }, function(__exports, __Scripts)
 do
     local name = "icyveins_paladin_protection"
     local desc = "[7.0] Icy-Veins: Paladin Protection"
@@ -150,7 +150,7 @@ AddIcon help=cd specialization=protection
 	ProtectionDefaultCdActions()
 }
 	]]
-    __OvaleScripts.OvaleScripts:RegisterScript("PALADIN", "protection", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("PALADIN", "protection", name, desc, code, "script")
 end
 do
     local name = "icyveins_paladin_holy"
@@ -230,7 +230,7 @@ AddIcon help=cd specialization=holy
 }
 
 	]]
-    __OvaleScripts.OvaleScripts:RegisterScript("PALADIN", "holy", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("PALADIN", "holy", name, desc, code, "script")
 end
 do
     local name = "simulationcraft_paladin_protection_t19p"
@@ -622,7 +622,7 @@ AddIcon checkbox=opt_paladin_protection_aoe help=cd specialization=protection
 # unbending_potion
 # war_stomp
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("PALADIN", "protection", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("PALADIN", "protection", name, desc, code, "script")
 end
 do
     local name = "simulationcraft_paladin_retribution_t19p"
@@ -1059,6 +1059,6 @@ AddIcon checkbox=opt_paladin_retribution_aoe help=cd specialization=retribution
 # whisper_of_the_nathrezim_buff
 # zeal
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("PALADIN", "retribution", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("PALADIN", "retribution", name, desc, code, "script")
 end
-end))
+end)

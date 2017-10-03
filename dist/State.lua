@@ -1,131 +1,124 @@
-local OVALE, Ovale = ...
-require(OVALE, Ovale, "State", { "./L", "./OvaleDebug", "./OvaleQueue" }, function(__exports, __L, __OvaleDebug, __OvaleQueue)
-local OvaleState = Ovale:NewModule("OvaleState")
-Ovale.OvaleState = OvaleState
+local __addonName, __addon = ...
+__addon.require(__addonName, __addon, "State", { "./Localization", "./Debug", "./Queue", "./Ovale" }, function(__exports, __Localization, __Debug, __Queue, __Ovale)
+local OvaleStateBase = __Ovale.Ovale:NewModule("OvaleState")
 local _pairs = pairs
 local self_statePrototype = {}
-local self_stateAddons = __OvaleQueue.OvaleQueue:NewQueue("OvaleState_stateAddons")
-__OvaleDebug.OvaleDebug:RegisterDebugging(OvaleState)
-OvaleState.state = {}
-local OvaleState = __class()
-function OvaleState:OnEnable()
-    self:RegisterState(self, self.statePrototype)
-end
-function OvaleState:OnDisable()
-    self:UnregisterState(self)
-end
-function OvaleState:RegisterState(stateAddon, statePrototype)
-    self_stateAddons:Insert(stateAddon)
-    self_statePrototype[stateAddon] = statePrototype
-    for k, v in _pairs(statePrototype) do
-        self.state[k] = v
-    end
-end
-function OvaleState:UnregisterState(stateAddon)
-    local stateModules = __OvaleQueue.OvaleQueue:NewQueue("OvaleState_stateModules")
-    while self_stateAddons:Size() > 0do
-        local addon = self_stateAddons:Remove()
-        if stateAddon ~= addon then
-            stateModules:Insert(addon)
+local self_stateAddons = __Queue.OvaleQueue("OvaleState_stateAddons")
+local OvaleStateClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleStateBase), {
+    OnEnable = function(self)
+    end,
+    OnDisable = function(self)
+    end,
+    RegisterState = function(self, stateAddon)
+        self_stateAddons:Insert(stateAddon)
+    end,
+    UnregisterState = function(self, stateAddon)
+        local stateModules = __Queue.OvaleQueue("OvaleState_stateModules")
+        while self_stateAddons:Size() > 0 do
+            local addon = self_stateAddons:Remove()
+            if stateAddon ~= addon then
+                stateModules:Insert(addon)
+            end
         end
-end
-    self_stateAddons = stateModules
-    if stateAddon.CleanState then
-        stateAddon:CleanState(self.state)
-    end
-    local statePrototype = self_statePrototype[stateAddon]
-    if statePrototype then
-        for k in _pairs(statePrototype) do
-            self.state[k] = nil
+        self_stateAddons = stateModules
+        stateAddon:CleanState()
+    end,
+    InitializeState = function(self)
+        local iterator = self_stateAddons:Iterator()
+        while iterator:Next() do
+            iterator.value:InitializeState()
         end
-    end
-    self_statePrototype[stateAddon] = nil
-end
-function OvaleState:InvokeMethod(methodName, ...)
-    for _, addon in self_stateAddons:Iterator() do
-        if addon[methodName] then
-            addon[methodName](addon, ...)
+    end,
+    ResetState = function(self)
+        local iterator = self_stateAddons:Iterator()
+        while iterator:Next() do
+            iterator.value:ResetState()
         end
-    end
-end
-OvaleState.statePrototype = {}
-local statePrototype = OvaleState.statePrototype
-statePrototype.isState = true
-statePrototype.isInitialized = nil
-statePrototype.futureVariable = nil
-statePrototype.futureLastEnable = nil
-statePrototype.variable = nil
-statePrototype.lastEnable = nil
-local OvaleState = __class()
-function OvaleState:InitializeState(state)
-    state.futureVariable = {}
-    state.futureLastEnable = {}
-    state.variable = {}
-    state.lastEnable = {}
-end
-function OvaleState:ResetState(state)
-    for k in _pairs(state.futureVariable) do
-        state.futureVariable[k] = nil
-        state.futureLastEnable[k] = nil
-    end
-    if  not state.inCombat then
-        for k in _pairs(state.variable) do
-            state:Log("Resetting state variable '%s'.", k)
-            state.variable[k] = nil
-            state.lastEnable[k] = nil
+    end,
+    ApplySpellStartCast = function(self, spellId, targetGUID, startCast, endCast, channel, spellcast)
+        local iterator = self_stateAddons:Iterator()
+        while iterator:Next() do
+            iterator.value:ApplySpellStartCast(spellId, targetGUID, startCast, endCast, channel, spellcast)
         end
-    end
-end
-function OvaleState:CleanState(state)
-    for k in _pairs(state.futureVariable) do
-        state.futureVariable[k] = nil
-    end
-    for k in _pairs(state.futureLastEnable) do
-        state.futureLastEnable[k] = nil
-    end
-    for k in _pairs(state.variable) do
-        state.variable[k] = nil
-    end
-    for k in _pairs(state.lastEnable) do
-        state.lastEnable[k] = nil
-    end
-end
-statePrototype.Initialize = function(state)
-    if  not state.isInitialized then
-        OvaleState:InvokeMethod("InitializeState", state)
-        state.isInitialized = true
-    end
-end
-statePrototype.Reset = function(state)
-    OvaleState:InvokeMethod("ResetState", state)
-end
-statePrototype.GetState = function(state, name)
-    return state.futureVariable[name] or state.variable[name] or 0
-end
-statePrototype.GetStateDuration = function(state, name)
-    local lastEnable = state.futureLastEnable[name] or state.lastEnable[name] or state.currentTime
-    return state.currentTime - lastEnable
-end
-statePrototype.PutState = function(state, name, value, isFuture)
-    if isFuture then
-        local oldValue = state:GetState(name)
-        if value ~= oldValue then
-            state:Log("Setting future state: %s from %s to %s.", name, oldValue, value)
-            state.futureVariable[name] = value
-            state.futureLastEnable[name] = state.currentTime
+    end,
+    ApplySpellAfterCast = function(self, spellId, targetGUID, startCast, endCast, channel, spellcast)
+        local iterator = self_stateAddons:Iterator()
+        while iterator:Next() do
+            iterator.value:ApplySpellAfterCast(spellId, targetGUID, startCast, endCast, channel, spellcast)
         end
-    else
-        local oldValue = state.variable[name] or 0
-        if value ~= oldValue then
-            OvaleState:DebugTimestamp("Advancing combat state: %s from %s to %s.", name, oldValue, value)
-            state:Log("Advancing combat state: %s from %s to %s.", name, oldValue, value)
-            state.variable[name] = value
-            state.lastEnable[name] = state.currentTime
+    end,
+    ApplySpellOnHit = function(self, spellId, targetGUID, startCast, endCast, channel, spellcast)
+        local iterator = self_stateAddons:Iterator()
+        while iterator:Next() do
+            iterator.value:ApplySpellOnHit(spellId, targetGUID, startCast, endCast, channel, spellcast)
         end
-    end
-end
-statePrototype.Log = function(state, ...)
-    return __OvaleDebug.OvaleDebug:Log(...)
-end
-statePrototype.GetMethod = Ovale.GetMethod
-end))
+    end,
+})
+__exports.OvaleState = OvaleStateClass()
+__exports.BaseState = __class(nil, {
+    InitializeState = function(self)
+        self.futureVariable = {}
+        self.futureLastEnable = {}
+        self.variable = {}
+        self.lastEnable = {}
+        self.defaultTarget = "target"
+    end,
+    ResetState = function(self)
+        for k in _pairs(self.futureVariable) do
+            self.futureVariable[k] = nil
+            self.futureLastEnable[k] = nil
+        end
+        if  not self.inCombat then
+            for k in _pairs(self.variable) do
+                self:Log("Resetting state variable '%s'.", k)
+                self.variable[k] = nil
+                self.lastEnable[k] = nil
+            end
+        end
+    end,
+    CleanState = function(self)
+        for k in _pairs(self.futureVariable) do
+            self.futureVariable[k] = nil
+        end
+        for k in _pairs(self.futureLastEnable) do
+            self.futureLastEnable[k] = nil
+        end
+        for k in _pairs(self.variable) do
+            self.variable[k] = nil
+        end
+        for k in _pairs(self.lastEnable) do
+            self.lastEnable[k] = nil
+        end
+        self.defaultTarget = nil
+    end,
+    GetState = function(self, name)
+        return self.futureVariable[name] or self.variable[name] or 0
+    end,
+    GetStateDuration = function(self, name)
+        local lastEnable = self.futureLastEnable[name] or self.lastEnable[name] or self.currentTime
+        return self.currentTime - lastEnable
+    end,
+    PutState = function(self, name, value, isFuture)
+        if isFuture then
+            local oldValue = self:GetState(name)
+            if value ~= oldValue then
+                self:Log("Setting future state: %s from %s to %s.", name, oldValue, value)
+                self.futureVariable[name] = value
+                self.futureLastEnable[name] = self.currentTime
+            end
+        else
+            local oldValue = self.variable[name] or 0
+            if value ~= oldValue then
+                __exports.OvaleState:DebugTimestamp("Advancing combat state: %s from %s to %s.", name, oldValue, value)
+                self:Log("Advancing combat state: %s from %s to %s.", name, oldValue, value)
+                self.variable[name] = value
+                self.lastEnable[name] = self.currentTime
+            end
+        end
+    end,
+    Log = function(self, parameters)
+        __exports.OvaleState:Log(parameters)
+    end,
+})
+__exports.baseState = __exports.BaseState()
+end)

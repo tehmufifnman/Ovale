@@ -252,15 +252,6 @@ class HealthState implements StateModule{
     }
     ResetState(): void {
     }
-    ApplySpellStartCast?(spellId: any, targetGUID: any, startCast: any, endCast: any, channel: any, spellcast: any): void {
-        throw new Error("Method not implemented.");
-    }
-    ApplySpellAfterCast?(spellId: any, targetGUID: any, startCast: any, endCast: any, channel: any, spellcast: any): void {
-        throw new Error("Method not implemented.");
-    }
-    ApplySpellOnHit?(spellId: any, targetGUID: any, startCast: any, endCast: any, channel: any, spellcast: any): void {
-        throw new Error("Method not implemented.");
-    }
     RequireHealthPercentHandler(spellId, atTime, requirement, tokens, index, targetGUID) {
         return OvaleHealth.RequireHealthPercentHandler(spellId, atTime, requirement, tokens, index, targetGUID);
     }

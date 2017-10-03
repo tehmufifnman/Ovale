@@ -1,5 +1,5 @@
-local OVALE, Ovale = ...
-require(OVALE, Ovale, "ovale_warlock", { "./OvaleScripts" }, function(__exports, __OvaleScripts)
+local __addonName, __addon = ...
+__addon.require(__addonName, __addon, "ovale_warlock", { "../Scripts" }, function(__exports, __Scripts)
 do
     local name = "ovale_warlock_demonology"
     local desc = "[7.0] Ovale Demonology Warlock"
@@ -137,7 +137,7 @@ AddIcon checkbox=opt_warlock_demonology_aoe help=cd specialization=demonology
 }
 
 	]]
-    __OvaleScripts.OvaleScripts:RegisterScript("WARLOCK", "demonology", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("WARLOCK", "demonology", name, desc, code, "script")
 end
 do
     local name = "simulationcraft_warlock_affliction_t19p"
@@ -445,7 +445,7 @@ AddIcon checkbox=opt_warlock_affliction_aoe help=cd specialization=affliction
 # unstable_affliction
 # writhe_in_agony_talent
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("WARLOCK", "affliction", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("WARLOCK", "affliction", name, desc, code, "script")
 end
 do
     local name = "simulationcraft_warlock_demonology_t19p"
@@ -718,7 +718,7 @@ AddIcon checkbox=opt_warlock_demonology_aoe help=cd specialization=demonology
 # summon_infernal
 # thalkiels_consumption
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("WARLOCK", "demonology", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("WARLOCK", "demonology", name, desc, code, "script")
 end
 do
     local name = "simulationcraft_warlock_destruction_t19p"
@@ -1027,6 +1027,6 @@ AddIcon checkbox=opt_warlock_destruction_aoe help=cd specialization=destruction
 # summon_infernal
 # wreak_havoc_talent
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("WARLOCK", "destruction", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("WARLOCK", "destruction", name, desc, code, "script")
 end
-end))
+end)

@@ -1,97 +1,109 @@
-local OVALE, Ovale = ...
-local OvaleQueue = {}
-Ovale.OvaleQueue = OvaleQueue
-local _setmetatable = setmetatable
-OvaleQueue.name = "OvaleQueue"
-OvaleQueue.first = 1
-OvaleQueue.last = 0
-OvaleQueue.__index = OvaleQueue
-local BackToFrontIterator = function(invariant, control)
-    control = control - 1
-    local element = invariant[control]
-    if element then
-        return control, element
-    end
-end
-local FrontToBackIterator = function(invariant, control)
-    control = control + 1
-    local element = invariant[control]
-    if element then
-        return control, element
-    end
-end
-local OvaleQueue = __class()
-function OvaleQueue:NewDeque(name)
-    return _setmetatable({
-        name = name,
-        first = 0,
-        last = -1
-    }, OvaleQueue)
-end
-function OvaleQueue:InsertFront(element)
-    local first = self.first - 1
-    self.first = first
-    self[first] = element
-end
-function OvaleQueue:InsertBack(element)
-    local last = self.last + 1
-    self.last = last
-    self[last] = element
-end
-function OvaleQueue:RemoveFront()
-    local first = self.first
-    local element = self[first]
-    if element then
-        self[first] = nil
-        self.first = first + 1
-    end
-    return element
-end
-function OvaleQueue:RemoveBack()
-    local last = self.last
-    local element = self[last]
-    if element then
-        self[last] = nil
-        self.last = last - 1
-    end
-    return element
-end
-function OvaleQueue:At(index)
-    if index > self:Size() then
-        break
-    end
-    return self[self.first + index - 1]
-end
-function OvaleQueue:Front()
-    return self[self.first]
-end
-function OvaleQueue:Back()
-    return self[self.last]
-end
-function OvaleQueue:BackToFrontIterator()
-    return BackToFrontIterator, self, self.last + 1
-end
-function OvaleQueue:FrontToBackIterator()
-    return FrontToBackIterator, self, self.first - 1
-end
-function OvaleQueue:Reset()
-    for i in self:BackToFrontIterator() do
-        self[i] = nil
-    end
-    self.first = 0
-    self.last = -1
-end
-function OvaleQueue:Size()
-    return self.last - self.first + 1
-end
-function OvaleQueue:DebuggingInfo()
-    Ovale:Print("Queue %s has %d item(s), first=%d, last=%d.", self.name, self:Size(), self.first, self.last)
-end
-OvaleQueue.NewQueue = OvaleQueue.NewDeque
-OvaleQueue.Insert = OvaleQueue.InsertBack
-OvaleQueue.Remove = OvaleQueue.RemoveFront
-OvaleQueue.Iterator = OvaleQueue.FrontToBackIterator
-OvaleQueue.NewStack = OvaleQueue.NewDeque
-OvaleQueue.Push = OvaleQueue.InsertBack
-OvaleQueue.Pop = OvaleQueue.RemoveBack
-OvaleQueue.Top = OvaleQueue.Back
+local __addonName, __addon = ...
+__addon.require(__addonName, __addon, "Queue", { "./Ovale" }, function(__exports, __Ovale)
+local BackToFrontIterator = __class(nil, {
+    constructor = function(self, invariant, control)
+    end,
+    Next = function(self)
+        self.control = self.control - 1
+        self.value = self.invariant[self.control]
+        return self.control <= self.invariant.last
+    end,
+})
+local FrontToBackIterator = __class(nil, {
+    constructor = function(self, invariant, control)
+    end,
+    Next = function(self)
+        self.control = self.control + 1
+        self.value = self.invariant[self.control]
+        return self.control >= self.invariant.first
+    end,
+})
+__exports.OvaleDequeue = __class(nil, {
+    constructor = function(self, name)
+        self.first = 0
+        self.last = -1
+    end,
+    InsertFront = function(self, element)
+        local first = self.first - 1
+        self.first = first
+        self[first] = element
+    end,
+    InsertBack = function(self, element)
+        local last = self.last + 1
+        self.last = last
+        self[last] = element
+    end,
+    RemoveFront = function(self)
+        local first = self.first
+        local element = self[first]
+        if element then
+            self[first] = nil
+            self.first = first + 1
+        end
+        return element
+    end,
+    RemoveBack = function(self)
+        local last = self.last
+        local element = self[last]
+        if element then
+            self[last] = nil
+            self.last = last - 1
+        end
+        return element
+    end,
+    At = function(self, index)
+        if index > self:Size() then
+            return 
+        end
+        return self[self.first + index - 1]
+    end,
+    Front = function(self)
+        return self[self.first]
+    end,
+    Back = function(self)
+        return self[self.last]
+    end,
+    BackToFrontIterator = function(self)
+        return BackToFrontIterator(self, self.last + 1)
+    end,
+    FrontToBackIterator = function(self)
+        return FrontToBackIterator(self, self.first - 1)
+    end,
+    Reset = function(self)
+        local iterator = self:BackToFrontIterator()
+        while iterator:Next() do
+            self[iterator.control] = nil
+        end
+        self.first = 0
+        self.last = -1
+    end,
+    Size = function(self)
+        return self.last - self.first + 1
+    end,
+    DebuggingInfo = function(self)
+        __Ovale.Ovale:Print("Queue %s has %d item(s), first=%d, last=%d.", self.name, self:Size(), self.first, self.last)
+    end,
+})
+__exports.OvaleQueue = __class(__exports.OvaleDequeue, {
+    Insert = function(self, value)
+        self:InsertBack(value)
+    end,
+    Remove = function(self)
+        return self:RemoveFront()
+    end,
+    Iterator = function(self)
+        return self:FrontToBackIterator()
+    end,
+})
+__exports.OvaleStack = __class(__exports.OvaleDequeue, {
+    Push = function(self, value)
+        self:InsertBack(value)
+    end,
+    Pop = function(self)
+        return self:RemoveBack()
+    end,
+    Top = function(self)
+        return self:Back()
+    end,
+})
+end)

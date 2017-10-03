@@ -112,7 +112,7 @@ const GetActionItemInfo = function(element, state: BaseState, atTime, target) {
         let action = OvaleActionBar.GetForItem(itemId);
         let spellName = API_GetItemSpell(itemId);
         if (element.namedParams.texture) {
-            actionTexture = "Interface\\Icons\\" + element.namedParams.texture;
+            actionTexture = `Interface\\Icons\\${element.namedParams.texture}`;
         }
         actionTexture = actionTexture || API_GetItemIcon(itemId);
         actionInRange = API_IsItemInRange(itemId, target);
@@ -137,7 +137,7 @@ const GetActionMacroInfo = function(element, state: BaseState, atTime, target) {
         state.Log("Unknown macro '%s'.", macro);
     } else {
         if (element.namedParams.texture) {
-            actionTexture = "Interface\\Icons\\" + element.namedParams.texture;
+            actionTexture = `Interface\\Icons\\${element.namedParams.texture}`;
         }
         actionTexture = actionTexture || API_GetActionTexture(action);
         actionInRange = API_IsActionInRange(action, target);
@@ -183,7 +183,7 @@ const GetActionSpellInfo = function(element, state: BaseState, atTime, target) {
         let [isUsable, noMana] = spellBookState.IsUsableSpell(spellId, atTime, targetGUID);
         if (isUsable || noMana) {
             if (element.namedParams.texture) {
-                actionTexture = "Interface\\Icons\\" + element.namedParams.texture;
+                actionTexture = `Interface\\Icons\\${element.namedParams.texture}`;
             }
             actionTexture = actionTexture || API_GetSpellTexture(spellId);
             actionInRange = OvaleSpellBook.IsSpellInRange(spellId, target);
@@ -199,7 +199,7 @@ const GetActionSpellInfo = function(element, state: BaseState, atTime, target) {
             actionId = spellId;
             if (si) {
                 if (si.texture) {
-                    actionTexture = "Interface\\Icons\\" + si.texture;
+                    actionTexture = `Interface\\Icons\\${si.texture}`;
                 }
                 if (actionCooldownStart && actionCooldownDuration) {
                     let extraPower = element.namedParams.extra_amount || 0;
@@ -228,7 +228,7 @@ const GetActionTextureInfo = function(element, state: BaseState, atTime, target)
         if (spellId) {
             actionTexture = API_GetSpellTexture(spellId);
         } else {
-            actionTexture = "Interface\\Icons\\" + texture;
+            actionTexture = `Interface\\Icons\\${texture}`;
         }
     }
     let actionInRange = undefined;

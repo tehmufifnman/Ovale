@@ -2053,7 +2053,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
     const TargetIsPlayer = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let yesno = positionalParams[1];
         let [target] = ParseCondition(positionalParams, namedParams, state);
-        let boolean = API_UnitIsUnit("player", target + "target");
+        let boolean = API_UnitIsUnit("player", `${target}target`);
         return TestBoolean(boolean, yesno);
     }
     OvaleCondition.RegisterCondition("istargetingplayer", false, TargetIsPlayer);

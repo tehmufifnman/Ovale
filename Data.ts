@@ -265,17 +265,17 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
         for (const [_, useName] of _pairs(STAT_USE_NAMES)) {
             let name;
             for (const [_, statName] of _pairs(STAT_NAMES)) {
-                name = useName + "_" + statName + "_buff";
+                name = `${useName}_${statName}_buff`;
                 this.buffSpellList[name] = {
                 }
                 let shortName = STAT_SHORTNAME[statName];
                 if (shortName) {
-                    name = useName + "_" + shortName + "_buff";
+                    name = `${useName}_${shortName}_buff`;
                     this.buffSpellList[name] = {
                     }
                 }
             }
-            name = useName + "_any_buff";
+            name = `${useName}_any_buff`;
             this.buffSpellList[name] = {}
         }
 
@@ -501,17 +501,17 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
         if (!value || !_tonumber(value)) {
             return value;
         }
-        let addpower = si && si["add" + property];
+        let addpower = si && si[`add${property}`];
         if (addpower) {
             value = value + addpower;
         }
-        let ratio = si && si[property + "_percent"];
+        let ratio = si && si[`${property}_percent`];
         if (ratio) {
             ratio = ratio / 100;
         } else {
             ratio = 1;
         }
-        let multipliers = si && si.require[property + '_percent'];
+        let multipliers = si && si.require[`${property}_percent`];
         if (multipliers) {
             for (const [v, requirement] of _pairs(multipliers)) {
                 let verified = this.CheckRequirements(spellId, atTime, requirement, 1, targetGUID);

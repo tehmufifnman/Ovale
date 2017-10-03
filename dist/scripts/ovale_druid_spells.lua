@@ -1,5 +1,5 @@
-local OVALE, Ovale = ...
-require(OVALE, Ovale, "ovale_druid_spells", { "./OvaleScripts" }, function(__exports, __OvaleScripts)
+local __addonName, __addon = ...
+__addon.require(__addonName, __addon, "ovale_druid_spells", { "../Scripts" }, function(__exports, __Scripts)
 do
     local name = "ovale_druid_spells"
     local desc = "[7.3] Ovale: Druid spells"
@@ -430,6 +430,6 @@ Define(typhoon_talent 12)
 Define(warrior_of_elune_talent 2)
 Define(wild_charge_talent 6)
 	]]
-    __OvaleScripts.OvaleScripts:RegisterScript("DRUID", nil, name, desc, code, "include")
+    __Scripts.OvaleScripts:RegisterScript("DRUID", nil, name, desc, code, "include")
 end
-end))
+end)

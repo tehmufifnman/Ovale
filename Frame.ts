@@ -12,7 +12,7 @@ import { OvaleTimeSpan } from "./TimeSpan";
 import { Ovale } from "./Ovale";
 import { OvaleIcon } from "./Icon";
 import { enemiesState } from "./Enemies";
-let Type = Ovale.GetName() + "Frame";
+let Type = `${Ovale.GetName()}Frame`;
 let Version = 7;
 let _ipairs = ipairs;
 let _next = next;
@@ -335,12 +335,12 @@ class OvaleFrame {
                 let icon;
                 if (!node.secure) {
                     if (!action.icons[l]) {
-                        action.icons[l] = new OvaleIcon("Icon" + k + "n" + l, this.frame, false);
+                        action.icons[l] = new OvaleIcon(`Icon${k}n${l}`, this.frame, false);
                     }
                     icon = action.icons[l];
                 } else {
                     if (!action.secureIcons[l]) {
-                        action.secureIcons[l] = new OvaleIcon("SecureIcon" + k + "n" + l, this.frame, true);
+                        action.secureIcons[l] = new OvaleIcon(`SecureIcon${k}n${l}`, this.frame, true);
                     }
                     icon = action.secureIcons[l];
                 }
@@ -400,7 +400,7 @@ class OvaleFrame {
     skinGroup: any;
 
     constructor() {
-        let hider = API_CreateFrame("Frame", Ovale.GetName() + "PetBattleFrameHider", UIParent, "SecureHandlerStateTemplate");
+        let hider = API_CreateFrame("Frame", `${Ovale.GetName()}PetBattleFrameHider`, UIParent, "SecureHandlerStateTemplate");
         hider.SetAllPoints(this.frame);
         API_RegisterStateDriver(hider, "visibility", "[petbattle] hide; show");
         let frame = API_CreateFrame("Frame", undefined, hider);
@@ -409,7 +409,7 @@ class OvaleFrame {
         
         this.frame = frame;
         this.hider = hider;
-        this.updateFrame = API_CreateFrame("Frame", Ovale.GetName() + "UpdateFrame");
+        this.updateFrame = API_CreateFrame("Frame", `${Ovale.GetName()}UpdateFrame`);
         this.barre = this.frame.CreateTexture();
         this.content = API_CreateFrame("Frame", undefined, this.updateFrame);
         if (Masque) {

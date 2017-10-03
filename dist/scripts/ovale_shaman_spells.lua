@@ -1,5 +1,5 @@
-local OVALE, Ovale = ...
-require(OVALE, Ovale, "ovale_shaman_spells", { "./OvaleScripts" }, function(__exports, __OvaleScripts)
+local __addonName, __addon = ...
+__addon.require(__addonName, __addon, "ovale_shaman_spells", { "../Scripts" }, function(__exports, __Scripts)
 do
     local name = "ovale_shaman_spells"
     local desc = "[7.0] Ovale: Shaman spells"
@@ -190,6 +190,6 @@ Define(echoes_of_the_great_sundering_buff 208723)
 
 	
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("SHAMAN", nil, name, desc, code, "include")
+    __Scripts.OvaleScripts:RegisterScript("SHAMAN", nil, name, desc, code, "include")
 end
-end))
+end)

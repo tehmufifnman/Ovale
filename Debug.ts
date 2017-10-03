@@ -23,7 +23,7 @@ let OVALE_TRACELOG_MAXLINES = 4096;
 
 class OvaleDebugClass extends OvaleDebugBase {
     options = {
-        name: Ovale.GetName() + " " + L["Debug"],
+        name: `${Ovale.GetName()} ${L["Debug"]}`,
         type: "group",
         args: {
             toggles: {
@@ -98,7 +98,7 @@ class OvaleDebugClass extends OvaleDebugBase {
         AceConfigDialog.AddToBlizOptions(appName, L["Debug"], Ovale.GetName());
     }
     OnEnable() {
-        self_traceLog = LibTextDump.New(Ovale.GetName() + " - " + L["Trace Log"], 750, 500);
+        self_traceLog = LibTextDump.New(`${Ovale.GetName()} - ${L["Trace Log"]}`, 750, 500);
     }
     DoTrace(displayLog) {
         self_traceLog.Clear();

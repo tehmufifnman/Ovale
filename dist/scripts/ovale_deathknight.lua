@@ -1,5 +1,5 @@
-local OVALE, Ovale = ...
-require(OVALE, Ovale, "ovale_deathknight", { "./OvaleScripts" }, function(__exports, __OvaleScripts)
+local __addonName, __addon = ...
+__addon.require(__addonName, __addon, "ovale_deathknight", { "../Scripts" }, function(__exports, __Scripts)
 do
     local name = "icyveins_deathknight_blood"
     local desc = "[7.0] Icy-Veins: DeathKnight Blood"
@@ -111,7 +111,7 @@ AddIcon help=cd specialization=blood
 	BloodDefaultCdActions()
 }
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("DEATHKNIGHT", "blood", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("DEATHKNIGHT", "blood", name, desc, code, "script")
 end
 do
     local name = "simulationcraft_death_knight_frost_t19p"
@@ -757,7 +757,7 @@ AddIcon checkbox=opt_deathknight_frost_aoe help=cd specialization=frost
 # unholy_strength_buff
 # war_stomp
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("DEATHKNIGHT", "frost", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("DEATHKNIGHT", "frost", name, desc, code, "script")
 end
 do
     local name = "simulationcraft_death_knight_unholy_t19p"
@@ -1417,6 +1417,6 @@ AddIcon checkbox=opt_deathknight_unholy_aoe help=cd specialization=unholy
 # virulent_plague_debuff
 # war_stomp
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("DEATHKNIGHT", "unholy", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("DEATHKNIGHT", "unholy", name, desc, code, "script")
 end
-end))
+end)

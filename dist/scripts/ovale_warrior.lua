@@ -1,5 +1,5 @@
-local OVALE, Ovale = ...
-require(OVALE, Ovale, "ovale_warrior", { "./OvaleScripts" }, function(__exports, __OvaleScripts)
+local __addonName, __addon = ...
+__addon.require(__addonName, __addon, "ovale_warrior", { "../Scripts" }, function(__exports, __Scripts)
 do
     local name = "icyveins_warrior_protection"
     local desc = "[7.2.5] Icy-Veins: Warrior Protection"
@@ -142,7 +142,7 @@ AddIcon help=cd specialization=protection
 }
 	
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("WARRIOR", "protection", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("WARRIOR", "protection", name, desc, code, "script")
 end
 do
     local name = "simulationcraft_warrior_arms_t19p"
@@ -689,7 +689,7 @@ AddIcon checkbox=opt_warrior_arms_aoe help=cd specialization=arms
 # warbreaker
 # whirlwind
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("WARRIOR", "arms", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("WARRIOR", "arms", name, desc, code, "script")
 end
 do
     local name = "simulationcraft_warrior_fury_t19p"
@@ -1261,7 +1261,7 @@ AddIcon checkbox=opt_warrior_fury_aoe help=cd specialization=fury
 # whirlwind
 # wrecking_ball_buff
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("WARRIOR", "fury", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("WARRIOR", "fury", name, desc, code, "script")
 end
 do
     local name = "simulationcraft_warrior_protection_t19p"
@@ -1552,6 +1552,6 @@ AddIcon checkbox=opt_warrior_protection_aoe help=cd specialization=protection
 # war_stomp
 # warbringer_talent
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("WARRIOR", "protection", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("WARRIOR", "protection", name, desc, code, "script")
 end
-end))
+end)

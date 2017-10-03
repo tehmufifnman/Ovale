@@ -1,7 +1,6 @@
-local OVALE, Ovale = ...
-local OvaleCondition = Ovale:NewModule("OvaleCondition")
-Ovale.OvaleCondition = OvaleCondition
-local OvaleState = nil
+local __addonName, __addon = ...
+__addon.require(__addonName, __addon, "Condition", { "./State", "./Ovale", "./Debug" }, function(__exports, __State, __Ovale, __Debug)
+local OvaleConditionBase = __Ovale.Ovale:NewModule("OvaleCondition")
 local _type = type
 local _wipe = wipe
 local INFINITY = math.huge
@@ -10,56 +9,37 @@ local self_spellBookCondition = {}
 do
     self_spellBookCondition["spell"] = true
 end
-OvaleCondition.Compare = nil
-OvaleCondition.ParseCondition = nil
-OvaleCondition.ParseRuneCondition = nil
-OvaleCondition.TestBoolean = nil
-OvaleCondition.TestValue = nil
-OvaleCondition.COMPARATOR = {
-    atLeast = true,
-    atMost = true,
-    equal = true,
-    less = true,
-    more = true
-}
-local OvaleCondition = __class()
-function OvaleCondition:OnInitialize()
-    OvaleState = Ovale.OvaleState
+local isString = function(s)
+    return _type(s) == "string"
 end
-function OvaleCondition:OnEnable()
-    OvaleState:RegisterState(self, self.statePrototype)
-end
-function OvaleCondition:OnDisable()
-    OvaleState:UnregisterState(self)
-end
-function OvaleCondition:RegisterCondition(name, isSpellBookCondition, func, arg)
-    if arg then
-        if _type(func) == "string" then
-            func = arg[func]
-        end
-        self_condition[name] = function(...)
-            func(arg, ...)
-        end
-    else
+local OvaleConditionClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleConditionBase), {
+    OnInitialize = function(self)
+    end,
+    OnEnable = function(self)
+    end,
+    OnDisable = function(self)
+    end,
+    RegisterCondition = function(self, name, isSpellBookCondition, func)
         self_condition[name] = func
-    end
-    if isSpellBookCondition then
-        self_spellBookCondition[name] = true
-    end
-end
-function OvaleCondition:UnregisterCondition(name)
-    self_condition[name] = nil
-end
-function OvaleCondition:IsCondition(name)
-    return (self_condition[name] ~= nil)
-end
-function OvaleCondition:IsSpellBookCondition(name)
-    return (self_spellBookCondition[name] ~= nil)
-end
-function OvaleCondition:EvaluateCondition(name, positionalParams, namedParams, state, atTime)
-    return self_condition[name](positionalParams, namedParams, state, atTime)
-end
-OvaleCondition.ParseCondition = function(positionalParams, namedParams, state, defaultTarget)
+        if isSpellBookCondition then
+            self_spellBookCondition[name] = true
+        end
+    end,
+    UnregisterCondition = function(self, name)
+        self_condition[name] = nil
+    end,
+    IsCondition = function(self, name)
+        return (self_condition[name] ~= nil)
+    end,
+    IsSpellBookCondition = function(self, name)
+        return (self_spellBookCondition[name] ~= nil)
+    end,
+    EvaluateCondition = function(self, name, positionalParams, namedParams, state, atTime)
+        return self_condition[name](positionalParams, namedParams, state, atTime)
+    end,
+})
+__exports.OvaleCondition = OvaleConditionClass()
+__exports.ParseCondition = function(positionalParams, namedParams, state, defaultTarget)
     local target = namedParams.target or defaultTarget or "player"
     namedParams.target = namedParams.target or target
     if target == "target" then
@@ -83,7 +63,7 @@ OvaleCondition.ParseCondition = function(positionalParams, namedParams, state, d
     end
     return target, filter, mine
 end
-OvaleCondition.TestBoolean = function(a, yesno)
+__exports.TestBoolean = function(a, yesno)
     if  not yesno or yesno == "yes" then
         if a then
             return 0, INFINITY
@@ -95,7 +75,7 @@ OvaleCondition.TestBoolean = function(a, yesno)
     end
     return nil
 end
-OvaleCondition.TestValue = function(start, ending, value, origin, rate, comparator, limit)
+__exports.TestValue = function(start, ending, value, origin, rate, comparator, limit)
     if  not value or  not origin or  not rate then
         return nil
     end
@@ -107,10 +87,10 @@ OvaleCondition.TestValue = function(start, ending, value, origin, rate, comparat
         else
             return 0, INFINITY, 0, 0, 0
         end
-    elseif  not OvaleCondition.COMPARATOR[comparator] then
-        OvaleCondition:Error("unknown comparator %s", comparator)
+    elseif  not __exports.OvaleCondition.COMPARATOR[comparator] then
+        __exports.OvaleCondition:Error("unknown comparator %s", comparator)
     elseif  not limit then
-        OvaleCondition:Error("comparator %s missing limit", comparator)
+        __exports.OvaleCondition:Error("comparator %s missing limit", comparator)
     elseif rate == 0 then
         if (comparator == "less" and value < limit) or (comparator == "atMost" and value <= limit) or (comparator == "equal" and value == limit) or (comparator == "atLeast" and value >= limit) or (comparator == "more" and value > limit) then
             return start, ending
@@ -126,16 +106,7 @@ OvaleCondition.TestValue = function(start, ending, value, origin, rate, comparat
     end
     return nil
 end
-OvaleCondition.Compare = function(value, comparator, limit)
-    return OvaleCondition:TestValue(0, INFINITY, value, 0, 0, comparator, limit)
+__exports.Compare = function(value, comparator, limit)
+    return __exports.TestValue(0, INFINITY, value, 0, 0, comparator, limit)
 end
-OvaleCondition.statePrototype = {}
-local statePrototype = OvaleCondition.statePrototype
-statePrototype.defaultTarget = nil
-local OvaleCondition = __class()
-function OvaleCondition:InitializeState(state)
-    state.defaultTarget = "target"
-end
-function OvaleCondition:CleanState(state)
-    state.defaultTarget = nil
-end
+end)

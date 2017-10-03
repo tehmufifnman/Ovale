@@ -1,5 +1,5 @@
-local OVALE, Ovale = ...
-require(OVALE, Ovale, "ovale_warlock_spells", { "./OvaleScripts" }, function(__exports, __OvaleScripts)
+local __addonName, __addon = ...
+__addon.require(__addonName, __addon, "ovale_warlock_spells", { "../Scripts" }, function(__exports, __Scripts)
 do
     local name = "ovale_warlock_spells"
     local desc = "[7.0] Ovale: Warlock spells"
@@ -352,6 +352,6 @@ Define(infernal 89)
 	SpellInfo(summon_succubus tag=shortcd)
 	SpellInfo(summon_voidwalker tag=shortcd)
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("WARLOCK", nil, name, desc, code, "include")
+    __Scripts.OvaleScripts:RegisterScript("WARLOCK", nil, name, desc, code, "include")
 end
-end))
+end)

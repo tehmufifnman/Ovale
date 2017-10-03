@@ -90,7 +90,7 @@ const OutputTableValues = function(output, tbl) {
     let array = {
     }
     for (const [k, v] of _pairs(tbl)) {
-        tinsert(array, _tostring(v) + ": " + _tostring(k));
+        tinsert(array, `${_tostring(v)}: ${_tostring(k)}`);
     }
     tsort(array);
     for (const [_, v] of _ipairs(array)) {
@@ -368,7 +368,7 @@ class OvaleSpellBookClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Reg
         for (const [_] of _pairs(this.spell)) {
             total = total + 1;
         }
-        output[lualength(output) + 1] = "Total spells: " + total;
+        output[lualength(output) + 1] = `Total spells: ${total}`;
         return tconcat(output, "\n");
     }
     DebugTalents() {

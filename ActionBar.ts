@@ -54,18 +54,18 @@ class OvaleActionBarClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Reg
     GetKeyBinding(slot) {
         let name;
         if (Bartender4) {
-            name = "CLICK BT4Button" + slot + ":LeftButton";
+            name = `CLICK BT4Button ${slot}:LeftButton`;
         } else {
             if (slot <= 24 || slot > 72) {
-                name = "ACTIONBUTTON" + (((slot - 1) % 12) + 1);
+                name = `ACTIONBUTTON${((slot - 1) % 12) + 1}`;
             } else if (slot <= 36) {
-                name = "MULTIACTIONBAR3BUTTON" + (slot - 24);
+                name = `MULTIACTIONBAR3BUTTON${slot - 24}`;
             } else if (slot <= 48) {
-                name = "MULTIACTIONBAR4BUTTON" + (slot - 36);
+                name = `MULTIACTIONBAR4BUTTON${slot - 36}`;
             } else if (slot <= 60) {
-                name = "MULTIACTIONBAR2BUTTON" + (slot - 48);
+                name = `MULTIACTIONBAR2BUTTON${slot - 48}`;
             } else {
-                name = "MULTIACTIONBAR1BUTTON" + (slot - 60);
+                name = `MULTIACTIONBAR1BUTTON${slot - 60}`;
             }
         }
         let key = name && API_GetBindingKey(name);
@@ -248,7 +248,7 @@ class OvaleActionBarClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Reg
         let array = {
         }
         for (const [k, v] of pairs(this.spell)) {
-            tinsert(array, tostring(this.GetKeyBinding(v)) + ": " + tostring(k) + " " + tostring(OvaleSpellBook.GetSpellName(k)));
+            tinsert(array, `${tostring(this.GetKeyBinding(v))}: ${tostring(k)} ${tostring(OvaleSpellBook.GetSpellName(k))}`);
         }
         tsort(array);
         for (const [_, v] of ipairs(array)) {
@@ -258,7 +258,7 @@ class OvaleActionBarClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Reg
         for (const [_] of pairs(this.spell)) {
             total = total + 1;
         }
-        this.output[lualength(this.output) + 1] = "Total spells: " + total;
+        this.output[lualength(this.output) + 1] = `Total spells: ${total}`;
         return tconcat(this.output, "\n");
     }
 }

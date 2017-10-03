@@ -1,5 +1,5 @@
-local OVALE, Ovale = ...
-require(OVALE, Ovale, "ovale_rogue", { "./OvaleScripts" }, function(__exports, __OvaleScripts)
+local __addonName, __addon = ...
+__addon.require(__addonName, __addon, "ovale_rogue", { "../Scripts" }, function(__exports, __Scripts)
 do
     local name = "simulationcraft_rogue_assassination_t19p"
     local desc = "[7.0] SimulationCraft: Rogue_Assassination_T19P"
@@ -542,7 +542,7 @@ AddIcon checkbox=opt_rogue_assassination_aoe help=cd specialization=assassinatio
 # vendetta_debuff
 # venom_rush_talent
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("ROGUE", "assassination", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("ROGUE", "assassination", name, desc, code, "script")
 end
 do
     local name = "simulationcraft_rogue_outlaw_t19p"
@@ -1094,7 +1094,7 @@ AddIcon checkbox=opt_rogue_outlaw_aoe help=cd specialization=outlaw
 # true_bearing_buff
 # vanish
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("ROGUE", "outlaw", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("ROGUE", "outlaw", name, desc, code, "script")
 end
 do
     local name = "simulationcraft_rogue_subtlety_t19p"
@@ -1794,6 +1794,6 @@ AddIcon checkbox=opt_rogue_subtlety_aoe help=cd specialization=subtlety
 # vanish_buff
 # vigor_talent
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("ROGUE", "subtlety", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("ROGUE", "subtlety", name, desc, code, "script")
 end
-end))
+end)

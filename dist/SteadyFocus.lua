@@ -1,10 +1,6 @@
-local OVALE, Ovale = ...
-require(OVALE, Ovale, "SteadyFocus", { "./OvaleDebug", "./OvaleProfiler" }, function(__exports, __OvaleDebug, __OvaleProfiler)
-local OvaleSteadyFocus = Ovale:NewModule("OvaleSteadyFocus", "AceEvent-3.0")
-Ovale.OvaleSteadyFocus = OvaleSteadyFocus
-local OvaleAura = nil
-local OvaleSpellBook = nil
-local OvaleState = nil
+local __addonName, __addon = ...
+__addon.require(__addonName, __addon, "SteadyFocus", { "./Debug", "./Profiler", "./Ovale", "./Aura", "./SpellBook", "./State" }, function(__exports, __Debug, __Profiler, __Ovale, __Aura, __SpellBook, __State)
+local OvaleSteadyFocusBase = __Ovale.Ovale:NewModule("OvaleSteadyFocus", "AceEvent-3.0")
 local API_GetTime = GetTime
 local INFINITY = math.huge
 local self_playerGUID = nil
@@ -31,123 +27,118 @@ local RANGED_ATTACKS = {
     [120761] = "Glaive Toss",
     [121414] = "Glaive Toss"
 }
-__OvaleDebug.OvaleDebug:RegisterDebugging(OvaleSteadyFocus)
-__OvaleProfiler.OvaleProfiler:RegisterProfiling(OvaleSteadyFocus)
-OvaleSteadyFocus.hasSteadyFocus = nil
-OvaleSteadyFocus.spellName = "Pre-Steady Focus"
-OvaleSteadyFocus.spellId = PRE_STEADY_FOCUS
-OvaleSteadyFocus.start = 0
-OvaleSteadyFocus.ending = 0
-OvaleSteadyFocus.duration = INFINITY
-OvaleSteadyFocus.stacks = 0
-local OvaleSteadyFocus = __class()
-function OvaleSteadyFocus:OnInitialize()
-    OvaleAura = Ovale.OvaleAura
-    OvaleSpellBook = Ovale.OvaleSpellBook
-    OvaleState = Ovale.OvaleState
-end
-function OvaleSteadyFocus:OnEnable()
-    if Ovale.playerClass == "HUNTER" then
-        self_playerGUID = Ovale.playerGUID
-        self:RegisterMessage("Ovale_TalentsChanged")
-        OvaleState:RegisterState(self, self.statePrototype)
-    end
-end
-function OvaleSteadyFocus:OnDisable()
-    if Ovale.playerClass == "HUNTER" then
-        OvaleState:UnregisterState(self)
-        self:UnregisterMessage("Ovale_TalentsChanged")
-    end
-end
-function OvaleSteadyFocus:UNIT_SPELLCAST_SUCCEEDED(event, unitId, spell, rank, lineId, spellId)
-    if unitId == "player" then
-        self:StartProfiling("OvaleSteadyFocus_UNIT_SPELLCAST_SUCCEEDED")
-        if STEADY_SHOT[spellId] then
-            self:DebugTimestamp("Spell %s (%d) successfully cast.", spell, spellId)
-            if self.stacks == 0 then
-                local now = API_GetTime()
-                self:GainedAura(now)
-            end
-        elseif RANGED_ATTACKS[spellId] and self.stacks > 0 then
-            local now = API_GetTime()
-            self:DebugTimestamp("Spell %s (%d) successfully cast.", spell, spellId)
-            self:LostAura(now)
+local OvaleSteadyFocusClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleSteadyFocusBase)), {
+    OnInitialize = function(self)
+    end,
+    OnEnable = function(self)
+        if __Ovale.Ovale.playerClass == "HUNTER" then
+            self_playerGUID = __Ovale.Ovale.playerGUID
+            self:RegisterMessage("Ovale_TalentsChanged")
         end
-        self:StopProfiling("OvaleSteadyFocus_UNIT_SPELLCAST_SUCCEEDED")
-    end
-end
-function OvaleSteadyFocus:Ovale_AuraAdded(event, timestamp, target, auraId, caster)
-    if self.stacks > 0 and auraId == STEADY_FOCUS and target == self_playerGUID then
-        self:DebugTimestamp("Gained Steady Focus buff.")
-        self:LostAura(timestamp)
-    end
-end
-function OvaleSteadyFocus:Ovale_TalentsChanged(event)
-    self.hasSteadyFocus = (OvaleSpellBook:GetTalentPoints(STEADY_FOCUS_TALENT) > 0)
-    if self.hasSteadyFocus then
-        self:Debug("Registering event handlers to track Steady Focus.")
-        self:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
-        self:RegisterMessage("Ovale_AuraAdded")
-        self:RegisterMessage("Ovale_AuraChanged", "Ovale_AuraAdded")
-    else
-        self:Debug("Unregistering event handlers to track Steady Focus.")
-        self:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
-        self:UnregisterMessage("Ovale_AuraAdded")
-        self:UnregisterMessage("Ovale_AuraChanged")
-    end
-end
-function OvaleSteadyFocus:GainedAura(atTime)
-    self:StartProfiling("OvaleSteadyFocus_GainedAura")
-    self.start = atTime
-    self.ending = self.start + self.duration
-    self.stacks = self.stacks + 1
-    self:Debug("Gaining %s buff at %s.", self.spellName, atTime)
-    OvaleAura:GainedAuraOnGUID(self_playerGUID, self.start, self.spellId, self_playerGUID, "HELPFUL", nil, nil, self.stacks, nil, self.duration, self.ending, nil, self.spellName, nil, nil, nil)
-    self:StopProfiling("OvaleSteadyFocus_GainedAura")
-end
-function OvaleSteadyFocus:LostAura(atTime)
-    self:StartProfiling("OvaleSteadyFocus_LostAura")
-    self.ending = atTime
-    self.stacks = 0
-    self:Debug("Losing %s buff at %s.", self.spellName, atTime)
-    OvaleAura:LostAuraOnGUID(self_playerGUID, atTime, self.spellId, self_playerGUID)
-    self:StopProfiling("OvaleSteadyFocus_LostAura")
-end
-function OvaleSteadyFocus:DebugSteadyFocus()
-    local aura = OvaleAura:GetAuraByGUID(self_playerGUID, self.spellId, "HELPFUL", true)
-    if aura then
-        self:Print("Player has pre-Steady Focus aura with start=%s, end=%s, stacks=%d.", aura.start, aura.ending, aura.stacks)
-    else
-        self:Print("Player has no pre-Steady Focus aura!")
-    end
-end
-OvaleSteadyFocus.statePrototype = {}
-local statePrototype = OvaleSteadyFocus.statePrototype
-local OvaleSteadyFocus = __class()
-function OvaleSteadyFocus:ApplySpellAfterCast(state, spellId, targetGUID, startCast, endCast, channel, spellcast)
-    if self.hasSteadyFocus then
-        self:StartProfiling("OvaleSteadyFocus_ApplySpellAfterCast")
-        if STEADY_SHOT[spellId] then
-            local aura = state:GetAuraByGUID(self_playerGUID, self.spellId, "HELPFUL", true)
-            if state:IsActiveAura(aura, endCast) then
-                state:RemoveAuraOnGUID(self_playerGUID, self.spellId, "HELPFUL", true, endCast)
-                aura = state:GetAuraByGUID(self_playerGUID, STEADY_FOCUS, "HELPFUL", true)
-                if  not aura then
-                    aura = state:AddAuraToGUID(self_playerGUID, STEADY_FOCUS, self_playerGUID, "HELPFUL", nil, endCast, nil, spellcast)
+    end,
+    OnDisable = function(self)
+        if __Ovale.Ovale.playerClass == "HUNTER" then
+            self:UnregisterMessage("Ovale_TalentsChanged")
+        end
+    end,
+    UNIT_SPELLCAST_SUCCEEDED = function(self, event, unitId, spell, rank, lineId, spellId)
+        if unitId == "player" then
+            self:StartProfiling("OvaleSteadyFocus_UNIT_SPELLCAST_SUCCEEDED")
+            if STEADY_SHOT[spellId] then
+                self:DebugTimestamp("Spell %s (%d) successfully cast.", spell, spellId)
+                if self.stacks == 0 then
+                    local now = API_GetTime()
+                    self:GainedAura(now)
                 end
-                aura.start = endCast
-                aura.duration = STEADY_FOCUS_DURATION
-                aura.ending = endCast + STEADY_FOCUS_DURATION
-                aura.gain = endCast
-            else
-                local ending = endCast + self.duration
-                aura = state:AddAuraToGUID(self_playerGUID, self.spellId, self_playerGUID, "HELPFUL", nil, endCast, ending, spellcast)
-                aura.name = self.spellName
+            elseif RANGED_ATTACKS[spellId] and self.stacks > 0 then
+                local now = API_GetTime()
+                self:DebugTimestamp("Spell %s (%d) successfully cast.", spell, spellId)
+                self:LostAura(now)
             end
-        elseif RANGED_ATTACKS[spellId] then
-            state:RemoveAuraOnGUID(self_playerGUID, self.spellId, "HELPFUL", true, endCast)
+            self:StopProfiling("OvaleSteadyFocus_UNIT_SPELLCAST_SUCCEEDED")
         end
-        self:StopProfiling("OvaleSteadyFocus_ApplySpellAfterCast")
-    end
-end
-end))
+    end,
+    Ovale_AuraAdded = function(self, event, timestamp, target, auraId, caster)
+        if self.stacks > 0 and auraId == STEADY_FOCUS and target == self_playerGUID then
+            self:DebugTimestamp("Gained Steady Focus buff.")
+            self:LostAura(timestamp)
+        end
+    end,
+    Ovale_TalentsChanged = function(self, event)
+        self.hasSteadyFocus = (__SpellBook.OvaleSpellBook:GetTalentPoints(STEADY_FOCUS_TALENT) > 0)
+        if self.hasSteadyFocus then
+            self:Debug("Registering event handlers to track Steady Focus.")
+            self:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+            self:RegisterMessage("Ovale_AuraAdded")
+            self:RegisterMessage("Ovale_AuraChanged", "Ovale_AuraAdded")
+        else
+            self:Debug("Unregistering event handlers to track Steady Focus.")
+            self:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+            self:UnregisterMessage("Ovale_AuraAdded")
+            self:UnregisterMessage("Ovale_AuraChanged")
+        end
+    end,
+    GainedAura = function(self, atTime)
+        self:StartProfiling("OvaleSteadyFocus_GainedAura")
+        self.start = atTime
+        self.ending = self.start + self.duration
+        self.stacks = self.stacks + 1
+        self:Debug("Gaining %s buff at %s.", self.spellName, atTime)
+        __Aura.OvaleAura:GainedAuraOnGUID(self_playerGUID, self.start, self.spellId, self_playerGUID, "HELPFUL", nil, nil, self.stacks, nil, self.duration, self.ending, nil, self.spellName, nil, nil, nil)
+        self:StopProfiling("OvaleSteadyFocus_GainedAura")
+    end,
+    LostAura = function(self, atTime)
+        self:StartProfiling("OvaleSteadyFocus_LostAura")
+        self.ending = atTime
+        self.stacks = 0
+        self:Debug("Losing %s buff at %s.", self.spellName, atTime)
+        __Aura.OvaleAura:LostAuraOnGUID(self_playerGUID, atTime, self.spellId, self_playerGUID)
+        self:StopProfiling("OvaleSteadyFocus_LostAura")
+    end,
+    DebugSteadyFocus = function(self)
+        local aura = __Aura.OvaleAura:GetAuraByGUID(self_playerGUID, self.spellId, "HELPFUL", true)
+        if aura then
+            self:Print("Player has pre-Steady Focus aura with start=%s, end=%s, stacks=%d.", aura.start, aura.ending, aura.stacks)
+        else
+            self:Print("Player has no pre-Steady Focus aura!")
+        end
+    end,
+})
+local SteadyFocusState = __class(nil, {
+    CleanState = function(self)
+    end,
+    InitializeState = function(self)
+    end,
+    ResetState = function(self)
+    end,
+    ApplySpellAfterCast = function(self, spellId, targetGUID, startCast, endCast, channel, spellcast)
+        if __exports.OvaleSteadyFocus.hasSteadyFocus then
+            __exports.OvaleSteadyFocus:StartProfiling("OvaleSteadyFocus_ApplySpellAfterCast")
+            if STEADY_SHOT[spellId] then
+                local aura = __Aura.auraState:GetAuraByGUID(self_playerGUID, __exports.OvaleSteadyFocus.spellId, "HELPFUL", true)
+                if __Aura.auraState:IsActiveAura(aura, endCast) then
+                    __Aura.auraState:RemoveAuraOnGUID(self_playerGUID, __exports.OvaleSteadyFocus.spellId, "HELPFUL", true, endCast)
+                    aura = __Aura.auraState:GetAuraByGUID(self_playerGUID, STEADY_FOCUS, "HELPFUL", true)
+                    if  not aura then
+                        aura = __Aura.auraState:AddAuraToGUID(self_playerGUID, STEADY_FOCUS, self_playerGUID, "HELPFUL", nil, endCast, nil, spellcast)
+                    end
+                    aura.start = endCast
+                    aura.duration = STEADY_FOCUS_DURATION
+                    aura.ending = endCast + STEADY_FOCUS_DURATION
+                    aura.gain = endCast
+                else
+                    local ending = endCast + __exports.OvaleSteadyFocus.duration
+                    aura = __Aura.auraState:AddAuraToGUID(self_playerGUID, __exports.OvaleSteadyFocus.spellId, self_playerGUID, "HELPFUL", nil, endCast, ending, spellcast)
+                    aura.name = __exports.OvaleSteadyFocus.spellName
+                end
+            elseif RANGED_ATTACKS[spellId] then
+                __Aura.auraState:RemoveAuraOnGUID(self_playerGUID, __exports.OvaleSteadyFocus.spellId, "HELPFUL", true, endCast)
+            end
+            __exports.OvaleSteadyFocus:StopProfiling("OvaleSteadyFocus_ApplySpellAfterCast")
+        end
+    end,
+})
+__exports.steadyFocusState = SteadyFocusState()
+__State.OvaleState:RegisterState(__exports.steadyFocusState)
+__exports.OvaleSteadyFocus = OvaleSteadyFocusClass()
+end)

@@ -31,9 +31,9 @@ const TooltipFuncs = function(self, name, data) {
 class OvaleRecountClass extends OvaleRecountBase {
     OnInitialize() {
         if (Recount) {
-            let L = AceLocale && AceLocale.GetLocale("Recount", true);
-            if (!L) {
-                L = _setmetatable<LuaObj<string>>({}, {
+            let aceLocale = AceLocale && AceLocale.GetLocale("Recount", true);
+            if (!aceLocale) {
+                aceLocale = _setmetatable<LuaObj<string>>({}, {
                     __index: function (t, k) {
                         t[k] = k;
                         return k;
@@ -56,7 +56,7 @@ class OvaleRecountClass extends OvaleRecountBase {
             let source = Recount.db2.combatants[name];
             if (source) {
                 Recount.AddAmount(source, Ovale.GetName(), scored);
-                Recount.AddAmount(source, Ovale.GetName() + "Max", scoreMax);
+                Recount.AddAmount(source, `${Ovale.GetName()}Max`, scoreMax);
             }
         }
     }

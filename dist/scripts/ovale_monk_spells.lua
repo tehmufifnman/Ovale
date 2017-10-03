@@ -1,5 +1,5 @@
-local OVALE, Ovale = ...
-require(OVALE, Ovale, "ovale_monk_spells", { "./OvaleScripts" }, function(__exports, __OvaleScripts)
+local __addonName, __addon = ...
+__addon.require(__addonName, __addon, "ovale_monk_spells", { "../Scripts" }, function(__exports, __Scripts)
 do
     local name = "ovale_monk_spells"
     local desc = "[7.0] Ovale: Monk spells"
@@ -333,6 +333,6 @@ SpellList(any_stagger_debuff light_stagger_debuff moderate_stagger_debuff heavy_
 	SpellInfo(dampen_harm tag=cd)
 	SpellInfo(diffuse_magic tag=cd)
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("MONK", nil, name, desc, code, "include")
+    __Scripts.OvaleScripts:RegisterScript("MONK", nil, name, desc, code, "include")
 end
-end))
+end)

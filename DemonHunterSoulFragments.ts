@@ -97,8 +97,6 @@ class OvaleDemonHunterSoulFragmentsClass extends OvaleDebug.RegisterDebugging(Ov
         }
     }
     DebugSoulFragments() {
-        // print("Fragments:" + this.last_soul_fragment_count["fragments"]);
-        // print("Time:" + this.last_soul_fragment_count["timestamp"]);
     }
 }
 

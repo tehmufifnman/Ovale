@@ -1,9 +1,6 @@
-local OVALE, Ovale = ...
-local OvaleRecount = Ovale:NewModule("OvaleRecount")
-Ovale.OvaleRecount = OvaleRecount
-local L = nil
-local OvaleScore = nil
-local Recount = LibStub("AceAddon-3.0"):GetAddon("Recount", true)
+local __addonName, __addon = ...
+__addon.require(__addonName, __addon, "Recount", { "./Ovale", "./Localization", "./Score", "AceLocale-3.0", "Recount" }, function(__exports, __Ovale, __Localization, __Score, AceLocale, Recount)
+local OvaleRecountBase = __Ovale.Ovale:NewModule("OvaleRecount")
 local _setmetatable = setmetatable
 local DataModes = function(self, data, num)
     if  not data then
@@ -21,42 +18,45 @@ local DataModes = function(self, data, num)
     end
     return score, nil
 end
+
 local TooltipFuncs = function(self, name, data)
     local SortedData, total
     GameTooltip:ClearLines()
     GameTooltip:AddLine(name)
 end
-local OvaleRecount = __class()
-function OvaleRecount:OnInitialize()
-    OvaleScore = Ovale.OvaleScore
-    if Recount then
-        local AceLocale = LibStub("AceLocale-3.0", true)
-        local L = AceLocale and AceLocale:GetLocale("Recount", true)
-        if  not L then
-            L = _setmetatable({}, {
-                __index = function(t, k)
-                    t[k] = k
-                    return k
-                end
-            })
+
+local OvaleRecountClass = __class(OvaleRecountBase, {
+    OnInitialize = function(self)
+        if Recount then
+            local aceLocale = AceLocale and AceLocale:GetLocale("Recount", true)
+            if  not aceLocale then
+                aceLocale = _setmetatable({}, {
+                    __index = function(t, k)
+                        t[k] = k
+                        return k
+                    end
+
+                })
+            end
+            Recount:AddModeTooltip(__Ovale.Ovale:GetName(), DataModes, TooltipFuncs, nil, nil, nil, nil)
         end
-        Recount:AddModeTooltip(OVALE, DataModes, TooltipFuncs, nil, nil, nil, nil)
-    end
-end
-function OvaleRecount:OnEnable()
-    if Recount then
-        OvaleScore:RegisterDamageMeter("OvaleRecount", self, "ReceiveScore")
-    end
-end
-function OvaleRecount:OnDisable()
-    OvaleScore:UnregisterDamageMeter("OvaleRecount")
-end
-function OvaleRecount:ReceiveScore(name, guid, scored, scoreMax)
-    if Recount then
-        local source = Recount.db2.combatants[name]
-        if source then
-            Recount:AddAmount(source, OVALE, scored)
-            Recount:AddAmount(source, OVALE + "Max", scoreMax)
+    end,
+    OnEnable = function(self)
+        if Recount then
+            __Score.OvaleScore:RegisterDamageMeter("OvaleRecount", self, "ReceiveScore")
         end
-    end
-end
+    end,
+    OnDisable = function(self)
+        __Score.OvaleScore:UnregisterDamageMeter("OvaleRecount")
+    end,
+    ReceiveScore = function(self, name, guid, scored, scoreMax)
+        if Recount then
+            local source = Recount.db2.combatants[name]
+            if source then
+                Recount:AddAmount(source, __Ovale.Ovale:GetName(), scored)
+                Recount:AddAmount(source, __Ovale.Ovale:GetName(), scoreMax)
+            end
+        end
+    end,
+})
+end)

@@ -1,5 +1,5 @@
-local OVALE, Ovale = ...
-require(OVALE, Ovale, "ovale_common", { "./OvaleScripts" }, function(__exports, __OvaleScripts)
+local __addonName, __addon = ...
+__addon.require(__addonName, __addon, "ovale_common", { "../Scripts" }, function(__exports, __Scripts)
 do
     local name = "ovale_common"
     local desc = "[6.0.2] Ovale: Common spell definitions"
@@ -192,6 +192,6 @@ AddFunction UseRacialSurvivalActions
 	Spell(stoneform)
 }
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript(nil, nil, name, desc, code, "include")
+    __Scripts.OvaleScripts:RegisterScript(nil, nil, name, desc, code, "include")
 end
-end))
+end)

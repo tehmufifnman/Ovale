@@ -9,8 +9,10 @@ end
 
 -- Function used by define to call a factory that is ready
 local function call(exports) 
+    print("calling " .. exports.name)
     local parameters = {}
     for _,v in ipairs(exports.imports) do
+        print("   with " .. v.name)
         parameters[#parameters + 1] = v.exports
     end
     exports.exports = {}
@@ -22,11 +24,10 @@ local function call(exports)
     -- If some modules were waiting for these modules,...
     if exports.wait then
         for _,v in ipairs(exports.wait) do
-            -- print(v .. " is no more waiting for " .. exports.name)
+            print(v .. " is no more waiting for " .. exports.name)
             v.missing[exports.name] = nil
             -- This module is waiting for nothing, call the factory
             if not next(v.missing) and v.imports then
-                -- print("missing nothing")
                 call(v)
             end
         end
@@ -34,12 +35,12 @@ local function call(exports)
 end 
 
 -- Used by the AMD-like module system
-function define( addonName, addon, mod, dependencies, factory)
+Addon.require = function(addonName, addon, mod, dependencies, factory)
     local exports
 
     mod = "./" .. mod
 
-    -- print("Define " .. mod)
+    print("Define " .. mod)
 
     if not addon[mod] then
       exports = { missing = {}, name = mod }
@@ -59,7 +60,7 @@ function define( addonName, addon, mod, dependencies, factory)
       if not dependency then
         if LibStub and LibStub.libs[v] then
           -- It's a global dependency
-          -- print("Global " .. v)
+          print("Global " .. v)
           dependency = { exports = { default = LibStub.libs[v] }, name = v, missing = {} }
         else
           -- Create the dependency, empty for now
@@ -71,7 +72,7 @@ function define( addonName, addon, mod, dependencies, factory)
         addon[v] = dependency 
       else
         if next(dependency.missing) then
-          -- print(v .. " is not ready")
+          print(v .. " is not ready")
           if dependency.wait then
             dependency.wait[#dependency.wait + 1] = exports
           else
@@ -89,6 +90,14 @@ function define( addonName, addon, mod, dependencies, factory)
     if not next(exports.missing) then
       call(exports)
     end
+
+    -- for k, v in pairs(addon) do 
+    --   if (type(v) == "table" and v.wait) then
+    --     for _,w in ipairs(v.wait) do
+    --       print(w.name .. " is waiting for " .. v.name)
+    --     end
+    --   end
+    -- end
 end
 
 __class = function(base) 

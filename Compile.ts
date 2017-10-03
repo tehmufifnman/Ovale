@@ -443,7 +443,7 @@ const AddMissingVariantSpells = function(annotation) {
                     } else {
                         let functionCall = node.name;
                         if (node.paramsAsString) {
-                            functionCall = node.name + "(" + node.paramsAsString + ")";
+                            functionCall = `${node.name}(${node.paramsAsString})`;
                         }
                         OvaleCompile.Print("Unknown spell with ID %s used in %s.", spellId, functionCall);
                     }
@@ -456,20 +456,20 @@ const AddToBuffList = function(buffId, statName?, isStacking?) {
     if (statName) {
         for (const [_, useName] of _pairs(OvaleData.STAT_USE_NAMES)) {
             if (isStacking || !strfind(useName, "_stacking_")) {
-                let name = useName + "_" + statName + "_buff";
+                let name = `${useName}_${statName}_buff`;
                 let list = OvaleData.buffSpellList[name] || {
                 }
                 list[buffId] = true;
                 OvaleData.buffSpellList[name] = list;
                 let shortStatName = OvaleData.STAT_SHORTNAME[statName];
                 if (shortStatName) {
-                    name = useName + "_" + shortStatName + "_buff";
+                    name = `${useName}_${shortStatName}_buff`;
                     list = OvaleData.buffSpellList[name] || {
                     }
                     list[buffId] = true;
                     OvaleData.buffSpellList[name] = list;
                 }
-                name = useName + "_any_buff";
+                name = `${useName}_any_buff`;
                 list = OvaleData.buffSpellList[name] || {
                 }
                 list[buffId] = true;

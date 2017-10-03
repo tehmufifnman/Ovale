@@ -1,5 +1,5 @@
-local OVALE, Ovale = ...
-require(OVALE, Ovale, "ovale_hunter", { "./OvaleScripts" }, function(__exports, __OvaleScripts)
+local __addonName, __addon = ...
+__addon.require(__addonName, __addon, "ovale_hunter", { "../Scripts" }, function(__exports, __Scripts)
 do
     local name = "simulationcraft_hunter_bm_t19p"
     local desc = "[7.0] SimulationCraft: Hunter_BM_T19P"
@@ -245,7 +245,7 @@ AddIcon checkbox=opt_hunter_beast_mastery_aoe help=cd specialization=beast_maste
 # volley
 # war_stomp
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("HUNTER", "beast_mastery", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("HUNTER", "beast_mastery", name, desc, code, "script")
 end
 do
     local name = "simulationcraft_hunter_mm_t19p"
@@ -807,7 +807,7 @@ AddIcon checkbox=opt_hunter_marksmanship_aoe help=cd specialization=marksmanship
 # war_stomp
 # windburst
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("HUNTER", "marksmanship", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("HUNTER", "marksmanship", name, desc, code, "script")
 end
 do
     local name = "simulationcraft_hunter_sv_t19p"
@@ -1345,6 +1345,6 @@ AddIcon checkbox=opt_hunter_survival_aoe help=cd specialization=survival
 # war_stomp
 # way_of_the_moknathal_talent
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("HUNTER", "survival", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("HUNTER", "survival", name, desc, code, "script")
 end
-end))
+end)

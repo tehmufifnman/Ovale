@@ -1,5 +1,5 @@
-local OVALE, Ovale = ...
-require(OVALE, Ovale, "ovale_mage", { "./OvaleScripts" }, function(__exports, __OvaleScripts)
+local __addonName, __addon = ...
+__addon.require(__addonName, __addon, "ovale_mage", { "../Scripts" }, function(__exports, __Scripts)
 do
     local name = "simulationcraft_mage_arcane_t19p"
     local desc = "[7.0] SimulationCraft: Mage_Arcane_T19P"
@@ -589,7 +589,7 @@ AddIcon checkbox=opt_mage_arcane_aoe help=cd specialization=arcane
 # supernova
 # time_warp
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("MAGE", "arcane", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("MAGE", "arcane", name, desc, code, "script")
 end
 do
     local name = "simulationcraft_mage_fire_t19p"
@@ -1110,7 +1110,7 @@ AddIcon checkbox=opt_mage_fire_aoe help=cd specialization=fire
 # scorch
 # time_warp
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("MAGE", "fire", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("MAGE", "fire", name, desc, code, "script")
 end
 do
     local name = "simulationcraft_mage_frost_t19p"
@@ -1539,7 +1539,7 @@ AddIcon checkbox=opt_mage_frost_aoe help=cd specialization=frost
 # winters_chill_debuff
 # zannesu_journey_buff
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("MAGE", "frost", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("MAGE", "frost", name, desc, code, "script")
 end
 do
     local name = "simulationcraft_mage_ntspamarcane_t19p"
@@ -1948,6 +1948,6 @@ AddIcon checkbox=opt_mage_arcane_aoe help=cd specialization=arcane
 # supernova
 # time_warp
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("MAGE", "arcane", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("MAGE", "arcane", name, desc, code, "script")
 end
-end))
+end)

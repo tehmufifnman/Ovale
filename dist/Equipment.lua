@@ -1,7 +1,6 @@
-local OVALE, Ovale = ...
-require(OVALE, Ovale, "Equipment", { "./OvaleProfiler", "./playerClass" }, function(__exports, __OvaleProfiler, __playerClass)
-local OvaleEquipment = Ovale:NewModule("OvaleEquipment", "AceEvent-3.0")
-Ovale.OvaleEquipment = OvaleEquipment
+local __addonName, __addon = ...
+__addon.require(__addonName, __addon, "Equipment", { "./Profiler", "./Ovale", "./Debug" }, function(__exports, __Profiler, __Ovale, __Debug)
+local OvaleEquipmentBase = __Ovale.Ovale:NewModule("OvaleEquipment", "AceEvent-3.0")
 local _pairs = pairs
 local _select = select
 local strgsub = string.gsub
@@ -38,9 +37,8 @@ local _INVSLOT_TRINKET1 = INVSLOT_TRINKET1
 local _INVSLOT_TRINKET2 = INVSLOT_TRINKET2
 local _INVSLOT_WAIST = INVSLOT_WAIST
 local _INVSLOT_WRIST = INVSLOT_WRIST
-__OvaleProfiler.OvaleProfiler:RegisterProfiling(OvaleEquipment)
 local self_tooltip = nil
-local OVALE_ITEM_LEVEL_PATTERN = "^" + strgsub(ITEM_LEVEL, "%%d", "(%%d+)")
+local OVALE_ITEM_LEVEL_PATTERN = strgsub(ITEM_LEVEL, "%%d", "(%%d+)")
 local OVALE_SLOTNAME = {
     AmmoSlot = _INVSLOT_AMMO,
     BackSlot = _INVSLOT_BACK,
@@ -63,12 +61,12 @@ local OVALE_SLOTNAME = {
     WristSlot = _INVSLOT_WRIST
 }
 local OVALE_ARMORSET_SLOT_IDS = {
-    1 = _INVSLOT_CHEST,
-    2 = _INVSLOT_HAND,
-    3 = _INVSLOT_HEAD,
-    4 = _INVSLOT_LEGS,
-    5 = _INVSLOT_SHOULDER,
-    6 = _INVSLOT_BACK
+    [1] = _INVSLOT_CHEST,
+    [2] = _INVSLOT_HAND,
+    [3] = _INVSLOT_HEAD,
+    [4] = _INVSLOT_LEGS,
+    [5] = _INVSLOT_SHOULDER,
+    [6] = _INVSLOT_BACK
 }
 local OVALE_ARMORSET = {
     [85314] = "T14_tank",
@@ -1287,36 +1285,28 @@ do
 end
 local OVALE_META_GEM = nil
 do
-    local _, _, _, _, _, _, name = API_GetAuctionItemSubClasses(8)
+    local _1, _2, _3, _4, _5, _6, name = API_GetAuctionItemSubClasses(8)
     OVALE_META_GEM = name
 end
 local OVALE_NORMALIZED_WEAPON_SPEED = {}
-OvaleEquipment.ready = false
-OvaleEquipment.equippedItems = {}
-OvaleEquipment.equippedItemLevels = {}
-OvaleEquipment.mainHandItemType = nil
-OvaleEquipment.offHandItemType = nil
-OvaleEquipment.armorSetCount = {}
-OvaleEquipment.metaGem = nil
-OvaleEquipment.mainHandWeaponSpeed = nil
-OvaleEquipment.offHandWeaponSpeed = nil
 local GetEquippedItemType = function(slotId)
-    OvaleEquipment:StartProfiling("OvaleEquipment_GetEquippedItemType")
-    local itemId = OvaleEquipment:GetEquippedItem(slotId)
+    __exports.OvaleEquipment:StartProfiling("OvaleEquipment_GetEquippedItemType")
+    local itemId = __exports.OvaleEquipment:GetEquippedItem(slotId)
     local itemType
     if itemId then
-        local _, _, _, _, _, _, _, _, inventoryType = API_GetItemInfo(itemId)
+        local _1, _2, _3, _4, _5, _6, _7, _8, inventoryType = API_GetItemInfo(itemId)
         itemType = inventoryType
     end
-    OvaleEquipment:StopProfiling("OvaleEquipment_GetEquippedItemType")
+    __exports.OvaleEquipment:StopProfiling("OvaleEquipment_GetEquippedItemType")
     return itemType
 end
+
 local GetItemLevel = function(slotId)
-    OvaleEquipment:StartProfiling("OvaleEquipment_GetItemLevel")
+    __exports.OvaleEquipment:StartProfiling("OvaleEquipment_GetItemLevel")
     self_tooltip:SetInventoryItem("player", slotId)
     local itemLevel
     for i = 2, self_tooltip:NumLines(), 1 do
-        local text = _G["OvaleEquipment_ScanningTooltipTextLeft" + i]:GetText()
+        local text = _G[i]:GetText()
         if text then
             itemLevel = strmatch(text, OVALE_ITEM_LEVEL_PATTERN)
             if itemLevel then
@@ -1325,116 +1315,114 @@ local GetItemLevel = function(slotId)
             end
         end
     end
-    OvaleEquipment:StopProfiling("OvaleEquipment_GetItemLevel")
+    __exports.OvaleEquipment:StopProfiling("OvaleEquipment_GetItemLevel")
     return itemLevel
 end
+
 local GetNormalizedWeaponSpeed = function(slotId)
-    OvaleEquipment:StartProfiling("OvaleEquipment_GetNormalizedWeaponSpeed")
+    __exports.OvaleEquipment:StartProfiling("OvaleEquipment_GetNormalizedWeaponSpeed")
     local weaponSpeed
     if slotId == _INVSLOT_MAINHAND or slotId == _INVSLOT_OFFHAND then
-        local itemId = OvaleEquipment:GetEquippedItem(slotId)
+        local itemId = __exports.OvaleEquipment:GetEquippedItem(slotId)
         if itemId then
-            local _, _, _, _, _, _, weaponClass = API_GetItemInfo(itemId)
+            local _1, _2, _3, _4, _5, _6, weaponClass = API_GetItemInfo(itemId)
         end
     end
-    OvaleEquipment:StopProfiling("OvaleEquipment_GetNormalizedWeaponSpeed")
+    __exports.OvaleEquipment:StopProfiling("OvaleEquipment_GetNormalizedWeaponSpeed")
     return weaponSpeed
 end
-local OvaleEquipment = __class()
-function OvaleEquipment:OnInitialize()
-    self_tooltip = API_CreateFrame("GameTooltip", "OvaleEquipment_ScanningTooltip", nil, "GameTooltipTemplate")
-    self_tooltip:SetOwner(UIParent, "ANCHOR_NONE")
-end
-function OvaleEquipment:OnEnable()
-    self:RegisterEvent("GET_ITEM_INFO_RECEIVED")
-    self:RegisterEvent("PLAYER_ENTERING_WORLD", "UpdateEquippedItems")
-    self:RegisterEvent("PLAYER_AVG_ITEM_LEVEL_UPDATE", "UpdateEquippedItemLevels")
-    self:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
-end
-function OvaleEquipment:OnDisable()
-    self:UnregisterEvent("GET_ITEM_INFO_RECEIVED")
-    self:UnregisterEvent("PLAYER_ENTERING_WORLD")
-    self:UnregisterEvent("PLAYER_AVG_ITEM_LEVEL_UPDATE")
-    self:UnregisterEvent("PLAYER_EQUIPMENT_CHANGED")
-end
-function OvaleEquipment:GET_ITEM_INFO_RECEIVED(event)
-    self:StartProfiling("OvaleEquipment_GET_ITEM_INFO_RECEIVED")
-    self.mainHandItemType = GetEquippedItemType(_INVSLOT_MAINHAND)
-    self.offHandItemType = GetEquippedItemType(_INVSLOT_OFFHAND)
-    self.mainHandWeaponSpeed = self:HasMainHandWeapon() and GetNormalizedWeaponSpeed(_INVSLOT_MAINHAND)
-    self.offHandWeaponSpeed = self:HasOffHandWeapon() and GetNormalizedWeaponSpeed(_INVSLOT_OFFHAND)
-    local changed = false
-    if changed then
-        Ovale.refreshNeeded[Ovale.playerGUID] = true
-        self:SendMessage("Ovale_EquipmentChanged")
-    end
-    self:StopProfiling("OvaleEquipment_GET_ITEM_INFO_RECEIVED")
-end
-function OvaleEquipment:PLAYER_EQUIPMENT_CHANGED(event, slotId, hasItem)
-    self:StartProfiling("OvaleEquipment_PLAYER_EQUIPMENT_CHANGED")
-    if hasItem then
-        self.equippedItems[slotId] = API_GetInventoryItemID("player", slotId)
-        self.equippedItemLevels[slotId] = GetItemLevel(slotId)
-        if slotId == _INVSLOT_MAINHAND then
-            self.mainHandItemType = GetEquippedItemType(slotId)
-            self.mainHandWeaponSpeed = self:HasMainHandWeapon() and GetNormalizedWeaponSpeed(_INVSLOT_MAINHAND)
-        elseif slotId == _INVSLOT_OFFHAND then
-            self.offHandItemType = GetEquippedItemType(slotId)
-            self.offHandWeaponSpeed = self:HasOffHandWeapon() and GetNormalizedWeaponSpeed(_INVSLOT_OFFHAND)
-        end
-    else
-        self.equippedItems[slotId] = nil
-        self.equippedItemLevels[slotId] = nil
-        if slotId == _INVSLOT_MAINHAND then
-            self.mainHandItemType = nil
-        elseif slotId == _INVSLOT_OFFHAND then
-            self.offHandItemType = nil
-        end
-    end
-    self:UpdateArmorSetCount()
-    Ovale.refreshNeeded[Ovale.playerGUID] = true
-    self:SendMessage("Ovale_EquipmentChanged")
-    self:StopProfiling("OvaleEquipment_PLAYER_EQUIPMENT_CHANGED")
-end
-do
-    local armorSetName = {
-        HUNTER = {
-            ["T14"] = "T14_melee",
-            ["T15"] = "T15_melee",
-            ["T16"] = "T16_melee"
-        },
-        MAGE = {
-            ["T14"] = "T14_caster",
-            ["T15"] = "T15_caster",
-            ["T16"] = "T16_caster"
-        },
-        ROGUE = {
-            ["T14"] = "T14_melee",
-            ["T15"] = "T15_melee",
-            ["T16"] = "T16_melee"
-        },
-        WARLOCK = {
-            ["T14"] = "T14_caster",
-            ["T15"] = "T15_caster"
-        }
+
+local result = {}
+local count = 0
+local armorSetName = {
+    HUNTER = {
+        ["T14"] = "T14_melee",
+        ["T15"] = "T15_melee",
+        ["T16"] = "T16_melee"
+    },
+    MAGE = {
+        ["T14"] = "T14_caster",
+        ["T15"] = "T15_caster",
+        ["T16"] = "T16_caster"
+    },
+    ROGUE = {
+        ["T14"] = "T14_melee",
+        ["T15"] = "T15_melee",
+        ["T16"] = "T16_melee"
+    },
+    WARLOCK = {
+        ["T14"] = "T14_caster",
+        ["T15"] = "T15_caster"
     }
-local OvaleEquipment = __class()
-    function OvaleEquipment:GetArmorSetCount(name)
+}
+local OvaleEquipmentClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleEquipmentBase)), {
+    OnInitialize = function(self)
+        self_tooltip = API_CreateFrame("GameTooltip", "OvaleEquipment_ScanningTooltip", nil, "GameTooltipTemplate")
+        self_tooltip:SetOwner(UIParent, "ANCHOR_NONE")
+    end,
+    OnEnable = function(self)
+        self:RegisterEvent("GET_ITEM_INFO_RECEIVED")
+        self:RegisterEvent("PLAYER_ENTERING_WORLD", "UpdateEquippedItems")
+        self:RegisterEvent("PLAYER_AVG_ITEM_LEVEL_UPDATE", "UpdateEquippedItemLevels")
+        self:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
+    end,
+    OnDisable = function(self)
+        self:UnregisterEvent("GET_ITEM_INFO_RECEIVED")
+        self:UnregisterEvent("PLAYER_ENTERING_WORLD")
+        self:UnregisterEvent("PLAYER_AVG_ITEM_LEVEL_UPDATE")
+        self:UnregisterEvent("PLAYER_EQUIPMENT_CHANGED")
+    end,
+    GET_ITEM_INFO_RECEIVED = function(self, event)
+        self:StartProfiling("OvaleEquipment_GET_ITEM_INFO_RECEIVED")
+        self.mainHandItemType = GetEquippedItemType(_INVSLOT_MAINHAND)
+        self.offHandItemType = GetEquippedItemType(_INVSLOT_OFFHAND)
+        self.mainHandWeaponSpeed = self:HasMainHandWeapon() and GetNormalizedWeaponSpeed(_INVSLOT_MAINHAND)
+        self.offHandWeaponSpeed = self:HasOffHandWeapon() and GetNormalizedWeaponSpeed(_INVSLOT_OFFHAND)
+        local changed = false
+        if changed then
+            __Ovale.Ovale.refreshNeeded[__Ovale.Ovale.playerGUID] = true
+            self:SendMessage("Ovale_EquipmentChanged")
+        end
+        self:StopProfiling("OvaleEquipment_GET_ITEM_INFO_RECEIVED")
+    end,
+    PLAYER_EQUIPMENT_CHANGED = function(self, event, slotId, hasItem)
+        self:StartProfiling("OvaleEquipment_PLAYER_EQUIPMENT_CHANGED")
+        if hasItem then
+            self.equippedItems[slotId] = API_GetInventoryItemID("player", slotId)
+            self.equippedItemLevels[slotId] = GetItemLevel(slotId)
+            if slotId == _INVSLOT_MAINHAND then
+                self.mainHandItemType = GetEquippedItemType(slotId)
+                self.mainHandWeaponSpeed = self:HasMainHandWeapon() and GetNormalizedWeaponSpeed(_INVSLOT_MAINHAND)
+            elseif slotId == _INVSLOT_OFFHAND then
+                self.offHandItemType = GetEquippedItemType(slotId)
+                self.offHandWeaponSpeed = self:HasOffHandWeapon() and GetNormalizedWeaponSpeed(_INVSLOT_OFFHAND)
+            end
+        else
+            self.equippedItems[slotId] = nil
+            self.equippedItemLevels[slotId] = nil
+            if slotId == _INVSLOT_MAINHAND then
+                self.mainHandItemType = nil
+            elseif slotId == _INVSLOT_OFFHAND then
+                self.offHandItemType = nil
+            end
+        end
+        self:UpdateArmorSetCount()
+        __Ovale.Ovale.refreshNeeded[__Ovale.Ovale.playerGUID] = true
+        self:SendMessage("Ovale_EquipmentChanged")
+        self:StopProfiling("OvaleEquipment_PLAYER_EQUIPMENT_CHANGED")
+    end,
+    GetArmorSetCount = function(self, name)
         local count = self.armorSetCount[name]
         if  not count then
-            if armorSetName[__playerClass.className] and armorSetName[__playerClass.className][name] then
-                name = armorSetName[__playerClass.className][name]
+            local className = __Ovale.Ovale.playerClass
+            if armorSetName[className] and armorSetName[className][name] then
+                name = armorSetName[className][name]
                 count = self.armorSetCount[name]
             end
         end
         return count or 0
-    end
-end
-do
-    local result = {}
-    local count = 0
-local OvaleEquipment = __class()
-    function OvaleEquipment:GetEquippedItem(...)
+    end,
+    GetEquippedItem = function(self, ...)
         count = _select("#", ...)
         for n = 1, count, 1 do
             local slotId = _select(n, ...)
@@ -1452,13 +1440,8 @@ local OvaleEquipment = __class()
         else
             return nil
         end
-    end
-end
-do
-    local result = {}
-    local count = 0
-local OvaleEquipment = __class()
-    function OvaleEquipment:GetEquippedItemLevel(...)
+    end,
+    GetEquippedItemLevel = function(self, ...)
         count = _select("#", ...)
         for n = 1, count, 1 do
             local slotId = _select(n, ...)
@@ -1476,171 +1459,170 @@ local OvaleEquipment = __class()
         else
             return nil
         end
-    end
-end
-local OvaleEquipment = __class()
-function OvaleEquipment:GetEquippedTrinkets()
-    return self.equippedItems[_INVSLOT_TRINKET1], self.equippedItems[_INVSLOT_TRINKET2]
-end
-function OvaleEquipment:HasEquippedItem(itemId, slot, ...)
-    if (slot ~= nil) then
-        local slotId = slot
-        if _type(slotId) ~= "number" then
-            slotId = OVALE_SLOTNAME[slotId]
-        end
-        if slotId and self.equippedItems[slotId] == itemId then
-            return slotId
-        end
-        local additionalSlotsCount = _select("#", ...)
-        if additionalSlotsCount > 0 then
-            for n = 1, additionalSlotsCount, 1 do
-                slotId = _select(n, ...)
-                if slotId and _type(slotId) ~= "number" then
-                    slotId = OVALE_SLOTNAME[slotId]
+    end,
+    GetEquippedTrinkets = function(self)
+        return self.equippedItems[_INVSLOT_TRINKET1], self.equippedItems[_INVSLOT_TRINKET2]
+    end,
+    HasEquippedItem = function(self, itemId, slot, ...)
+        if (slot ~= nil) then
+            local slotId = slot
+            if _type(slotId) ~= "number" then
+                slotId = OVALE_SLOTNAME[slotId]
+            end
+            if slotId and self.equippedItems[slotId] == itemId then
+                return slotId
+            end
+            local additionalSlotsCount = _select("#", ...)
+            if additionalSlotsCount > 0 then
+                for n = 1, additionalSlotsCount, 1 do
+                    slotId = _select(n, ...)
+                    if slotId and _type(slotId) ~= "number" then
+                        slotId = OVALE_SLOTNAME[slotId]
+                    end
+                    if slotId and self.equippedItems[slotId] == itemId then
+                        return slotId
+                    end
                 end
-                if slotId and self.equippedItems[slotId] == itemId then
+            end
+        else
+            for slotId, equippedItemId in _pairs(self.equippedItems) do
+                if equippedItemId == itemId then
                     return slotId
                 end
             end
         end
-    else
-        for slotId, equippedItemId in _pairs(self.equippedItems) do
-            if equippedItemId == itemId then
-                return slotId
+        return nil
+    end,
+    HasMainHandWeapon = function(self, handedness)
+        if handedness then
+            if handedness == 1 then
+                return self.mainHandItemType == "INVTYPE_WEAPON" or self.mainHandItemType == "INVTYPE_WEAPONMAINHAND"
+            elseif handedness == 2 then
+                return self.mainHandItemType == "INVTYPE_2HWEAPON"
             end
+        else
+            return self.mainHandItemType == "INVTYPE_WEAPON" or self.mainHandItemType == "INVTYPE_WEAPONMAINHAND" or self.mainHandItemType == "INVTYPE_2HWEAPON"
         end
-    end
-    return nil
-end
-function OvaleEquipment:HasMainHandWeapon(handedness)
-    if handedness then
-        if handedness == 1 then
-            return self.mainHandItemType == "INVTYPE_WEAPON" or self.mainHandItemType == "INVTYPE_WEAPONMAINHAND"
-        elseif handedness == 2 then
-            return self.mainHandItemType == "INVTYPE_2HWEAPON"
+        return false
+    end,
+    HasOffHandWeapon = function(self, handedness)
+        if handedness then
+            if handedness == 1 then
+                return self.offHandItemType == "INVTYPE_WEAPON" or self.offHandItemType == "INVTYPE_WEAPONOFFHAND" or self.offHandItemType == "INVTYPE_WEAPONMAINHAND"
+            elseif handedness == 2 then
+                return self.offHandItemType == "INVTYPE_2HWEAPON"
+            end
+        else
+            return self.offHandItemType == "INVTYPE_WEAPON" or self.offHandItemType == "INVTYPE_WEAPONOFFHAND" or self.offHandItemType == "INVTYPE_WEAPONMAINHAND" or self.offHandItemType == "INVTYPE_2HWEAPON"
         end
-    else
-        return self.mainHandItemType == "INVTYPE_WEAPON" or self.mainHandItemType == "INVTYPE_WEAPONMAINHAND" or self.mainHandItemType == "INVTYPE_2HWEAPON"
-    end
-    return false
-end
-function OvaleEquipment:HasOffHandWeapon(handedness)
-    if handedness then
-        if handedness == 1 then
-            return self.offHandItemType == "INVTYPE_WEAPON" or self.offHandItemType == "INVTYPE_WEAPONOFFHAND" or self.offHandItemType == "INVTYPE_WEAPONMAINHAND"
-        elseif handedness == 2 then
-            return self.offHandItemType == "INVTYPE_2HWEAPON"
+        return false
+    end,
+    HasShield = function(self)
+        return self.offHandItemType == "INVTYPE_SHIELD"
+    end,
+    HasTrinket = function(self, itemId)
+        return self:HasEquippedItem(itemId, _INVSLOT_TRINKET1) or self:HasEquippedItem(itemId, _INVSLOT_TRINKET2)
+    end,
+    HasTwoHandedWeapon = function(self, slotId)
+        if slotId and _type(slotId) ~= "number" then
+            slotId = OVALE_SLOTNAME[slotId]
         end
-    else
-        return self.offHandItemType == "INVTYPE_WEAPON" or self.offHandItemType == "INVTYPE_WEAPONOFFHAND" or self.offHandItemType == "INVTYPE_WEAPONMAINHAND" or self.offHandItemType == "INVTYPE_2HWEAPON"
-    end
-    return false
-end
-function OvaleEquipment:HasShield()
-    return self.offHandItemType == "INVTYPE_SHIELD"
-end
-function OvaleEquipment:HasTrinket(itemId)
-    return self:HasEquippedItem(itemId, _INVSLOT_TRINKET1) or self:HasEquippedItem(itemId, _INVSLOT_TRINKET2)
-end
-function OvaleEquipment:HasTwoHandedWeapon(slotId)
-    if slotId and _type(slotId) ~= "number" then
-        slotId = OVALE_SLOTNAME[slotId]
-    end
-    if slotId then
-        if slotId == _INVSLOT_MAINHAND then
-            return self.mainHandItemType == "INVTYPE_2HWEAPON"
-        elseif slotId == _INVSLOT_OFFHAND then
-            return self.offHandItemType == "INVTYPE_2HWEAPON"
+        if slotId then
+            if slotId == _INVSLOT_MAINHAND then
+                return self.mainHandItemType == "INVTYPE_2HWEAPON"
+            elseif slotId == _INVSLOT_OFFHAND then
+                return self.offHandItemType == "INVTYPE_2HWEAPON"
+            end
+        else
+            return self.mainHandItemType == "INVTYPE_2HWEAPON" or self.offHandItemType == "INVTYPE_2HWEAPON"
         end
-    else
-        return self.mainHandItemType == "INVTYPE_2HWEAPON" or self.offHandItemType == "INVTYPE_2HWEAPON"
-    end
-    return false
-end
-function OvaleEquipment:HasOneHandedWeapon(slotId)
-    if slotId and _type(slotId) ~= "number" then
-        slotId = OVALE_SLOTNAME[slotId]
-    end
-    if slotId then
-        if slotId == _INVSLOT_MAINHAND then
-            return self.mainHandItemType == "INVTYPE_WEAPON" or self.mainHandItemType == "INVTYPE_WEAPONMAINHAND"
-        elseif slotId == _INVSLOT_OFFHAND then
-            return self.offHandItemType == "INVTYPE_WEAPON" or self.offHandItemType == "INVTYPE_WEAPONMAINHAND"
+        return false
+    end,
+    HasOneHandedWeapon = function(self, slotId)
+        if slotId and _type(slotId) ~= "number" then
+            slotId = OVALE_SLOTNAME[slotId]
         end
-    else
-        return self.mainHandItemType == "INVTYPE_WEAPON" or self.mainHandItemType == "INVTYPE_WEAPONMAINHAND" or self.offHandItemType == "INVTYPE_WEAPON" or self.offHandItemType == "INVTYPE_WEAPONMAINHAND"
-    end
-    return false
-end
-function OvaleEquipment:UpdateArmorSetCount()
-    self:StartProfiling("OvaleEquipment_UpdateArmorSetCount")
-    _wipe(self.armorSetCount)
-    for i = 1, #OVALE_ARMORSET_SLOT_IDS, 1 do
-        local itemId = self:GetEquippedItem(OVALE_ARMORSET_SLOT_IDS[i])
-        if itemId then
-            local name = OVALE_ARMORSET[itemId]
-            if name then
-                if  not self.armorSetCount[name] then
-                    self.armorSetCount[name] = 1
-                else
-                    self.armorSetCount[name] = self.armorSetCount[name] + 1
+        if slotId then
+            if slotId == _INVSLOT_MAINHAND then
+                return self.mainHandItemType == "INVTYPE_WEAPON" or self.mainHandItemType == "INVTYPE_WEAPONMAINHAND"
+            elseif slotId == _INVSLOT_OFFHAND then
+                return self.offHandItemType == "INVTYPE_WEAPON" or self.offHandItemType == "INVTYPE_WEAPONMAINHAND"
+            end
+        else
+            return self.mainHandItemType == "INVTYPE_WEAPON" or self.mainHandItemType == "INVTYPE_WEAPONMAINHAND" or self.offHandItemType == "INVTYPE_WEAPON" or self.offHandItemType == "INVTYPE_WEAPONMAINHAND"
+        end
+        return false
+    end,
+    UpdateArmorSetCount = function(self)
+        self:StartProfiling("OvaleEquipment_UpdateArmorSetCount")
+        _wipe(self.armorSetCount)
+        for i = 1, #OVALE_ARMORSET_SLOT_IDS, 1 do
+            local itemId = self:GetEquippedItem(OVALE_ARMORSET_SLOT_IDS[i])
+            if itemId then
+                local name = OVALE_ARMORSET[itemId]
+                if name then
+                    if  not self.armorSetCount[name] then
+                        self.armorSetCount[name] = 1
+                    else
+                        self.armorSetCount[name] = self.armorSetCount[name] + 1
+                    end
                 end
             end
         end
-    end
-    self:StopProfiling("OvaleEquipment_UpdateArmorSetCount")
-end
-function OvaleEquipment:UpdateEquippedItems()
-    self:StartProfiling("OvaleEquipment_UpdateEquippedItems")
-    local changed = false
-    local item
-    for slotId = _INVSLOT_FIRST_EQUIPPED, _INVSLOT_LAST_EQUIPPED, 1 do
-        item = API_GetInventoryItemID("player", slotId)
-        if item ~= self.equippedItems[slotId] then
-            self.equippedItems[slotId] = item
-            changed = true
+        self:StopProfiling("OvaleEquipment_UpdateArmorSetCount")
+    end,
+    UpdateEquippedItems = function(self)
+        self:StartProfiling("OvaleEquipment_UpdateEquippedItems")
+        local changed = false
+        local item
+        for slotId = _INVSLOT_FIRST_EQUIPPED, _INVSLOT_LAST_EQUIPPED, 1 do
+            item = API_GetInventoryItemID("player", slotId)
+            if item ~= self.equippedItems[slotId] then
+                self.equippedItems[slotId] = item
+                changed = true
+            end
         end
-    end
-    local changedItemLevels = self:UpdateEquippedItemLevels()
-    changed = changed or changedItemLevels
-    self.mainHandItemType = GetEquippedItemType(_INVSLOT_MAINHAND)
-    self.offHandItemType = GetEquippedItemType(_INVSLOT_OFFHAND)
-    self.mainHandWeaponSpeed = self:HasMainHandWeapon() and GetNormalizedWeaponSpeed(_INVSLOT_MAINHAND)
-    self.offHandWeaponSpeed = self:HasOffHandWeapon() and GetNormalizedWeaponSpeed(_INVSLOT_OFFHAND)
-    if changed then
-        self:UpdateArmorSetCount()
-        Ovale.refreshNeeded[Ovale.playerGUID] = true
-        self:SendMessage("Ovale_EquipmentChanged")
-    end
-    self.ready = true
-    self:StopProfiling("OvaleEquipment_UpdateEquippedItems")
-end
-function OvaleEquipment:UpdateEquippedItemLevels()
-    self:StartProfiling("OvaleEquipment_UpdateEquippedItemLevels")
-    local changed = false
-    local itemLevel
-    for slotId = _INVSLOT_FIRST_EQUIPPED, _INVSLOT_LAST_EQUIPPED, 1 do
-        itemLevel = GetItemLevel(slotId)
-        if itemLevel ~= self.equippedItemLevels[slotId] then
-            self.equippedItemLevels[slotId] = itemLevel
-            changed = true
+        local changedItemLevels = self:UpdateEquippedItemLevels()
+        changed = changed or changedItemLevels
+        self.mainHandItemType = GetEquippedItemType(_INVSLOT_MAINHAND)
+        self.offHandItemType = GetEquippedItemType(_INVSLOT_OFFHAND)
+        self.mainHandWeaponSpeed = self:HasMainHandWeapon() and GetNormalizedWeaponSpeed(_INVSLOT_MAINHAND)
+        self.offHandWeaponSpeed = self:HasOffHandWeapon() and GetNormalizedWeaponSpeed(_INVSLOT_OFFHAND)
+        if changed then
+            self:UpdateArmorSetCount()
+            __Ovale.Ovale.refreshNeeded[__Ovale.Ovale.playerGUID] = true
+            self:SendMessage("Ovale_EquipmentChanged")
         end
-    end
-    if changed then
-        Ovale.refreshNeeded[Ovale.playerGUID] = true
-        self:SendMessage("Ovale_EquipmentChanged")
-    end
-    self:StopProfiling("OvaleEquipment_UpdateEquippedItemLevels")
-    return changed
-end
-function OvaleEquipment:DebugEquipment()
-    for slotId = _INVSLOT_FIRST_EQUIPPED, _INVSLOT_LAST_EQUIPPED, 1 do
-        self:Print("Slot %d = %s (%d)", slotId, self:GetEquippedItem(slotId), self:GetEquippedItemLevel(slotId))
-    end
-    self:Print("Main-hand item type: %s", self.mainHandItemType)
-    self:Print("Off-hand item type: %s", self.offHandItemType)
-    for k, v in _pairs(self.armorSetCount) do
-        self:Print("Player has %d piece(s) of %s armor set.", v, k)
-    end
-end
-end))
+        self.ready = true
+        self:StopProfiling("OvaleEquipment_UpdateEquippedItems")
+    end,
+    UpdateEquippedItemLevels = function(self)
+        self:StartProfiling("OvaleEquipment_UpdateEquippedItemLevels")
+        local changed = false
+        local itemLevel
+        for slotId = _INVSLOT_FIRST_EQUIPPED, _INVSLOT_LAST_EQUIPPED, 1 do
+            itemLevel = GetItemLevel(slotId)
+            if itemLevel ~= self.equippedItemLevels[slotId] then
+                self.equippedItemLevels[slotId] = itemLevel
+                changed = true
+            end
+        end
+        if changed then
+            __Ovale.Ovale.refreshNeeded[__Ovale.Ovale.playerGUID] = true
+            self:SendMessage("Ovale_EquipmentChanged")
+        end
+        self:StopProfiling("OvaleEquipment_UpdateEquippedItemLevels")
+        return changed
+    end,
+    DebugEquipment = function(self)
+        for slotId = _INVSLOT_FIRST_EQUIPPED, _INVSLOT_LAST_EQUIPPED, 1 do
+            self:Print("Slot %d = %s (%d)", slotId, self:GetEquippedItem(slotId), self:GetEquippedItemLevel(slotId))
+        end
+        self:Print("Main-hand item type: %s", self.mainHandItemType)
+        self:Print("Off-hand item type: %s", self.offHandItemType)
+        for k, v in _pairs(self.armorSetCount) do
+            self:Print("Player has %d piece(s) of %s armor set.", v, k)
+        end
+    end,
+})
+end)

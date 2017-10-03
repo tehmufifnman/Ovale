@@ -23,7 +23,7 @@ let self_userVersion = {
 let self_timer;
 let MSG_PREFIX = Ovale.MSG_PREFIX;
 let OVALE_VERSION = "@project-version@";
-let REPOSITORY_KEYWORD = "@" + "project-version" + "@";
+let REPOSITORY_KEYWORD = `@${"project-version"}@`;
 {
     let actions = {
         ping: {

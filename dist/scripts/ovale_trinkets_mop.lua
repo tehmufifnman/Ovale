@@ -1,5 +1,5 @@
-local OVALE, Ovale = ...
-require(OVALE, Ovale, "ovale_trinkets_mop", { "./OvaleScripts" }, function(__exports, __OvaleScripts)
+local __addonName, __addon = ...
+__addon.require(__addonName, __addon, "ovale_trinkets_mop", { "../Scripts" }, function(__exports, __Scripts)
 do
     local name = "ovale_trinkets_mop"
     local desc = "[6.0.3] Ovale: Trinkets (Mists of Pandaria)"
@@ -338,6 +338,6 @@ Define(tyrannical_gladiators_insignia_of_victory_alliance 99948)
 Define(tyrannical_gladiators_insignia_of_victory_horde 100085)
 	ItemInfo(tyrannical_gladiators_insignia_of_victory_horde buff=surge_of_victory_buff)
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript(nil, nil, name, desc, code, "include")
+    __Scripts.OvaleScripts:RegisterScript(nil, nil, name, desc, code, "include")
 end
-end))
+end)

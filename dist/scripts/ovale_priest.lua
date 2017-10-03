@@ -1,5 +1,5 @@
-local OVALE, Ovale = ...
-require(OVALE, Ovale, "ovale_priest", { "./OvaleScripts" }, function(__exports, __OvaleScripts)
+local __addonName, __addon = ...
+__addon.require(__addonName, __addon, "ovale_priest", { "../Scripts" }, function(__exports, __Scripts)
 do
     local name = "icyveins_priest_discipline"
     local desc = "[7.1.5] Icy-Veins: Priest Discipline"
@@ -58,7 +58,7 @@ AddIcon help=cd specialization=discipline
 }
 
 	]]
-    __OvaleScripts.OvaleScripts:RegisterScript("PRIEST", "discipline", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("PRIEST", "discipline", name, desc, code, "script")
 end
 do
     local name = "simulationcraft_priest_shadow_t19p"
@@ -643,6 +643,6 @@ AddIcon checkbox=opt_priest_shadow_aoe help=cd specialization=shadow
 # voidform_buff
 # war_stomp
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("PRIEST", "shadow", name, desc, code, "script")
+    __Scripts.OvaleScripts:RegisterScript("PRIEST", "shadow", name, desc, code, "script")
 end
-end))
+end)

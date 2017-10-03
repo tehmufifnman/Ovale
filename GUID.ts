@@ -16,17 +16,17 @@ let PET_UNIT = {
 {
     PET_UNIT["player"] = "pet";
     for (let i = 1; i <= 5; i += 1) {
-        PET_UNIT["arena" + i] = "arenapet" + i;
+        PET_UNIT[`arena${i}`] = `arenapet${i}`;
     }
     for (let i = 1; i <= 4; i += 1) {
-        PET_UNIT["party" + i] = "partypet" + i;
+        PET_UNIT[`party${i}`] = `partypet${i}`;
     }
     for (let i = 1; i <= 40; i += 1) {
-        PET_UNIT["raid" + i] = "raidpet" + i;
+        PET_UNIT[`raid${i}`] = `raidpet${i}`;
     }
     _setmetatable(PET_UNIT, {
         __index: function (t, unitId) {
-            return unitId + "pet";
+            return `${unitId}pet`;
         }
     });
 }
@@ -39,20 +39,20 @@ let UNIT_AURA_UNITS: LuaArray<string> = {
     tinsert(UNIT_AURA_UNITS, "target");
     tinsert(UNIT_AURA_UNITS, "focus");
     for (let i = 1; i <= 40; i += 1) {
-        let unitId = "raid" + i;
+        let unitId = `raid${i}`;
         tinsert(UNIT_AURA_UNITS, unitId);
         tinsert(UNIT_AURA_UNITS, PET_UNIT[unitId]);
     }
     for (let i = 1; i <= 4; i += 1) {
-        let unitId = "party" + i;
+        let unitId = `party${i}`;
         tinsert(UNIT_AURA_UNITS, unitId);
         tinsert(UNIT_AURA_UNITS, PET_UNIT[unitId]);
     }
     for (let i = 1; i <= 4; i += 1) {
-        tinsert(UNIT_AURA_UNITS, "boss" + i);
+        tinsert(UNIT_AURA_UNITS, `boss${i}`);
     }
     for (let i = 1; i <= 5; i += 1) {
-        let unitId = "arena" + i;
+        let unitId = `arena${i}`;
         tinsert(UNIT_AURA_UNITS, unitId);
         tinsert(UNIT_AURA_UNITS, PET_UNIT[unitId]);
     }
@@ -165,7 +165,7 @@ class OvaleGUIDClass extends OvaleDebug.RegisterDebugging(OvaleGUIDBase) {
     INSTANCE_ENCOUNTER_ENGAGE_UNIT(event) {
         this.Debug(event);
         for (let i = 1; i <= 4; i += 1) {
-            this.UpdateUnitWithTarget("boss" + i);
+            this.UpdateUnitWithTarget(`boss${i}`);
         }
     }
     PLAYER_FOCUS_CHANGED(event) {
@@ -196,7 +196,7 @@ class OvaleGUIDClass extends OvaleDebug.RegisterDebugging(OvaleGUIDBase) {
     UNIT_TARGET(event, unitId) {
         if (unitId != "player") {
             this.Debug(event, unitId);
-            let target = unitId + "target";
+            let target = `${unitId}target`;
             this.UpdateUnit(target);
         }
     }
@@ -270,7 +270,7 @@ class OvaleGUIDClass extends OvaleDebug.RegisterDebugging(OvaleGUIDBase) {
     }
     UpdateUnitWithTarget(unitId) {
         this.UpdateUnit(unitId);
-        this.UpdateUnit(unitId + "target");
+        this.UpdateUnit(`${unitId}target`);
     }
     IsPlayerPet(guid) {
         let atTime = this.petGUID[guid];

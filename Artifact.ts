@@ -79,7 +79,7 @@ class OvaleArtifactClass extends OvaleDebug.RegisterDebugging(OvaleArtifactBase)
         let array = {
         }
         for (const [k, v] of pairs(this.self_traits)) {
-            tinsert(array, tostring(v.name) + ": " + tostring(k));
+            tinsert(array, `${tostring(v.name)}: ${tostring(k)}`);
         }
         tsort(array);
         for (const [_, v] of ipairs(array)) {

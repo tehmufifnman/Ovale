@@ -74,7 +74,7 @@ class OvaleScriptsClass  extends OvaleScriptsBase {
         for (const [name, script] of _pairs(this.script)) {
             if ((!scriptType || script.type == scriptType) && (!script.specialization || OvalePaperDoll.IsSpecialization(script.specialization))) {
                 if (name == DEFAULT_NAME) {
-                    descriptionsTable[name] = script.desc + " (" + this.GetScriptName(name) + ")";
+                    descriptionsTable[name] = `${script.desc} (${this.GetScriptName(name)})`;
                 } else {
                     descriptionsTable[name] = script.desc;
                 }
@@ -183,7 +183,7 @@ class OvaleScriptsClass  extends OvaleScriptsBase {
     }
     CreateOptions() {
         let options = {
-            name: Ovale.GetName() + " " + L["Script"],
+            name: `${Ovale.GetName()} ${L["Script"]}`,
             type: "group",
             args: {
                 source: {

@@ -1,5 +1,5 @@
-local OVALE, Ovale = ...
-require(OVALE, Ovale, "ovale_trinkets_wod", { "./OvaleScripts" }, function(__exports, __OvaleScripts)
+local __addonName, __addon = ...
+__addon.require(__addonName, __addon, "ovale_trinkets_wod", { "../Scripts" }, function(__exports, __Scripts)
 do
     local name = "ovale_trinkets_wod"
     local desc = "[6.2] Ovale: Trinkets (Warlords of Draenor)"
@@ -397,6 +397,6 @@ Define(soul_capacitor 124225)
 Define(spirit_shift_buff 184293)
 	SpellInfo(spirit_shift_buff buff_cd=60 duration=10)
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript(nil, nil, name, desc, code, "include")
+    __Scripts.OvaleScripts:RegisterScript(nil, nil, name, desc, code, "include")
 end
-end))
+end)

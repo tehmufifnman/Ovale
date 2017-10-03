@@ -96,7 +96,7 @@ const OnClick = function(frame, button) {
     }
 }
 const OnTooltipShow = function(tooltip) {
-    self_tooltipTitle = self_tooltipTitle || Ovale.GetName() + " " + OvaleVersion.version;
+    self_tooltipTitle = self_tooltipTitle || `${Ovale.GetName()} ${OvaleVersion.version}`;
     tooltip.SetText(self_tooltipTitle, 1, 1, 1);
     tooltip.AddLine(L["Click to select the script."]);
     tooltip.AddLine(L["Middle-Click to toggle the script options panel."]);

@@ -60,7 +60,7 @@ const IsTagEvent = function(cleuEvent) {
         isTagEvent = true;
     } else {
         for (const [_, suffix] of _ipairs(CLEU_TAG_SUFFIXES)) {
-            if (strfind(cleuEvent, suffix + "$")) {
+            if (strfind(cleuEvent, `${suffix}$`)) {
                 isTagEvent = true;
                 break;
             }

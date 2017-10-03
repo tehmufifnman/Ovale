@@ -282,7 +282,7 @@ let INDENT = {
         __index: function (tbl, key) {
             key = _tonumber(key);
             if (key > 0) {
-                let s = tbl[key - 1] + "\t";
+                let s = `${tbl[key - 1]}\t`;
                 _rawset(tbl, key, s);
                 return s;
             }
@@ -420,22 +420,22 @@ const print_r = function(node, indent?, done?, output?) {
     output = output || {}
     indent = indent || '';
     if (node == undefined) {
-        tinsert(output, indent + 'nil');
+        tinsert(output, `${indent}nil`);
     } else if (_type(node) != "table") {
-        tinsert(output, indent + node);
+        tinsert(output, `${indent}${node}`);
     } else {
         for (const [key, value] of _pairs(node)) {
             if (_type(value) == "table") {
                 if (done[value]) {
-                    tinsert(output, indent + "[" + _tostring(key) + "] => (self_reference)");
+                    tinsert(output, `${indent}[${_tostring(key)}] => (self_reference)`);
                 } else {
                     done[value] = true;
-                    tinsert(output, indent + "[" + _tostring(key) + "] => {");
-                    print_r(value, indent + "    ", done, output);
-                    tinsert(output, indent + "}");
+                    tinsert(output, `${indent}[${_tostring(key)}] => {`);
+                    print_r(value, `${indent}    `, done, output);
+                    tinsert(output, `${indent}}`);
                 }
             } else {
-                tinsert(output, indent + "[" + _tostring(key) + "] => " + _tostring(value));
+                tinsert(output, `${indent}[${_tostring(key)}] => ${_tostring(value)}`);
             }
         }
     }
@@ -539,7 +539,7 @@ const UnparseAction = function(node) {
     let output = self_outputPool.Get();
     output[lualength(output) + 1] = node.name;
     for (const [modifier, expressionNode] of _pairs(node.child)) {
-        output[lualength(output) + 1] = modifier + "=" + Unparse(expressionNode);
+        output[lualength(output) + 1] = `${modifier}=${Unparse(expressionNode)}`;
     }
     let s = tconcat(output, ",");
     self_outputPool.Release(output);
@@ -551,12 +551,12 @@ const UnparseActionList = function(node: Node) {
     if (node.name == "_default") {
         listName = "action";
     } else {
-        listName = "action." + node.name;
+        listName = `action.${node.name}`;
     }
     output[lualength(output) + 1] = "";
     for (const [i, actionNode] of _pairs(node.child)) {
         let operator = (i == 1) && "=" || "+=/";
-        output[lualength(output) + 1] = listName + operator + Unparse(actionNode);
+        output[lualength(output) + 1] = `${listName}${operator}${Unparse(actionNode)}`;
     }
     let s = tconcat(output, "\n");
     self_outputPool.Release(output);
@@ -570,39 +570,39 @@ const UnparseExpression = function(node) {
         let rhsNode = node.child[1];
         let rhsPrecedence = GetPrecedence(rhsNode);
         if (rhsPrecedence && precedence >= rhsPrecedence) {
-            rhsExpression = "(" + Unparse(rhsNode) + ")";
+            rhsExpression = `(${Unparse(rhsNode)})`;
         } else {
             rhsExpression = Unparse(rhsNode);
         }
-        expression = node.operator + rhsExpression;
+        expression = `${node.operator}${rhsExpression}`;
     } else if (node.expressionType == "binary") {
         let lhsExpression, rhsExpression;
         let lhsNode = node.child[1];
         let lhsPrecedence = GetPrecedence(lhsNode);
         if (lhsPrecedence && lhsPrecedence < precedence) {
-            lhsExpression = "(" + Unparse(lhsNode) + ")";
+            lhsExpression = `(${Unparse(lhsNode)})`;
         } else {
             lhsExpression = Unparse(lhsNode);
         }
         let rhsNode = node.child[2];
         let rhsPrecedence = GetPrecedence(rhsNode);
         if (rhsPrecedence && precedence > rhsPrecedence) {
-            rhsExpression = "(" + Unparse(rhsNode) + ")";
+            rhsExpression = `(${Unparse(rhsNode)})`;
         } else if (rhsPrecedence && precedence == rhsPrecedence) {
             if (BINARY_OPERATOR[node.operator][3] == "associative" && node.operator == rhsNode.operator) {
                 rhsExpression = Unparse(rhsNode);
             } else {
-                rhsExpression = "(" + Unparse(rhsNode) + ")";
+                rhsExpression = `(${Unparse(rhsNode)})`;
             }
         } else {
             rhsExpression = Unparse(rhsNode);
         }
-        expression = lhsExpression + node.operator + rhsExpression;
+        expression = `${lhsExpression}${node.operator}${rhsExpression}`;
     }
     return expression;
 }
 const UnparseFunction = function(node) {
-    return node.name + "(" + Unparse(node.child[1]) + ")";
+    return `${node.name}(${Unparse(node.child[1])})`;
 }
 const UnparseNumber = function(node) {
     return _tostring(node.value);
@@ -651,9 +651,9 @@ let ParseIdentifer: ParseFunction = undefined;
 
 const TicksRemainTranslationHelper = function(p1: string, p2: string, p3: string, p4: string) {
     if (p4) {
-        return p1 + p2 + "<" + _tostring(_tonumber(p4) + 1);
+        return `${p1}${p2} < ${_tostring(_tonumber(p4) + 1)}`;
     } else {
-        return p1 + "<" + _tostring(_tonumber(p3) + 1);
+        return `${p1}<${_tostring(_tonumber(p3) + 1)}`;
     }
 }
 const ParseAction = function (action: string, nodeList, annotation) {
@@ -1039,7 +1039,7 @@ ParseSimpleExpression = function (tokenStream, nodeList, annotation):[boolean, N
 let CamelCase = undefined;
 {
     const CamelCaseHelper = function(first, rest) {
-        return strupper(first) + strlower(rest);
+        return `${strupper(first)}${strlower(rest)}`;
     }
     CamelCase = function (s) {
         let tc = gsub(s, "(%a)(%w*)", CamelCaseHelper);
@@ -1072,9 +1072,9 @@ const CamelSpecialization = function(annotation) {
     return outputString;
 }
 const OvaleFunctionName = function(name, annotation) {
-    let functionName = CamelCase(name + " actions");
+    let functionName = CamelCase(`${name} actions`);
     if (annotation.specialization) {
-        functionName = CamelSpecialization(annotation) + functionName;
+        functionName = `${CamelSpecialization(annotation)}${functionName}`;
     }
     return functionName;
 }
@@ -1338,8 +1338,8 @@ const OvaleTaggedFunctionName = function(name, tag) {
         } else {
             camelTag = CamelCase(tag);
         }
-        bodyName = prefix + camelTag + suffix;
-        conditionName = prefix + camelTag + "PostConditions";
+        bodyName = `${prefix}${camelTag}${suffix}`;
+        conditionName = `${prefix}${camelTag}PostConditions`;
     }
     return [bodyName, conditionName];
 }
@@ -1456,13 +1456,13 @@ SplitByTagCustomFunction = function (tag, node, nodeList, annotation) {
         bodyNode.lowername = strlower(bodyName);
         bodyNode.type = "custom_function";
         bodyNode.func = bodyName;
-        bodyNode.asString = bodyName + "()";
+        bodyNode.asString = `${bodyName}()`;
         conditionNode = OvaleAST.NewNode(nodeList);
         conditionNode.name = conditionName;
         conditionNode.lowername = strlower(conditionName);
         conditionNode.type = "custom_function";
         conditionNode.func = conditionName;
-        conditionNode.asString = conditionName + "()";
+        conditionNode.asString = `${conditionName}()`;
     } else {
         let functionTag = annotation.functionTag[functionName];
         if (!functionTag) {
@@ -1683,7 +1683,7 @@ const EmitModifier = function (modifier, parseNode, nodeList, annotation, action
             code = format("TimeSincePreviousSpell(%s) > %s", action, expressionCode);
         }
     } else if (modifier == "max_cycle_targets") {
-        let debuffName = action + "_debuff";
+        let debuffName = `${action}_debuff`;
         AddSymbol(annotation, debuffName);
         let expressionCode = OvaleAST.Unparse(Emit(parseNode, nodeList, annotation, action));
         code = format("DebuffCountOnAny(%s) < Enemies() and DebuffCountOnAny(%s) <= %s", debuffName, debuffName, expressionCode);
@@ -1847,9 +1847,9 @@ const EmitNamedVariable = function (name, nodeList, annotation, modifier, parseN
     annotation.currentVariable = undefined;
 }
 const EmitVariableMin = function (name, nodeList, annotation, modifier, parseNode, action) {
-    EmitNamedVariable(name + "_min", nodeList, annotation, modifier, parseNode, action);
+    EmitNamedVariable(`${name}_min`, nodeList, annotation, modifier, parseNode, action);
     let valueNode = annotation.variable[name];
-    valueNode.name = name + "_value";
+    valueNode.name = `${name}_value`;
     annotation.variable[valueNode.name] = valueNode;
     let bodyCode = format("AddFunction %s { if %s_value() > %s_min() %s_value() %s_min() }", name, name, name, name, name);
     let node = OvaleAST.ParseCode("add_function", bodyCode, nodeList, annotation.astAnnotation);
@@ -1906,12 +1906,12 @@ EmitAction = function (parseNode, nodeList, annotation) {
         if (className == "DEATHKNIGHT" && action == "antimagic_shell") {
             conditionCode = "IncomingDamage(1.5 magic=1) > 0";
         } else if (className == "DEATHKNIGHT" && action == "mind_freeze") {
-            bodyCode = camelSpecialization + "InterruptActions()";
+            bodyCode = `${camelSpecialization}InterruptActions()`;
             annotation[action] = className;
             annotation.interrupt = className;
             isSpellAction = false;
         } else if (className == "DEMONHUNTER" && action == "consume_magic") {
-            bodyCode = camelSpecialization + "InterruptActions()";
+            bodyCode = `${camelSpecialization}InterruptActions()`;
             annotation[action] = className;
             annotation.interrupt = className;
             isSpellAction = false;
@@ -1924,12 +1924,12 @@ EmitAction = function (parseNode, nodeList, annotation) {
             AddSymbol(annotation, spellName);
             conditionCode = format("SpellKnown(%s)", spellName);
         } else if (className == "DRUID" && (action == "skull_bash" || action == "solar_beam")) {
-            bodyCode = camelSpecialization + "InterruptActions()";
+            bodyCode = `${camelSpecialization}InterruptActions()`;
             annotation[action] = className;
             annotation.interrupt = className;
             isSpellAction = false;
         } else if (className == "DRUID" && action == "wild_charge") {
-            bodyCode = camelSpecialization + "GetInMeleeRange()";
+            bodyCode = `${camelSpecialization}GetInMeleeRange()`;
             annotation[action] = className;
             isSpellAction = false;
         } else if (className == "DRUID" && action == "new_moon") {
@@ -1941,14 +1941,14 @@ EmitAction = function (parseNode, nodeList, annotation) {
         } else if (className == "DRUID" && action == "full_moon") {
             conditionCode = "SpellKnown(full_moon)";
         } else if (className == "HUNTER" && (action == "muzzle" || action == "counter_shot")) {
-            bodyCode = camelSpecialization + "InterruptActions()";
+            bodyCode = `${camelSpecialization}InterruptActions()`;
             annotation[action] = className;
             annotation.interrupt = className;
             isSpellAction = false;
         } else if (className == "HUNTER" && action == "exotic_munitions") {
             if (modifier.ammo_type) {
                 let name = Unparse(modifier.ammo_type);
-                action = name + "_ammo";
+                action = `${name}_ammo`;
                 let buffName = "exotic_munitions_buff";
                 AddSymbol(annotation, buffName);
                 conditionCode = format("BuffRemaining(%s) < 1200", buffName);
@@ -1963,7 +1963,7 @@ EmitAction = function (parseNode, nodeList, annotation) {
         } else if (className == "MAGE" && action == "arcane_brilliance") {
             conditionCode = "BuffExpires(critical_strike_buff any=1) or BuffExpires(spell_power_multiplier_buff any=1)";
         } else if (className == "MAGE" && action == "counterspell") {
-            bodyCode = camelSpecialization + "InterruptActions()";
+            bodyCode = `${camelSpecialization}InterruptActions()`;
             annotation[action] = className;
             annotation.interrupt = className;
             isSpellAction = false;
@@ -1991,7 +1991,7 @@ EmitAction = function (parseNode, nodeList, annotation) {
         } else if (className == "MONK" && action == "nimble_brew") {
             conditionCode = "IsFeared() or IsRooted() or IsStunned()";
         } else if (className == "MONK" && action == "spear_hand_strike") {
-            bodyCode = camelSpecialization + "InterruptActions()";
+            bodyCode = `${camelSpecialization}InterruptActions()`;
             annotation[action] = className;
             annotation.interrupt = className;
             isSpellAction = false;
@@ -2010,11 +2010,11 @@ EmitAction = function (parseNode, nodeList, annotation) {
         } else if (className == "PALADIN" && action == "judgment") {
             if (modifier.cycle_targets) {
                 AddSymbol(annotation, action);
-                bodyCode = "Spell(" + action + " text=double)";
+                bodyCode = `Spell(${action} text=double)`;
                 isSpellAction = false;
             }
         } else if (className == "PALADIN" && action == "rebuke") {
-            bodyCode = camelSpecialization + "InterruptActions()";
+            bodyCode = `${camelSpecialization}InterruptActions()`;
             annotation[action] = className;
             annotation.interrupt = className;
             isSpellAction = false;
@@ -2024,7 +2024,7 @@ EmitAction = function (parseNode, nodeList, annotation) {
             conditionCode = "CheckBoxOn(opt_righteous_fury_check)";
             annotation[action] = className;
         } else if (className == "PRIEST" && (action == "silence" || action == "mind_bomb")) {
-            bodyCode = camelSpecialization + "InterruptActions()";
+            bodyCode = `${camelSpecialization}InterruptActions()`;
             annotation[action] = className;
             annotation.interrupt = className;
             isSpellAction = false;
@@ -2033,7 +2033,7 @@ EmitAction = function (parseNode, nodeList, annotation) {
         } else if (className == "ROGUE" && action == "apply_poison") {
             if (modifier.lethal) {
                 let name = Unparse(modifier.lethal);
-                action = name + "_poison";
+                action = `${name}_poison`;
                 let buffName = "lethal_poison_buff";
                 AddSymbol(annotation, buffName);
                 conditionCode = format("BuffRemaining(%s) < 1200", buffName);
@@ -2050,13 +2050,13 @@ EmitAction = function (parseNode, nodeList, annotation) {
         } else if (className == "ROGUE" && action == "honor_among_thieves") {
             if (modifier.cooldown) {
                 let cooldown = Unparse(modifier.cooldown);
-                let buffName = action + "_cooldown_buff";
+                let buffName = `${action}_cooldown_buff`;
                 annotation[buffName] = cooldown;
                 annotation[action] = className;
             }
             isSpellAction = false;
         } else if (className == "ROGUE" && action == "kick") {
-            bodyCode = camelSpecialization + "InterruptActions()";
+            bodyCode = `${camelSpecialization}InterruptActions()`;
             annotation[action] = className;
             annotation.interrupt = className;
             isSpellAction = false;
@@ -2072,11 +2072,11 @@ EmitAction = function (parseNode, nodeList, annotation) {
             annotation.vanish = className;
             conditionCode = format("CheckBoxOn(opt_vanish)", action);
         } else if (className == "SHAMAN" && strsub(action, 1, 11) == "ascendance_") {
-            let buffName = action + "_buff";
+            let buffName = `${action}_buff`;
             AddSymbol(annotation, buffName);
             conditionCode = format("BuffExpires(%s)", buffName);
         } else if (className == "SHAMAN" && action == "bloodlust") {
-            bodyCode = camelSpecialization + "Bloodlust()";
+            bodyCode = `${camelSpecialization}Bloodlust()`;
             annotation[action] = className;
             isSpellAction = false;
         } else if (className == "SHAMAN" && action == "magma_totem") {
@@ -2087,7 +2087,7 @@ EmitAction = function (parseNode, nodeList, annotation) {
             conditionCode = "(not TotemPresent(totem_mastery) or InCombat()) and Speed() == 0";
             AddSymbol(annotation, "totem_mastery");
         } else if (className == "SHAMAN" && action == "wind_shear") {
-            bodyCode = camelSpecialization + "InterruptActions()";
+            bodyCode = `${camelSpecialization}InterruptActions()`;
             annotation[action] = className;
             annotation.interrupt = className;
             isSpellAction = false;
@@ -2107,7 +2107,7 @@ EmitAction = function (parseNode, nodeList, annotation) {
             conditionCode = "Enemies() > 1";
         } else if (className == "WARLOCK" && action == "service_pet") {
             if (annotation.pet) {
-                let spellName = "service_" + annotation.pet;
+                let spellName = `service_${annotation.pet}`;
                 AddSymbol(annotation, spellName);
                 bodyCode = format("Spell(%s)", spellName);
             } else {
@@ -2116,7 +2116,7 @@ EmitAction = function (parseNode, nodeList, annotation) {
             isSpellAction = false;
         } else if (className == "WARLOCK" && action == "summon_pet") {
             if (annotation.pet) {
-                let spellName = "summon_" + annotation.pet;
+                let spellName = `summon_${annotation.pet}`;
                 AddSymbol(annotation, spellName);
                 bodyCode = format("Spell(%s)", spellName);
             } else {
@@ -2146,19 +2146,19 @@ EmitAction = function (parseNode, nodeList, annotation) {
         } else if (className == "WARRIOR" && action == "heroic_leap") {
             conditionCode = "CheckBoxOn(opt_melee_range) and target.Distance(atLeast 8) and target.Distance(atMost 40)";
         } else if (className == "WARRIOR" && action == "pummel") {
-            bodyCode = camelSpecialization + "InterruptActions()";
+            bodyCode = `${camelSpecialization}InterruptActions()`;
             annotation[action] = className;
             annotation.interrupt = className;
             isSpellAction = false;
         } else if (action == "auto_attack") {
-            bodyCode = camelSpecialization + "GetInMeleeRange()";
+            bodyCode = `${camelSpecialization}GetInMeleeRange()`;
             isSpellAction = false;
         } else if (className == "DEMONHUNTER" && action == "metamorphosis_havoc") {
             conditionCode = "not CheckBoxOn(opt_meta_only_during_boss) or IsBossFight()";
             annotation.opt_meta_only_during_boss = "DEMONHUNTER";
         } else if (checkOptionalSkill(action, className, specialization)) {
             annotation[action] = className;
-            conditionCode = "CheckBoxOn(opt_" + action + ")";
+            conditionCode = `CheckBoxOn(opt_${action})`;
         } else if (action == "variable") {
             EmitVariable(nodeList, annotation, modifier, parseNode, action);
             isSpellAction = false;
@@ -2166,7 +2166,7 @@ EmitAction = function (parseNode, nodeList, annotation) {
             if (modifier.name) {
                 let name = Unparse(modifier.name);
                 let functionName = OvaleFunctionName(name, annotation);
-                bodyCode = functionName + "()";
+                bodyCode = `${functionName}()`;
                 if (className == "MAGE" && specialization == "arcane" && (name == "burn" || name == "init_burn")) {
                     conditionCode = "CheckBoxOn(opt_arcane_mage_burn_phase)";
                     annotation.opt_arcane_mage_burn_phase = className;
@@ -2176,7 +2176,7 @@ EmitAction = function (parseNode, nodeList, annotation) {
         } else if (action == "cancel_buff") {
             if (modifier.name) {
                 let spellName = Unparse(modifier.name);
-                let buffName = spellName + "_buff";
+                let buffName = `${spellName}_buff`;
                 AddSymbol(annotation, spellName);
                 AddSymbol(annotation, buffName);
                 bodyCode = format("Texture(%s text=cancel)", spellName);
@@ -2207,9 +2207,9 @@ EmitAction = function (parseNode, nodeList, annotation) {
             if (modifier.choose) {
                 let name = Unparse(modifier.choose);
                 if (className == "MONK") {
-                    action = "stance_of_the_" + name;
+                    action = `stance_of_the_${name}`;
                 } else if (className == "WARRIOR") {
-                    action = name + "_stance";
+                    action = `${name}_stance`;
                 } else {
                     action = name;
                 }
@@ -2217,11 +2217,11 @@ EmitAction = function (parseNode, nodeList, annotation) {
                 isSpellAction = false;
             }
         } else if (action == "summon_pet") {
-            bodyCode = camelSpecialization + "SummonPet()";
+            bodyCode = `${camelSpecialization}SummonPet()`;
             annotation[action] = className;
             isSpellAction = false;
         } else if (action == "use_items") {
-            bodyCode = camelSpecialization + "UseItemActions()";
+            bodyCode = `${camelSpecialization}UseItemActions()`;
             annotation["use_item"] = true;
             isSpellAction = false;
         } else if (action == "use_item") {
@@ -2248,7 +2248,7 @@ EmitAction = function (parseNode, nodeList, annotation) {
                 AddSymbol(annotation, legendaryRing);
                 annotation.use_legendary_ring = legendaryRing;
             } else {
-                bodyCode = camelSpecialization + "UseItemActions()";
+                bodyCode = `${camelSpecialization}UseItemActions()`;
                 annotation[action] = true;
             }
             isSpellAction = false;
@@ -2457,7 +2457,7 @@ EmitExpression = function (parseNode, nodeList, annotation, action) {
                     let op = parseNode.operator;
                     let runeFunction = "Rune";
                     let runeCondition;
-                    runeCondition = runeFunction + "()";
+                    runeCondition = `${runeFunction}()`;
                     if (op == ">") {
                         code = format("%s >= %d", runeCondition, number + 1);
                     } else if (op == ">=") {
@@ -2531,7 +2531,7 @@ EmitExpression = function (parseNode, nodeList, annotation, action) {
         OvaleSimulationCraft.Print(msg);
         node = OvaleAST.NewNode(nodeList);
         node.type = "string";
-        node.value = "FIXME_" + parseNode.operator;
+        node.value = `FIXME_${parseNode.operator}`;
     }
     return node;
 }
@@ -2543,7 +2543,7 @@ EmitFunction = function (parseNode, nodeList, annotation, action) {
         OvaleSimulationCraft.Print("Warning: Function '%s' is not implemented.", parseNode.name);
         node = OvaleAST.NewNode(nodeList);
         node.type = "variable";
-        node.name = "FIXME_" + parseNode.name;
+        node.name = `FIXME_${parseNode.name}`;
     }
     return node;
 }
@@ -2637,7 +2637,7 @@ EmitOperand = function (parseNode, nodeList, annotation, action) {
         OvaleSimulationCraft.Print("Warning: Variable '%s' is not implemented.", parseNode.name);
         node = OvaleAST.NewNode(nodeList);
         node.type = "variable";
-        node.name = "FIXME_" + parseNode.name;
+        node.name = `FIXME_${parseNode.name}`;
     }
     return node;
 }
@@ -2657,12 +2657,12 @@ EmitOperandAction = function (operand, parseNode, nodeList, annotation, action, 
     }
     let [className, specialization] = [annotation.class, annotation.specialization];
     name = Disambiguate(name, className, specialization);
-    target = target && (target + ".") || "";
-    let buffName = name + "_debuff";
+    target = target && (`${target}.`) || "";
+    let buffName = `${name}_debuff`;
     [buffName] = Disambiguate(buffName, className, specialization);
     let prefix = strfind(buffName, "_buff$") && "Buff" || "Debuff";
     let buffTarget = (prefix == "Debuff") && "target." || target;
-    let talentName = name + "_talent";
+    let talentName = `${name}_talent`;
     [talentName] = Disambiguate(talentName, className, specialization);
     let symbol = name;
     let code;
@@ -2763,10 +2763,10 @@ EmitOperandActiveDot = function (operand, parseNode, nodeList, annotation, actio
     if (token == "active_dot") {
         let name = tokenIterator();
         [name] = Disambiguate(name, annotation.class, annotation.specialization);
-        let dotName = name + "_debuff";
+        let dotName = `${name}_debuff`;
         [dotName] = Disambiguate(dotName, annotation.class, annotation.specialization);
         let prefix = strfind(dotName, "_buff$") && "Buff" || "Debuff";
-        target = target && (target + ".") || "";
+        target = target && (`${target}.`) || "";
         let code = format("%sCountOnAny(%s)", prefix, dotName);
         if (ok && code) {
             annotation.astAnnotation = annotation.astAnnotation || {
@@ -2812,7 +2812,7 @@ EmitOperandRefresh = function (operand, parseNode, nodeList, annotation, action,
     let tokenIterator = gmatch(operand, OPERAND_TOKEN_PATTERN);
     let token = tokenIterator();
     if (token == "refreshable") {
-        let buffName = action + "_debuff";
+        let buffName = `${action}_debuff`;
         [buffName] = Disambiguate(buffName, annotation.class, annotation.specialization);
         let target;
         let prefix = strfind(buffName, "_buff$") && "Buff" || "Debuff";
@@ -2840,11 +2840,11 @@ EmitOperandBuff = function (operand, parseNode, nodeList, annotation, action, ta
             property = "remains";
         }
         [name] = Disambiguate(name, annotation.class, annotation.specialization);
-        let buffName = (token == "debuff") && name + "_debuff" || name + "_buff";
+        let buffName = (token == "debuff") && `${name}_debuff` || `${name}_buff`;
         [buffName] = Disambiguate(buffName, annotation.class, annotation.specialization);
         let prefix = strfind(buffName, "_buff$") && "Buff" || "Debuff";
         let any = OvaleData.DEFAULT_SPELL_LIST[buffName] && " any=1" || "";
-        target = target && (target + ".") || "";
+        target = target && (`${target}.`) || "";
         if (buffName == "dark_transformation_buff" && target == "") {
             target = "pet.";
         }
@@ -2987,16 +2987,16 @@ EmitOperandBuff = function (operand, parseNode, nodeList, annotation, action, ta
         let className = annotation.class;
         let specialization = annotation.specialization;
         let camelSpecialization = CamelSpecialization(annotation);
-        target = target && (target + ".") || "";
+        target = target && (`${target}.`) || "";
         let code;
         if (CHARACTER_PROPERTY[operand]) {
-            code = target + CHARACTER_PROPERTY[operand];
+            code = `${target}${CHARACTER_PROPERTY[operand]}`;
         } else if (className == "MAGE" && operand == "incanters_flow_dir") {
             let name = "incanters_flow_buff";
             code = format("BuffDirection(%s)", name);
             AddSymbol(annotation, name);
         } else if (className == "PALADIN" && operand == "time_to_hpg") {
-            code = camelSpecialization + "TimeToHPG()";
+            code = `${camelSpecialization}TimeToHPG()`;
             if (specialization == "holy") {
                 annotation.time_to_hpg_heal = className;
             } else if (specialization == "protection") {
@@ -3117,16 +3117,16 @@ EmitOperandDisease = function (operand, parseNode, nodeList, annotation, action,
     let token = tokenIterator();
     if (token == "disease") {
         let property = tokenIterator();
-        target = target && (target + ".") || "";
+        target = target && (`${target}.`) || "";
         let code;
         if (property == "max_ticking") {
-            code = target + "DiseasesAnyTicking()";
+            code = `${target}DiseasesAnyTicking()`;
         } else if (property == "min_remains") {
-            code = target + "DiseasesRemaining()";
+            code = `${target}DiseasesRemaining()`;
         } else if (property == "min_ticking") {
-            code = target + "DiseasesTicking()";
+            code = `${target}DiseasesTicking()`;
         } else if (property == "ticking") {
-            code = target + "DiseasesAnyTicking()";
+            code = `${target}DiseasesAnyTicking()`;
         } else {
             ok = false;
         }
@@ -3149,10 +3149,10 @@ EmitOperandDot = function (operand, parseNode, nodeList, annotation, action, tar
         let name = tokenIterator();
         let property = tokenIterator();
         [name] = Disambiguate(name, annotation.class, annotation.specialization);
-        let dotName = name + "_debuff";
+        let dotName = `${name}_debuff`;
         [dotName] = Disambiguate(dotName, annotation.class, annotation.specialization);
         let prefix = strfind(dotName, "_buff$") && "Buff" || "Debuff";
-        target = target && (target + ".") || "";
+        target = target && (`${target}.`) || "";
         let code;
         if (property == "duration") {
             code = format("%s%sDuration(%s)", target, prefix, dotName);
@@ -3195,7 +3195,7 @@ EmitOperandGlyph = function (operand, parseNode, nodeList, annotation, action) {
         let name = tokenIterator();
         let property = tokenIterator();
         [name] = Disambiguate(name, annotation.class, annotation.specialization);
-        let glyphName = "glyph_of_" + name;
+        let glyphName = `glyph_of_${name}`;
         [glyphName] = Disambiguate(glyphName, annotation.class, annotation.specialization);
         let code;
         if (property == "disabled") {
@@ -3253,7 +3253,7 @@ EmitOperandPet = function (operand, parseNode, nodeList, annotation, action) {
                     let [petAbilityName] = strmatch(petOperand, "^[%w_]+%.([^.]+)");
                     [petAbilityName] = Disambiguate(petAbilityName, annotation.class, annotation.specialization);
                     if (strsub(petAbilityName, 1, 4) != "pet_") {
-                        petOperand = gsub(petOperand, "^([%w_]+)%.", "%1." + name + "_");
+                        petOperand = gsub(petOperand, "^([%w_]+)%.", `%1.${name}_`);
                     }
                     if (property == "buff") {
                         [ok, node] = EmitOperandBuff(petOperand, parseNode, nodeList, annotation, action, target);
@@ -3438,10 +3438,10 @@ EmitOperandSetBonus = function (operand, parseNode, nodeList, annotation, action
                 setName = strupper(setName);
             }
             if (level) {
-                name = setName + _tostring(level);
+                name = `${setName}${_tostring(level)}`;
             }
             if (role) {
-                name = name + "_" + role;
+                name = `${name}_${role}`;
             }
             [count] = strmatch(count, "(%d+)pc");
             if (name && count) {
@@ -3489,7 +3489,7 @@ EmitOperandSpecial = function (operand, parseNode, nodeList, annotation, action,
     let node;
     let className = annotation.class;
     let specialization = annotation.specialization;
-    target = target && (target + ".") || "";
+    target = target && (`${target}.`) || "";
     operand = strlower(operand);
     let code;
     if (className == "DEATHKNIGHT" && operand == "dot.breath_of_sindragosa.ticking") {
@@ -3680,20 +3680,20 @@ EmitOperandSpecial = function (operand, parseNode, nodeList, annotation, action,
     } else if (className == "WARRIOR" && operand == "gcd.remains" && (action == "battle_cry" || action == "avatar")) {
         code = "0";
     } else if (operand == "buff.enrage.down") {
-        code = "not " + target + "IsEnraged()";
+        code = `not ${target}IsEnraged()`;
     } else if (operand == "buff.enrage.remains") {
-        code = target + "EnrageRemaining()";
+        code = `${target}EnrageRemaining()`;
     } else if (operand == "buff.enrage.up") {
-        code = target + "IsEnraged()";
+        code = `${target}IsEnraged()`;
     } else if (operand == "debuff.casting.react") {
-        code = target + "IsInterruptible()";
+        code = `${target}IsInterruptible()`;
     } else if (operand == "debuff.casting.up") {
         let t = (target == "" && "target.") || target;
-        code = t + "IsInterruptible()";
+        code = `${t}IsInterruptible()`;
     } else if (operand == "debuff.flying.down") {
-        code = target + "True(debuff_flying_down)";
+        code = `${target}True(debuff_flying_down)`;
     } else if (operand == "distance") {
-        code = target + "Distance()";
+        code = `${target}Distance()`;
     } else if (strsub(operand, 1, 9) == "equipped.") {
         let name = strsub(operand, 10);
         code = format("HasEquippedItem(%s)", name);
@@ -3704,7 +3704,7 @@ EmitOperandSpecial = function (operand, parseNode, nodeList, annotation, action,
         code = "GCDRemaining()";
     } else if (strsub(operand, 1, 15) == "legendary_ring.") {
         let name = Disambiguate("legendary_ring", className, specialization);
-        let buffName = name + "_buff";
+        let buffName = `${name}_buff`;
         let properties = strsub(operand, 16);
         let tokenIterator = gmatch(properties, OPERAND_TOKEN_PATTERN);
         let token = tokenIterator();
@@ -3734,7 +3734,7 @@ EmitOperandSpecial = function (operand, parseNode, nodeList, annotation, action,
         code = "PTR()";
     } else if (operand == "time_to_die") {
         if (target != "") {
-            code = target + "TimeToDie()";
+            code = `${target}TimeToDie()`;
         } else {
             code = "target.TimeToDie()";
         }
@@ -3768,7 +3768,7 @@ EmitOperandTalent = function (operand, parseNode, nodeList, annotation, action) 
     if (token == "talent") {
         let name = strlower(tokenIterator());
         let property = tokenIterator();
-        let talentName = name + "_talent";
+        let talentName = `${name}_talent`;
         [talentName] = Disambiguate(talentName, annotation.class, annotation.specialization);
         let code;
         if (property == "disabled") {
@@ -4134,9 +4134,9 @@ const InsertInterruptFunction = function(child, annotation, interrupts: LuaArray
         }
         let line = "";
         if (lualength(conditions) > 0) {
-            line = line + "if " + tconcat(conditions, " and ") + " ";
+            line = `${line}if ${tconcat(conditions, " and ")} `;
         }
-        line = line + format("Spell(%s)", spell.name);
+        line = `${line}${format("Spell(%s)", spell.name)}`;
         tinsert(lines, line);
     }
     let fmt = `
@@ -4793,7 +4793,7 @@ const InsertSupportingControls = function(child, annotation) {
         count = count + AddOptionalSkillCheckBox(child, annotation, data, skill);
     }
     let nodeList = annotation.astAnnotation.nodeList;
-    let ifSpecialization = "specialization=" + annotation.specialization;
+    let ifSpecialization = `specialization=${annotation.specialization}`;
     if (annotation.using_apl && _next(annotation.using_apl)) {
         for (const [name] of _pairs(annotation.using_apl)) {
             if (name != "normal") {
@@ -4926,7 +4926,7 @@ const GenerateIconBody = function(tag, profile) {
         mainBodyCode = tconcat(output, "\n");
         self_outputPool.Release(output);
     } else {
-        mainBodyCode = defaultBodyName + "()";
+        mainBodyCode = `${defaultBodyName}()`;
     }
     let code;
     if (profile["actions.precombat"]) {
@@ -5021,7 +5021,7 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
                 for (let index = lualength(profile.templates); index >= 1; index += -1) {
                     let template = profile.templates[index];
                     let variable = strsub(template, 3, -2);
-                    let pattern = "%$%(" + variable + "%)";
+                    let pattern = `%$%(${variable}%)`;
                     v = gsub(v, pattern, profile[template]);
                 }
                 let node;
@@ -5147,7 +5147,7 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
                     let actionListName = gsub(node.name, "^_+", "");
                     let commentNode = OvaleAST.NewNode(nodeList);
                     commentNode.type = "comment";
-                    commentNode.comment = "## actions." + actionListName;
+                    commentNode.comment = `## actions.${actionListName}`;
                     child[lualength(child) + 1] = commentNode;
                     for (const [_, tag] of _pairs(OVALE_TAGS)) {
                         let [bodyNode, conditionNode] = SplitByTag(tag, addFunctionNode, nodeList, annotation);
@@ -5168,11 +5168,11 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
             InsertVariables(child, annotation);
             let [className, specialization] = [annotation.className, annotation.specialization];
             let lowerclass = strlower(className);
-            let aoeToggle = "opt_" + lowerclass + "_" + specialization + "_aoe";
+            let aoeToggle = `opt_${lowerclass}_${specialization}_aoe`;
             {
                 let commentNode = OvaleAST.NewNode(nodeList);
                 commentNode.type = "comment";
-                commentNode.comment = "## " + CamelCase(specialization) + " icons.";
+                commentNode.comment = `## ${CamelCase(specialization)} icons.`;
                 tinsert(child, commentNode);
                 let code = format("AddCheckBox(%s L(AOE) default specialization=%s)", aoeToggle, specialization);
                 let [node] = OvaleAST.ParseCode("checkbox", code, nodeList, annotation.astAnnotation);
@@ -5269,17 +5269,17 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
         let specialization = annotation.specialization;
         let output = self_outputPool.Get();
         {
-            output[lualength(output) + 1] = "# Based on SimulationCraft profile " + annotation.name + ".";
-            output[lualength(output) + 1] = "#	class=" + lowerclass;
-            output[lualength(output) + 1] = "#	spec=" + specialization;
+            output[lualength(output) + 1] = `# Based on SimulationCraft profile ${annotation.name}.`;
+            output[lualength(output) + 1] = `#	class=${lowerclass}`;
+            output[lualength(output) + 1] = `#	spec=${specialization}`;
             if (profile.talents) {
-                output[lualength(output) + 1] = "#	talents=" + profile.talents;
+                output[lualength(output) + 1] = `#	talents=${profile.talents}`;
             }
             if (profile.glyphs) {
-                output[lualength(output) + 1] = "#	glyphs=" + profile.glyphs;
+                output[lualength(output) + 1] = `#	glyphs=${profile.glyphs}`;
             }
             if (profile.default_pet) {
-                output[lualength(output) + 1] = "#	pet=" + profile.default_pet;
+                output[lualength(output) + 1] = `#	pet=${profile.default_pet}`;
             }
         }
         {
@@ -5307,7 +5307,7 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
                 if (!_tonumber(symbol) && profile.annotation.dictionary && !profile.annotation.dictionary[symbol] && !OvaleData.buffSpellList[symbol]) {
                     this.Print("Warning: Symbol '%s' not defined", symbol);
                 }
-                output[lualength(output) + 1] = "# " + symbol;
+                output[lualength(output) + 1] = `# ${symbol}`;
             }
         }
         annotation.dictionary = undefined;
@@ -5324,7 +5324,7 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
     }
     CreateOptions() {
         let options = {
-            name: Ovale.GetName() + " SimulationCraft",
+            name: `${Ovale.GetName()} SimulationCraft`,
             type: "group",
             args: {
                 input: {
@@ -5334,7 +5334,7 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
                     args: {
                         description: {
                             order: 10,
-                            name: L["The contents of a SimulationCraft profile."] + "\nhttps://code.google.com/p/simulationcraft/source/browse/profiles",
+                            name: `${L["The contents of a SimulationCraft profile."]}\nhttps://code.google.com/p/simulationcraft/source/browse/profiles`,
                             type: "description"
                         },
                         input: {

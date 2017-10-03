@@ -1,5 +1,5 @@
-local OVALE, Ovale = ...
-require(OVALE, Ovale, "ovale_priest_spells", { "./OvaleScripts" }, function(__exports, __OvaleScripts)
+local __addonName, __addon = ...
+__addon.require(__addonName, __addon, "ovale_priest_spells", { "../Scripts" }, function(__exports, __Scripts)
 do
     local name = "ovale_priest_spells"
     local desc = "[7.0] Ovale: Priest spells"
@@ -175,6 +175,6 @@ AddFunction CurrentInsanityDrain {
 #Legendary
 Define(mangazas_madness 132864)
 ]]
-    __OvaleScripts.OvaleScripts:RegisterScript("PRIEST", nil, name, desc, code, "include")
+    __Scripts.OvaleScripts:RegisterScript("PRIEST", nil, name, desc, code, "include")
 end
-end))
+end)

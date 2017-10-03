@@ -1,95 +1,99 @@
-local OVALE, Ovale = ...
-require(OVALE, Ovale, "Frame", { "./OvaleBestAction", "./OvaleCompile", "./OvaleCooldown", "./OvaleDebug", "./OvaleFuture", "./OvaleGUID", "./OvaleSpellFlash", "./OvaleState", "./OvaleTimeSpan", "./db", "./db", "./db", "./db", "./db", "./db", "./db" }, function(__exports, __OvaleBestAction, __OvaleCompile, __OvaleCooldown, __OvaleDebug, __OvaleFuture, __OvaleGUID, __OvaleSpellFlash, __OvaleState, __OvaleTimeSpan, __db, __db, __db, __db, __db, __db, __db)
-do
-    local AceGUI = LibStub("AceGUI-3.0")
-    local Masque = LibStub("Masque", true)
-    local Type = OVALE + "Frame"
-    local Version = 7
-    local _ipairs = ipairs
-    local _next = next
-    local _pairs = pairs
-    local _tostring = tostring
-    local _wipe = wipe
-    local API_CreateFrame = CreateFrame
-    local API_GetTime = GetTime
-    local API_RegisterStateDriver = RegisterStateDriver
-    local NextTime = __OvaleTimeSpan.OvaleTimeSpan.NextTime
-    local INFINITY = math.huge
-    local MIN_REFRESH_TIME = 0.05
-    local frameOnClose = function(self)
-        self.obj:Fire("OnClose")
+local __addonName, __addon = ...
+__addon.require(__addonName, __addon, "Frame", { "AceGUI-3.0", "Masque", "./BestAction", "./Compile", "./Cooldown", "./Debug", "./Future", "./GUID", "./SpellFlash", "./State", "./TimeSpan", "./Ovale", "./Icon", "./Enemies" }, function(__exports, AceGUI, Masque, __BestAction, __Compile, __Cooldown, __Debug, __Future, __GUID, __SpellFlash, __State, __TimeSpan, __Ovale, __Icon, __Enemies)
+local Type = __Ovale.Ovale:GetName()
+local Version = 7
+local _ipairs = ipairs
+local _next = next
+local _pairs = pairs
+local _tostring = tostring
+local _wipe = wipe
+local API_CreateFrame = CreateFrame
+local API_GetTime = GetTime
+local API_RegisterStateDriver = RegisterStateDriver
+local INFINITY = math.huge
+local MIN_REFRESH_TIME = 0.05
+local frameOnClose = function(self)
+    self.obj:Fire("OnClose")
+end
+
+local closeOnClick = function(self)
+    self.obj:Hide()
+end
+
+local frameOnMouseDown = function(self)
+    if ( not __Ovale.Ovale.db.profile.apparence.verrouille) then
+        self:StartMoving()
+        AceGUI:ClearFocus()
     end
-    local closeOnClick = function(self)
-        self.obj:Hide()
+end
+
+local frameOnMouseUp = function(self)
+    self:StopMovingOrSizing()
+    local profile = __Ovale.Ovale.db.profile
+    local x, y = self:GetCenter()
+    local parentX, parentY = self:GetParent():GetCenter()
+    profile.apparence.offsetX = x - parentX
+    profile.apparence.offsetY = y - parentY
+end
+
+local frameOnEnter = function(self)
+    local profile = __Ovale.Ovale.db.profile
+    if  not (profile.apparence.enableIcons and profile.apparence.verrouille) then
+        self.obj.barre:Show()
     end
-    local frameOnMouseDown = function(self)
-        if ( not Ovale.db.profile.apparence.verrouille) then
-            self:StartMoving()
-            AceGUI:ClearFocus()
-        end
-    end
-    local ToggleOptions = function(self)
+end
+
+local frameOnLeave = function(self)
+    self.obj.barre:Hide()
+end
+
+local frameOnUpdate = function(self, elapsed)
+    self.obj:OnUpdate(elapsed)
+end
+
+local OvaleFrame = __class(nil, {
+    ToggleOptions = function(self)
         if (self.content:IsShown()) then
             self.content:Hide()
         else
             self.content:Show()
         end
-    end
-    local frameOnMouseUp = function(self)
-        self:StopMovingOrSizing()
-        local x, y = self:GetCenter()
-        local parentX, parentY = self:GetParent():GetCenter()
-        __db.profile.apparence.offsetX = x - parentX
-        __db.profile.apparence.offsetY = y - parentY
-    end
-    local frameOnEnter = function(self)
-        if  not (__db.profile.apparence.enableIcons and __db.profile.apparence.verrouille) then
-            self.obj.barre:Show()
-        end
-    end
-    local frameOnLeave = function(self)
-        self.obj.barre:Hide()
-    end
-    local frameOnUpdate = function(self, elapsed)
-        self.obj:OnUpdate(elapsed)
-    end
-    local Hide = function(self)
+    end,
+    Hide = function(self)
         self.frame:Hide()
-    end
-    local Show = function(self)
+    end,
+    Show = function(self)
         self.frame:Show()
-    end
-    local OnAcquire = function(self)
+    end,
+    OnAcquire = function(self)
         self.frame:SetParent(UIParent)
-    end
-    local OnRelease = function(self)
-    end
-    local OnWidthSet = function(self, width)
+    end,
+    OnRelease = function(self)
+    end,
+    OnWidthSet = function(self, width)
         local content = self.content
         local contentwidth = width - 34
         if contentwidth < 0 then
             contentwidth = 0
         end
         content:SetWidth(contentwidth)
-        content.width = contentwidth
-    end
-    local OnHeightSet = function(self, height)
+    end,
+    OnHeightSet = function(self, height)
         local content = self.content
         local contentheight = height - 57
         if contentheight < 0 then
             contentheight = 0
         end
         content:SetHeight(contentheight)
-        content.height = contentheight
-    end
-    local OnLayoutFinished = function(self, width, height)
+    end,
+    OnLayoutFinished = function(self, width, height)
         if ( not width) then
             width = self.content:GetWidth()
         end
         self.content:SetWidth(width)
         self.content:SetHeight(height + 50)
-    end
-    local GetScore = function(self, spellId)
+    end,
+    GetScore = function(self, spellId)
         for k, action in _pairs(self.actions) do
             if action.spellId == spellId then
                 if  not action.waitStart then
@@ -110,60 +114,61 @@ do
             end
         end
         return 0
-    end
-    local OnUpdate = function(self, elapsed)
-        local guid = __OvaleGUID.OvaleGUID:UnitGUID("target") or __OvaleGUID.OvaleGUID:UnitGUID("focus")
+    end,
+    OnUpdate = function(self, elapsed)
+        local guid = __GUID.OvaleGUID:UnitGUID("target") or __GUID.OvaleGUID:UnitGUID("focus")
         if guid then
-            Ovale.refreshNeeded[guid] = true
+            __Ovale.Ovale.refreshNeeded[guid] = true
         end
         self.timeSinceLastUpdate = self.timeSinceLastUpdate + elapsed
-        local refresh = __OvaleDebug.OvaleDebug.trace or self.timeSinceLastUpdate > MIN_REFRESH_TIME and _next(Ovale.refreshNeeded)
+        local refresh = __Debug.OvaleDebug.trace or self.timeSinceLastUpdate > MIN_REFRESH_TIME and _next(__Ovale.Ovale.refreshNeeded)
         if refresh then
-            Ovale:AddRefreshInterval(self.timeSinceLastUpdate * 1000)
-            local state = __OvaleState.OvaleState.state
-            state:Initialize()
-            if __OvaleCompile.OvaleCompile:EvaluateScript() then
-                Ovale:UpdateFrame()
+            __Ovale.Ovale:AddRefreshInterval(self.timeSinceLastUpdate * 1000)
+            __State.OvaleState:InitializeState()
+            if __Compile.OvaleCompile:EvaluateScript() then
+                __Ovale.Ovale:UpdateFrame()
             end
-            local iconNodes = __OvaleCompile.OvaleCompile:GetIconNodes()
+            local profile = __Ovale.Ovale.db.profile
+            local iconNodes = __Compile.OvaleCompile:GetIconNodes()
             for k, node in _ipairs(iconNodes) do
                 if node.namedParams and node.namedParams.target then
-                    state.defaultTarget = node.namedParams.target
+                    __State.baseState.defaultTarget = node.namedParams.target
                 else
-                    state.defaultTarget = "target"
+                    __State.baseState.defaultTarget = "target"
                 end
                 if node.namedParams and node.namedParams.enemies then
-                    state.enemies = node.namedParams.enemies
+                    __Enemies.enemiesState.enemies = node.namedParams.enemies
                 else
-                    state.enemies = nil
+                    __Enemies.enemiesState.enemies = nil
                 end
-                state:Log("+++ Icon %d", k)
-                __OvaleBestAction.OvaleBestAction:StartNewAction(state)
-                local atTime = state.nextCast
-                if state.lastSpellId ~= state.lastGCDSpellId then
-                    atTime = state.currentTime
+                __State.OvaleState:Log("+++ Icon %d", k)
+                __BestAction.OvaleBestAction:StartNewAction()
+                local atTime = __Future.futureState.nextCast
+                if __Future.futureState.lastSpellId ~= __Future.futureState.lastGCDSpellId then
+                    atTime = __State.baseState.currentTime
                 end
-                local timeSpan, element = __OvaleBestAction.OvaleBestAction:GetAction(node, state, atTime)
+                local timeSpan, element = __BestAction.OvaleBestAction:GetAction(node, __State.baseState, atTime)
                 local start
                 if element and element.offgcd then
-                    start = NextTime(timeSpan, state.currentTime)
+                    start = timeSpan:NextTime(__State.baseState.currentTime)
                 else
-                    start = NextTime(timeSpan, atTime)
+                    start = timeSpan:NextTime(atTime)
                 end
-                if __db.profile.apparence.enableIcons then
-                    self:UpdateActionIcon(state, node, self.actions[k], element, start)
+                if profile.apparence.enableIcons then
+                    self:UpdateActionIcon(__State.baseState, node, self.actions[k], element, start)
                 end
-                if __db.profile.apparence.spellFlash.enabled then
-                    __OvaleSpellFlash.OvaleSpellFlash:Flash(state, node, element, start)
+                if profile.apparence.spellFlash.enabled then
+                    __SpellFlash.OvaleSpellFlash:Flash(__State.baseState, node, element, start)
                 end
             end
-            _wipe(Ovale.refreshNeeded)
-            __OvaleDebug.OvaleDebug:UpdateTrace()
-            Ovale:PrintOneTimeMessages()
+            _wipe(__Ovale.Ovale.refreshNeeded)
+            __Debug.OvaleDebug:UpdateTrace()
+            __Ovale.Ovale:PrintOneTimeMessages()
             self.timeSinceLastUpdate = 0
         end
-    end
-    local UpdateActionIcon = function(self, state, node, action, element, start, now)
+    end,
+    UpdateActionIcon = function(self, state, node, action, element, start, now)
+        local profile = __Ovale.Ovale.db.profile
         local icons = action.secure and action.secureIcons or action.icons
         now = now or API_GetTime()
         if element and element.type == "value" then
@@ -181,7 +186,7 @@ do
                 icons[2]:Update(element, nil)
             end
         else
-            local actionTexture, actionInRange, actionCooldownStart, actionCooldownDuration, actionUsable, actionShortcut, actionIsCurrent, actionEnable, actionType, actionId, actionTarget, actionResourceExtend = __OvaleBestAction.OvaleBestAction:GetActionInfo(element, state)
+            local actionTexture, actionInRange, actionCooldownStart, actionCooldownDuration, actionUsable, actionShortcut, actionIsCurrent, actionEnable, actionType, actionId, actionTarget, actionResourceExtend = __BestAction.OvaleBestAction:GetActionInfo(element, state, now)
             if actionResourceExtend and actionResourceExtend > 0 then
                 if actionCooldownDuration > 0 then
                     state:Log("Extending cooldown of spell ID '%s' for primary resource by %fs.", actionId, actionResourceExtend)
@@ -192,8 +197,8 @@ do
                 end
             end
             state:Log("GetAction: start=%s, id=%s", start, actionId)
-            if actionType == "spell" and actionId == state.currentSpellId and start and state.nextCast and start < state.nextCast then
-                start = state.nextCast
+            if actionType == "spell" and actionId == __Future.futureState.currentSpellId and start and __Future.futureState.nextCast and start < __Future.futureState.nextCast then
+                start = __Future.futureState.nextCast
             end
             if start and node.namedParams.nocd and now < start - node.namedParams.nocd then
                 icons[1]:Update(element, nil)
@@ -210,7 +215,7 @@ do
             else
                 action.waitStart = nil
             end
-            if __db.profile.apparence.moving and icons[1].cooldownStart and icons[1].cooldownEnd then
+            if profile.apparence.moving and icons[1].cooldownStart and icons[1].cooldownEnd then
                 local top = 1 - (now - icons[1].cooldownStart) / (icons[1].cooldownEnd - icons[1].cooldownStart)
                 if top < 0 then
                     top = 0
@@ -222,33 +227,33 @@ do
                     icons[2]:SetPoint("TOPLEFT", self.frame, "TOPLEFT", (action.left + (top + 1) * action.dx) / action.scale, (action.top - (top + 1) * action.dy) / action.scale)
                 end
             end
-            if (node.namedParams.size ~= "small" and  not node.namedParams.nocd and __db.profile.apparence.predictif) then
+            if (node.namedParams.size ~= "small" and  not node.namedParams.nocd and profile.apparence.predictif) then
                 if start then
                     state:Log("****Second icon %s", start)
-                    state:ApplySpell(actionId, __OvaleGUID.OvaleGUID:UnitGUID(actionTarget), start)
-                    local atTime = state.nextCast
-                    if actionId ~= state.lastGCDSpellId then
+                    __Future.futureState:ApplySpell(actionId, __GUID.OvaleGUID:UnitGUID(actionTarget), start)
+                    local atTime = __Future.futureState.nextCast
+                    if actionId ~= __Future.futureState.lastGCDSpellId then
                         atTime = state.currentTime
                     end
-                    local timeSpan, nextElement = __OvaleBestAction.OvaleBestAction:GetAction(node, state, atTime)
-                    local start
+                    local timeSpan, nextElement = __BestAction.OvaleBestAction:GetAction(node, state, atTime)
                     if nextElement and nextElement.offgcd then
-                        start = NextTime(timeSpan, state.currentTime)
+                        start = timeSpan:NextTime(state.currentTime)
                     else
-                        start = NextTime(timeSpan, atTime)
+                        start = timeSpan:NextTime(atTime)
                     end
-                    icons[2]:Update(nextElement, start, __OvaleBestAction.OvaleBestAction:GetActionInfo(nextElement, state))
+                    icons[2]:Update(nextElement, start, __BestAction.OvaleBestAction:GetActionInfo(nextElement, state, start))
                 else
                     icons[2]:Update(element, nil)
                 end
             end
         end
-    end
-    local UpdateFrame = function(self)
-        self.frame:SetPoint("CENTER", self.hider, "CENTER", __db.profile.apparence.offsetX, __db.profile.apparence.offsetY)
-        self.frame:EnableMouse( not __db.profile.apparence.clickThru)
-    end
-    local UpdateIcons = function(self)
+    end,
+    UpdateFrame = function(self)
+        local profile = __Ovale.Ovale.db.profile
+        self.frame:SetPoint("CENTER", self.hider, "CENTER", profile.apparence.offsetX, profile.apparence.offsetY)
+        self.frame:EnableMouse( not profile.apparence.clickThru)
+    end,
+    UpdateIcons = function(self)
         for k, action in _pairs(self.actions) do
             for i, icon in _pairs(action.icons) do
                 icon:Hide()
@@ -257,14 +262,15 @@ do
                 icon:Hide()
             end
         end
-        self.frame:EnableMouse( not __db.profile.apparence.clickThru)
+        local profile = __Ovale.Ovale.db.profile
+        self.frame:EnableMouse( not profile.apparence.clickThru)
         local left = 0
         local maxHeight = 0
         local maxWidth = 0
         local top = 0
         local BARRE = 8
-        local margin = __db.profile.apparence.margin
-        local iconNodes = __OvaleCompile.OvaleCompile:GetIconNodes()
+        local margin = profile.apparence.margin
+        local iconNodes = __Compile.OvaleCompile:GetIconNodes()
         for k, node in _ipairs(iconNodes) do
             if  not self.actions[k] then
                 self.actions[k] = {
@@ -276,26 +282,26 @@ do
             local width, height, newScale
             local nbIcons
             if (node.namedParams ~= nil and node.namedParams.size == "small") then
-                newScale = __db.profile.apparence.smallIconScale
+                newScale = profile.apparence.smallIconScale
                 width = newScale * 36 + margin
                 height = newScale * 36 + margin
                 nbIcons = 1
             else
-                newScale = __db.profile.apparence.iconScale
+                newScale = profile.apparence.iconScale
                 width = newScale * 36 + margin
                 height = newScale * 36 + margin
-                if __db.profile.apparence.predictif and node.namedParams.type ~= "value" then
+                if profile.apparence.predictif and node.namedParams.type ~= "value" then
                     nbIcons = 2
                 else
                     nbIcons = 1
                 end
             end
-            if (top + height > __db.profile.apparence.iconScale * 36 + margin) then
+            if (top + height > profile.apparence.iconScale * 36 + margin) then
                 top = 0
                 left = maxWidth
             end
             action.scale = newScale
-            if (__db.profile.apparence.vertical) then
+            if (profile.apparence.vertical) then
                 action.left = top
                 action.top = -left - BARRE - margin
                 action.dx = width
@@ -311,27 +317,27 @@ do
                 local icon
                 if  not node.secure then
                     if  not action.icons[l] then
-                        action.icons[l] = API_CreateFrame("CheckButton", "Icon" + k + "n" + l, self.frame, OVALE + "IconTemplate")
+                        action.icons[l] = __Icon.OvaleIcon(k .. l, self.frame, false)
                     end
                     icon = action.icons[l]
                 else
                     if  not action.secureIcons[l] then
-                        action.secureIcons[l] = API_CreateFrame("CheckButton", "SecureIcon" + k + "n" + l, self.frame, "Secure" + OVALE + "IconTemplate")
+                        action.secureIcons[l] = __Icon.OvaleIcon(k .. l, self.frame, true)
                     end
                     icon = action.secureIcons[l]
                 end
                 local scale = action.scale
                 if l > 1 then
-                    scale = scale * __db.profile.apparence.secondIconScale
+                    scale = scale * profile.apparence.secondIconScale
                 end
                 icon:SetPoint("TOPLEFT", self.frame, "TOPLEFT", (action.left + (l - 1) * action.dx) / scale, (action.top - (l - 1) * action.dy) / scale)
                 icon:SetScale(scale)
-                icon:SetRemainsFont(__db.profile.apparence.remainsFontColor)
-                icon:SetFontScale(__db.profile.apparence.fontScale)
+                icon:SetRemainsFont(profile.apparence.remainsFontColor)
+                icon:SetFontScale(profile.apparence.fontScale)
                 icon:SetParams(node.positionalParams, node.namedParams)
                 icon:SetHelp((node.namedParams ~= nil and node.namedParams.help) or nil)
-                icon:SetRangeIndicator(__db.profile.apparence.targetText)
-                icon:EnableMouse( not __db.profile.apparence.clickThru)
+                icon:SetRangeIndicator(profile.apparence.targetText)
+                icon:EnableMouse( not profile.apparence.clickThru)
                 icon.cdShown = (l == 1)
                 if Masque then
                     self.skinGroup:AddButton(icon)
@@ -348,47 +354,36 @@ do
                 maxWidth = left + width
             end
         end
-        if (__db.profile.apparence.vertical) then
+        if (profile.apparence.vertical) then
             self.barre:SetWidth(maxHeight - margin)
             self.barre:SetHeight(BARRE)
-            self.frame:SetWidth(maxHeight + __db.profile.apparence.iconShiftY)
-            self.frame:SetHeight(maxWidth + BARRE + margin + __db.profile.apparence.iconShiftX)
-            self.content:SetPoint("TOPLEFT", self.frame, "TOPLEFT", maxHeight + __db.profile.apparence.iconShiftX, __db.profile.apparence.iconShiftY)
+            self.frame:SetWidth(maxHeight + profile.apparence.iconShiftY)
+            self.frame:SetHeight(maxWidth + BARRE + margin + profile.apparence.iconShiftX)
+            self.content:SetPoint("TOPLEFT", self.frame, "TOPLEFT", maxHeight + profile.apparence.iconShiftX, profile.apparence.iconShiftY)
         else
             self.barre:SetWidth(maxWidth - margin)
             self.barre:SetHeight(BARRE)
             self.frame:SetWidth(maxWidth)
             self.frame:SetHeight(maxHeight + BARRE + margin)
-            self.content:SetPoint("TOPLEFT", self.frame, "TOPLEFT", maxWidth + __db.profile.apparence.iconShiftX, __db.profile.apparence.iconShiftY)
+            self.content:SetPoint("TOPLEFT", self.frame, "TOPLEFT", maxWidth + profile.apparence.iconShiftX, profile.apparence.iconShiftY)
         end
-    end
-    local Constructor = function()
-        local hider = API_CreateFrame("Frame", OVALE + "PetBattleFrameHider", UIParent, "SecureHandlerStateTemplate")
-        hider:SetAllPoints(true)
-        API_RegisterStateDriver(hider, "visibility", "[petbattle] hide; show")
-        local frame = API_CreateFrame("Frame", nil, hider)
-        local self = {}
-        self.Hide = Hide
-        self.Show = Show
-        self.OnRelease = OnRelease
-        self.OnAcquire = OnAcquire
-        self.LayoutFinished = OnLayoutFinished
-        self.UpdateActionIcon = UpdateActionIcon
-        self.UpdateFrame = UpdateFrame
-        self.UpdateIcons = UpdateIcons
-        self.ToggleOptions = ToggleOptions
-        self.OnUpdate = OnUpdate
-        self.GetScore = GetScore
+    end,
+    constructor = function(self)
         self.type = "Frame"
         self.localstatus = {}
         self.actions = {}
+        local hider = API_CreateFrame("Frame", __Ovale.Ovale:GetName(), UIParent, "SecureHandlerStateTemplate")
+        hider:SetAllPoints(self.frame)
+        API_RegisterStateDriver(hider, "visibility", "[petbattle] hide; show")
+        local frame = API_CreateFrame("Frame", nil, hider)
+        local profile = __Ovale.Ovale.db.profile
         self.frame = frame
         self.hider = hider
-        self.updateFrame = API_CreateFrame("Frame", OVALE + "UpdateFrame")
+        self.updateFrame = API_CreateFrame("Frame", __Ovale.Ovale:GetName())
         self.barre = self.frame:CreateTexture()
         self.content = API_CreateFrame("Frame", nil, self.updateFrame)
         if Masque then
-            self.skinGroup = Masque:Group(OVALE)
+            self.skinGroup = Masque:Group(__Ovale.Ovale:GetName())
         end
         self.timeSinceLastUpdate = INFINITY
         self.obj = nil
@@ -403,7 +398,7 @@ do
         frame:SetScript("OnEnter", frameOnEnter)
         frame:SetScript("OnLeave", frameOnLeave)
         frame:SetScript("OnHide", frameOnClose)
-        frame:SetAlpha(__db.profile.apparence.alpha)
+        frame:SetAlpha(profile.apparence.alpha)
         self.updateFrame:SetScript("OnUpdate", frameOnUpdate)
         self.updateFrame.obj = self
         self.barre:SetTexture(0, 0.8, 0)
@@ -414,10 +409,9 @@ do
         content:SetWidth(200)
         content:SetHeight(100)
         content:Hide()
-        content:SetAlpha(__db.profile.apparence.optionsAlpha)
+        content:SetAlpha(profile.apparence.optionsAlpha)
         AceGUI:RegisterAsContainer(self)
-        return self
-    end
-    AceGUI:RegisterWidgetType(Type, Constructor, Version)
-end
-end))
+    end,
+})
+AceGUI:RegisterWidgetType(Type, OvaleFrame, Version)
+end)
