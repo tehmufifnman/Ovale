@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "ovale_trinkets_wod", { "../Scripts" }, function(__exports, __Scripts)
+__addon.require(__addonName, __addon, "./scripts/ovale_trinkets_wod", { "./Scripts" }, function(__exports, __Scripts)
 do
     local name = "ovale_trinkets_wod"
     local desc = "[6.2] Ovale: Trinkets (Warlords of Draenor)"

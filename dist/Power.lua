@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "Power", { "./Localization", "./Debug", "./Profiler", "./Ovale", "./Aura", "./Future", "./Data", "./State", "./PaperDoll" }, function(__exports, __Localization, __Debug, __Profiler, __Ovale, __Aura, __Future, __Data, __State, __PaperDoll)
+__addon.require(__addonName, __addon, "./Power", { "./Localization", "./Debug", "./Profiler", "./Ovale", "./Aura", "./Future", "./Data", "./State", "./PaperDoll" }, function(__exports, __Localization, __Debug, __Profiler, __Ovale, __Aura, __Future, __Data, __State, __PaperDoll)
 local OvalePowerBase = __Ovale.Ovale:NewModule("OvalePower", "AceEvent-3.0")
 local ceil = math.ceil
 local format = string.format
@@ -37,7 +37,7 @@ do
                     multiline = 25,
                     width = "full",
                     get = function(info)
-                        return powerState:DebugPower()
+                        return __exports.powerState:DebugPower()
                     end
 
                 }

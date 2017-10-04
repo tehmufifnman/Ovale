@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "GUID", { "./Debug", "./Ovale" }, function(__exports, __Debug, __Ovale)
+__addon.require(__addonName, __addon, "./GUID", { "./Debug", "./Ovale" }, function(__exports, __Debug, __Ovale)
 local OvaleGUIDBase = __Ovale.Ovale:NewModule("OvaleGUID", "AceEvent-3.0")
 local floor = math.floor
 local _ipairs = ipairs

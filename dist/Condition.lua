@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "Condition", { "./State", "./Ovale", "./Debug" }, function(__exports, __State, __Ovale, __Debug)
+__addon.require(__addonName, __addon, "./Condition", { "./State", "./Ovale", "./Debug" }, function(__exports, __State, __Ovale, __Debug)
 local OvaleConditionBase = __Ovale.Ovale:NewModule("OvaleCondition")
 local _type = type
 local _wipe = wipe

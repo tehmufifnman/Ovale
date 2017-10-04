@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "Future", { "./Debug", "./Pool", "./Profiler", "./Ovale", "./Aura", "./Cooldown", "./Data", "./GUID", "./PaperDoll", "./Score", "./SpellBook", "./State" }, function(__exports, __Debug, __Pool, __Profiler, __Ovale, __Aura, __Cooldown, __Data, __GUID, __PaperDoll, __Score, __SpellBook, __State)
+__addon.require(__addonName, __addon, "./Future", { "./Debug", "./Pool", "./Profiler", "./Ovale", "./Aura", "./Cooldown", "./Data", "./GUID", "./PaperDoll", "./Score", "./SpellBook", "./State" }, function(__exports, __Debug, __Pool, __Profiler, __Ovale, __Aura, __Cooldown, __Data, __GUID, __PaperDoll, __Score, __SpellBook, __State)
 local OvaleFutureBase = __Ovale.Ovale:NewModule("OvaleFuture", "AceEvent-3.0")
 local _assert = assert
 local _ipairs = ipairs
@@ -742,7 +742,7 @@ local OvaleFutureClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(__De
                     else
                         __State.OvaleState:Log("Active spell %s (%d) is %s, now=%f, endCast=%f", spellcast.spellName, spellcast.spellId, description, now, spellcast.stop)
                     end
-                    futureState:ApplySpell(spellcast.spellId, spellcast.target, spellcast.start, spellcast.stop, spellcast.channel, spellcast)
+                    __exports.futureState:ApplySpell(spellcast.spellId, spellcast.target, spellcast.start, spellcast.stop, spellcast.channel, spellcast)
                 else
                     if spellcast.target then
                         self:Debug("Warning: removing active spell %s (%d) to %s (%s) that should have finished.", spellcast.spellName, spellcast.spellId, spellcast.targetName, spellcast.target)
@@ -799,12 +799,12 @@ local FutureState = __class(nil, {
         self.counter = {}
     end,
     ResetState = function(self)
-        OvaleFuture:StartProfiling("OvaleFuture_ResetState")
+        __exports.OvaleFuture:StartProfiling("OvaleFuture_ResetState")
         local now = API_GetTime()
         self.currentTime = now
-        OvaleFuture:Log("Reset state with current time = %f", self.currentTime)
-        self.inCombat = OvaleFuture.inCombat
-        self.combatStartTime = OvaleFuture.combatStartTime or 0
+        __exports.OvaleFuture:Log("Reset state with current time = %f", self.currentTime)
+        self.inCombat = __exports.OvaleFuture.inCombat
+        self.combatStartTime = __exports.OvaleFuture.combatStartTime or 0
         self.nextCast = now
         local reason = ""
         local start, duration = __Cooldown.OvaleCooldown:GetGlobalCooldown(now)
@@ -816,10 +816,10 @@ local FutureState = __class(nil, {
             end
         end
         local lastGCDSpellcastFound, lastOffGCDSpellcastFound, lastSpellcastFound
-        for i = #OvaleFuture.queue, 1, -1 do
-            local spellcast = OvaleFuture.queue[i]
+        for i = #__exports.OvaleFuture.queue, 1, -1 do
+            local spellcast = __exports.OvaleFuture.queue[i]
             if spellcast.spellId and spellcast.start then
-                OvaleFuture:Log("    Found cast %d of spell %s (%d), start = %s, stop = %s.", i, spellcast.spellName, spellcast.spellId, spellcast.start, spellcast.stop)
+                __exports.OvaleFuture:Log("    Found cast %d of spell %s (%d), start = %s, stop = %s.", i, spellcast.spellName, spellcast.spellId, spellcast.start, spellcast.stop)
                 if  not lastSpellcastFound then
                     self.lastSpellId = spellcast.spellId
                     if spellcast.start and spellcast.stop and spellcast.start <= now and now < spellcast.stop then
@@ -848,7 +848,7 @@ local FutureState = __class(nil, {
             end
         end
         if  not lastSpellcastFound then
-            local spellcast = OvaleFuture.lastSpellcast
+            local spellcast = __exports.OvaleFuture.lastSpellcast
             if spellcast then
                 self.lastSpellId = spellcast.spellId
                 if spellcast.start and spellcast.stop and spellcast.start <= now and now < spellcast.stop then
@@ -860,7 +860,7 @@ local FutureState = __class(nil, {
             end
         end
         if  not lastGCDSpellcastFound then
-            local spellcast = OvaleFuture.lastGCDSpellcast
+            local spellcast = __exports.OvaleFuture.lastGCDSpellcast
             if spellcast then
                 self.lastGCDSpellId = spellcast.spellId
                 if spellcast.stop and self.nextCast < spellcast.stop then
@@ -870,18 +870,18 @@ local FutureState = __class(nil, {
             end
         end
         if  not lastOffGCDSpellcastFound then
-            local spellcast = OvaleFuture.lastOffGCDSpellcast
+            local spellcast = __exports.OvaleFuture.lastOffGCDSpellcast
             if spellcast then
                 self.lastOffGCDSpellId = spellcast.spellId
             end
         end
-        OvaleFuture:Log("    lastSpellId = %s, lastGCDSpellId = %s, lastOffGCDSpellId = %s", self.lastSpellId, self.lastGCDSpellId, self.lastOffGCDSpellId)
-        OvaleFuture:Log("    nextCast = %f%s", self.nextCast, reason)
+        __exports.OvaleFuture:Log("    lastSpellId = %s, lastGCDSpellId = %s, lastOffGCDSpellId = %s", self.lastSpellId, self.lastGCDSpellId, self.lastOffGCDSpellId)
+        __exports.OvaleFuture:Log("    nextCast = %f%s", self.nextCast, reason)
         _wipe(self.lastCast)
-        for k, v in _pairs(OvaleFuture.counter) do
+        for k, v in _pairs(__exports.OvaleFuture.counter) do
             self.counter[k] = v
         end
-        OvaleFuture:StopProfiling("OvaleFuture_ResetState")
+        __exports.OvaleFuture:StopProfiling("OvaleFuture_ResetState")
     end,
     CleanState = function(self)
         for k in _pairs(self.lastCast) do
@@ -892,18 +892,18 @@ local FutureState = __class(nil, {
         end
     end,
     ApplySpellStartCast = function(self, spellId, targetGUID, startCast, endCast, channel, spellcast)
-        OvaleFuture:StartProfiling("OvaleFuture_ApplySpellStartCast")
+        __exports.OvaleFuture:StartProfiling("OvaleFuture_ApplySpellStartCast")
         if channel then
-            OvaleFuture:UpdateCounters(spellId, startCast, targetGUID)
+            __exports.OvaleFuture:UpdateCounters(spellId, startCast, targetGUID)
         end
-        OvaleFuture:StopProfiling("OvaleFuture_ApplySpellStartCast")
+        __exports.OvaleFuture:StopProfiling("OvaleFuture_ApplySpellStartCast")
     end,
     ApplySpellAfterCast = function(self, spellId, targetGUID, startCast, endCast, channel, spellcast)
-        OvaleFuture:StartProfiling("OvaleFuture_ApplySpellAfterCast")
+        __exports.OvaleFuture:StartProfiling("OvaleFuture_ApplySpellAfterCast")
         if  not channel then
-            OvaleFuture:UpdateCounters(spellId, endCast, targetGUID)
+            __exports.OvaleFuture:UpdateCounters(spellId, endCast, targetGUID)
         end
-        OvaleFuture:StopProfiling("OvaleFuture_ApplySpellAfterCast")
+        __exports.OvaleFuture:StopProfiling("OvaleFuture_ApplySpellAfterCast")
     end,
     GetCounter = function(self, id)
         return self.counter[id] or 0
@@ -912,7 +912,7 @@ local FutureState = __class(nil, {
         return self:GetCounter(id)
     end,
     TimeOfLastCast = function(self, spellId)
-        return self.lastCast[spellId] or OvaleFuture.lastCastTime[spellId] or 0
+        return self.lastCast[spellId] or __exports.OvaleFuture.lastCastTime[spellId] or 0
     end,
     IsChanneling = function(self, atTime)
         atTime = atTime or self.currentTime
@@ -928,7 +928,7 @@ local FutureState = __class(nil, {
         self.lastGCDSpellId = spellId
     end,
     ApplySpell = function(self, spellId, targetGUID, startCast, endCast, channel, spellcast)
-        OvaleFuture:StartProfiling("OvaleFuture_state_ApplySpell")
+        __exports.OvaleFuture:StartProfiling("OvaleFuture_state_ApplySpell")
         if spellId then
             if  not targetGUID then
                 targetGUID = __Ovale.Ovale.playerGUID
@@ -982,7 +982,7 @@ local FutureState = __class(nil, {
             else
                 self.currentTime = now
             end
-            OvaleFuture:Log("Apply spell %d at %f currentTime=%f nextCast=%f endCast=%f targetGUID=%s", spellId, startCast, self.currentTime, nextCast, endCast, targetGUID)
+            __exports.OvaleFuture:Log("Apply spell %d at %f currentTime=%f nextCast=%f endCast=%f targetGUID=%s", spellId, startCast, self.currentTime, nextCast, endCast, targetGUID)
             if  not self.inCombat and __SpellBook.OvaleSpellBook:IsHarmfulSpell(spellId) then
                 self.inCombat = true
                 if channel then
@@ -999,13 +999,13 @@ local FutureState = __class(nil, {
             end
             __State.OvaleState:ApplySpellOnHit(spellId, targetGUID, startCast, endCast, channel, spellcast)
         end
-        OvaleFuture:StopProfiling("OvaleFuture_state_ApplySpell")
+        __exports.OvaleFuture:StopProfiling("OvaleFuture_state_ApplySpell")
     end,
     GetDamageMultiplier = function(self, spellId, targetGUID, atTime)
-        return OvaleFuture:GetDamageMultiplier(spellId, targetGUID, atTime)
+        return __exports.OvaleFuture:GetDamageMultiplier(spellId, targetGUID, atTime)
     end,
     UpdateCounters = function(self, spellId, atTime, targetGUID)
-        return OvaleFuture:UpdateCounters(spellId, atTime, targetGUID)
+        return __exports.OvaleFuture:UpdateCounters(spellId, atTime, targetGUID)
     end,
 })
 __exports.futureState = FutureState()

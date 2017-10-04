@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "Ovale", { "AceAddon-3.0", "AceGUI-3.0", "./Localization" }, function(__exports, AceAddon, AceGUI, __Localization)
+__addon.require(__addonName, __addon, "./Ovale", { "AceAddon-3.0", "AceGUI-3.0", "./Localization" }, function(__exports, AceAddon, AceGUI, __Localization)
 local _assert = assert
 local format = string.format
 local _ipairs = ipairs

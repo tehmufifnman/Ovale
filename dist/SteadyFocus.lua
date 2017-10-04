@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "SteadyFocus", { "./Debug", "./Profiler", "./Ovale", "./Aura", "./SpellBook", "./State" }, function(__exports, __Debug, __Profiler, __Ovale, __Aura, __SpellBook, __State)
+__addon.require(__addonName, __addon, "./SteadyFocus", { "./Debug", "./Profiler", "./Ovale", "./Aura", "./SpellBook", "./State" }, function(__exports, __Debug, __Profiler, __Ovale, __Aura, __SpellBook, __State)
 local OvaleSteadyFocusBase = __Ovale.Ovale:NewModule("OvaleSteadyFocus", "AceEvent-3.0")
 local API_GetTime = GetTime
 local INFINITY = math.huge

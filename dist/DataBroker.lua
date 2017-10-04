@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "DataBroker", { "./Localization", "LibDataBroker-1.1", "LibDBIcon-1.0", "./Debug", "./Options", "./Ovale", "./Scripts", "./Version" }, function(__exports, __Localization, LibDataBroker, LibDBIcon, __Debug, __Options, __Ovale, __Scripts, __Version)
+__addon.require(__addonName, __addon, "./DataBroker", { "./Localization", "LibDataBroker-1.1", "LibDBIcon-1.0", "./Debug", "./Options", "./Ovale", "./Scripts", "./Version" }, function(__exports, __Localization, LibDataBroker, LibDBIcon, __Debug, __Options, __Ovale, __Scripts, __Version)
 local OvaleDataBrokerBase = __Ovale.Ovale:NewModule("OvaleDataBroker", "AceEvent-3.0")
 local _pairs = pairs
 local tinsert = table.insert

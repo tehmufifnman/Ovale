@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "SimulationCraft", { "AceConfig-3.0", "AceConfigDialog-3.0", "./Localization", "./Debug", "./Options", "./Pool", "./Ovale", "./AST", "./Compile", "./Data", "./HonorAmongThieves", "./Lexer", "./Power", "./Scripts" }, function(__exports, AceConfig, AceConfigDialog, __Localization, __Debug, __Options, __Pool, __Ovale, __AST, __Compile, __Data, __HonorAmongThieves, __Lexer, __Power, __Scripts)
+__addon.require(__addonName, __addon, "./SimulationCraft", { "AceConfig-3.0", "AceConfigDialog-3.0", "./Localization", "./Debug", "./Options", "./Pool", "./Ovale", "./AST", "./Compile", "./Data", "./HonorAmongThieves", "./Lexer", "./Power", "./Scripts" }, function(__exports, AceConfig, AceConfigDialog, __Localization, __Debug, __Options, __Pool, __Ovale, __AST, __Compile, __Data, __HonorAmongThieves, __Lexer, __Power, __Scripts)
 local OvaleSimulationCraftBase = __Ovale.Ovale:NewModule("OvaleSimulationCraft")
 local format = string.format
 local gmatch = string.gmatch

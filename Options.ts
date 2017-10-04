@@ -424,7 +424,8 @@ class OvaleOptionsClass extends OvaleOptionsBase {
         }
     }
 
-    OnInitialize() {
+    constructor() {
+        super();
         const ovale = Ovale.GetName();
         const db = AceDB.New("OvaleDB", this.defaultDB);
         this.options.args.profile = AceDBOptions.GetOptionsTable(db);

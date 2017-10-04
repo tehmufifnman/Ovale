@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "PassiveAura", { "./Ovale", "./Aura", "./Equipment", "./PaperDoll" }, function(__exports, __Ovale, __Aura, __Equipment, __PaperDoll)
+__addon.require(__addonName, __addon, "./PassiveAura", { "./Ovale", "./Aura", "./Equipment", "./PaperDoll" }, function(__exports, __Ovale, __Aura, __Equipment, __PaperDoll)
 local OvalePassiveAuraBase = __Ovale.Ovale:NewModule("OvalePassiveAura", "AceEvent-3.0")
 local exp = math.exp
 local log = math.log

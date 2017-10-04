@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "Score", { "./Ovale", "./Localization", "./Debug" }, function(__exports, __Ovale, __Localization, __Debug)
+__addon.require(__addonName, __addon, "./Score", { "./Ovale", "./Localization", "./Debug" }, function(__exports, __Ovale, __Localization, __Debug)
 local OvaleFuture = nil
 local OvaleScoreBase = __Ovale.Ovale:NewModule("OvaleScore", "AceEvent-3.0", "AceSerializer-3.0")
 local _pairs = pairs

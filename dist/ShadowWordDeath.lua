@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "ShadowWordDeath", { "./Ovale", "./Aura" }, function(__exports, __Ovale, __Aura)
+__addon.require(__addonName, __addon, "./ShadowWordDeath", { "./Ovale", "./Aura" }, function(__exports, __Ovale, __Aura)
 local OvaleShadowWordDeathBase = __Ovale.Ovale:NewModule("OvaleShadowWordDeath", "AceEvent-3.0")
 local API_GetTime = GetTime
 local self_playerGUID = nil

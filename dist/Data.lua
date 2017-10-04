@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "Data", { "./Ovale", "./GUID", "./PaperDoll", "./State", "./Debug" }, function(__exports, __Ovale, __GUID, __PaperDoll, __State, __Debug)
+__addon.require(__addonName, __addon, "./Data", { "./Ovale", "./GUID", "./PaperDoll", "./State", "./Debug" }, function(__exports, __Ovale, __GUID, __PaperDoll, __State, __Debug)
 local OvaleDataBase = __Ovale.Ovale:NewModule("OvaleData")
 local format = string.format
 local _type = type
@@ -581,19 +581,19 @@ __exports.DataState = __class(nil, {
     ResetState = function(self)
     end,
     CheckRequirements = function(self, spellId, atTime, tokens, index, targetGUID)
-        return OvaleData:CheckRequirements(spellId, atTime, tokens, index, targetGUID)
+        return __exports.OvaleData:CheckRequirements(spellId, atTime, tokens, index, targetGUID)
     end,
     CheckSpellAuraData = function(self, auraId, spellData, atTime, guid)
-        return OvaleData:CheckSpellAuraData(auraId, spellData, atTime, guid)
+        return __exports.OvaleData:CheckSpellAuraData(auraId, spellData, atTime, guid)
     end,
     CheckSpellInfo = function(self, spellId, atTime, targetGUID)
-        return OvaleData:CheckSpellInfo(spellId, atTime, targetGUID)
+        return __exports.OvaleData:CheckSpellInfo(spellId, atTime, targetGUID)
     end,
     GetItemInfoProperty = function(self, itemId, atTime, property)
-        return OvaleData:GetItemInfoProperty(itemId, atTime, property)
+        return __exports.OvaleData:GetItemInfoProperty(itemId, atTime, property)
     end,
     GetSpellInfoProperty = function(self, spellId, atTime, property, targetGUID)
-        return OvaleData:GetSpellInfoProperty(spellId, atTime, property, targetGUID)
+        return __exports.OvaleData:GetSpellInfoProperty(spellId, atTime, property, targetGUID)
     end,
 })
 __exports.dataState = __exports.DataState()

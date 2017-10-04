@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "ovale_shaman", { "../Scripts" }, function(__exports, __Scripts)
+__addon.require(__addonName, __addon, "./scripts/ovale_shaman", { "./Scripts" }, function(__exports, __Scripts)
 do
     local name = "simulationcraft_shaman_elemental_t19p"
     local desc = "[7.0] SimulationCraft: Shaman_Elemental_T19P"

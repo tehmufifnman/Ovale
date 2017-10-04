@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "Icon", { "./Localization", "./SpellBook", "./State", "./Ovale" }, function(__exports, __Localization, __SpellBook, __State, __Ovale)
+__addon.require(__addonName, __addon, "./Icon", { "./Localization", "./SpellBook", "./State", "./Ovale" }, function(__exports, __Localization, __SpellBook, __State, __Ovale)
 local format = string.format
 local _next = next
 local _pairs = pairs

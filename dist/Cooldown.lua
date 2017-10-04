@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "Cooldown", { "./Debug", "./Profiler", "./Data", "./Future", "./GUID", "./PaperDoll", "./SpellBook", "./Stance", "./State", "./Ovale", "./Aura" }, function(__exports, __Debug, __Profiler, __Data, __Future, __GUID, __PaperDoll, __SpellBook, __Stance, __State, __Ovale, __Aura)
+__addon.require(__addonName, __addon, "./Cooldown", { "./Debug", "./Profiler", "./Data", "./Future", "./GUID", "./PaperDoll", "./SpellBook", "./Stance", "./State", "./Ovale", "./Aura" }, function(__exports, __Debug, __Profiler, __Data, __Future, __GUID, __PaperDoll, __SpellBook, __Stance, __State, __Ovale, __Aura)
 local OvaleCooldownBase = __Ovale.Ovale:NewModule("OvaleCooldown", "AceEvent-3.0")
 local _next = next
 local _pairs = pairs

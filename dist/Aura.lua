@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "Aura", { "./Localization", "./Debug", "./Pool", "./Profiler", "./Data", "./Future", "./GUID", "./PaperDoll", "./SpellBook", "./State", "./Ovale" }, function(__exports, __Localization, __Debug, __Pool, __Profiler, __Data, __Future, __GUID, __PaperDoll, __SpellBook, __State, __Ovale)
+__addon.require(__addonName, __addon, "./Aura", { "./Localization", "./Debug", "./Pool", "./Profiler", "./Data", "./Future", "./GUID", "./PaperDoll", "./SpellBook", "./State", "./Ovale" }, function(__exports, __Localization, __Debug, __Pool, __Profiler, __Data, __Future, __GUID, __PaperDoll, __SpellBook, __State, __Ovale)
 local OvaleAuraBase = __Ovale.Ovale:NewModule("OvaleAura", "AceEvent-3.0")
 local bit_band = bit.band
 local bit_bor = bit.bor
@@ -43,12 +43,12 @@ do
                     width = "full",
                     get = function(info)
                         _wipe(output)
-                        local helpful = auraState:DebugUnitAuras("player", "HELPFUL")
+                        local helpful = __exports.auraState:DebugUnitAuras("player", "HELPFUL")
                         if helpful then
                             output[#output + 1] = "== BUFFS =="
                             output[#output + 1] = helpful
                         end
-                        local harmful = auraState:DebugUnitAuras("player", "HARMFUL")
+                        local harmful = __exports.auraState:DebugUnitAuras("player", "HARMFUL")
                         if harmful then
                             output[#output + 1] = "== DEBUFFS =="
                             output[#output + 1] = harmful
@@ -70,12 +70,12 @@ do
                     width = "full",
                     get = function(info)
                         _wipe(output)
-                        local helpful = auraState:DebugUnitAuras("target", "HELPFUL")
+                        local helpful = __exports.auraState:DebugUnitAuras("target", "HELPFUL")
                         if helpful then
                             output[#output + 1] = "== BUFFS =="
                             output[#output + 1] = helpful
                         end
-                        local harmful = auraState:DebugUnitAuras("target", "HARMFUL")
+                        local harmful = __exports.auraState:DebugUnitAuras("target", "HARMFUL")
                         if harmful then
                             output[#output + 1] = "== DEBUFFS =="
                             output[#output + 1] = harmful

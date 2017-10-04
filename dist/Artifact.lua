@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "Artifact", { "LibArtifactData-1.0", "./Debug", "./Localization", "./State", "./Ovale" }, function(__exports, LibArtifactData, __Debug, __Localization, __State, __Ovale)
+__addon.require(__addonName, __addon, "./Artifact", { "LibArtifactData-1.0", "./Debug", "./Localization", "./State", "./Ovale" }, function(__exports, LibArtifactData, __Debug, __Localization, __State, __Ovale)
 local tsort = table.sort
 local tinsert = table.insert
 local tremove = table.remove
@@ -35,16 +35,16 @@ local OvaleArtifactClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleArt
     end,
     OnEnable = function(self)
         self:RegisterEvent("SPELLS_CHANGED", self.UpdateTraits)
-        LibArtifactData:RegisterCallback(OvaleArtifact, "ARTIFACT_ADDED", self.UpdateTraits)
-        LibArtifactData:RegisterCallback(OvaleArtifact, "ARTIFACT_EQUIPPED_CHANGED", self.UpdateTraits)
-        LibArtifactData:RegisterCallback(OvaleArtifact, "ARTIFACT_ACTIVE_CHANGED", self.UpdateTraits)
-        LibArtifactData:RegisterCallback(OvaleArtifact, "ARTIFACT_TRAITS_CHANGED", self.UpdateTraits)
+        LibArtifactData:RegisterCallback(__exports.OvaleArtifact, "ARTIFACT_ADDED", self.UpdateTraits)
+        LibArtifactData:RegisterCallback(__exports.OvaleArtifact, "ARTIFACT_EQUIPPED_CHANGED", self.UpdateTraits)
+        LibArtifactData:RegisterCallback(__exports.OvaleArtifact, "ARTIFACT_ACTIVE_CHANGED", self.UpdateTraits)
+        LibArtifactData:RegisterCallback(__exports.OvaleArtifact, "ARTIFACT_TRAITS_CHANGED", self.UpdateTraits)
     end,
     OnDisable = function(self)
-        LibArtifactData:UnregisterCallback(OvaleArtifact, "ARTIFACT_ADDED")
-        LibArtifactData:UnregisterCallback(OvaleArtifact, "ARTIFACT_EQUIPPED_CHANGED")
-        LibArtifactData:UnregisterCallback(OvaleArtifact, "ARTIFACT_ACTIVE_CHANGED")
-        LibArtifactData:UnregisterCallback(OvaleArtifact, "ARTIFACT_TRAITS_CHANGED")
+        LibArtifactData:UnregisterCallback(__exports.OvaleArtifact, "ARTIFACT_ADDED")
+        LibArtifactData:UnregisterCallback(__exports.OvaleArtifact, "ARTIFACT_EQUIPPED_CHANGED")
+        LibArtifactData:UnregisterCallback(__exports.OvaleArtifact, "ARTIFACT_ACTIVE_CHANGED")
+        LibArtifactData:UnregisterCallback(__exports.OvaleArtifact, "ARTIFACT_TRAITS_CHANGED")
         self:UnregisterEvent("SPELLS_CHANGED")
     end,
     UpdateTraits = function(self, message)

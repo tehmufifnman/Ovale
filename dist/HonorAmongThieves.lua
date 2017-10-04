@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "HonorAmongThieves", { "./Ovale", "./Aura", "./Data" }, function(__exports, __Ovale, __Aura, __Data)
+__addon.require(__addonName, __addon, "./HonorAmongThieves", { "./Ovale", "./Aura", "./Data" }, function(__exports, __Ovale, __Aura, __Data)
 local OvaleHonorAmongThievesBase = __Ovale.Ovale:NewModule("OvaleHonorAmongThieves", "AceEvent-3.0")
 local API_GetTime = GetTime
 local INFINITY = math.huge

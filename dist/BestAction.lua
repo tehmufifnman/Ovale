@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "BestAction", { "./Debug", "./Pool", "./Profiler", "./TimeSpan", "./AST", "./ActionBar", "./Compile", "./Condition", "./Cooldown", "./Data", "./Equipment", "./Guid", "./Future", "./Power", "./SpellBook", "./Stance", "./Ovale", "./State", "./PaperDoll" }, function(__exports, __Debug, __Pool, __Profiler, __TimeSpan, __AST, __ActionBar, __Compile, __Condition, __Cooldown, __Data, __Equipment, __Guid, __Future, __Power, __SpellBook, __Stance, __Ovale, __State, __PaperDoll)
+__addon.require(__addonName, __addon, "./BestAction", { "./Debug", "./Pool", "./Profiler", "./TimeSpan", "./AST", "./ActionBar", "./Compile", "./Condition", "./Cooldown", "./Data", "./Equipment", "./GUID", "./Future", "./Power", "./SpellBook", "./Stance", "./Ovale", "./State", "./PaperDoll" }, function(__exports, __Debug, __Pool, __Profiler, __TimeSpan, __AST, __ActionBar, __Compile, __Condition, __Cooldown, __Data, __Equipment, __GUID, __Future, __Power, __SpellBook, __Stance, __Ovale, __State, __PaperDoll)
 local OvaleBestActionBase = __Ovale.Ovale:NewModule("OvaleBestAction", "AceEvent-3.0")
 local abs = math.abs
 local _assert = assert
@@ -138,7 +138,7 @@ end
 local GetActionSpellInfo = function(element, state, atTime, target)
     __exports.OvaleBestAction:StartProfiling("OvaleBestAction_GetActionSpellInfo")
     local actionTexture, actionInRange, actionCooldownStart, actionCooldownDuration, actionUsable, actionShortcut, actionIsCurrent, actionEnable, actionType, actionId, actionResourceExtend, actionCharges
-    local targetGUID = __Guid.OvaleGUID:UnitGUID(target)
+    local targetGUID = __GUID.OvaleGUID:UnitGUID(target)
     local spellId = element.positionalParams[1]
     local si = __Data.OvaleData.spellInfo[spellId]
     local replacedSpellId = nil

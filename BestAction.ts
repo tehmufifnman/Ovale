@@ -9,7 +9,7 @@ import { OvaleCondition } from "./Condition";
 import { OvaleCooldown, cooldownState } from "./Cooldown";
 import { OvaleData, dataState } from "./Data";
 import { OvaleEquipment } from "./Equipment";
-import { OvaleGUID } from "./Guid";
+import { OvaleGUID } from "./GUID";
 import { OvaleFuture, futureState } from "./Future";
 import { OvalePower } from "./Power";
 import { OvaleSpellBook, spellBookState } from "./SpellBook";

@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "SpellFlash", { "./Localization", "./Options", "./Ovale", "./Data", "./Future", "./SpellBook", "./Stance", "./State" }, function(__exports, __Localization, __Options, __Ovale, __Data, __Future, __SpellBook, __Stance, __State)
+__addon.require(__addonName, __addon, "./SpellFlash", { "./Localization", "./Options", "./Ovale", "./Data", "./Future", "./SpellBook", "./Stance", "./State" }, function(__exports, __Localization, __Options, __Ovale, __Data, __Future, __SpellBook, __Stance, __State)
 local OvaleSpellFlashBase = __Ovale.Ovale:NewModule("OvaleSpellFlash", "AceEvent-3.0")
 local _pairs = pairs
 local _type = type

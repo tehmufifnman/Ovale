@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "ComboPoints", { "./Localization", "./Debug", "./Profiler", "./Aura", "./Data", "./Equipment", "./Future", "./PaperDoll", "./Power", "./SpellBook", "./Ovale", "./State" }, function(__exports, __Localization, __Debug, __Profiler, __Aura, __Data, __Equipment, __Future, __PaperDoll, __Power, __SpellBook, __Ovale, __State)
+__addon.require(__addonName, __addon, "./ComboPoints", { "./Localization", "./Debug", "./Profiler", "./Aura", "./Data", "./Equipment", "./Future", "./PaperDoll", "./Power", "./SpellBook", "./Ovale", "./State" }, function(__exports, __Localization, __Debug, __Profiler, __Aura, __Data, __Equipment, __Future, __PaperDoll, __Power, __SpellBook, __Ovale, __State)
 local OvaleComboPointsBase = __Ovale.Ovale:NewModule("OvaleComboPoints", "AceEvent-3.0")
 local tinsert = table.insert
 local tremove = table.remove

@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "Queue", { "./Ovale" }, function(__exports, __Ovale)
+__addon.require(__addonName, __addon, "./Queue", { "./Ovale" }, function(__exports, __Ovale)
 local BackToFrontIterator = __class(nil, {
     constructor = function(self, invariant, control)
     end,

@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "ovale_warrior_spells", { "../Scripts" }, function(__exports, __Scripts)
+__addon.require(__addonName, __addon, "./scripts/ovale_warrior_spells", { "./Scripts" }, function(__exports, __Scripts)
 do
     local name = "ovale_warrior_spells"
     local desc = "[7.0] Ovale: Warrior spells"

@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "Lexer", { "./Queue" }, function(__exports, __Queue)
+__addon.require(__addonName, __addon, "./Lexer", { "./Queue" }, function(__exports, __Queue)
 local _pairs = pairs
 local _setmetatable = setmetatable
 local _error = error

@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "State", { "./Localization", "./Debug", "./Queue", "./Ovale" }, function(__exports, __Localization, __Debug, __Queue, __Ovale)
+__addon.require(__addonName, __addon, "./State", { "./Localization", "./Debug", "./Queue", "./Ovale" }, function(__exports, __Localization, __Debug, __Queue, __Ovale)
 local OvaleStateBase = __Ovale.Ovale:NewModule("OvaleState")
 local _pairs = pairs
 local self_statePrototype = {}

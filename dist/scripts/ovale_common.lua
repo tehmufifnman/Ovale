@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "ovale_common", { "../Scripts" }, function(__exports, __Scripts)
+__addon.require(__addonName, __addon, "./scripts/ovale_common", { "./Scripts" }, function(__exports, __Scripts)
 do
     local name = "ovale_common"
     local desc = "[6.0.2] Ovale: Common spell definitions"

@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "SpellBook", { "./Localization", "./Debug", "./Profiler", "./Cooldown", "./Data", "./Power", "./Runes", "./State", "./Ovale" }, function(__exports, __Localization, __Debug, __Profiler, __Cooldown, __Data, __Power, __Runes, __State, __Ovale)
+__addon.require(__addonName, __addon, "./SpellBook", { "./Localization", "./Debug", "./Profiler", "./Cooldown", "./Data", "./Power", "./Runes", "./State", "./Ovale" }, function(__exports, __Localization, __Debug, __Profiler, __Cooldown, __Data, __Power, __Runes, __State, __Ovale)
 local _ipairs = ipairs
 local _pairs = pairs
 local strmatch = string.match

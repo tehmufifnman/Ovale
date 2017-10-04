@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "Recount", { "./Ovale", "./Localization", "./Score", "AceLocale-3.0", "Recount" }, function(__exports, __Ovale, __Localization, __Score, AceLocale, Recount)
+__addon.require(__addonName, __addon, "./Recount", { "./Ovale", "./Localization", "./Score", "AceLocale-3.0", "Recount" }, function(__exports, __Ovale, __Localization, __Score, AceLocale, Recount)
 local OvaleRecountBase = __Ovale.Ovale:NewModule("OvaleRecount")
 local _setmetatable = setmetatable
 local DataModes = function(self, data, num)

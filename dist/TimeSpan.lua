@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "TimeSpan", {}, function(__exports)
+__addon.require(__addonName, __addon, "./TimeSpan", {}, function(__exports)
 local _select = select
 local _setmetatable = setmetatable
 local format = string.format
@@ -36,7 +36,7 @@ __exports.newTimeSpan = function()
     if obj then
         self_poolUnused = self_poolUnused - 1
     else
-        obj = OvaleTimeSpan()
+        obj = __exports.OvaleTimeSpan()
         self_poolSize = self_poolSize + 1
     end
     return obj

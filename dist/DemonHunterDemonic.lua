@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "DemonHunterDemonic", { "./Ovale", "./Debug", "./Aura" }, function(__exports, __Ovale, __Debug, __Aura)
+__addon.require(__addonName, __addon, "./DemonHunterDemonic", { "./Ovale", "./Debug", "./Aura" }, function(__exports, __Ovale, __Debug, __Aura)
 local OvaleDemonHunterDemonicBase = __Ovale.Ovale:NewModule("OvaleDemonHunterDemonic", "AceEvent-3.0")
 local API_GetSpecialization = GetSpecialization
 local API_GetSpecializationInfo = GetSpecializationInfo

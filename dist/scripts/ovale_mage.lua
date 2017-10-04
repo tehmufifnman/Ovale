@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "ovale_mage", { "../Scripts" }, function(__exports, __Scripts)
+__addon.require(__addonName, __addon, "./scripts/ovale_mage", { "./Scripts" }, function(__exports, __Scripts)
 do
     local name = "simulationcraft_mage_arcane_t19p"
     local desc = "[7.0] SimulationCraft: Mage_Arcane_T19P"

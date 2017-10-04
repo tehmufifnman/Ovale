@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "Frame", { "AceGUI-3.0", "Masque", "./BestAction", "./Compile", "./Cooldown", "./Debug", "./Future", "./GUID", "./SpellFlash", "./State", "./TimeSpan", "./Ovale", "./Icon", "./Enemies" }, function(__exports, AceGUI, Masque, __BestAction, __Compile, __Cooldown, __Debug, __Future, __GUID, __SpellFlash, __State, __TimeSpan, __Ovale, __Icon, __Enemies)
+__addon.require(__addonName, __addon, "./Frame", { "AceGUI-3.0", "Masque", "./BestAction", "./Compile", "./Cooldown", "./Debug", "./Future", "./GUID", "./SpellFlash", "./State", "./TimeSpan", "./Ovale", "./Icon", "./Enemies" }, function(__exports, AceGUI, Masque, __BestAction, __Compile, __Cooldown, __Debug, __Future, __GUID, __SpellFlash, __State, __TimeSpan, __Ovale, __Icon, __Enemies)
 local Type = __Ovale.Ovale:GetName()
 local Version = 7
 local _ipairs = ipairs

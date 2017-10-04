@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "Debug", { "AceConfig-3.0", "AceConfigDialog-3.0", "./Localization", "LibTextDump-1.0", "./Options", "./Ovale" }, function(__exports, AceConfig, AceConfigDialog, __Localization, LibTextDump, __Options, __Ovale)
+__addon.require(__addonName, __addon, "./Debug", { "AceConfig-3.0", "AceConfigDialog-3.0", "./Localization", "LibTextDump-1.0", "./Options", "./Ovale" }, function(__exports, AceConfig, AceConfigDialog, __Localization, LibTextDump, __Options, __Ovale)
 local OvaleDebugBase = __Ovale.Ovale:NewModule("OvaleDebug", "AceTimer-3.0")
 local format = string.format
 local gmatch = string.gmatch
@@ -148,7 +148,7 @@ local OvaleDebugClass = __class(OvaleDebugBase, {
             Error = function(self, ...)
                 local s = __Ovale.MakeString(...)
                 self:Print("Fatal error: %s", s)
-                OvaleDebug.bug = true
+                __exports.OvaleDebug.bug = true
             end,
             Print = function(self, ...)
                 local name = self:GetName()

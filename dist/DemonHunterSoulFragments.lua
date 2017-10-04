@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "DemonHunterSoulFragments", { "./Ovale", "./Debug", "./State" }, function(__exports, __Ovale, __Debug, __State)
+__addon.require(__addonName, __addon, "./DemonHunterSoulFragments", { "./Ovale", "./Debug", "./State" }, function(__exports, __Ovale, __Debug, __State)
 local OvaleDemonHunterSoulFragmentsBase = __Ovale.Ovale:NewModule("OvaleDemonHunterSoulFragments", "AceEvent-3.0")
 local _ipairs = ipairs
 local tinsert = table.insert

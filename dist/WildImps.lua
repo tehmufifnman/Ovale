@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "WildImps", { "./State", "./Ovale" }, function(__exports, __State, __Ovale)
+__addon.require(__addonName, __addon, "./WildImps", { "./State", "./Ovale" }, function(__exports, __State, __Ovale)
 local OvaleWildImpsBase = __Ovale.Ovale:NewModule("OvaleWildImps", "AceEvent-3.0")
 local tinsert = table.insert
 local tremove = table.remove

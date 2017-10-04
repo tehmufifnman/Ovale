@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "BossMod", { "./Debug", "./Profiler", "./Ovale", "./State" }, function(__exports, __Debug, __Profiler, __Ovale, __State)
+__addon.require(__addonName, __addon, "./BossMod", { "./Debug", "./Profiler", "./Ovale", "./State" }, function(__exports, __Debug, __Profiler, __Ovale, __State)
 local OvaleBossModBase = __Ovale.Ovale:NewModule("OvaleBossMod")
 local API_GetNumGroupMembers = GetNumGroupMembers
 local API_IsInGroup = IsInGroup
@@ -26,10 +26,10 @@ local OvaleBossModClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(__D
         end
         if _BigWigsLoader then
             self:Debug("BigWigs is loaded")
-            _BigWigsLoader:RegisterMessage(OvaleBossMod, "BigWigs_OnBossEngage", function(_, mod, diff)
+            _BigWigsLoader:RegisterMessage(__exports.OvaleBossMod, "BigWigs_OnBossEngage", function(_, mod, diff)
                 self.EngagedBigWigs = mod
             end)
-            _BigWigsLoader:RegisterMessage(OvaleBossMod, "BigWigs_OnBossDisable", function(_, mod)
+            _BigWigsLoader:RegisterMessage(__exports.OvaleBossMod, "BigWigs_OnBossDisable", function(_, mod)
                 self.EngagedBigWigs = nil
             end)
         end

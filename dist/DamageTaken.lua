@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "DamageTaken", { "./Localization", "./Debug", "./Pool", "./Profiler", "./Queue", "./Ovale" }, function(__exports, __Localization, __Debug, __Pool, __Profiler, __Queue, __Ovale)
+__addon.require(__addonName, __addon, "./DamageTaken", { "./Localization", "./Debug", "./Pool", "./Profiler", "./Queue", "./Ovale" }, function(__exports, __Localization, __Debug, __Pool, __Profiler, __Queue, __Ovale)
 local OvaleDamageTakenBase = __Ovale.Ovale:NewModule("OvaleDamageTaken", "AceEvent-3.0")
 local bit_band = bit.band
 local bit_bor = bit.bor

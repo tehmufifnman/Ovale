@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "Runes", { "./Debug", "./Profiler", "./Ovale", "./Data", "./Equipment", "./Power", "./Stance", "./State", "./PaperDoll" }, function(__exports, __Debug, __Profiler, __Ovale, __Data, __Equipment, __Power, __Stance, __State, __PaperDoll)
+__addon.require(__addonName, __addon, "./Runes", { "./Debug", "./Profiler", "./Ovale", "./Data", "./Equipment", "./Power", "./Stance", "./State", "./PaperDoll" }, function(__exports, __Debug, __Profiler, __Ovale, __Data, __Equipment, __Power, __Stance, __State, __PaperDoll)
 local OvaleRunesBase = __Ovale.Ovale:NewModule("OvaleRunes", "AceEvent-3.0")
 local _ipairs = ipairs
 local _pairs = pairs

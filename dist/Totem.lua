@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "Totem", { "./Profiler", "./Ovale", "./Data", "./SpellBook", "./State", "./Aura" }, function(__exports, __Profiler, __Ovale, __Data, __SpellBook, __State, __Aura)
+__addon.require(__addonName, __addon, "./Totem", { "./Profiler", "./Ovale", "./Data", "./SpellBook", "./State", "./Aura" }, function(__exports, __Profiler, __Ovale, __Data, __SpellBook, __State, __Aura)
 local OvaleTotemBase = __Ovale.Ovale:NewModule("OvaleTotem", "AceEvent-3.0")
 local _ipairs = ipairs
 local _pairs = pairs

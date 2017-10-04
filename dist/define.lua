@@ -7,16 +7,23 @@ if ADDON_NAME then
   _G[ADDON_NAME] = Addon or {}
 end
 
+local strsub = string.sub
+
 -- Function used by define to call a factory that is ready
 local function call(exports) 
     print("calling " .. exports.name)
     local parameters = {}
+    local i = 1
     for _,v in ipairs(exports.imports) do
-        print("   with " .. v.name)
-        parameters[#parameters + 1] = v.exports
+        -- print("   with " .. v.name)
+        if v.exports == nil and not v.global then
+          print("called but " .. v.name .. " has no export")
+        end
+        parameters[i] = v.exports
+        i = i + 1
     end
     exports.exports = {}
-    local result = exports.factory(exports.exports, unpack(parameters))
+    local result = exports.factory(exports.exports, unpack(parameters, 1, i))
     if result then
         exports.exports = result
     end
@@ -24,7 +31,7 @@ local function call(exports)
     -- If some modules were waiting for these modules,...
     if exports.wait then
         for _,v in ipairs(exports.wait) do
-            print(v .. " is no more waiting for " .. exports.name)
+            -- print(v .. " is no more waiting for " .. exports.name)
             v.missing[exports.name] = nil
             -- This module is waiting for nothing, call the factory
             if not next(v.missing) and v.imports then
@@ -38,15 +45,14 @@ end
 Addon.require = function(addonName, addon, mod, dependencies, factory)
     local exports
 
-    mod = "./" .. mod
-
-    print("Define " .. mod)
+   -- print("Define " .. mod)
 
     if not addon[mod] then
-      exports = { missing = {}, name = mod }
+      exports = { missing = {}, name = mod, defined = true }
       addon[mod] = exports
     else
       exports = addon[mod]
+      exports.defined = true
     end
 
     exports.factory = factory
@@ -58,21 +64,21 @@ Addon.require = function(addonName, addon, mod, dependencies, factory)
       local dependency = addon[v]
       -- Dependency not found, register it 
       if not dependency then
-        if LibStub and LibStub.libs[v] then
+        if strsub(v, 1, 1) ~= "." then
           -- It's a global dependency
-          print("Global " .. v)
-          dependency = { exports = { default = LibStub.libs[v] }, name = v, missing = {} }
+        -- print("add global " .. v)
+          dependency = { exports =  LibStub and LibStub.libs[v], name = v, missing = {}, defined = true, global = true }
         else
           -- Create the dependency, empty for now
           -- Register the fact that this module is waiting for this dependency
           -- print("Local " .. v)
-          dependency = { wait = { exports }, name = v, missing = {} }
+          dependency = { wait = { exports }, name = v, missing = {}, defined = false }
           exports.missing[v] = dependency
         end
         addon[v] = dependency 
       else
-        if next(dependency.missing) then
-          print(v .. " is not ready")
+        if (not dependency.defined) or next(dependency.missing) then
+          -- print(v .. " is not ready")
           if dependency.wait then
             dependency.wait[#dependency.wait + 1] = exports
           else
@@ -89,19 +95,32 @@ Addon.require = function(addonName, addon, mod, dependencies, factory)
     -- If missing nothing, call the factory
     if not next(exports.missing) then
       call(exports)
-    end
-
-    -- for k, v in pairs(addon) do 
-    --   if (type(v) == "table" and v.wait) then
-    --     for _,w in ipairs(v.wait) do
-    --       print(w.name .. " is waiting for " .. v.name)
-    --     end
-    --   end
-    -- end
+    end    
 end
 
-__class = function(base) 
-  local class = {}
+Addon.debug = function(missing, level)
+  missing = missing or Addon
+  level = level or 0
+  if level > 3 then return end
+  for k, v in pairs(missing) do 
+    if (type(v) == "table") then
+      if v.wait then
+        for _,w in ipairs(v.missing) do
+          print(v.name .. " is missing " .. w.name)
+        end
+      end
+
+      if not v.defined then
+        print(v.name .. " is not defined ")
+      end
+    end
+  end
+end
+
+__class = function(base, prototype) 
+  local class = prototype
+  if not class.constructor then class.constructor = function() end end
+  if not base.constructor then base.constructor = function() end end
   class.__index = class
   setmetatable(class, {
     __index = base,

@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "Pool", { "./Profiler", "./Ovale" }, function(__exports, __Profiler, __Ovale)
+__addon.require(__addonName, __addon, "./Pool", { "./Profiler", "./Ovale" }, function(__exports, __Profiler, __Ovale)
 local _assert = assert
 local _setmetatable = setmetatable
 local tinsert = table.insert

@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "Enemies", { "./Localization", "./Debug", "./Profiler", "./Ovale", "./GUID", "./State" }, function(__exports, __Localization, __Debug, __Profiler, __Ovale, __GUID, __State)
+__addon.require(__addonName, __addon, "./Enemies", { "./Localization", "./Debug", "./Profiler", "./Ovale", "./GUID", "./State" }, function(__exports, __Localization, __Debug, __Profiler, __Ovale, __GUID, __State)
 local OvaleEnemiesBase = __Ovale.Ovale:NewModule("OvaleEnemies", "AceEvent-3.0", "AceTimer-3.0")
 local bit_band = bit.band
 local bit_bor = bit.bor

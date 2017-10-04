@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "ActionBar", { "./Localization", "./Debug", "./Profiler", "./SpellBook", "./Ovale" }, function(__exports, __Localization, __Debug, __Profiler, __SpellBook, __Ovale)
+__addon.require(__addonName, __addon, "./ActionBar", { "./Localization", "./Debug", "./Profiler", "./SpellBook", "./Ovale" }, function(__exports, __Localization, __Debug, __Profiler, __SpellBook, __Ovale)
 local OvaleActionBarBase = __Ovale.Ovale:NewModule("OvaleActionBar", "AceEvent-3.0", "AceTimer-3.0")
 local gsub = string.gsub
 local strlen = string.len

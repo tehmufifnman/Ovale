@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "Profiler", { "AceConfig-3.0", "AceConfigDialog-3.0", "./Localization", "LibTextDump-1.0", "./Options", "./Ovale" }, function(__exports, AceConfig, AceConfigDialog, __Localization, LibTextDump, __Options, __Ovale)
+__addon.require(__addonName, __addon, "./Profiler", { "AceConfig-3.0", "AceConfigDialog-3.0", "./Localization", "LibTextDump-1.0", "./Options", "./Ovale" }, function(__exports, AceConfig, AceConfigDialog, __Localization, LibTextDump, __Options, __Ovale)
 local OvaleProfilerBase = __Ovale.Ovale:NewModule("OvaleProfiler")
 local _debugprofilestop = debugprofilestop
 local format = string.format

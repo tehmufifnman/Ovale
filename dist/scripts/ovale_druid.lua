@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "ovale_druid", { "../Scripts" }, function(__exports, __Scripts)
+__addon.require(__addonName, __addon, "./scripts/ovale_druid", { "./Scripts" }, function(__exports, __Scripts)
 do
     local name = "icyveins_druid_guardian"
     local desc = "[7.1.5] Icy-Veins: Druid Guardian"
