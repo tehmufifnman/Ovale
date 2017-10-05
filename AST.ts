@@ -533,7 +533,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         }
     }
 
-    UnparseAddCheckBox = function (node) {
+    UnparseAddCheckBox = (node) => {
         let s;
         if (node.rawPositionalParams && _next(node.rawPositionalParams) || node.rawNamedParams && _next(node.rawNamedParams)) {
             s = format("AddCheckBox(%s %s %s)", node.name, this.Unparse(node.description), this.UnparseParameters(node.rawPositionalParams, node.rawNamedParams));
@@ -542,7 +542,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         }
         return s;
     }
-    UnparseAddFunction = function (node) {
+    UnparseAddFunction = (node) => {
         let s;
         if (this.HasParameters(node)) {
             s = format("AddFunction %s %s%s", node.name, this.UnparseParameters(node.rawPositionalParams, node.rawNamedParams), this.UnparseGroup(node.child[1]));
@@ -551,7 +551,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         }
         return s;
     }
-    UnparseAddIcon = function (node) {
+    UnparseAddIcon = (node) => {
         let s;
         if (this.HasParameters(node)) {
             s = format("AddIcon %s%s", this.UnparseParameters(node.rawPositionalParams, node.rawNamedParams), this.UnparseGroup(node.child[1]));
@@ -560,7 +560,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         }
         return s;
     }
-    UnparseAddListItem = function (node) {
+    UnparseAddListItem = (node) => {
         let s;
         if (this.HasParameters(node)) {
             s = format("AddListItem(%s %s %s %s)", node.name, node.item, this.Unparse(node.description), this.UnparseParameters(node.rawPositionalParams, node.rawNamedParams));
@@ -569,17 +569,17 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         }
         return s;
     }
-    UnparseBangValue = function (node) {
+    UnparseBangValue = (node) => {
         return `!${this.Unparse(node.child[1])}`;
     }
-    UnparseComment = function (node) {
+    UnparseComment = (node) => {
         if (!node.comment || node.comment == "") {
             return "";
         } else {
             return `#${node.comment}`;
         }
     }
-    UnparseCommaSeparatedValues = function (node) {
+    UnparseCommaSeparatedValues = (node) => {
         let output = this.self_outputPool.Get();
         for (const [k, v] of _ipairs(node.csv)) {
             output[k] = this.Unparse(v);
@@ -588,10 +588,10 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         this.self_outputPool.Release(output);
         return outputString;
     }
-    UnparseDefine = function (node) {
+    UnparseDefine = (node) => {
         return format("Define(%s %s)", node.name, node.value);
     }
-    UnparseExpression = function (node) {
+    UnparseExpression = (node) => {
         let expression;
         let precedence = this.GetPrecedence(node);
         if (node.expressionType == "unary") {
@@ -674,28 +674,28 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         this.self_outputPool.Release(output);
         return outputString;
     }
-    UnparseIf = function (node) {
+    UnparseIf(node) {
         if (node.child[2].type == "group") {
             return format("if %s%s", this.Unparse(node.child[1]), this.UnparseGroup(node.child[2]));
         } else {
             return format("if %s %s", this.Unparse(node.child[1]), this.Unparse(node.child[2]));
         }
     }
-    UnparseItemInfo = function (node) {
+    UnparseItemInfo(node) {
         let identifier = node.name && node.name || node.itemId;
         return format("ItemInfo(%s %s)", identifier, this.UnparseParameters(node.rawPositionalParams, node.rawNamedParams));
     }
-    UnparseItemRequire = function (node) {
+    UnparseItemRequire(node) {
         let identifier = node.name && node.name || node.itemId;
         return format("ItemRequire(%s %s %s)", identifier, node.property, this.UnparseParameters(node.rawPositionalParams, node.rawNamedParams));
     }
-    UnparseList = function (node) {
+    UnparseList(node) {
         return format("%s(%s %s)", node.keyword, node.name, this.UnparseParameters(node.rawPositionalParams, node.rawNamedParams));
     }
-    UnparseNumber = function (node) {
+    UnparseNumber(node) {
         return _tostring(node.value);
     }
-    UnparseParameters = function (positionalParams, namedParams) {
+    UnparseParameters(positionalParams, namedParams) {
         let output = this.self_outputPool.Get();
         for (const [k, v] of _pairs(namedParams)) {
             if (k == "checkbox") {
@@ -721,10 +721,10 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         this.self_outputPool.Release(output);
         return outputString;
     }
-    UnparseScoreSpells = function (node) {
+    UnparseScoreSpells(node) {
         return format("ScoreSpells(%s)", this.UnparseParameters(node.rawPositionalParams, node.rawNamedParams));
     }
-    UnparseScript = function (node: Node) {
+    UnparseScript(node: Node) {
         let output = this.self_outputPool.Get();
         let previousDeclarationType;
         for (const [_, declarationNode] of _ipairs(node.child)) {
@@ -754,15 +754,15 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         this.self_outputPool.Release(output);
         return outputString;
     }
-    UnparseSpellAuraList = function (node) {
+    UnparseSpellAuraList(node) {
         let identifier = node.name && node.name || node.spellId;
         return format("%s(%s %s)", node.keyword, identifier, this.UnparseParameters(node.rawPositionalParams, node.rawNamedParams));
     }
-    UnparseSpellInfo = function (node) {
+    UnparseSpellInfo(node) {
         let identifier = node.name && node.name || node.spellId;
         return format("SpellInfo(%s %s)", identifier, this.UnparseParameters(node.rawPositionalParams, node.rawNamedParams));
     }
-    UnparseSpellRequire = function (node) {
+    UnparseSpellRequire(node) {
         let identifier = node.name && node.name || node.spellId;
         return format("SpellRequire(%s %s %s)", identifier, node.property, this.UnparseParameters(node.rawPositionalParams, node.rawNamedParams));
     }
@@ -1377,7 +1377,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         }
         return [ok, node];
     }
-    ParseIf = function (tokenStream, nodeList, annotation) {
+    ParseIf(tokenStream, nodeList, annotation) {
         let ok = true;
         {
             let [tokenType, token] = tokenStream.Consume();
@@ -1448,7 +1448,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         }
         return [ok, node];
     }
-    ParseItemInfo = function (tokenStream, nodeList, annotation) {
+    ParseItemInfo(tokenStream, nodeList, annotation) {
         let ok = true;
         let name, lowername;
         {
@@ -1678,7 +1678,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         }
         return [ok, node];
     }
-    ParseParameters = function (tokenStream, nodeList, annotation, isList?:boolean) {
+    ParseParameters(tokenStream, nodeList, annotation, isList?:boolean) {
         let ok = true;
         let positionalParams = this.self_parametersPool.Get();
         let namedParams = this.self_parametersPool.Get();
@@ -1795,7 +1795,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         }
         return [ok, positionalParams, namedParams];
     }
-    ParseParentheses = function (tokenStream, nodeList, annotation) {
+    ParseParentheses(tokenStream, nodeList, annotation) {
         let ok = true;
         let leftToken, rightToken;
         {
@@ -1826,7 +1826,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         }
         return [ok, node];
     }
-    ParseScoreSpells = function (tokenStream, nodeList, annotation) {
+    ParseScoreSpells(tokenStream, nodeList, annotation) {
         let ok = true;
         {
             let [tokenType, token] = tokenStream.Consume();

@@ -11,7 +11,7 @@
 
 declare class AceModule {
     GetName?(): string;
-    Print?(s: string, ...format): void;
+    //Print?(s: string, ...format): void;
 }
 
 interface Addon {

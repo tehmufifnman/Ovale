@@ -120,7 +120,7 @@ end
 __class = function(base, prototype) 
   local class = prototype
   if not class.constructor then class.constructor = function() end end
-  if not base.constructor then base.constructor = function() end end
+  if base and not base.constructor then base.constructor = function() end end
   class.__index = class
   setmetatable(class, {
     __index = base,

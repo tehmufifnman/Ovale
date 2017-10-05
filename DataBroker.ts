@@ -95,7 +95,7 @@ const OnClick = function(frame, button) {
         }
     }
 }
-const OnTooltipShow = function(tooltip) {
+const OnTooltipShow = function(tooltip: UIGameTooltip) {
     self_tooltipTitle = self_tooltipTitle || `${Ovale.GetName()} ${OvaleVersion.version}`;
     tooltip.SetText(self_tooltipTitle, 1, 1, 1);
     tooltip.AddLine(L["Click to select the script."]);

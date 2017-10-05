@@ -138,7 +138,6 @@ export interface OvaleDb {
 }
 
 class OvaleClass extends AceAddon.NewAddon("Ovale", "AceEvent-3.0") {
-    L = undefined;
     playerClass = _select(2, API_UnitClass("player"));
     playerGUID: string = undefined;
     db: OvaleDb = undefined;

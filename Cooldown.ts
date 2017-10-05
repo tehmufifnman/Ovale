@@ -205,8 +205,13 @@ class OvaleCooldownClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regi
     SaveSpellcastInfo(spellcast, atTime, state: DataState) {
         let spellId = spellcast.spellId;
         if (spellId) {
-            let dataModule = state || OvaleData;
-            let gcd = dataModule.GetSpellInfoProperty(spellId, spellcast.start, "gcd", spellcast.target);
+            let gcd:number;
+            if (state) {
+                gcd = state.GetSpellInfoProperty(spellId, spellcast.start, "gcd", spellcast.target);
+            } 
+            else{
+                gcd = OvaleData.GetSpellInfoProperty(spellId, spellcast.start, "gcd", spellcast.target);
+            }
             if (gcd && gcd == 0) {
                 spellcast.offgcd = true;
             }

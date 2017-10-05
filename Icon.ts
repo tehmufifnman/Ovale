@@ -79,7 +79,7 @@ export class OvaleIcon {
         }
         this.frame.Show();
     }
-    Update(element, startTime, actionTexture, actionInRange, actionCooldownStart, actionCooldownDuration, actionUsable, actionShortcut, actionIsCurrent, actionEnable, actionType, actionId, actionTarget, actionResourceExtend) {
+    Update(element, startTime, actionTexture?, actionInRange?, actionCooldownStart?, actionCooldownDuration?, actionUsable?, actionShortcut?, actionIsCurrent?, actionEnable?, actionType?, actionId?, actionTarget?, actionResourceExtend?) {
         this.actionType = actionType;
         this.actionId = actionId;
         this.value = undefined;
@@ -217,7 +217,7 @@ export class OvaleIcon {
     SetHelp(help) {
         this.help = help;
     }
-    SetParams(positionalParams, namedParams, secure) {
+    SetParams(positionalParams, namedParams, secure?) {
         this.positionalParams = positionalParams;
         this.namedParams = namedParams;
         this.actionButton = false;
@@ -327,5 +327,25 @@ export class OvaleIcon {
         if (profile.apparence.clickThru) {
             this.frame.EnableMouse(false);
         }
+    }
+
+    SetPoint(anchor: UIPosition, reference: UIFrame, refAnchor: UIPosition, x:number, y: number) {
+        this.frame.SetPoint(anchor, reference, refAnchor, x, y);
+    }
+
+    Show(){
+        this.frame.Show();
+    }
+
+    Hide() {
+        this.frame.Hide();
+    }
+
+    SetScale(scale) {
+        this.frame.SetScale(scale);
+    }
+
+    EnableMouse(enabled: boolean){
+        this.frame.EnableMouse(enabled);
     }
 }

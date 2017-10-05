@@ -1310,7 +1310,7 @@ const GetItemLevel = function(slotId) {
     self_tooltip.SetInventoryItem("player", slotId);
     let itemLevel;
     for (let i = 2; i <= self_tooltip.NumLines(); i += 1) {
-        let text = _G[`OvaleEquipment_ScanningTooltipTextLeft${i}`].GetText();
+        let text = (<UIGameTooltip>_G[`OvaleEquipment_ScanningTooltipTextLeft${i}`]).GetText();
         if (text) {
             itemLevel = strmatch(text, OVALE_ITEM_LEVEL_PATTERN);
             if (itemLevel) {

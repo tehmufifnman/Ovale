@@ -278,11 +278,14 @@ interface UIFrame  extends UIRegion {
     SetList(list: LuaArray<any>):void;
     SetAlpha(value:number):void;
     SetScript(event:"OnMouseUp" | "OnEnter" | "OnLeave" | "OnMouseDown" | "OnHide" | "OnUpdate", func):void;
+    StartMoving():void;
+    StopMovingOrSizing():void;
+    GetCenter():[number, number];
+    GetParent():UIFrame;
     SetMovable(movable:boolean):void;
     SetFrameStrata(strata: "MEDIUM"):void;
     SetWidth(width:number):void;
     SetHeight(height:number):void;
-    obj:any;
     Show():void;
     Hide():void;   
     IsShown():boolean;
@@ -294,6 +297,7 @@ interface UIFrame  extends UIRegion {
     CreateFontString(name: string, layer?: "OVERLAY", inherits?: string): UIFontString;
     RegisterForClicks(type: "AnyUp"):void;
     SetAttribute(key: string, value: string):void;
+    SetScale(scale: number):void;
 }
 
 interface UIFontString extends UIFrame {
@@ -312,11 +316,12 @@ interface UITexture extends UIFrame {
 }
 interface UIGameTooltip extends UIFrame {
     SetOwner(frame: UIFrame, anchor: UIAnchor):void;
-    SetText(text: string):void;
+    SetText(text: string, r?: number, g?: number, b?: number):void;
     AddLine(text: string, r?: number, g?: number, b?: number):void;
     ClearLines():void;
     SetInventoryItem(unit: string, slot: number):void;
     NumLines():number;
+    GetText():string;
 }
 
 // WOW global functions

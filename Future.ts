@@ -724,7 +724,9 @@ class OvaleFutureClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Regist
         return false;
     }
 
-    InFlight = this.IsActive;
+    InFlight(spellId) {
+        return this.IsActive(spellId);
+    }
 
     LastInFlightSpell() {
         let spellcast;

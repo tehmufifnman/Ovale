@@ -25,38 +25,17 @@ let API_RegisterStateDriver = RegisterStateDriver;
 let INFINITY = math.huge;
 let MIN_REFRESH_TIME = 0.05;
 
-const frameOnClose = function(self) {
-    self.obj.Fire("OnClose");
-}
-const closeOnClick = function(self) {
-    self.obj.Hide();
-}
-const frameOnMouseDown = function(self) {
-    if ((!Ovale.db.profile.apparence.verrouille)) {
-        self.StartMoving();
-        AceGUI.ClearFocus();
-    }
-}
-
-const frameOnMouseUp = function(self) {
-    this.StopMovingOrSizing();
-    const profile = Ovale.db.profile;
-    let [x, y] = this.GetCenter();
-    let [parentX, parentY] = this.GetParent().GetCenter();
-    profile.apparence.offsetX = x - parentX;
-    profile.apparence.offsetY = y - parentY;
-}
-const frameOnEnter = function(self) {
-    const profile = Ovale.db.profile;
-    if (!(profile.apparence.enableIcons && profile.apparence.verrouille)) {
-        this.obj.barre.Show();
-    }
-}
-const frameOnLeave = function(self) {
-    this.obj.barre.Hide();
-}
-const frameOnUpdate = function(self, elapsed) {
-    this.obj.OnUpdate(elapsed);
+interface Action {
+    secure?: boolean;
+    secureIcons: LuaArray<OvaleIcon>;
+    icons: LuaArray<OvaleIcon>;
+    spellId?:number;
+    waitStart?:number;
+    left?:number;
+    top?:number;
+    scale?: number;
+    dx?: number;
+    dy?: number;
 }
 
 class OvaleFrame {
@@ -183,7 +162,7 @@ class OvaleFrame {
             this.timeSinceLastUpdate = 0;
         }
     }
-    UpdateActionIcon(state: BaseState, node, action, element, start, now?) {
+    UpdateActionIcon(state: BaseState, node, action: Action, element, start, now?) {
         const profile = Ovale.db.profile;
         let icons = action.secure && action.secureIcons || action.icons;
         now = now || API_GetTime();
@@ -332,7 +311,7 @@ class OvaleFrame {
             }
             action.secure = node.secure;
             for (let l = 1; l <= nbIcons; l += 1) {
-                let icon;
+                let icon: OvaleIcon;
                 if (!node.secure) {
                     if (!action.icons[l]) {
                         action.icons[l] = new OvaleIcon(`Icon${k}n${l}`, this.frame, false);
@@ -390,12 +369,11 @@ class OvaleFrame {
     type = "Frame";
     frame: UIFrame;
     localstatus = {}
-    actions = {}
+    actions: LuaArray<Action> = {}
     hider: UIFrame;
     updateFrame: UIFrame;
     content: UIFrame;
     timeSinceLastUpdate: number;
-    obj: OvaleFrame;
     barre: UITexture;
     skinGroup: any;
 
@@ -416,26 +394,41 @@ class OvaleFrame {
             this.skinGroup = Masque.Group(Ovale.GetName());
         }
         this.timeSinceLastUpdate = INFINITY;
-        this.obj = undefined;
-        frame.obj = this;
         frame.SetWidth(100);
         frame.SetHeight(100);
         this.UpdateFrame();
         frame.SetMovable(true);
         frame.SetFrameStrata("MEDIUM");
-        frame.SetScript("OnMouseDown", frameOnMouseDown);
-        frame.SetScript("OnMouseUp", frameOnMouseUp);
-        frame.SetScript("OnEnter", frameOnEnter);
-        frame.SetScript("OnLeave", frameOnLeave);
-        frame.SetScript("OnHide", frameOnClose);
+        frame.SetScript("OnMouseDown", () => {
+            if ((!Ovale.db.profile.apparence.verrouille)) {
+                frame.StartMoving();
+                AceGUI.ClearFocus();
+            }
+        });
+        frame.SetScript("OnMouseUp", () => {
+            frame.StopMovingOrSizing();
+            const profile = Ovale.db.profile;
+            let [x, y] = frame.GetCenter();
+            let [parentX, parentY] = frame.GetParent().GetCenter();
+            profile.apparence.offsetX = x - parentX;
+            profile.apparence.offsetY = y - parentY;
+        });
+        frame.SetScript("OnEnter", () => {
+            const profile = Ovale.db.profile;
+            if (!(profile.apparence.enableIcons && profile.apparence.verrouille)) {
+                this.barre.Show();
+            }
+        });
+        frame.SetScript("OnLeave", () => {
+            this.barre.Hide();
+        });
+        frame.SetScript("OnHide", () => this.Hide());
         frame.SetAlpha(profile.apparence.alpha);
-        this.updateFrame.SetScript("OnUpdate", frameOnUpdate);
-        this.updateFrame.obj = this;
+        this.updateFrame.SetScript("OnUpdate", (updateFrame, elapsed) => this.OnUpdate(elapsed));
         this.barre.SetTexture(0, 0.8, 0);
         this.barre.SetPoint("TOPLEFT", 0, 0);
         this.barre.Hide();
         let content = this.content;
-        content.obj = this;
         content.SetWidth(200);
         content.SetHeight(100);
         content.Hide();

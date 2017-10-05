@@ -25,7 +25,6 @@ class OvaleBanditsGuile extends OvaleDebug.RegisterDebugging(OvaleBanditsGuileBa
     ending = 0;
     duration = 15;
     stacks = 0;
-    
     OnInitialize() {
     }
     OnEnable() {

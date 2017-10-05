@@ -784,7 +784,9 @@ class OvaleBestActionClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Re
         return [timeSpan, element];
     }
 
-    Compute = this.PostOrderCompute;
+    Compute(element, state: BaseState, atTime): [OvaleTimeSpan, any] {
+        return this.PostOrderCompute(element, state, atTime);
+    }
 }
 
 OvaleBestAction = new OvaleBestActionClass();
