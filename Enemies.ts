@@ -240,5 +240,5 @@ class EnemiesState implements StateModule {
 }
 
 OvaleEnemies = new OvaleEnemiesClass();
-export const enemiesState = new EnemiesState();
-OvaleState.RegisterState(enemiesState);
+export const EnemiesState = new EnemiesState();
+OvaleState.RegisterState(EnemiesState);

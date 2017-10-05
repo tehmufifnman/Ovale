@@ -3,15 +3,15 @@
 local LibStub = LibStub
 local ADDON_NAME, Addon = ...
 
-if ADDON_NAME then
-  _G[ADDON_NAME] = Addon or {}
-end
+-- if ADDON_NAME then
+--   _G[ADDON_NAME] = Addon or {}
+-- end
 
 local strsub = string.sub
 
 -- Function used by define to call a factory that is ready
 local function call(exports) 
-    print("calling " .. exports.name)
+    -- print("calling " .. exports.name)
     local parameters = {}
     local i = 1
     for _,v in ipairs(exports.imports) do
@@ -119,8 +119,11 @@ end
 
 __class = function(base, prototype) 
   local class = prototype
-  if not class.constructor then class.constructor = function() end end
-  if base and not base.constructor then base.constructor = function() end end
+  if base then
+    if not base.constructor then base.constructor = function() end end
+  else
+    if not class.constructor then class.constructor = function()  end end
+  end
   class.__index = class
   setmetatable(class, {
     __index = base,

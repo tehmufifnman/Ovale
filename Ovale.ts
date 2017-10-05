@@ -16,14 +16,9 @@ let _tostringall = tostringall;
 let _type = type;
 let _unpack = unpack;
 let _wipe = wipe;
-let API_GetItemInfo = GetItemInfo;
 let API_GetTime = GetTime;
-let API_UnitCanAttack = UnitCanAttack;
 let API_UnitClass = UnitClass;
-let API_UnitExists = UnitExists;
 let API_UnitGUID = UnitGUID;
-let API_UnitHasVehicleUI = UnitHasVehicleUI;
-let API_UnitIsDead = UnitIsDead;
 let _DEFAULT_CHAT_FRAME = DEFAULT_CHAT_FRAME;
 let INFINITY = math.huge;
 let OVALE_VERSION = "7.3.0.2";
@@ -137,36 +132,18 @@ export interface OvaleDb {
     global: any;
 }
 
-class OvaleClass extends AceAddon.NewAddon("Ovale", "AceEvent-3.0") {
+const OvaleBase = AceAddon.NewAddon("Ovale", "AceEvent-3.0");
+class OvaleClass extends OvaleBase {
     playerClass = _select(2, API_UnitClass("player"));
     playerGUID: string = undefined;
     db: OvaleDb = undefined;
-    frame = undefined;
-    checkBox = {
-    }
-    list = {
-    }
-    checkBoxWidget = {
-    }
-    listWidget = {
-    }
     refreshNeeded:LuaObj<boolean> = {}
     inCombat = false;
     MSG_PREFIX = "Ovale";
 
-    OnCheckBoxValueChanged(widget) {
-        let name = widget.GetUserData("name");
-        this.db.profile.check[name] = widget.GetValue();
-        this.SendMessage("Ovale_CheckBoxValueChanged", name);
-    }
 
-    OnDropDownValueChanged = function(widget) {
-        let name = widget.GetUserData("name");
-        this.db.profile.list[name] = widget.GetValue();
-        this.SendMessage("Ovale_ListValueChanged", name);
-    }
-
-    OnInitialize() {
+    constructor() {
+        super();
         _G["BINDING_HEADER_OVALE"] = "Ovale";
         let toggleCheckBox = L["Inverser la boîte à cocher "];
         _G["BINDING_NAME_OVALE_CHECKBOX0"] = `${toggleCheckBox}(1)`;
@@ -174,48 +151,22 @@ class OvaleClass extends AceAddon.NewAddon("Ovale", "AceEvent-3.0") {
         _G["BINDING_NAME_OVALE_CHECKBOX2"] = `${toggleCheckBox}(3)`;
         _G["BINDING_NAME_OVALE_CHECKBOX3"] = `${toggleCheckBox}(4)`;
         _G["BINDING_NAME_OVALE_CHECKBOX4"] = `${toggleCheckBox}(5)`;
-    }
-
-    OnEnable() {
+    
         this.playerGUID = API_UnitGUID("player");
         this.RegisterEvent("PLAYER_ENTERING_WORLD");
-        this.RegisterEvent("PLAYER_TARGET_CHANGED");
-        this.RegisterMessage("Ovale_CombatStarted");
-        this.RegisterMessage("Ovale_OptionChanged");
-        this.frame = AceGUI.Create("OvaleFrame");
-        this.UpdateFrame();
     }
 
-    OnDisable() {
-        this.UnregisterEvent("PLAYER_ENTERING_WORLD");
-        this.UnregisterEvent("PLAYER_TARGET_CHANGED");
-        this.UnregisterMessage("Ovale_CombatEnded");
-        this.UnregisterMessage("Ovale_OptionChanged");
-        this.frame.Hide();
-    }
+    // OnDisable() {
+    //     this.UnregisterEvent("PLAYER_ENTERING_WORLD");
+    //     this.UnregisterEvent("PLAYER_TARGET_CHANGED");
+    //     this.UnregisterMessage("Ovale_CombatEnded");
+    //     this.UnregisterMessage("Ovale_OptionChanged");
+    //     this.frame.Hide();
+    // }
     PLAYER_ENTERING_WORLD() {
         _wipe(self_refreshIntervals);
         self_refreshIndex = 1;
         this.ClearOneTimeMessages();
-    }
-    PLAYER_TARGET_CHANGED() {
-        this.UpdateVisibility();
-    }
-    Ovale_CombatStarted(event, atTime) {
-        this.UpdateVisibility();
-    }
-    Ovale_CombatEnded(event, atTime) {
-        this.UpdateVisibility();
-    }
-    Ovale_OptionChanged(event, eventType) {
-        if (eventType == "visibility") {
-            this.UpdateVisibility();
-        } else {
-            if (eventType == "layout") {
-                this.frame.UpdateFrame();
-            }
-            this.UpdateFrame();
-        }
     }
     IsPreloaded(moduleList) {
         let preloaded = true;
@@ -224,130 +175,7 @@ class OvaleClass extends AceAddon.NewAddon("Ovale", "AceEvent-3.0") {
         }
         return preloaded;
     }
-    ToggleOptions() {
-        this.frame.ToggleOptions();
-    }
-    UpdateVisibility() {
-        let visible = true;
-        let profile = this.db.profile;
-        if (!profile.apparence.enableIcons) {
-            visible = false;
-        } else if (!this.frame.hider.IsVisible()) {
-            visible = false;
-        } else {
-            if (profile.apparence.hideVehicule && API_UnitHasVehicleUI("player")) {
-                visible = false;
-            }
-            if (profile.apparence.avecCible && !API_UnitExists("target")) {
-                visible = false;
-            }
-            if (profile.apparence.enCombat && !this.inCombat) {
-                visible = false;
-            }
-            if (profile.apparence.targetHostileOnly && (API_UnitIsDead("target") || !API_UnitCanAttack("player", "target"))) {
-                visible = false;
-            }
-        }
-        if (visible) {
-            this.frame.Show();
-        } else {
-            this.frame.Hide();
-        }
-    }
-    ResetControls() {
-        _wipe(this.checkBox);
-        _wipe(this.list);
-    }
-    UpdateControls() {
-        let profile = this.db.profile;
-        _wipe(this.checkBoxWidget);
-        for (const [name, checkBox] of _pairs(this.checkBox)) {
-            if (checkBox.text) {
-                let widget = AceGUI.Create("CheckBox");
-                let text = this.FinalizeString(checkBox.text);
-                widget.SetLabel(text);
-                if (profile.check[name] == undefined) {
-                    profile.check[name] = checkBox.checked;
-                }
-                if (profile.check[name]) {
-                    widget.SetValue(profile.check[name]);
-                }
-                widget.SetUserData("name", name);
-                widget.SetCallback("OnValueChanged", this.OnCheckBoxValueChanged);
-                this.frame.AddChild(widget);
-                this.checkBoxWidget[name] = widget;
-            } else {
-                this.OneTimeMessage("Warning: checkbox '%s' is used but not defined.", name);
-            }
-        }
-        _wipe(this.listWidget);
-        for (const [name, list] of _pairs(this.list)) {
-            if (_next(list.items)) {
-                let widget = AceGUI.Create("Dropdown");
-                widget.SetList(list.items);
-                if (!profile.list[name]) {
-                    profile.list[name] = list.default;
-                }
-                if (profile.list[name]) {
-                    widget.SetValue(profile.list[name]);
-                }
-                widget.SetUserData("name", name);
-                widget.SetCallback("OnValueChanged", this.OnDropDownValueChanged);
-                this.frame.AddChild(widget);
-                this.listWidget[name] = widget;
-            } else {
-                this.OneTimeMessage("Warning: list '%s' is used but has no items.", name);
-            }
-        }
-    }
-    UpdateFrame() {
-        this.frame.ReleaseChildren();
-        this.frame.UpdateIcons();
-        this.UpdateControls();
-        this.UpdateVisibility();
-    }
-    GetCheckBox(name) {
-        let widget;
-        if (_type(name) == "string") {
-            widget = this.checkBoxWidget[name];
-        } else if (_type(name) == "number") {
-            let k = 0;
-            for (const [_, frame] of _pairs(this.checkBoxWidget)) {
-                if (k == name) {
-                    widget = frame;
-                    break;
-                }
-                k = k + 1;
-            }
-        }
-        return widget;
-    }
-    IsChecked(name) {
-        let widget = this.GetCheckBox(name);
-        return widget && widget.GetValue();
-    }
-    GetListValue(name) {
-        let widget = this.listWidget[name];
-        return widget && widget.GetValue();
-    }
-    SetCheckBox(name, on) {
-        let widget = this.GetCheckBox(name);
-        if (widget) {
-            let oldValue = widget.GetValue();
-            if (oldValue != on) {
-                widget.SetValue(on);
-                this.OnCheckBoxValueChanged(widget);
-            }
-        }
-    }
-    ToggleCheckBox(name) {
-        let widget = this.GetCheckBox(name);
-        if (widget) {
-            let on = !widget.GetValue();
-            widget.SetValue(on);
-            this.OnCheckBoxValueChanged(widget);
-        }
-    }
+    
     AddRefreshInterval(milliseconds) {
         if (milliseconds < INFINITY) {
             self_refreshIntervals[self_refreshIndex] = milliseconds;
@@ -371,13 +199,7 @@ class OvaleClass extends AceAddon.NewAddon("Ovale", "AceEvent-3.0") {
         let avgRefresh = (count > 0) && (sumRefresh / count) || 0;
         return [avgRefresh, minRefresh, maxRefresh, count];
     }
-    FinalizeString(s) {
-        let [item, id] = strmatch(s, "^(item:)(.+)");
-        if (item) {
-            s = API_GetItemInfo(id);
-        }
-        return s;
-    }
+    
     
     OneTimeMessage(...__args) {
         let s = MakeString(...__args);

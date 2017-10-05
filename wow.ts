@@ -264,6 +264,8 @@ type UIPosition = "TOPLEFT" | "CENTER";
 type UIAnchor = "ANCHOR_BOTTOMLEFT" | "ANCHOR_NONE";
 
 interface UIRegion {
+    GetParent():UIRegion;
+    SetParent(parent: UIRegion):void;
     SetAllPoints(around: UIFrame):void;
     SetPoint(anchor: UIPosition, x:number, y: number):void;
     SetPoint(anchor: UIPosition, reference: UIFrame, refAnchor: UIPosition, x:number, y: number):void;
@@ -274,6 +276,7 @@ interface UIFrame  extends UIRegion {
     SetLabel(label: string);
     SetValue(value: string);
     SetUserData(key: string, value: string);
+    GetUserData(key: string):string;
     SetCallback(event: string, callback: (widget: UIFrame) => void);
     SetList(list: LuaArray<any>):void;
     SetAlpha(value:number):void;
@@ -281,7 +284,6 @@ interface UIFrame  extends UIRegion {
     StartMoving():void;
     StopMovingOrSizing():void;
     GetCenter():[number, number];
-    GetParent():UIFrame;
     SetMovable(movable:boolean):void;
     SetFrameStrata(strata: "MEDIUM"):void;
     SetWidth(width:number):void;
@@ -298,6 +300,7 @@ interface UIFrame  extends UIRegion {
     RegisterForClicks(type: "AnyUp"):void;
     SetAttribute(key: string, value: string):void;
     SetScale(scale: number):void;
+    IsVisible():boolean;
 }
 
 interface UIFontString extends UIFrame {
@@ -309,6 +312,7 @@ interface UIFontString extends UIFrame {
 
 interface UICheckButton extends UIFrame {
     SetChecked(checked: boolean):void;
+    GetChecked():boolean;
 }
 
 interface UITexture extends UIFrame {
@@ -483,10 +487,11 @@ function UnitStagger(unit: string){return 0}
 function GetSpellCharges(spellId: number) {return []}
 function GetSpellCooldown(type, book?):[number, number, boolean]{ return [0, 0, false]}
 function GetLocale() { return "en-US"}
-function CreateFrame(type:"GameTooltip", id:string, parent?:UIFrame, template?:string):UIGameTooltip;
-function CreateFrame(type:"CheckButton", id:string, parent?:UIFrame, template?:string):UICheckButton;
-function CreateFrame(type:"Frame", id:string, parent?:UIFrame, template?:string):UIFrame;
-function CreateFrame(type:string, id:string, parent?:UIFrame, template?:string):UIFrame { return undefined}
+function CreateFrame(type:"GameTooltip", id?:string, parent?:UIFrame, template?:string):UIGameTooltip;
+function CreateFrame(type:"CheckButton", id?:string, parent?:UIFrame, template?:string):UICheckButton;
+function CreateFrame(type:"Dropdown", id?:string, parent?:UIFrame, template?:string):UIFrame;
+function CreateFrame(type:"Frame", id?:string, parent?:UIFrame, template?:string):UIFrame;
+function CreateFrame(type:string, id?:string, parent?:UIFrame, template?:string):UIFrame { return undefined}
 function EasyMenu(menu, self_menuFrame, cursor, x, y, menuType) {}
 function IsShiftKeyDown(){}
 function GetSpecialization(){return "havoc"}

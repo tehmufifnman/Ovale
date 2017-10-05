@@ -11,17 +11,24 @@ import { OvaleState, baseState, BaseState } from "./State";
 import { OvaleTimeSpan } from "./TimeSpan";
 import { Ovale } from "./Ovale";
 import { OvaleIcon } from "./Icon";
-import { enemiesState } from "./Enemies";
-let Type = `${Ovale.GetName()}Frame`;
+import { EnemiesState } from "./Enemies";
+let Type = `OvaleFrame`;
 let Version = 7;
 let _ipairs = ipairs;
 let _next = next;
 let _pairs = pairs;
 let _tostring = tostring;
 let _wipe = wipe;
+let _type = type;
+let strmatch = string.match;
 let API_CreateFrame = CreateFrame;
+let API_GetItemInfo = GetItemInfo;
 let API_GetTime = GetTime;
 let API_RegisterStateDriver = RegisterStateDriver;
+let API_UnitHasVehicleUI = UnitHasVehicleUI;
+let API_UnitExists = UnitExists;
+let API_UnitIsDead = UnitIsDead;
+let API_UnitCanAttack = UnitCanAttack;
 let INFINITY = math.huge;
 let MIN_REFRESH_TIME = 0.05;
 
@@ -38,7 +45,13 @@ interface Action {
     dy?: number;
 }
 
-class OvaleFrame {
+const OvaleFrameBase = Ovale.NewModule("OvaleFrame", "AceEvent-3.0");
+class OvaleFrame extends OvaleFrameBase {
+    checkBox = {}
+    list = {}
+    checkBoxWidget = {}
+    listWidget = {}
+        
     ToggleOptions() {
         if ((this.content.IsShown())) {
             this.content.Hide();
@@ -110,6 +123,57 @@ class OvaleFrame {
         }
         return 0;
     }
+
+    Ovale_OptionChanged(event, eventType) {
+        if (eventType == "visibility") {
+            this.UpdateVisibility();
+        }
+        else {
+            if (eventType == "layout") {
+                this.UpdateFrame(); // TODO
+            }
+            this.UpdateFrame();
+        }    
+    }
+
+    PLAYER_TARGET_CHANGED() {
+        this.UpdateVisibility();
+    }
+    Ovale_CombatStarted(event, atTime) {
+        this.UpdateVisibility();
+    }
+    Ovale_CombatEnded(event, atTime) {
+        this.UpdateVisibility();
+    }
+    
+    UpdateVisibility() {
+        let visible = true;
+        let profile = Ovale.db.profile;
+        if (!profile.apparence.enableIcons) {
+            visible = false;
+        } else if (!this.hider.IsVisible()) {
+            visible = false;
+        } else {
+            if (profile.apparence.hideVehicule && API_UnitHasVehicleUI("player")) {
+                visible = false;
+            }
+            if (profile.apparence.avecCible && !API_UnitExists("target")) {
+                visible = false;
+            }
+            if (profile.apparence.enCombat && !Ovale.inCombat) {
+                visible = false;
+            }
+            if (profile.apparence.targetHostileOnly && (API_UnitIsDead("target") || !API_UnitCanAttack("player", "target"))) {
+                visible = false;
+            }
+        }
+        if (visible) {
+            this.Show();
+        } else {
+            this.Hide();
+        }
+    }
+
     OnUpdate(elapsed) {
         let guid = OvaleGUID.UnitGUID("target") || OvaleGUID.UnitGUID("focus");
         if (guid) {
@@ -121,7 +185,7 @@ class OvaleFrame {
             Ovale.AddRefreshInterval(this.timeSinceLastUpdate * 1000);
             OvaleState.InitializeState();
             if (OvaleCompile.EvaluateScript()) {
-                Ovale.UpdateFrame();
+                this.UpdateFrame();
             }
             const profile = Ovale.db.profile;
             let iconNodes = OvaleCompile.GetIconNodes();
@@ -132,9 +196,9 @@ class OvaleFrame {
                     baseState.defaultTarget = "target";
                 }
                 if (node.namedParams && node.namedParams.enemies) {
-                    enemiesState.enemies = node.namedParams.enemies;
+                    EnemiesState.enemies = node.namedParams.enemies;
                 } else {
-                    enemiesState.enemies = undefined;
+                    EnemiesState.enemies = undefined;
                 }
                 OvaleState.Log("+++ Icon %d", k);
                 OvaleBestAction.StartNewAction();
@@ -247,7 +311,124 @@ class OvaleFrame {
         const profile = Ovale.db.profile;
         this.frame.SetPoint("CENTER", this.hider, "CENTER", profile.apparence.offsetX, profile.apparence.offsetY);
         this.frame.EnableMouse(!profile.apparence.clickThru);
+        // this.frame.ReleaseChildren();
+        this.UpdateIcons();
+        this.UpdateControls();
+        this.UpdateVisibility();
     }
+
+    ResetControls() {
+        _wipe(this.checkBox);
+        _wipe(this.list);
+    }
+    
+    
+    GetCheckBox(name) {
+        let widget;
+        if (_type(name) == "string") {
+            widget = this.checkBoxWidget[name];
+        } else if (_type(name) == "number") {
+            let k = 0;
+            for (const [_, frame] of _pairs(this.checkBoxWidget)) {
+                if (k == name) {
+                    widget = frame;
+                    break;
+                }
+                k = k + 1;
+            }
+        }
+        return widget;
+    }
+    IsChecked(name) {
+        let widget = this.GetCheckBox(name);
+        return widget && widget.GetValue();
+    }
+    GetListValue(name) {
+        let widget = this.listWidget[name];
+        return widget && widget.GetValue();
+    }
+    SetCheckBox(name, on) {
+        let widget = this.GetCheckBox(name);
+        if (widget) {
+            let oldValue = widget.GetValue();
+            if (oldValue != on) {
+                widget.SetValue(on);
+                this.OnCheckBoxValueChanged(widget);
+            }
+        }
+    }
+    ToggleCheckBox(name) {
+        let widget = this.GetCheckBox(name);
+        if (widget) {
+            let on = !widget.GetValue();
+            widget.SetValue(on);
+            this.OnCheckBoxValueChanged(widget);
+        }
+    }
+
+    OnCheckBoxValueChanged = (widget: UIFrame) => {
+        let name = widget.GetUserData("name");
+        Ovale.db.profile.check[name] = widget.GetValue();
+        this.SendMessage("Ovale_CheckBoxValueChanged", name);
+    }
+
+    OnDropDownValueChanged = (widget: UIFrame) => {
+        let name = widget.GetUserData("name");
+        Ovale.db.profile.list[name] = widget.GetValue();
+        this.SendMessage("Ovale_ListValueChanged", name);
+    }
+    FinalizeString(s) {
+        let [item, id] = strmatch(s, "^(item:)(.+)");
+        if (item) {
+            s = API_GetItemInfo(id);
+        }
+        return s;
+    }
+
+    UpdateControls() {
+        let profile = Ovale.db.profile;
+        _wipe(this.checkBoxWidget);
+        for (const [name, checkBox] of _pairs(this.checkBox)) {
+            if (checkBox.text) {
+                let widget = AceGUI.Create("CheckBox");
+                let text = this.FinalizeString(checkBox.text);
+                widget.SetLabel(text);
+                if (profile.check[name] == undefined) {
+                    profile.check[name] = checkBox.checked;
+                }
+                if (profile.check[name]) {
+                    widget.SetValue(profile.check[name]);
+                }
+                widget.SetUserData("name", name);
+                widget.SetCallback("OnValueChanged", this.OnCheckBoxValueChanged);
+                widget.SetParent(this.frame);
+                this.checkBoxWidget[name] = widget;
+            } else {
+                Ovale.OneTimeMessage("Warning: checkbox '%s' is used but not defined.", name);
+            }
+        }
+        _wipe(this.listWidget);
+        for (const [name, list] of _pairs(this.list)) {
+            if (_next(list.items)) {
+                let widget = AceGUI.Create("Dropdown");
+                widget.SetList(list.items);
+                if (!profile.list[name]) {
+                    profile.list[name] = list.default;
+                }
+                if (profile.list[name]) {
+                    widget.SetValue(profile.list[name]);
+                }
+                widget.SetUserData("name", name);
+                widget.SetCallback("OnValueChanged", this.OnDropDownValueChanged);
+                widget.SetParent(this.frame);
+                this.listWidget[name] = widget;
+            } else {
+                Ovale.OneTimeMessage("Warning: list '%s' is used but has no items.", name);
+            }
+        }
+    }
+    
+
     UpdateIcons() {
         for (const [k, action] of _pairs(this.actions)) {
             for (const [i, icon] of _pairs(action.icons)) {
@@ -378,6 +559,7 @@ class OvaleFrame {
     skinGroup: any;
 
     constructor() {
+        super();
         let hider = API_CreateFrame("Frame", `${Ovale.GetName()}PetBattleFrameHider`, UIParent, "SecureHandlerStateTemplate");
         hider.SetAllPoints(this.frame);
         API_RegisterStateDriver(hider, "visibility", "[petbattle] hide; show");
@@ -434,7 +616,10 @@ class OvaleFrame {
         content.Hide();
         content.SetAlpha(profile.apparence.optionsAlpha);
         AceGUI.RegisterAsContainer(this);
+        this.RegisterMessage("Ovale_OptionChanged");
+        this.RegisterMessage("Ovale_CombatStarted");
+        this.RegisterEvent("PLAYER_TARGET_CHANGED");
     }
 }
 
-AceGUI.RegisterWidgetType(Type, OvaleFrame, Version);
+const frame = new OvaleFrame();

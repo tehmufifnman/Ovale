@@ -73,10 +73,10 @@ class OvaleOptionsClass extends OvaleOptionsBase {
             apparence: {
                 name: Ovale.GetName(),
                 type: "group",
-                get: function (info) {
+                get: (info) => {
                     return Ovale.db.profile.apparence[info[lualength(info)]];
                 },
-                set: function (info, value) {
+                set: (info, value) => {
                     Ovale.db.profile.apparence[info[lualength(info)]] = value;
                     this.SendMessage("Ovale_OptionChanged", info[lualength(info) - 1]);
                 },
