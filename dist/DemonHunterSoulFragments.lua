@@ -88,12 +88,12 @@ local spairs = function(t, order)
         keys[#keys + 1] = k
     end
     if order then
-        table:sort(keys, function(a, b)
+        table.sort(keys, function(a, b)
             return order(t, a, b)
         end
 )
     else
-        table:sort(keys)
+        table.sort(keys)
     end
     local i = 0
     return function()

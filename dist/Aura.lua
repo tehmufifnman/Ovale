@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Aura", { "./Localization", "./Debug", "./Pool", "./Profiler", "./Data", "./Future", "./GUID", "./PaperDoll", "./SpellBook", "./State", "./Ovale" }, function(__exports, __Localization, __Debug, __Pool, __Profiler, __Data, __Future, __GUID, __PaperDoll, __SpellBook, __State, __Ovale)
+__addon.require(__addonName, __addon, "./Aura", { "./Localization", "./Debug", "./Pool", "./Profiler", "./Data", "./GUID", "./PaperDoll", "./SpellBook", "./State", "./Ovale", "./LastSpell" }, function(__exports, __Localization, __Debug, __Pool, __Profiler, __Data, __GUID, __PaperDoll, __SpellBook, __State, __Ovale, __LastSpell)
 local OvaleAuraBase = __Ovale.Ovale:NewModule("OvaleAura", "AceEvent-3.0")
 local bit_band = bit.band
 local bit_bor = bit.bor
@@ -141,7 +141,7 @@ end
 local GetAura = function(auraDB, guid, auraId, casterGUID)
     if auraDB[guid] and auraDB[guid][auraId] and auraDB[guid][auraId][casterGUID] then
         if auraId == 215570 then
-            local spellcast = __Future.OvaleFuture:LastInFlightSpell()
+            local spellcast = __LastSpell.lastSpell:LastInFlightSpell()
             if spellcast and spellcast.spellId and spellcast.spellId == 190411 and spellcast.start then
                 local aura = auraDB[guid][auraId][casterGUID]
                 if aura.start and aura.start < spellcast.start then
@@ -510,9 +510,9 @@ local OvaleAuraClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(__Debu
             aura.value1, aura.value2, aura.value3 = value1, value2, value3
             local mine = (casterGUID == self_playerGUID or __GUID.OvaleGUID:IsPlayerPet(casterGUID))
             if mine then
-                local spellcast = __Future.OvaleFuture:LastInFlightSpell()
+                local spellcast = __LastSpell.lastSpell:LastInFlightSpell()
                 if spellcast and spellcast.stop and  not IsWithinAuraLag(spellcast.stop, atTime) then
-                    spellcast = __Future.OvaleFuture.lastSpellcast
+                    spellcast = __LastSpell.lastSpell.lastSpellcast
                     if spellcast and spellcast.stop and  not IsWithinAuraLag(spellcast.stop, atTime) then
                         spellcast = nil
                     end
@@ -537,7 +537,7 @@ local OvaleAuraClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(__Debu
                         self:Debug("    Keeping snapshot stats for %s %s (%d) on %s refreshed by %s (%d) from %f, now=%f, aura.serial=%d", filter, name, auraId, guid, spellName, spellId, aura.snapshotTime, atTime, aura.serial)
                     else
                         self:Debug("    Snapshot stats for %s %s (%d) on %s applied by %s (%d) from %f, now=%f, aura.serial=%d", filter, name, auraId, guid, spellName, spellId, spellcast.snapshotTime, atTime, aura.serial)
-                        __Future.OvaleFuture:CopySpellcastInfo(spellcast, aura)
+                        __LastSpell.lastSpell:CopySpellcastInfo(spellcast, aura)
                     end
                 end
                 local si = __Data.OvaleData.spellInfo[auraId]
@@ -587,9 +587,9 @@ local OvaleAuraClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(__Debu
                 if aura.start + aura.duration > aura.ending then
                     local spellcast
                     if guid == self_playerGUID then
-                        spellcast = __Future.OvaleFuture:LastSpellSent()
+                        spellcast = __LastSpell.lastSpell:LastSpellSent()
                     else
-                        spellcast = __Future.OvaleFuture.lastSpellcast
+                        spellcast = __LastSpell.lastSpell.lastSpellcast
                     end
                     if spellcast then
                         if (spellcast.success and spellcast.stop and IsWithinAuraLag(spellcast.stop, aura.ending)) or (spellcast.queued and IsWithinAuraLag(spellcast.queued, aura.ending)) then
@@ -1121,7 +1121,7 @@ local AuraState = __class(nil, {
                             if keepSnapshot then
                                 __exports.OvaleAura:Log("Aura %d keeping previous snapshot.", auraId)
                             elseif spellcast then
-                                __Future.OvaleFuture:CopySpellcastInfo(spellcast, aura)
+                                __LastSpell.lastSpell:CopySpellcastInfo(spellcast, aura)
                             end
                         elseif stacks == 0 or stacks < 0 then
                             if stacks == 0 then
@@ -1166,7 +1166,7 @@ local AuraState = __class(nil, {
                             aura.ending = aura.start + aura.duration
                             aura.gain = aura.start
                             if spellcast then
-                                __Future.OvaleFuture:CopySpellcastInfo(spellcast, aura)
+                                __LastSpell.lastSpell:CopySpellcastInfo(spellcast, aura)
                             end
                         end
                     end

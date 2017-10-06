@@ -462,8 +462,6 @@ local OvaleFrame = __class(AceGUI.WidgetContainerBase, {
         end
     end,
     constructor = function(self)
-    print("Frame constructor");
-        
         self.checkBox = {}
         self.list = {}
         self.checkBoxWidget = {}
@@ -541,8 +539,7 @@ local OvaleFrame = __class(AceGUI.WidgetContainerBase, {
         content:SetAlpha(profile.apparence.optionsAlpha)
     end,
 })
-local OvaleFrameWidget = AceGUIRegisterAsContainer(OvaleFrame)
-print("instancie")
+local OvaleFrameWidget = AceGUI:RegisterAsContainer(OvaleFrame)
 __exports.frame = OvaleFrameWidget()
 local OvaleFrameBase = __Ovale.Ovale:NewModule("OvaleFrame", "AceEvent-3.0")
 local OvaleFrameModuleClass = __class(OvaleFrameBase, {

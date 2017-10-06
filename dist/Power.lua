@@ -192,10 +192,10 @@ local OvalePowerClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.
         for powerType in _pairs(self.POWER_INFO) do
             __Data.OvaleData:RegisterRequirement(powerType, "RequirePowerHandler", self)
         end
-        __Future.OvaleFuture:RegisterSpellcastInfo(self)
+        __Future.OvaleFuture.RegisterSpellcastInfo(self)
     end,
     OnDisable = function(self)
-        __Future.OvaleFuture:UnregisterSpellcastInfo(self)
+        __Future.OvaleFuture.UnregisterSpellcastInfo(self)
         for powerType in _pairs(self.POWER_INFO) do
             __Data.OvaleData:UnregisterRequirement(powerType)
         end

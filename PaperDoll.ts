@@ -3,9 +3,9 @@ import { OvaleDebug } from "./Debug";
 import { OvaleProfiler } from "./Profiler";
 import { Ovale } from "./Ovale";
 import { OvaleEquipment } from "./Equipment";
-import { OvaleFuture } from "./Future";
 import { OvaleStance } from "./Stance";
 import { OvaleState, StateModule } from "./State";
+import { lastSpell, SpellCast } from "./LastSpell";
 
 let OvalePaperDollBase = Ovale.NewModule("OvalePaperDoll", "AceEvent-3.0");
 export let OvalePaperDoll: OvalePaperDollClass;
@@ -206,10 +206,10 @@ class OvalePaperDollClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
         this.RegisterMessage("Ovale_EquipmentChanged", "UpdateDamage");
         this.RegisterMessage("Ovale_StanceChanged", "UpdateDamage");
         this.RegisterMessage("Ovale_TalentsChanged", "UpdateStats");
-        OvaleFuture.RegisterSpellcastInfo(this);
+        lastSpell.RegisterSpellcastInfo(this);
     }
     OnDisable() {
-        OvaleFuture.UnregisterSpellcastInfo(this);
+        lastSpell.UnregisterSpellcastInfo(this);
         this.UnregisterEvent("COMBAT_RATING_UPDATE");
         this.UnregisterEvent("MASTERY_UPDATE");
         this.UnregisterEvent("MULTISTRIKE_UPDATE");
@@ -465,10 +465,10 @@ class OvalePaperDollClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
             tbl[k] = snapshot[k];
         }
     }
-    CopySpellcastInfo(spellcast, dest) {
+    CopySpellcastInfo = (module: OvalePaperDollClass, spellcast: SpellCast, dest: SpellCast) => {
         this.UpdateSnapshot(dest, spellcast, true);
     }
-    SaveSpellcastInfo(spellcast, atTime, state: PaperDollState) {
+    SaveSpellcastInfo = (module: OvalePaperDollClass, spellcast: SpellCast, atTime: number, state: PaperDollState) => {
         let paperDollModule = state || this;
         this.UpdateSnapshot(spellcast, true);
     }

@@ -783,7 +783,7 @@ end
 do
     local Enemies = function(positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
-        local value = __Enemies.enemiesState.enemies
+        local value = __Enemies.EnemiesState.enemies
         if  not value then
             local useTagged = __Ovale.Ovale.db.profile.apparence.taggedEnemies
             if namedParams.tagged == 0 then
@@ -791,7 +791,7 @@ do
             elseif namedParams.tagged == 1 then
                 useTagged = true
             end
-            value = useTagged and __Enemies.enemiesState.taggedEnemies or __Enemies.enemiesState.activeEnemies
+            value = useTagged and __Enemies.EnemiesState.taggedEnemies or __Enemies.EnemiesState.activeEnemies
         end
         if value < 1 then
             value = 1
@@ -891,7 +891,7 @@ do
         local target = __Condition.ParseCondition(positionalParams, namedParams, state, "target")
         if __Future.futureState.lastSpellId then
             local duration = __Cooldown.cooldownState:GetGCD(__Future.futureState.lastSpellId, atTime, __GUID.OvaleGUID:UnitGUID(target))
-            local spellcast = __Future.OvaleFuture:LastInFlightSpell()
+            local spellcast = __Future.OvaleFuture.LastInFlightSpell()
             local start = (spellcast and spellcast.start) or 0
             local ending = start + duration
             if atTime < ending then

@@ -62,12 +62,12 @@ local OvaleComboPointsClass = __class(__Ovale.RegisterPrinter(__Profiler.OvalePr
             self:RegisterMessage("Ovale_SpellFinished")
             self:RegisterMessage("Ovale_TalentsChanged")
             __Data.OvaleData:RegisterRequirement("combo", "RequireComboPointsHandler", self)
-            __Future.OvaleFuture:RegisterSpellcastInfo(self)
+            __Future.OvaleFuture.RegisterSpellcastInfo(self)
         end
     end,
     OnDisable = function(self)
         if __Ovale.Ovale.playerClass == "ROGUE" or __Ovale.Ovale.playerClass == "DRUID" then
-            __Future.OvaleFuture:UnregisterSpellcastInfo(self)
+            __Future.OvaleFuture.UnregisterSpellcastInfo(self)
             __Data.OvaleData:UnregisterRequirement("combo")
             self:UnregisterEvent("PLAYER_ENTERING_WORLD")
             self:UnregisterEvent("PLAYER_TARGET_CHANGED")
@@ -248,15 +248,14 @@ local OvaleComboPointsClass = __class(__Ovale.RegisterPrinter(__Profiler.OvalePr
         if spellId then
             local si = __Data.OvaleData.spellInfo[spellId]
             if si then
-                local dataModule
-                if state ~= nil then
-                    dataModule = __Data.dataState
-                else
-                    dataModule = __Data.OvaleData
-                end
                 local comboPointModule = state or self
                 if si.combo == "finisher" then
-                    local combo = dataModule.GetSpellInfoProperty(spellId, atTime, "combo", spellcast.target)
+                    local combo
+                    if state then
+                        combo = __Data.dataState:GetSpellInfoProperty(spellId, atTime, "combo", spellcast.target)
+                    else
+                        combo = __Data.OvaleData:GetSpellInfoProperty(spellId, atTime, "combo", spellcast.target)
+                    end
                     if combo == "finisher" then
                         local min_combo = si.min_combo or si.mincombo or 1
                         if comboPointModule.combo >= min_combo then

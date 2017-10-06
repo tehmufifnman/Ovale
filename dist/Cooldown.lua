@@ -74,11 +74,11 @@ local OvaleCooldownClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profil
         self:RegisterEvent("UNIT_SPELLCAST_START", "Update")
         self:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED", "Update")
         self:RegisterEvent("UPDATE_SHAPESHIFT_COOLDOWN", "Update")
-        __Future.OvaleFuture:RegisterSpellcastInfo(self)
+        __Future.OvaleFuture.RegisterSpellcastInfo(self)
         __Data.OvaleData:RegisterRequirement("oncooldown", "RequireCooldownHandler", self)
     end,
     OnDisable = function(self)
-        __Future.OvaleFuture:UnregisterSpellcastInfo(self)
+        __Future.OvaleFuture.UnregisterSpellcastInfo(self)
         __Data.OvaleData:UnregisterRequirement("oncooldown")
         self:UnregisterEvent("ACTIONBAR_UPDATE_COOLDOWN")
         self:UnregisterEvent("BAG_UPDATE_COOLDOWN")

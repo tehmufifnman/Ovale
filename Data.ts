@@ -3,6 +3,7 @@ import { OvaleGUID } from "./GUID";
 import { OvalePaperDoll } from "./PaperDoll";
 import { OvaleState, StateModule, baseState } from "./State";
 import { OvaleDebug } from "./Debug";
+import { requirement, self_requirement, CheckRequirements } from "./Requirement";
 let OvaleDataBase = Ovale.NewModule("OvaleData");
 let format = string.format;
 let _type = type;
@@ -13,8 +14,7 @@ let _wipe = wipe;
 let INFINITY = math.huge;
 let floor = math.floor;
 let ceil = math.ceil;
-let self_requirement = {
-}
+
 let BLOODELF_CLASSES = {
     ["DEATHKNIGHT"]: true,
     ["DEMONHUNTER"]: true,
@@ -293,15 +293,7 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
     }
     OnDisable() {
     }
-    RegisterRequirement(name, method, arg) {
-        self_requirement[name] = {
-            1: method,
-            2: arg
-        }
-    }
-    UnregisterRequirement(name) {
-        self_requirement[name] = undefined;
-    }
+    
     Reset() {
         _wipe(this.itemInfo);
         _wipe(this.spellInfo);
@@ -384,31 +376,7 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
         }
         return [tag, invokesGCD];
     }
-    CheckRequirements(spellId, atTime, tokens, index, targetGUID):[boolean, string, number] {
-        targetGUID = targetGUID || OvaleGUID.UnitGUID(baseState.defaultTarget || "target");
-        let name = tokens[index];
-        index = index + 1;
-        if (name) {
-            this.Log("Checking requirements:");
-            let verified = true;
-            let requirement = name;
-            while (verified && name) {
-                let handler = self_requirement[name];
-                if (handler) {
-                    let method = handler[1];
-                    let arg = this[method] && this || handler[2];
-                    [verified, requirement, index] = arg[method](arg, spellId, atTime, name, tokens, index, targetGUID);
-                    name = tokens[index];
-                    index = index + 1;
-                } else {
-                    Ovale.OneTimeMessage("Warning: requirement '%s' has no registered handler; FAILING requirement.", name);
-                    verified = false;
-                }
-            }
-            return [verified, requirement, index];
-        }
-        return [true, undefined, undefined];
-    }
+    
     CheckSpellAuraData(auraId, spellData, atTime, guid) {
         guid = guid || OvaleGUID.UnitGUID("player");
         let index, value, data;
@@ -446,7 +414,7 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
         }
         let verified = true;
         if (index) {
-            [verified] = this.CheckRequirements(auraId, atTime, spellData, index, guid);
+            [verified] = CheckRequirements(auraId, atTime, spellData, index, guid);
         }
         return [verified, value, data];
     }
@@ -475,7 +443,7 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
         let requirements = ii && ii.require[property];
         if (requirements) {
             for (const [v, requirement] of _pairs(requirements)) {
-                let verified = this.CheckRequirements(itemId, atTime, requirement, 1, targetGUID);
+                let verified = CheckRequirements(itemId, atTime, requirement, 1, targetGUID);
                 if (verified) {
                     value = _tonumber(v) || v;
                     break;
@@ -491,7 +459,7 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
         let requirements = si && si.require[property];
         if (requirements) {
             for (const [v, requirement] of _pairs(requirements)) {
-                let verified = this.CheckRequirements(spellId, atTime, requirement, 1, targetGUID);
+                let verified = CheckRequirements(spellId, atTime, requirement, 1, targetGUID);
                 if (verified) {
                     value = _tonumber(v) || v;
                     break;
@@ -514,7 +482,7 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
         let multipliers = si && si.require[`${property}_percent`];
         if (multipliers) {
             for (const [v, requirement] of _pairs(multipliers)) {
-                let verified = this.CheckRequirements(spellId, atTime, requirement, 1, targetGUID);
+                let verified = CheckRequirements(spellId, atTime, requirement, 1, targetGUID);
                 if (verified) {
                     ratio = ratio * (_tonumber(v) || 0) / 100;
                 }
@@ -597,7 +565,7 @@ export class DataState implements StateModule {
     ResetState(): void {
     }
     CheckRequirements(spellId, atTime, tokens, index, targetGUID) {
-        return OvaleData.CheckRequirements(spellId, atTime, tokens, index, targetGUID);
+        return CheckRequirements(spellId, atTime, tokens, index, targetGUID);
     }
 
     CheckSpellAuraData(auraId, spellData, atTime, guid) {

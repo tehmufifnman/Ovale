@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./PaperDoll", { "./Localization", "./Debug", "./Profiler", "./Ovale", "./Equipment", "./Future", "./Stance", "./State" }, function(__exports, __Localization, __Debug, __Profiler, __Ovale, __Equipment, __Future, __Stance, __State)
+__addon.require(__addonName, __addon, "./PaperDoll", { "./Localization", "./Debug", "./Profiler", "./Ovale", "./Equipment", "./Stance", "./State", "./LastSpell" }, function(__exports, __Localization, __Debug, __Profiler, __Ovale, __Equipment, __Stance, __State, __LastSpell)
 local OvalePaperDollBase = __Ovale.Ovale:NewModule("OvalePaperDoll", "AceEvent-3.0")
 local _pairs = pairs
 local _select = select
@@ -135,10 +135,10 @@ local OvalePaperDollClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profi
         self:RegisterMessage("Ovale_EquipmentChanged", "UpdateDamage")
         self:RegisterMessage("Ovale_StanceChanged", "UpdateDamage")
         self:RegisterMessage("Ovale_TalentsChanged", "UpdateStats")
-        __Future.OvaleFuture:RegisterSpellcastInfo(self)
+        __LastSpell.lastSpell:RegisterSpellcastInfo(self)
     end,
     OnDisable = function(self)
-        __Future.OvaleFuture:UnregisterSpellcastInfo(self)
+        __LastSpell.lastSpell:UnregisterSpellcastInfo(self)
         self:UnregisterEvent("COMBAT_RATING_UPDATE")
         self:UnregisterEvent("MASTERY_UPDATE")
         self:UnregisterEvent("MULTISTRIKE_UPDATE")
@@ -394,13 +394,6 @@ local OvalePaperDollClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profi
             tbl[k] = snapshot[k]
         end
     end,
-    CopySpellcastInfo = function(self, spellcast, dest)
-        self:UpdateSnapshot(dest, spellcast, true)
-    end,
-    SaveSpellcastInfo = function(self, spellcast, atTime, state)
-        local paperDollModule = state or self
-        self:UpdateSnapshot(spellcast, true)
-    end,
     constructor = function(self)
         self.class = __Ovale.Ovale.playerClass
         self.level = API_UnitLevel("player")
@@ -462,6 +455,13 @@ local OvalePaperDollClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profi
         self.mainHandWeaponDamage = 0
         self.offHandWeaponDamage = 0
         self.baseDamageMultiplier = 1
+        self.CopySpellcastInfo = function(module, spellcast, dest)
+            self:UpdateSnapshot(dest, spellcast, true)
+        end
+        self.SaveSpellcastInfo = function(module, spellcast, atTime, state)
+            local paperDollModule = state or self
+            self:UpdateSnapshot(spellcast, true)
+        end
     end
 })
 local PaperDollState = __class(nil, {

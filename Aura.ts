@@ -3,12 +3,13 @@ import { OvaleDebug } from "./Debug";
 import { OvalePool } from "./Pool";
 import { OvaleProfiler } from "./Profiler";
 import { OvaleData, dataState } from "./Data";
-import { OvaleFuture } from "./Future";
 import { OvaleGUID } from "./GUID";
 import { OvalePaperDoll, paperDollState } from "./PaperDoll";
 import { OvaleSpellBook } from "./SpellBook";
 import { OvaleState, StateModule, baseState } from "./State";
 import { Ovale } from "./Ovale";
+import { lastSpell, SpellCast } from "./LastSpell";
+import { RegisterRequirement, UnregisterRequirement } from "./Requirement";
 let OvaleAuraBase = Ovale.NewModule("OvaleAura", "AceEvent-3.0");
 export let OvaleAura: OvaleAuraClass;
 let bit_band = bit.band;
@@ -172,7 +173,7 @@ const PutAura = function(auraDB, guid, auraId, casterGUID, aura) {
 const GetAura = function(auraDB, guid, auraId, casterGUID) {
     if (auraDB[guid] && auraDB[guid][auraId] && auraDB[guid][auraId][casterGUID]) {
         if (auraId == 215570) {
-            let spellcast = OvaleFuture.LastInFlightSpell();
+            let spellcast = lastSpell.LastInFlightSpell();
             if (spellcast && spellcast.spellId && spellcast.spellId == 190411 && spellcast.start) {
                 let aura = auraDB[guid][auraId][casterGUID];
                 if (aura.start && aura.start < spellcast.start) {
@@ -293,32 +294,32 @@ class OvaleAuraClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Register
         this.RegisterEvent("UNIT_AURA");
         this.RegisterMessage("Ovale_GroupChanged", "ScanAllUnitAuras");
         this.RegisterMessage("Ovale_UnitChanged");
-        OvaleData.RegisterRequirement("buff", "RequireBuffHandler", this);
-        OvaleData.RegisterRequirement("buff_any", "RequireBuffHandler", this);
-        OvaleData.RegisterRequirement("debuff", "RequireBuffHandler", this);
-        OvaleData.RegisterRequirement("debuff_any", "RequireBuffHandler", this);
-        OvaleData.RegisterRequirement("pet_buff", "RequireBuffHandler", this);
-        OvaleData.RegisterRequirement("pet_debuff", "RequireBuffHandler", this);
-        OvaleData.RegisterRequirement("stealth", "RequireStealthHandler", this);
-        OvaleData.RegisterRequirement("stealthed", "RequireStealthHandler", this);
-        OvaleData.RegisterRequirement("target_buff", "RequireBuffHandler", this);
-        OvaleData.RegisterRequirement("target_buff_any", "RequireBuffHandler", this);
-        OvaleData.RegisterRequirement("target_debuff", "RequireBuffHandler", this);
-        OvaleData.RegisterRequirement("target_debuff_any", "RequireBuffHandler", this);
+        RegisterRequirement("buff", "RequireBuffHandler", this);
+        RegisterRequirement("buff_any", "RequireBuffHandler", this);
+        RegisterRequirement("debuff", "RequireBuffHandler", this);
+        RegisterRequirement("debuff_any", "RequireBuffHandler", this);
+        RegisterRequirement("pet_buff", "RequireBuffHandler", this);
+        RegisterRequirement("pet_debuff", "RequireBuffHandler", this);
+        RegisterRequirement("stealth", "RequireStealthHandler", this);
+        RegisterRequirement("stealthed", "RequireStealthHandler", this);
+        RegisterRequirement("target_buff", "RequireBuffHandler", this);
+        RegisterRequirement("target_buff_any", "RequireBuffHandler", this);
+        RegisterRequirement("target_debuff", "RequireBuffHandler", this);
+        RegisterRequirement("target_debuff_any", "RequireBuffHandler", this);
     }
     OnDisable() {
-        OvaleData.UnregisterRequirement("buff");
-        OvaleData.UnregisterRequirement("buff_any");
-        OvaleData.UnregisterRequirement("debuff");
-        OvaleData.UnregisterRequirement("debuff_any");
-        OvaleData.UnregisterRequirement("pet_buff");
-        OvaleData.UnregisterRequirement("pet_debuff");
-        OvaleData.UnregisterRequirement("stealth");
-        OvaleData.UnregisterRequirement("stealthed");
-        OvaleData.UnregisterRequirement("target_buff");
-        OvaleData.UnregisterRequirement("target_buff_any");
-        OvaleData.UnregisterRequirement("target_debuff");
-        OvaleData.UnregisterRequirement("target_debuff_any");
+        UnregisterRequirement("buff");
+        UnregisterRequirement("buff_any");
+        UnregisterRequirement("debuff");
+        UnregisterRequirement("debuff_any");
+        UnregisterRequirement("pet_buff");
+        UnregisterRequirement("pet_debuff");
+        UnregisterRequirement("stealth");
+        UnregisterRequirement("stealthed");
+        UnregisterRequirement("target_buff");
+        UnregisterRequirement("target_buff_any");
+        UnregisterRequirement("target_debuff");
+        UnregisterRequirement("target_debuff_any");
         this.UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
         this.UnregisterEvent("PLAYER_ENTERING_WORLD");
         this.UnregisterEvent("PLAYER_REGEN_ENABLED");
@@ -541,9 +542,9 @@ class OvaleAuraClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Register
             [aura.value1, aura.value2, aura.value3] = [value1, value2, value3];
             let mine = (casterGUID == self_playerGUID || OvaleGUID.IsPlayerPet(casterGUID));
             if (mine) {
-                let spellcast = OvaleFuture.LastInFlightSpell();
+                let spellcast = lastSpell.LastInFlightSpell();
                 if (spellcast && spellcast.stop && !IsWithinAuraLag(spellcast.stop, atTime)) {
-                    spellcast = OvaleFuture.lastSpellcast;
+                    spellcast = lastSpell.lastSpellcast;
                     if (spellcast && spellcast.stop && !IsWithinAuraLag(spellcast.stop, atTime)) {
                         spellcast = undefined;
                     }
@@ -568,7 +569,7 @@ class OvaleAuraClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Register
                         this.Debug("    Keeping snapshot stats for %s %s (%d) on %s refreshed by %s (%d) from %f, now=%f, aura.serial=%d", filter, name, auraId, guid, spellName, spellId, aura.snapshotTime, atTime, aura.serial);
                     } else {
                         this.Debug("    Snapshot stats for %s %s (%d) on %s applied by %s (%d) from %f, now=%f, aura.serial=%d", filter, name, auraId, guid, spellName, spellId, spellcast.snapshotTime, atTime, aura.serial);
-                        OvaleFuture.CopySpellcastInfo(spellcast, aura);
+                        lastSpell.CopySpellcastInfo(spellcast, aura);
                     }
                 }
                 let si = OvaleData.spellInfo[auraId];
@@ -618,9 +619,9 @@ class OvaleAuraClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Register
                 if (aura.start + aura.duration > aura.ending) {
                     let spellcast;
                     if (guid == self_playerGUID) {
-                        spellcast = OvaleFuture.LastSpellSent();
+                        spellcast = lastSpell.LastSpellSent();
                     } else {
-                        spellcast = OvaleFuture.lastSpellcast;
+                        spellcast = lastSpell.lastSpellcast;
                     }
                     if (spellcast) {
                         if ((spellcast.success && spellcast.stop && IsWithinAuraLag(spellcast.stop, aura.ending)) || (spellcast.queued && IsWithinAuraLag(spellcast.queued, aura.ending))) {
@@ -1066,7 +1067,7 @@ class AuraState implements StateModule {
         } else if (spellData["if_buff"]) {
         }
     }
-    ApplySpellAuras(spellId, guid, atTime, auraList, spellcast) {
+    ApplySpellAuras(spellId, guid, atTime, auraList, spellcast: SpellCast) {
         OvaleAura.StartProfiling("OvaleAura_state_ApplySpellAuras");
         for (const [filter, filterInfo] of _pairs(auraList)) {
             for (const [auraId, spellData] of _pairs(filterInfo)) {
@@ -1155,7 +1156,7 @@ class AuraState implements StateModule {
                             if (keepSnapshot) {
                                 OvaleAura.Log("Aura %d keeping previous snapshot.", auraId);
                             } else if (spellcast) {
-                                OvaleFuture.CopySpellcastInfo(spellcast, aura);
+                                lastSpell.CopySpellcastInfo(spellcast, aura);
                             }
                         } else if (stacks == 0 || stacks < 0) {
                             if (stacks == 0) {
@@ -1200,7 +1201,7 @@ class AuraState implements StateModule {
                             aura.ending = aura.start + aura.duration;
                             aura.gain = aura.start;
                             if (spellcast) {
-                                OvaleFuture.CopySpellcastInfo(spellcast, aura);
+                                lastSpell.CopySpellcastInfo(spellcast, aura);
                             }
                         }
                     }
