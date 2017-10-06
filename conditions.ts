@@ -22,7 +22,7 @@ import { paperDollState } from "./PaperDoll";
 import { auraState } from "./Aura";
 import { comboPointsState } from "./ComboPoints";
 import { wildImpsState } from "./WildImps";
-import { enemiesState } from "./Enemies";
+import { EnemiesState } from "./Enemies";
 import { stanceState } from "./Stance";
 import { totemState } from "./Totem";
 import { sigilState } from "./DemonHunterSigils";
@@ -762,7 +762,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
 {
     const Enemies = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let [comparator, limit] = [positionalParams[1], positionalParams[2]];
-        let value = enemiesState.enemies;
+        let value = EnemiesState.enemies;
         if (!value) {
             let useTagged = Ovale.db.profile.apparence.taggedEnemies
             if (namedParams.tagged == 0) {
@@ -770,7 +770,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
             } else if (namedParams.tagged == 1) {
                 useTagged = true;
             }
-            value = useTagged && enemiesState.taggedEnemies || enemiesState.activeEnemies;
+            value = useTagged && EnemiesState.taggedEnemies || EnemiesState.activeEnemies;
         }
         if (value < 1) {
             value = 1;

@@ -263,16 +263,15 @@ class OvaleComboPointsClass extends RegisterPrinter(OvaleProfiler.RegisterProfil
         if (spellId) {
             let si = OvaleData.spellInfo[spellId];
             if (si) {
-                let dataModule
-                
-                if (state !== undefined) {
-                    dataModule = dataState;
-                } else {
-                    dataModule = OvaleData;
-                }
                 let comboPointModule = state || this;
                 if (si.combo == "finisher") {
-                    let combo = dataModule.GetSpellInfoProperty(spellId, atTime, "combo", spellcast.target);
+                    let combo;
+                    if (state) {
+                        combo =  dataState.GetSpellInfoProperty(spellId, atTime, "combo", spellcast.target);
+                    }
+                    else{
+                        combo =  OvaleData.GetSpellInfoProperty(spellId, atTime, "combo", spellcast.target);
+                    }
                     if (combo == "finisher") {
                         let min_combo = si.min_combo || si.mincombo || 1;
                         if (comboPointModule.combo >= min_combo) {
