@@ -256,7 +256,7 @@ local OvaleComboPointsClass = __class(__Ovale.RegisterPrinter(__Profiler.OvalePr
                 end
                 local comboPointModule = state or self
                 if si.combo == "finisher" then
-                    local combo = dataModule:GetSpellInfoProperty(spellId, atTime, "combo", spellcast.target)
+                    local combo = dataModule.GetSpellInfoProperty(spellId, atTime, "combo", spellcast.target)
                     if combo == "finisher" then
                         local min_combo = si.min_combo or si.mincombo or 1
                         if comboPointModule.combo >= min_combo then
@@ -272,6 +272,9 @@ local OvaleComboPointsClass = __class(__Ovale.RegisterPrinter(__Profiler.OvalePr
             end
         end
     end,
+    constructor = function(self)
+        self.combo = 0
+    end
 })
 __exports.OvaleComboPoints = OvaleComboPointsClass()
 __exports.ComboPointsState = __class(nil, {
@@ -344,6 +347,9 @@ __exports.ComboPointsState = __class(nil, {
     end,
     CleanState = function(self)
     end,
+    constructor = function(self)
+        self.combo = nil
+    end
 })
 __exports.comboPointsState = __exports.ComboPointsState()
 __State.OvaleState:RegisterState(__exports.comboPointsState)

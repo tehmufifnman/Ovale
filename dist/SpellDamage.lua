@@ -28,6 +28,9 @@ local OvaleSpellDamageClass = __class(__Profiler.OvaleProfiler:RegisterProfiling
     Get = function(self, spellId)
         return self.value[spellId]
     end,
+    constructor = function(self)
+        self.value = {}
+    end
 })
 __exports.OvaleSpellDamage = OvaleSpellDamageClass()
 end)

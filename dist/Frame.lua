@@ -1,57 +1,25 @@
 local __addonName, __addon = ...
 __addon.require(__addonName, __addon, "./Frame", { "AceGUI-3.0", "Masque", "./BestAction", "./Compile", "./Cooldown", "./Debug", "./Future", "./GUID", "./SpellFlash", "./State", "./TimeSpan", "./Ovale", "./Icon", "./Enemies" }, function(__exports, AceGUI, Masque, __BestAction, __Compile, __Cooldown, __Debug, __Future, __GUID, __SpellFlash, __State, __TimeSpan, __Ovale, __Icon, __Enemies)
-local Type = __Ovale.Ovale:GetName()
+local Type = [[OvaleFrame]]
 local Version = 7
 local _ipairs = ipairs
 local _next = next
 local _pairs = pairs
 local _tostring = tostring
 local _wipe = wipe
+local _type = type
+local strmatch = string.match
 local API_CreateFrame = CreateFrame
+local API_GetItemInfo = GetItemInfo
 local API_GetTime = GetTime
 local API_RegisterStateDriver = RegisterStateDriver
+local API_UnitHasVehicleUI = UnitHasVehicleUI
+local API_UnitExists = UnitExists
+local API_UnitIsDead = UnitIsDead
+local API_UnitCanAttack = UnitCanAttack
 local INFINITY = math.huge
 local MIN_REFRESH_TIME = 0.05
-local frameOnClose = function(self)
-    self.obj:Fire("OnClose")
-end
-
-local closeOnClick = function(self)
-    self.obj:Hide()
-end
-
-local frameOnMouseDown = function(self)
-    if ( not __Ovale.Ovale.db.profile.apparence.verrouille) then
-        self:StartMoving()
-        AceGUI:ClearFocus()
-    end
-end
-
-local frameOnMouseUp = function(self)
-    self:StopMovingOrSizing()
-    local profile = __Ovale.Ovale.db.profile
-    local x, y = self:GetCenter()
-    local parentX, parentY = self:GetParent():GetCenter()
-    profile.apparence.offsetX = x - parentX
-    profile.apparence.offsetY = y - parentY
-end
-
-local frameOnEnter = function(self)
-    local profile = __Ovale.Ovale.db.profile
-    if  not (profile.apparence.enableIcons and profile.apparence.verrouille) then
-        self.obj.barre:Show()
-    end
-end
-
-local frameOnLeave = function(self)
-    self.obj.barre:Hide()
-end
-
-local frameOnUpdate = function(self, elapsed)
-    self.obj:OnUpdate(elapsed)
-end
-
-local OvaleFrame = __class(nil, {
+local OvaleFrame = __class(AceGUI.WidgetContainerBase, {
     ToggleOptions = function(self)
         if (self.content:IsShown()) then
             self.content:Hide()
@@ -115,6 +83,33 @@ local OvaleFrame = __class(nil, {
         end
         return 0
     end,
+    UpdateVisibility = function(self)
+        local visible = true
+        local profile = __Ovale.Ovale.db.profile
+        if  not profile.apparence.enableIcons then
+            visible = false
+        elseif  not self.hider:IsVisible() then
+            visible = false
+        else
+            if profile.apparence.hideVehicule and API_UnitHasVehicleUI("player") then
+                visible = false
+            end
+            if profile.apparence.avecCible and  not API_UnitExists("target") then
+                visible = false
+            end
+            if profile.apparence.enCombat and  not __Ovale.Ovale.inCombat then
+                visible = false
+            end
+            if profile.apparence.targetHostileOnly and (API_UnitIsDead("target") or  not API_UnitCanAttack("player", "target")) then
+                visible = false
+            end
+        end
+        if visible then
+            self:Show()
+        else
+            self:Hide()
+        end
+    end,
     OnUpdate = function(self, elapsed)
         local guid = __GUID.OvaleGUID:UnitGUID("target") or __GUID.OvaleGUID:UnitGUID("focus")
         if guid then
@@ -126,7 +121,7 @@ local OvaleFrame = __class(nil, {
             __Ovale.Ovale:AddRefreshInterval(self.timeSinceLastUpdate * 1000)
             __State.OvaleState:InitializeState()
             if __Compile.OvaleCompile:EvaluateScript() then
-                __Ovale.Ovale:UpdateFrame()
+                self:UpdateFrame()
             end
             local profile = __Ovale.Ovale.db.profile
             local iconNodes = __Compile.OvaleCompile:GetIconNodes()
@@ -137,9 +132,9 @@ local OvaleFrame = __class(nil, {
                     __State.baseState.defaultTarget = "target"
                 end
                 if node.namedParams and node.namedParams.enemies then
-                    __Enemies.enemiesState.enemies = node.namedParams.enemies
+                    __Enemies.EnemiesState.enemies = node.namedParams.enemies
                 else
-                    __Enemies.enemiesState.enemies = nil
+                    __Enemies.EnemiesState.enemies = nil
                 end
                 __State.OvaleState:Log("+++ Icon %d", k)
                 __BestAction.OvaleBestAction:StartNewAction()
@@ -252,6 +247,104 @@ local OvaleFrame = __class(nil, {
         local profile = __Ovale.Ovale.db.profile
         self.frame:SetPoint("CENTER", self.hider, "CENTER", profile.apparence.offsetX, profile.apparence.offsetY)
         self.frame:EnableMouse( not profile.apparence.clickThru)
+        self:UpdateIcons()
+        self:UpdateControls()
+        self:UpdateVisibility()
+    end,
+    ResetControls = function(self)
+        _wipe(self.checkBox)
+        _wipe(self.list)
+    end,
+    GetCheckBox = function(self, name)
+        local widget
+        if _type(name) == "string" then
+            widget = self.checkBoxWidget[name]
+        elseif _type(name) == "number" then
+            local k = 0
+            for _, frame in _pairs(self.checkBoxWidget) do
+                if k == name then
+                    widget = frame
+                    break
+                end
+                k = k + 1
+            end
+        end
+        return widget
+    end,
+    IsChecked = function(self, name)
+        local widget = self:GetCheckBox(name)
+        return widget and widget.GetValue()
+    end,
+    GetListValue = function(self, name)
+        local widget = self.listWidget[name]
+        return widget and widget.GetValue()
+    end,
+    SetCheckBox = function(self, name, on)
+        local widget = self:GetCheckBox(name)
+        if widget then
+            local oldValue = widget.GetValue()
+            if oldValue ~= on then
+                widget.SetValue(on)
+                self.OnCheckBoxValueChanged(widget)
+            end
+        end
+    end,
+    ToggleCheckBox = function(self, name)
+        local widget = self:GetCheckBox(name)
+        if widget then
+            local on =  not widget.GetValue()
+            widget.SetValue(on)
+            self.OnCheckBoxValueChanged(widget)
+        end
+    end,
+    FinalizeString = function(self, s)
+        local item, id = strmatch(s, "^(item:)(.+)")
+        if item then
+            s = API_GetItemInfo(id)
+        end
+        return s
+    end,
+    UpdateControls = function(self)
+        local profile = __Ovale.Ovale.db.profile
+        _wipe(self.checkBoxWidget)
+        for name, checkBox in _pairs(self.checkBox) do
+            if checkBox.text then
+                local widget = AceGUI:Create("CheckBox")
+                local text = self:FinalizeString(checkBox.text)
+                widget:SetLabel(text)
+                if profile.check[name] == nil then
+                    profile.check[name] = checkBox.checked
+                end
+                if profile.check[name] then
+                    widget:SetValue(profile.check[name])
+                end
+                widget:SetUserData("name", name)
+                widget:SetCallback("OnValueChanged", self.OnCheckBoxValueChanged)
+                self:AddChild(widget)
+                self.checkBoxWidget[name] = widget
+            else
+                __Ovale.Ovale:OneTimeMessage("Warning: checkbox '%s' is used but not defined.", name)
+            end
+        end
+        _wipe(self.listWidget)
+        for name, list in _pairs(self.list) do
+            if _next(list.items) then
+                local widget = AceGUI:Create("Dropdown")
+                widget:SetList(list.items)
+                if  not profile.list[name] then
+                    profile.list[name] = list.default
+                end
+                if profile.list[name] then
+                    widget:SetValue(profile.list[name])
+                end
+                widget:SetUserData("name", name)
+                widget:SetCallback("OnValueChanged", self.OnDropDownValueChanged)
+                self:AddChild(widget)
+                self.listWidget[name] = widget
+            else
+                __Ovale.Ovale:OneTimeMessage("Warning: list '%s' is used but has no items.", name)
+            end
+        end
     end,
     UpdateIcons = function(self)
         for k, action in _pairs(self.actions) do
@@ -317,12 +410,12 @@ local OvaleFrame = __class(nil, {
                 local icon
                 if  not node.secure then
                     if  not action.icons[l] then
-                        action.icons[l] = __Icon.OvaleIcon(k .. l, self.frame, false)
+                        action.icons[l] = __Icon.OvaleIcon("Icon" .. k .. "n" .. l, self.frame, false)
                     end
                     icon = action.icons[l]
                 else
                     if  not action.secureIcons[l] then
-                        action.secureIcons[l] = __Icon.OvaleIcon(k .. l, self.frame, true)
+                        action.secureIcons[l] = __Icon.OvaleIcon("SecureIcon" .. k .. "n" .. l, self.frame, true)
                     end
                     icon = action.secureIcons[l]
                 end
@@ -340,7 +433,7 @@ local OvaleFrame = __class(nil, {
                 icon:EnableMouse( not profile.apparence.clickThru)
                 icon.cdShown = (l == 1)
                 if Masque then
-                    self.skinGroup:AddButton(icon)
+                    self.skinGroup.AddButton(icon)
                 end
                 if l == 1 then
                     icon:Show()
@@ -369,49 +462,115 @@ local OvaleFrame = __class(nil, {
         end
     end,
     constructor = function(self)
+    print("Frame constructor");
+        
+        self.checkBox = {}
+        self.list = {}
+        self.checkBoxWidget = {}
+        self.listWidget = {}
+        self.OnCheckBoxValueChanged = function(widget)
+            local name = widget:GetUserData("name")
+            __Ovale.Ovale.db.profile.check[name] = widget:GetValue()
+            __exports.OvaleFrameModule:SendMessage("Ovale_CheckBoxValueChanged", name)
+        end
+        self.OnDropDownValueChanged = function(widget)
+            local name = widget:GetUserData("name")
+            __Ovale.Ovale.db.profile.list[name] = widget:GetValue()
+            __exports.OvaleFrameModule:SendMessage("Ovale_ListValueChanged", name)
+        end
         self.type = "Frame"
         self.localstatus = {}
         self.actions = {}
-        local hider = API_CreateFrame("Frame", __Ovale.Ovale:GetName(), UIParent, "SecureHandlerStateTemplate")
-        hider:SetAllPoints(self.frame)
-        API_RegisterStateDriver(hider, "visibility", "[petbattle] hide; show")
+        AceGUI.WidgetContainerBase.constructor(self)
+        local hider = API_CreateFrame("Frame", __Ovale.Ovale:GetName() .. "PetBattleFrameHider", UIParent, "SecureHandlerStateTemplate")
         local frame = API_CreateFrame("Frame", nil, hider)
+        hider:SetAllPoints(frame)
+        API_RegisterStateDriver(hider, "visibility", "[petbattle] hide; show")
         local profile = __Ovale.Ovale.db.profile
         self.frame = frame
         self.hider = hider
-        self.updateFrame = API_CreateFrame("Frame", __Ovale.Ovale:GetName())
+        self.updateFrame = API_CreateFrame("Frame", __Ovale.Ovale:GetName() .. "UpdateFrame")
         self.barre = self.frame:CreateTexture()
         self.content = API_CreateFrame("Frame", nil, self.updateFrame)
         if Masque then
             self.skinGroup = Masque:Group(__Ovale.Ovale:GetName())
         end
         self.timeSinceLastUpdate = INFINITY
-        self.obj = nil
-        frame.obj = self
         frame:SetWidth(100)
         frame:SetHeight(100)
         self:UpdateFrame()
         frame:SetMovable(true)
         frame:SetFrameStrata("MEDIUM")
-        frame:SetScript("OnMouseDown", frameOnMouseDown)
-        frame:SetScript("OnMouseUp", frameOnMouseUp)
-        frame:SetScript("OnEnter", frameOnEnter)
-        frame:SetScript("OnLeave", frameOnLeave)
-        frame:SetScript("OnHide", frameOnClose)
+        frame:SetScript("OnMouseDown", function()
+            if ( not __Ovale.Ovale.db.profile.apparence.verrouille) then
+                frame:StartMoving()
+                AceGUI:ClearFocus()
+            end
+        end)
+        frame:SetScript("OnMouseUp", function()
+            frame:StopMovingOrSizing()
+            local profile = __Ovale.Ovale.db.profile
+            local x, y = frame:GetCenter()
+            local parentX, parentY = frame:GetParent():GetCenter()
+            profile.apparence.offsetX = x - parentX
+            profile.apparence.offsetY = y - parentY
+        end)
+        frame:SetScript("OnEnter", function()
+            local profile = __Ovale.Ovale.db.profile
+            if  not (profile.apparence.enableIcons and profile.apparence.verrouille) then
+                self.barre:Show()
+            end
+        end)
+        frame:SetScript("OnLeave", function()
+            self.barre:Hide()
+        end)
+        frame:SetScript("OnHide", function()
+            return self:Hide()
+        end)
         frame:SetAlpha(profile.apparence.alpha)
-        self.updateFrame:SetScript("OnUpdate", frameOnUpdate)
-        self.updateFrame.obj = self
+        self.updateFrame:SetScript("OnUpdate", function(updateFrame, elapsed)
+            return self:OnUpdate(elapsed)
+        end)
         self.barre:SetTexture(0, 0.8, 0)
         self.barre:SetPoint("TOPLEFT", 0, 0)
         self.barre:Hide()
         local content = self.content
-        content.obj = self
         content:SetWidth(200)
         content:SetHeight(100)
         content:Hide()
         content:SetAlpha(profile.apparence.optionsAlpha)
-        AceGUI:RegisterAsContainer(self)
     end,
 })
-AceGUI:RegisterWidgetType(Type, OvaleFrame, Version)
+local OvaleFrameWidget = AceGUIRegisterAsContainer(OvaleFrame)
+print("instancie")
+__exports.frame = OvaleFrameWidget()
+local OvaleFrameBase = __Ovale.Ovale:NewModule("OvaleFrame", "AceEvent-3.0")
+local OvaleFrameModuleClass = __class(OvaleFrameBase, {
+    Ovale_OptionChanged = function(self, event, eventType)
+        if eventType == "visibility" then
+            __exports.frame:UpdateVisibility()
+        else
+            if eventType == "layout" then
+                __exports.frame:UpdateFrame()
+            end
+            __exports.frame:UpdateFrame()
+        end
+    end,
+    PLAYER_TARGET_CHANGED = function(self)
+        __exports.frame:UpdateVisibility()
+    end,
+    Ovale_CombatStarted = function(self, event, atTime)
+        __exports.frame:UpdateVisibility()
+    end,
+    Ovale_CombatEnded = function(self, event, atTime)
+        __exports.frame:UpdateVisibility()
+    end,
+    constructor = function(self)
+        OvaleFrameBase.constructor(self)
+        self:RegisterMessage("Ovale_OptionChanged")
+        self:RegisterMessage("Ovale_CombatStarted")
+        self:RegisterEvent("PLAYER_TARGET_CHANGED")
+    end,
+})
+__exports.OvaleFrameModule = OvaleFrameModuleClass()
 end)

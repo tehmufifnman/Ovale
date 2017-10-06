@@ -44,7 +44,7 @@ local OvaleWildImpsClass = __class(OvaleWildImpsBase, {
             return 
         end
         if cleuEvent == "SPELL_SUMMON" then
-            local _1, _2, _3, _4, _5, _6, _7, creatureId = destGUID:find("(%S+)-(%d+)-(%d+)-(%d+)-(%d+)-(%d+)-(%S+)")
+            local _1, _2, _3, _4, _5, _6, _7, creatureId = destGUID.find("(%S+)-(%d+)-(%d+)-(%d+)-(%d+)-(%d+)-(%S+)")
             creatureId = tonumber(creatureId)
             local now = API_GetTime()
             for id, v in pairs(demonData) do

@@ -24,27 +24,27 @@ __exports.OvaleIcon = __class(nil, {
         self:OvaleIcon_OnLoad()
     end,
     SetValue = function(self, value, actionTexture)
-        self.icone:Show()
-        self.icone:SetTexture(actionTexture)
-        self.icone:SetAlpha(__Ovale.Ovale.db.profile.apparence.alpha)
-        self.cd:Hide()
+        self.icone.Show()
+        self.icone.SetTexture(actionTexture)
+        self.icone.SetAlpha(__Ovale.Ovale.db.profile.apparence.alpha)
+        self.cd.Hide()
         self.focusText:Hide()
-        self.rangeIndicator:Hide()
-        self.shortcut:Hide()
+        self.rangeIndicator.Hide()
+        self.shortcut.Hide()
         if value then
             self.actionType = "value"
             self.actionHelp = nil
             self.value = value
             if value < 10 then
-                self.remains:SetFormattedText("%.1f", value)
+                self.remains.SetFormattedText("%.1f", value)
             elseif value == INFINITY then
-                self.remains:SetFormattedText("inf")
+                self.remains.SetFormattedText("inf")
             else
-                self.remains:SetFormattedText("%d", value)
+                self.remains.SetFormattedText("%d", value)
             end
-            self.remains:Show()
+            self.remains.Show()
         else
-            self.remains:Hide()
+            self.remains.Hide()
         end
         self.frame:Show()
     end,
@@ -58,7 +58,7 @@ __exports.OvaleIcon = __class(nil, {
             local cd = self.cd
             local resetCooldown = false
             if startTime > now then
-                local duration = cd:GetCooldownDuration()
+                local duration = cd.GetCooldownDuration()
                 if duration == 0 and self.texture == actionTexture and self.cooldownStart and self.cooldownEnd then
                     resetCooldown = true
                 end
@@ -85,27 +85,27 @@ __exports.OvaleIcon = __class(nil, {
                 local start, ending = self.cooldownStart, self.cooldownEnd
                 local duration = ending - start
                 if resetCooldown and duration > COOLDOWN_THRESHOLD then
-                    cd:SetDrawEdge(false)
-                    cd:SetSwipeColor(0, 0, 0, 0.8)
-                    cd:SetCooldown(start, duration)
-                    cd:Show()
+                    cd.SetDrawEdge(false)
+                    cd.SetSwipeColor(0, 0, 0, 0.8)
+                    cd.SetCooldown(start, duration)
+                    cd.Show()
                 end
             else
-                self.cd:Hide()
+                self.cd.Hide()
             end
-            self.icone:Show()
-            self.icone:SetTexture(actionTexture)
+            self.icone.Show()
+            self.icone.SetTexture(actionTexture)
             local alpha = profile.apparence.alpha
             if actionUsable then
-                self.icone:SetAlpha(alpha)
+                self.icone.SetAlpha(alpha)
             else
                 alpha = alpha / 2
-                self.icone:SetAlpha(alpha)
+                self.icone.SetAlpha(alpha)
             end
             if element.namedParams.nored ~= 1 and actionResourceExtend and actionResourceExtend > 0 then
-                self.icone:SetVertexColor(0.75, 0.2, 0.2)
+                self.icone.SetVertexColor(0.75, 0.2, 0.2)
             else
-                self.icone:SetVertexColor(1, 1, 1)
+                self.icone.SetVertexColor(1, 1, 1)
             end
             self.actionHelp = element.namedParams.help
             if  not (self.cooldownStart and self.cooldownEnd) then
@@ -135,25 +135,25 @@ __exports.OvaleIcon = __class(nil, {
                 self.frame:SetChecked(false)
             end
             if (profile.apparence.numeric or self.namedParams.text == "always") and startTime > now then
-                self.remains:SetFormattedText("%.1f", startTime - now)
-                self.remains:Show()
+                self.remains.SetFormattedText("%.1f", startTime - now)
+                self.remains.Show()
             else
-                self.remains:Hide()
+                self.remains.Hide()
             end
             if profile.apparence.raccourcis then
-                self.shortcut:Show()
-                self.shortcut:SetText(actionShortcut)
+                self.shortcut.Show()
+                self.shortcut.SetText(actionShortcut)
             else
-                self.shortcut:Hide()
+                self.shortcut.Hide()
             end
             if actionInRange == 1 then
-                self.rangeIndicator:SetVertexColor(0.6, 0.6, 0.6)
-                self.rangeIndicator:Show()
+                self.rangeIndicator.SetVertexColor(0.6, 0.6, 0.6)
+                self.rangeIndicator.Show()
             elseif actionInRange == 0 then
-                self.rangeIndicator:SetVertexColor(1, 0.1, 0.1)
-                self.rangeIndicator:Show()
+                self.rangeIndicator.SetVertexColor(1, 0.1, 0.1)
+                self.rangeIndicator.Show()
             else
-                self.rangeIndicator:Hide()
+                self.rangeIndicator.Hide()
             end
             if element.namedParams.text then
                 self.focusText:SetText(_tostring(element.namedParams.text))
@@ -166,10 +166,10 @@ __exports.OvaleIcon = __class(nil, {
             end
             self.frame:Show()
         else
-            self.icone:Hide()
-            self.rangeIndicator:Hide()
-            self.shortcut:Hide()
-            self.remains:Hide()
+            self.icone.Hide()
+            self.rangeIndicator.Hide()
+            self.shortcut.Hide()
+            self.remains.Hide()
             self.focusText:Hide()
             if profile.apparence.hideEmpty then
                 self.frame:Hide()
@@ -196,7 +196,7 @@ __exports.OvaleIcon = __class(nil, {
                 if index then
                     local prefix = strsub(k, 1, index - 1)
                     local suffix = strsub(k, index + 5)
-                    self.frame:SetAttribute(prefix .. suffix, "spell")
+                    self.frame:SetAttribute(prefix .. "type" .. suffix, "spell")
                     self.frame:SetAttribute("unit", self.namedParams.target or "target")
                     self.frame:SetAttribute(k, __SpellBook.OvaleSpellBook:GetSpellName(v))
                     self.actionButton = true
@@ -205,23 +205,23 @@ __exports.OvaleIcon = __class(nil, {
         end
     end,
     SetRemainsFont = function(self, color)
-        self.remains:SetTextColor(color.r, color.g, color.b, 1)
-        self.remains:SetJustifyH("left")
-        self.remains:SetPoint("BOTTOMLEFT", 2, 2)
+        self.remains.SetTextColor(color.r, color.g, color.b, 1)
+        self.remains.SetJustifyH("left")
+        self.remains.SetPoint("BOTTOMLEFT", 2, 2)
     end,
     SetFontScale = function(self, scale)
         self.fontScale = scale
-        self.remains:SetFont(self.fontName, self.fontHeight * self.fontScale, self.fontFlags)
-        self.shortcut:SetFont(self.fontName, self.fontHeight * self.fontScale, self.fontFlags)
-        self.rangeIndicator:SetFont(self.fontName, self.fontHeight * self.fontScale, self.fontFlags)
+        self.remains.SetFont(self.fontName, self.fontHeight * self.fontScale, self.fontFlags)
+        self.shortcut.SetFont(self.fontName, self.fontHeight * self.fontScale, self.fontFlags)
+        self.rangeIndicator.SetFont(self.fontName, self.fontHeight * self.fontScale, self.fontFlags)
         self.focusText:SetFont(self.fontName, self.fontHeight * self.fontScale, self.fontFlags)
     end,
     SetRangeIndicator = function(self, text)
-        self.rangeIndicator:SetText(text)
+        self.rangeIndicator.SetText(text)
     end,
     OvaleIcon_OnMouseUp = function(self)
         if  not self.actionButton then
-            __Ovale.Ovale:ToggleOptions()
+            __Ovale.Ovale.ToggleOptions()
         end
         self.frame:SetChecked(true)
     end,
@@ -258,14 +258,14 @@ __exports.OvaleIcon = __class(nil, {
     OvaleIcon_OnLoad = function(self)
         local name = __Ovale.Ovale:GetName()
         local profile = __Ovale.Ovale.db.profile
-        self.icone = _G[name]
-        self.shortcut = _G[name]
-        self.remains = _G[name]
-        self.rangeIndicator = _G[name]
-        self.rangeIndicator:SetText(profile.apparence.targetText)
-        self.cd = _G[name]
-        self.normalTexture = _G[name]
-        local fontName, fontHeight, fontFlags = self.shortcut:GetFont()
+        self.icone = _G[name .. "Icon"]
+        self.shortcut = _G[name .. "HotKey"]
+        self.remains = _G[name .. "Name"]
+        self.rangeIndicator = _G[name .. "Count"]
+        self.rangeIndicator.SetText(profile.apparence.targetText)
+        self.cd = _G[name .. "Cooldown"]
+        self.normalTexture = _G[name .. "NormalTexture"]
+        local fontName, fontHeight, fontFlags = self.shortcut.GetFont()
         self.fontName = fontName
         self.fontHeight = fontHeight
         self.fontFlags = fontFlags
@@ -302,6 +302,21 @@ __exports.OvaleIcon = __class(nil, {
         if profile.apparence.clickThru then
             self.frame:EnableMouse(false)
         end
+    end,
+    SetPoint = function(self, anchor, reference, refAnchor, x, y)
+        self.frame:SetPoint(anchor, reference, refAnchor, x, y)
+    end,
+    Show = function(self)
+        self.frame:Show()
+    end,
+    Hide = function(self)
+        self.frame:Hide()
+    end,
+    SetScale = function(self, scale)
+        self.frame:SetScale(scale)
+    end,
+    EnableMouse = function(self, enabled)
+        self.frame:EnableMouse(enabled)
     end,
 })
 end)

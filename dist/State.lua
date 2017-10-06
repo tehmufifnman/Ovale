@@ -119,6 +119,14 @@ __exports.BaseState = __class(nil, {
     Log = function(self, parameters)
         __exports.OvaleState:Log(parameters)
     end,
+    constructor = function(self)
+        self.isState = true
+        self.isInitialized = false
+        self.futureVariable = nil
+        self.futureLastEnable = nil
+        self.variable = nil
+        self.lastEnable = nil
+    end
 })
 __exports.baseState = __exports.BaseState()
 end)

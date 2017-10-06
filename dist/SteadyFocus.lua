@@ -103,6 +103,15 @@ local OvaleSteadyFocusClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Pro
             self:Print("Player has no pre-Steady Focus aura!")
         end
     end,
+    constructor = function(self)
+        self.hasSteadyFocus = nil
+        self.spellName = "Pre-Steady Focus"
+        self.spellId = PRE_STEADY_FOCUS
+        self.start = 0
+        self.ending = 0
+        self.duration = INFINITY
+        self.stacks = 0
+    end
 })
 local SteadyFocusState = __class(nil, {
     CleanState = function(self)

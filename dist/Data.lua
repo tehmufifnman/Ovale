@@ -92,184 +92,184 @@ local OvaleDataClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleDataBas
         self.itemList = {}
         self.spellInfo = {}
         self.buffSpellList = {
-                fear_debuff = {
-                    [5246] = true,
-                    [5484] = true,
-                    [5782] = true,
-                    [8122] = true
-                },
-                incapacitate_debuff = {
-                    [6770] = true,
-                    [12540] = true,
-                    [20066] = true,
-                    [137460] = true
-                },
-                root_debuff = {
-                    [122] = true,
-                    [339] = true
-                },
-                stun_debuff = {
-                    [408] = true,
-                    [853] = true,
-                    [1833] = true,
-                    [5211] = true,
-                    [46968] = true
-                },
-                attack_power_multiplier_buff = {
-                    [6673] = true,
-                    [19506] = true,
-                    [57330] = true
-                },
-                critical_strike_buff = {
-                    [1459] = true,
-                    [24604] = true,
-                    [24932] = true,
-                    [61316] = true,
-                    [90309] = true,
-                    [90363] = true,
-                    [97229] = true,
-                    [116781] = true,
-                    [126309] = true,
-                    [126373] = true,
-                    [128997] = true,
-                    [160052] = true,
-                    [160200] = true
-                },
-                haste_buff = {
-                    [49868] = true,
-                    [55610] = true,
-                    [113742] = true,
-                    [128432] = true,
-                    [135678] = true,
-                    [160003] = true,
-                    [160074] = true,
-                    [160203] = true
-                },
-                mastery_buff = {
-                    [19740] = true,
-                    [24907] = true,
-                    [93435] = true,
-                    [116956] = true,
-                    [128997] = true,
-                    [155522] = true,
-                    [160073] = true,
-                    [160198] = true
-                },
-                multistrike_buff = {
-                    [24844] = true,
-                    [34889] = true,
-                    [49868] = true,
-                    [57386] = true,
-                    [58604] = true,
-                    [109773] = true,
-                    [113742] = true,
-                    [166916] = true,
-                    [172968] = true
-                },
-                spell_power_multiplier_buff = {
-                    [1459] = true,
-                    [61316] = true,
-                    [90364] = true,
-                    [109773] = true,
-                    [126309] = true,
-                    [128433] = true,
-                    [160205] = true
-                },
-                stamina_buff = {
-                    [469] = true,
-                    [21562] = true,
-                    [50256] = true,
-                    [90364] = true,
-                    [160003] = true,
-                    [160014] = true,
-                    [166928] = true,
-                    [160199] = true
-                },
-                str_agi_int_buff = {
-                    [1126] = true,
-                    [20217] = true,
-                    [90363] = true,
-                    [115921] = true,
-                    [116781] = true,
-                    [159988] = true,
-                    [160017] = true,
-                    [160077] = true,
-                    [160206] = true
-                },
-                versatility_buff = {
-                    [1126] = true,
-                    [35290] = true,
-                    [50518] = true,
-                    [55610] = true,
-                    [57386] = true,
-                    [159735] = true,
-                    [160045] = true,
-                    [160077] = true,
-                    [167187] = true,
-                    [167188] = true,
-                    [172967] = true
-                },
-                bleed_debuff = {
-                    [1079] = true,
-                    [16511] = true,
-                    [33745] = true,
-                    [77758] = true,
-                    [113344] = true,
-                    [115767] = true,
-                    [122233] = true,
-                    [154953] = true,
-                    [155722] = true
-                },
-                healing_reduced_debuff = {
-                    [8680] = true,
-                    [54680] = true,
-                    [115625] = true,
-                    [115804] = true
-                },
-                stealthed_buff = {
-                    [1784] = true,
-                    [5215] = true,
-                    [11327] = true,
-                    [24450] = true,
-                    [58984] = true,
-                    [90328] = true,
-                    [102543] = true,
-                    [148523] = true,
-                    [115191] = true,
-                    [115192] = true,
-                    [115193] = true,
-                    [185422] = true
-                },
-                burst_haste_buff = {
-                    [2825] = true,
-                    [32182] = true,
-                    [80353] = true,
-                    [90355] = true
-                },
-                burst_haste_debuff = {
-                    [57723] = true,
-                    [57724] = true,
-                    [80354] = true,
-                    [95809] = true
-                },
-                raid_movement_buff = {
-                    [106898] = true
-                }
+            fear_debuff = {
+                [5246] = true,
+                [5484] = true,
+                [5782] = true,
+                [8122] = true
+            },
+            incapacitate_debuff = {
+                [6770] = true,
+                [12540] = true,
+                [20066] = true,
+                [137460] = true
+            },
+            root_debuff = {
+                [122] = true,
+                [339] = true
+            },
+            stun_debuff = {
+                [408] = true,
+                [853] = true,
+                [1833] = true,
+                [5211] = true,
+                [46968] = true
+            },
+            attack_power_multiplier_buff = {
+                [6673] = true,
+                [19506] = true,
+                [57330] = true
+            },
+            critical_strike_buff = {
+                [1459] = true,
+                [24604] = true,
+                [24932] = true,
+                [61316] = true,
+                [90309] = true,
+                [90363] = true,
+                [97229] = true,
+                [116781] = true,
+                [126309] = true,
+                [126373] = true,
+                [128997] = true,
+                [160052] = true,
+                [160200] = true
+            },
+            haste_buff = {
+                [49868] = true,
+                [55610] = true,
+                [113742] = true,
+                [128432] = true,
+                [135678] = true,
+                [160003] = true,
+                [160074] = true,
+                [160203] = true
+            },
+            mastery_buff = {
+                [19740] = true,
+                [24907] = true,
+                [93435] = true,
+                [116956] = true,
+                [128997] = true,
+                [155522] = true,
+                [160073] = true,
+                [160198] = true
+            },
+            multistrike_buff = {
+                [24844] = true,
+                [34889] = true,
+                [49868] = true,
+                [57386] = true,
+                [58604] = true,
+                [109773] = true,
+                [113742] = true,
+                [166916] = true,
+                [172968] = true
+            },
+            spell_power_multiplier_buff = {
+                [1459] = true,
+                [61316] = true,
+                [90364] = true,
+                [109773] = true,
+                [126309] = true,
+                [128433] = true,
+                [160205] = true
+            },
+            stamina_buff = {
+                [469] = true,
+                [21562] = true,
+                [50256] = true,
+                [90364] = true,
+                [160003] = true,
+                [160014] = true,
+                [166928] = true,
+                [160199] = true
+            },
+            str_agi_int_buff = {
+                [1126] = true,
+                [20217] = true,
+                [90363] = true,
+                [115921] = true,
+                [116781] = true,
+                [159988] = true,
+                [160017] = true,
+                [160077] = true,
+                [160206] = true
+            },
+            versatility_buff = {
+                [1126] = true,
+                [35290] = true,
+                [50518] = true,
+                [55610] = true,
+                [57386] = true,
+                [159735] = true,
+                [160045] = true,
+                [160077] = true,
+                [167187] = true,
+                [167188] = true,
+                [172967] = true
+            },
+            bleed_debuff = {
+                [1079] = true,
+                [16511] = true,
+                [33745] = true,
+                [77758] = true,
+                [113344] = true,
+                [115767] = true,
+                [122233] = true,
+                [154953] = true,
+                [155722] = true
+            },
+            healing_reduced_debuff = {
+                [8680] = true,
+                [54680] = true,
+                [115625] = true,
+                [115804] = true
+            },
+            stealthed_buff = {
+                [1784] = true,
+                [5215] = true,
+                [11327] = true,
+                [24450] = true,
+                [58984] = true,
+                [90328] = true,
+                [102543] = true,
+                [148523] = true,
+                [115191] = true,
+                [115192] = true,
+                [115193] = true,
+                [185422] = true
+            },
+            burst_haste_buff = {
+                [2825] = true,
+                [32182] = true,
+                [80353] = true,
+                [90355] = true
+            },
+            burst_haste_debuff = {
+                [57723] = true,
+                [57724] = true,
+                [80354] = true,
+                [95809] = true
+            },
+            raid_movement_buff = {
+                [106898] = true
             }
+        }
         self.DEFAULT_SPELL_LIST = {}
         __Debug.OvaleDebug:RegisterDebugging(OvaleDataBase).constructor(self)
         for _, useName in _pairs(STAT_USE_NAMES) do
             local name
             for _, statName in _pairs(STAT_NAMES) do
-                name = useName .. statName
+                name = useName .. "_" .. statName .. "_buff"
                 self.buffSpellList[name] = {}
                 local shortName = STAT_SHORTNAME[statName]
                 if shortName then
-                    name = useName .. shortName
+                    name = useName .. "_" .. shortName .. "_buff"
                     self.buffSpellList[name] = {}
                 end
             end
-            name = useName
+            name = useName .. "_any_buff"
             self.buffSpellList[name] = {}
         end
         do
@@ -486,17 +486,17 @@ local OvaleDataClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleDataBas
         if  not value or  not _tonumber(value) then
             return value
         end
-        local addpower = si and si[property]
+        local addpower = si and si["add" .. property]
         if addpower then
             value = value + addpower
         end
-        local ratio = si and si[property]
+        local ratio = si and si[property .. "_percent"]
         if ratio then
             ratio = ratio / 100
         else
             ratio = 1
         end
-        local multipliers = si and si.require[property]
+        local multipliers = si and si.require[property .. "_percent"]
         if multipliers then
             for v, requirement in _pairs(multipliers) do
                 local verified = self:CheckRequirements(spellId, atTime, requirement, 1, targetGUID)

@@ -112,6 +112,14 @@ local OvaleBanditsGuile = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleBand
             self:Print("Player has Bandit's Guile aura with start=%s, end=%s, stacks=%d.", playerAura.start, playerAura.ending, playerAura.stacks)
         end
     end,
+    constructor = function(self)
+        self.spellName = "Bandit's Guile"
+        self.spellId = BANDITS_GUILE
+        self.start = 0
+        self.ending = 0
+        self.duration = 15
+        self.stacks = 0
+    end
 })
 __exports.banditsGuile = OvaleBanditsGuile()
 end)

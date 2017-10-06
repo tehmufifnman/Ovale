@@ -44,6 +44,9 @@ local OvaleWarriorChargeClass = __class(__Debug.OvaleDebug:RegisterDebugging(Ova
             end
         end
     end,
+    constructor = function(self)
+        self.targetGUID = nil
+    end
 })
 __exports.OvaleWarriorCharge = OvaleWarriorChargeClass()
 end)

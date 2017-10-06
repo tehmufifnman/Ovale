@@ -3,6 +3,9 @@
 local LibStub = LibStub
 local ADDON_NAME, Addon = ...
 
+if _G[ADDON_NAME] == nil then
+  _G[ADDON_NAME] = Addon
+end
 -- if ADDON_NAME then
 --   _G[ADDON_NAME] = Addon or {}
 -- end
@@ -11,7 +14,7 @@ local strsub = string.sub
 
 -- Function used by define to call a factory that is ready
 local function call(exports) 
-    -- print("calling " .. exports.name)
+    --print("calling " .. exports.name)
     local parameters = {}
     local i = 1
     for _,v in ipairs(exports.imports) do
@@ -31,7 +34,7 @@ local function call(exports)
     -- If some modules were waiting for these modules,...
     if exports.wait then
         for _,v in ipairs(exports.wait) do
-            -- print(v .. " is no more waiting for " .. exports.name)
+            print(v .. " is no more waiting for " .. exports.name)
             v.missing[exports.name] = nil
             -- This module is waiting for nothing, call the factory
             if not next(v.missing) and v.imports then
@@ -45,13 +48,13 @@ end
 Addon.require = function(addonName, addon, mod, dependencies, factory)
     local exports
 
-   -- print("Define " .. mod)
+  -- print("Define " .. mod)
 
-    if not addon[mod] then
+    if not Addon[mod] then
       exports = { missing = {}, name = mod, defined = true }
-      addon[mod] = exports
+      Addon[mod] = exports
     else
-      exports = addon[mod]
+      exports = Addon[mod]
       exports.defined = true
     end
 
@@ -61,7 +64,7 @@ Addon.require = function(addonName, addon, mod, dependencies, factory)
 
     -- Check dependencies
     for _,v in ipairs(dependencies) do
-      local dependency = addon[v]
+      local dependency = Addon[v]
       -- Dependency not found, register it 
       if not dependency then
         if strsub(v, 1, 1) ~= "." then
@@ -75,7 +78,7 @@ Addon.require = function(addonName, addon, mod, dependencies, factory)
           dependency = { wait = { exports }, name = v, missing = {}, defined = false }
           exports.missing[v] = dependency
         end
-        addon[v] = dependency 
+        Addon[v] = dependency 
       else
         if (not dependency.defined) or next(dependency.missing) then
           -- print(v .. " is not ready")
@@ -95,17 +98,18 @@ Addon.require = function(addonName, addon, mod, dependencies, factory)
     -- If missing nothing, call the factory
     if not next(exports.missing) then
       call(exports)
+    else
+      print(mod .. " has some missing dep")
     end    
 end
 
-Addon.debug = function(missing, level)
-  missing = missing or Addon
-  level = level or 0
-  if level > 3 then return end
-  for k, v in pairs(missing) do 
+Addon.debug = function()
+print("debug")
+  for k, v in pairs(Addon) do 
     if (type(v) == "table") then
-      if v.wait then
-        for _,w in ipairs(v.missing) do
+      if v.missing then
+        print(v.name)
+        for _,w in pairs(v.missing) do
           print(v.name .. " is missing " .. w.name)
         end
       end
@@ -166,4 +170,25 @@ switch = function(t)
 		end
 	end;
 	return t
+end
+
+function AceGUIRegisterAsContainer(widget)
+		widget.children = {}
+		widget.userdata = {}
+		widget.events = {}
+		widget.base = WidgetContainerBase
+		widget.content.obj = widget
+		widget.frame.obj = widget
+		widget.content:SetScript("OnSizeChanged", ContentResize)
+		widget.frame:SetScript("OnSizeChanged", FrameResize)
+		widget:SetLayout("List")
+	end
+	
+function AceGUIRegisterAsWidget(widget)
+		widget.userdata = {}
+		widget.events = {}
+		widget.base = WidgetBase
+		widget.frame.obj = widget
+		widget.frame:SetScript("OnSizeChanged", FrameResize)
+		return widget
 end

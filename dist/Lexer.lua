@@ -12,7 +12,7 @@ local strsub = string.sub
 local append = table.insert
 local assert_arg = function(idx, val, tp)
     if _type(val) ~= tp then
-        _error(idx .. tp, 2)
+        _error("argument " .. idx .. " must be " .. tp, 2)
     end
 end
 
@@ -69,7 +69,7 @@ __exports.OvaleLexer = __class(nil, {
             index = index - 1
         end
         while index > 0 do
-            tokenType, token = self:iterator()
+            tokenType, token = self.iterator()
             if  not tokenType then
                 break
             end
@@ -84,7 +84,7 @@ __exports.OvaleLexer = __class(nil, {
             if self.endOfStream then
                 break
             else
-                tokenType, token = self:iterator()
+                tokenType, token = self.iterator()
                 if  not tokenType then
                     self.endOfStream = true
                     break

@@ -442,7 +442,7 @@ local AddMissingVariantSpells = function(annotation)
                     else
                         local functionCall = node.name
                         if node.paramsAsString then
-                            functionCall = node.name .. node.paramsAsString
+                            functionCall = node.name .. "(" .. node.paramsAsString .. ")"
                         end
                         __exports.OvaleCompile:Print("Unknown spell with ID %s used in %s.", spellId, functionCall)
                     end
@@ -456,18 +456,18 @@ local AddToBuffList = function(buffId, statName, isStacking)
     if statName then
         for _, useName in _pairs(__Data.OvaleData.STAT_USE_NAMES) do
             if isStacking or  not strfind(useName, "_stacking_") then
-                local name = useName .. statName
+                local name = useName .. "_" .. statName .. "_buff"
                 local list = __Data.OvaleData.buffSpellList[name] or {}
                 list[buffId] = true
                 __Data.OvaleData.buffSpellList[name] = list
                 local shortStatName = __Data.OvaleData.STAT_SHORTNAME[statName]
                 if shortStatName then
-                    name = useName .. shortStatName
+                    name = useName .. "_" .. shortStatName .. "_buff"
                     list = __Data.OvaleData.buffSpellList[name] or {}
                     list[buffId] = true
                     __Data.OvaleData.buffSpellList[name] = list
                 end
-                name = useName
+                name = useName .. "_any_buff"
                 list = __Data.OvaleData.buffSpellList[name] or {}
                 list[buffId] = true
                 __Data.OvaleData.buffSpellList[name] = list
@@ -572,7 +572,7 @@ local OvaleCompileClass = __class(__Ovale.RegisterPrinter(__Debug.OvaleDebug:Reg
             self.ast = nil
         end
         self.ast = __AST.OvaleAST:ParseScript(name)
-        __Ovale.Ovale:ResetControls()
+        __Ovale.Ovale.ResetControls()
     end,
     EvaluateScript = function(self, ast, forceEvaluation)
         self:StartProfiling("OvaleCompile_EvaluateScript")
@@ -641,6 +641,10 @@ local OvaleCompileClass = __class(__Ovale.RegisterPrinter(__Debug.OvaleDebug:Reg
     DebugCompile = function(self)
         self:Print("Total number of times the script was evaluated: %d", self_timesEvaluated)
     end,
+    constructor = function(self)
+        self.serial = nil
+        self.ast = nil
+    end
 })
 __exports.OvaleCompile = OvaleCompileClass()
 end)

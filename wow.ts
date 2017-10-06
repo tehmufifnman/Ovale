@@ -184,7 +184,7 @@ function makeLuaIterable<T>(iterable: Iterable<T>) {
 }
 
 var string = {
-    find(t: string, pattern: string, start?:number):[number, number] {
+    find: (t: string, pattern: string, start?:number):[number, number] => {
         if (start) {
             t = t.substring(start);
         }
@@ -196,22 +196,22 @@ var string = {
         pos += start;
         return [pos, pos + length];
     },
-    lower(t: string) { return t.toLowerCase() },
-    sub(t: string, index: number, end?:number) { return t.substring(index, end) },
-    len(t: string) { return t.length},
-    format(format: string, ...values) { return format; },
-    gmatch(text: string, pattern: string) { return makeLuaIterable(text.match(pattern)); },
-    gsub(text: string, pattern: string, substitute: string|((...args:string[]) => string)) {
+    lower: (t: string) => { return t.toLowerCase() },
+    sub: (t: string, index: number, end?:number) => { return t.substring(index, end) },
+    len: (t: string) => { return t.length},
+    format: (format: string, ...values) => { return format; },
+    gmatch: (text: string, pattern: string) => { return makeLuaIterable(text.match(pattern)); },
+    gsub: (text: string, pattern: string, substitute: string|((...args:string[]) => string)) => {
         const regex = compilePattern(pattern);
          if (typeof(substitute) === "string") return text.replace(regex, substitute.replace("%", "$"));
         return text.replace(regex, (pattern:string, ...args:string[]) => substitute(...args));
     },
-    match(text: string, pattern: string) { return text.match(pattern); },
-    upper(text: string) { return text.toUpperCase()}
+    match: (text: string, pattern: string) => { return text.match(pattern); },
+    upper: (text: string) => { return text.toUpperCase()}
 }
 
 var table = {
-    concat<T>(t:LuaArray<T>, seperator?: string):string {
+    concat: <T>(t:LuaArray<T>, seperator?: string):string => {
         const result: string[] = [];
         for (let i = 1; t[i] !== undefined; i++) {
             result.push(t[i].toString());
@@ -220,12 +220,12 @@ var table = {
         return result.join(seperator);
     },
 
-    insert<T>(t:LuaArray<T>, indexOrValue:number|T, value?: T) {
+    insert: <T>(t:LuaArray<T>, indexOrValue:number|T, value?: T) => {
         // const l = lualength(t);
         // t[l + 1] = value;
         // t.n = l + 1;
     },
-    sort<T>(t:LuaArray<T>, compare?: (left:T,right:T) => boolean) {
+    sort: <T>(t:LuaArray<T>, compare?: (left:T,right:T) => boolean) => {
         let values:T[] = [];
         for (const key in t) {
             values.push(t[key])
@@ -242,7 +242,7 @@ var table = {
         }
         t.n = values.length;
     },
-    remove<T>(t: LuaArray<T>, index?: number):T { return t[t.n] },
+    remove: <T>(t: LuaArray<T>, index?: number):T => { return t[t.n] },
 }
 
 // Utility functions
@@ -264,43 +264,41 @@ type UIPosition = "TOPLEFT" | "CENTER";
 type UIAnchor = "ANCHOR_BOTTOMLEFT" | "ANCHOR_NONE";
 
 interface UIRegion {
+    CanChangeProtectedState():boolean;
+    ClearAllPoints():void;
+    GetCenter():[number, number];
+    GetWidth():number;
+    GetHeight():number;
     GetParent():UIRegion;
     SetParent(parent: UIRegion):void;
     SetAllPoints(around: UIFrame):void;
+    SetParent(parent:UIFrame):void;
     SetPoint(anchor: UIPosition, x:number, y: number):void;
     SetPoint(anchor: UIPosition, reference: UIFrame, refAnchor: UIPosition, x:number, y: number):void;
+    SetWidth(width:number):void;
+    SetHeight(height:number):void;
 }
 
 interface UIFrame  extends UIRegion {
-    AddMessage(message:string);
-    SetLabel(label: string);
-    SetValue(value: string);
-    SetUserData(key: string, value: string);
-    GetUserData(key: string):string;
-    SetCallback(event: string, callback: (widget: UIFrame) => void);
-    SetList(list: LuaArray<any>):void;
     SetAlpha(value:number):void;
     SetScript(event:"OnMouseUp" | "OnEnter" | "OnLeave" | "OnMouseDown" | "OnHide" | "OnUpdate", func):void;
     StartMoving():void;
     StopMovingOrSizing():void;
-    GetCenter():[number, number];
     SetMovable(movable:boolean):void;
     SetFrameStrata(strata: "MEDIUM"):void;
-    SetWidth(width:number):void;
-    SetHeight(height:number):void;
     Show():void;
     Hide():void;   
     IsShown():boolean;
-    SetParent(parent:UIFrame):void;
-    GetWidth():number;
-    GetHeight():number;
     CreateTexture(): UITexture;
     EnableMouse(enabled: boolean):void;
     CreateFontString(name: string, layer?: "OVERLAY", inherits?: string): UIFontString;
-    RegisterForClicks(type: "AnyUp"):void;
     SetAttribute(key: string, value: string):void;
     SetScale(scale: number):void;
     IsVisible():boolean;
+}
+
+interface UIMessageFrame extends UIFrame {
+    AddMessage(message:string);
 }
 
 interface UIFontString extends UIFrame {
@@ -313,6 +311,7 @@ interface UIFontString extends UIFrame {
 interface UICheckButton extends UIFrame {
     SetChecked(checked: boolean):void;
     GetChecked():boolean;
+    RegisterForClicks(type: "AnyUp" | "AnyDown" | "LeftButtonDown" | "LeftButtonUp" | "MiddleButtonDown" | "MiddleButtonUp" | "RightButtonDown" | "RightButtonUp"):void;
 }
 
 interface UITexture extends UIFrame {
@@ -546,7 +545,7 @@ function GetShapeshiftFormInfo(index:number){return []}
 function GetTotemInfo(slot) {return[]}
 
 var BigWigsLoader;
-var UIParent;
+var UIParent: UIFrame;
 var Bartender4;
 
 // WoW global variables

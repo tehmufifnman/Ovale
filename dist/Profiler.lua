@@ -21,77 +21,77 @@ local OvaleProfilerClass = __class(OvaleProfilerBase, {
         self.self_profilingOutput = nil
         self.profiles = {}
         self.actions = {
+            profiling = {
+                name = __Localization.L["Profiling"],
+                type = "execute",
+                func = function()
+                    local appName = self.GetName()
+                    AceConfigDialog:SetDefaultSize(appName, 800, 550)
+                    AceConfigDialog:Open(appName)
+                end
+
+            }
+        }
+        self.options = {
+            name = __Ovale.Ovale:GetName() .. " " .. __Localization.L["Profiling"],
+            type = "group",
+            args = {
                 profiling = {
                     name = __Localization.L["Profiling"],
-                    type = "execute",
-                    func = function()
-                        local appName = self:GetName()
-                        AceConfigDialog:SetDefaultSize(appName, 800, 550)
-                        AceConfigDialog:Open(appName)
-                    end
+                    type = "group",
+                    args = {
+                        modules = {
+                            name = __Localization.L["Modules"],
+                            type = "group",
+                            inline = true,
+                            order = 10,
+                            args = {},
+                            get = function(info)
+                                local name = info[#info]
+                                local value = __Ovale.Ovale.db.global.profiler[name]
+                                return (value ~= nil)
+                            end,
+                            set = function(info, value)
+                                value = value or nil
+                                local name = info[#info]
+                                __Ovale.Ovale.db.global.profiler[name] = value
+                                if value then
+                                    self:EnableProfiling(name)
+                                else
+                                    self:DisableProfiling(name)
+                                end
+                            end
+                        },
+                        reset = {
+                            name = __Localization.L["Reset"],
+                            desc = __Localization.L["Reset the profiling statistics."],
+                            type = "execute",
+                            order = 20,
+                            func = function()
+                                self.ResetProfiling()
+                            end
 
-                }
-            }
-        self.options = {
-                name = __Ovale.Ovale:GetName() .. __Localization.L["Profiling"],
-                type = "group",
-                args = {
-                    profiling = {
-                        name = __Localization.L["Profiling"],
-                        type = "group",
-                        args = {
-                            modules = {
-                                name = __Localization.L["Modules"],
-                                type = "group",
-                                inline = true,
-                                order = 10,
-                                args = {},
-                                get = function(info)
-                                    local name = info[#info]
-                                    local value = __Ovale.Ovale.db.global.profiler[name]
-                                    return (value ~= nil)
-                                end,
-                                set = function(info, value)
-                                    value = value or nil
-                                    local name = info[#info]
-                                    __Ovale.Ovale.db.global.profiler[name] = value
-                                    if value then
-                                        self:EnableProfiling(name)
-                                    else
-                                        self:DisableProfiling(name)
-                                    end
+                        },
+                        show = {
+                            name = __Localization.L["Show"],
+                            desc = __Localization.L["Show the profiling statistics."],
+                            type = "execute",
+                            order = 30,
+                            func = function()
+                                self.self_profilingOutput.Clear()
+                                local s = self:GetProfilingInfo()
+                                if s then
+                                    self.self_profilingOutput.AddLine(s)
+                                    self.self_profilingOutput.Display()
                                 end
-                            },
-                            reset = {
-                                name = __Localization.L["Reset"],
-                                desc = __Localization.L["Reset the profiling statistics."],
-                                type = "execute",
-                                order = 20,
-                                func = function()
-                                    self:ResetProfiling()
-                                end
-
-                            },
-                            show = {
-                                name = __Localization.L["Show"],
-                                desc = __Localization.L["Show the profiling statistics."],
-                                type = "execute",
-                                order = 30,
-                                func = function()
-                                    self.self_profilingOutput:Clear()
-                                    local s = self:GetProfilingInfo()
-                                    if s then
-                                        self.self_profilingOutput:AddLine(s)
-                                        self.self_profilingOutput:Display()
-                                    end
-                                end
-                            }
+                            end
                         }
                     }
                 }
             }
+        }
         self.DoNothing = function()
-            end
+        end
 
         self.array = {}
         OvaleProfilerBase.constructor(self)
@@ -109,11 +109,11 @@ local OvaleProfilerClass = __class(OvaleProfilerBase, {
     end,
     OnEnable = function(self)
         if  not self.self_profilingOutput then
-            self.self_profilingOutput = LibTextDump:New(__Ovale.Ovale:GetName() .. __Localization.L["Profiling"], 750, 500)
+            self.self_profilingOutput = LibTextDump.New(__Ovale.Ovale:GetName() .. " - " .. __Localization.L["Profiling"], 750, 500)
         end
     end,
     OnDisable = function(self)
-        self.self_profilingOutput:Clear()
+        self.self_profilingOutput.Clear()
     end,
     RegisterProfiling = function(self, module, name)
         local profiler = self

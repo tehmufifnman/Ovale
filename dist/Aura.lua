@@ -53,7 +53,7 @@ do
                             output[#output + 1] = "== DEBUFFS =="
                             output[#output + 1] = harmful
                         end
-                        return tconcat(output, "\n")
+                        return tconcat(output, "\\n")
                     end
 
                 }
@@ -80,7 +80,7 @@ do
                             output[#output + 1] = "== DEBUFFS =="
                             output[#output + 1] = harmful
                         end
-                        return tconcat(output, "\n")
+                        return tconcat(output, "\\n")
                     end
 
                 }
@@ -758,6 +758,11 @@ local OvaleAuraClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(__Debu
         end
         return verified, requirement, index
     end,
+    constructor = function(self)
+        self.aura = {}
+        self.serial = {}
+        self.bypassState = {}
+    end
 })
 local array = {}
 local AuraState = __class(nil, {
@@ -986,7 +991,7 @@ local AuraState = __class(nil, {
                     local aura = self:GetStateAura(guid, auraId, casterGUID)
                     if self:IsActiveAura(aura) and aura.filter == filter and  not aura.state then
                         local name = aura.name or "Unknown spell"
-                        tinsert(array, name .. auraId)
+                        tinsert(array, name .. ": " .. auraId)
                     end
                 end
             end
@@ -996,14 +1001,14 @@ local AuraState = __class(nil, {
                 for casterGUID, aura in _pairs(whoseTable) do
                     if self:IsActiveAura(aura) and aura.filter == filter then
                         local name = aura.name or "Unknown spell"
-                        tinsert(array, name .. auraId)
+                        tinsert(array, name .. ": " .. auraId)
                     end
                 end
             end
         end
         if _next(array) then
             tsort(array)
-            return tconcat(array, "\n")
+            return tconcat(array, "\\n")
         end
     end,
     IsActiveAura = function(self, aura, atTime)
@@ -1373,6 +1378,10 @@ local AuraState = __class(nil, {
     RequireStealthHandler = function(self, spellId, atTime, requirement, tokens, index, targetGUID)
         return __exports.OvaleAura:RequireStealthHandler(spellId, atTime, requirement, tokens, index, targetGUID)
     end,
+    constructor = function(self)
+        self.aura = nil
+        self.serial = nil
+    end
 })
 __exports.auraState = AuraState()
 __State.OvaleState:RegisterState(__exports.auraState)

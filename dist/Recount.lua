@@ -54,7 +54,7 @@ local OvaleRecountClass = __class(OvaleRecountBase, {
             local source = Recount.db2.combatants[name]
             if source then
                 Recount:AddAmount(source, __Ovale.Ovale:GetName(), scored)
-                Recount:AddAmount(source, __Ovale.Ovale:GetName(), scoreMax)
+                Recount:AddAmount(source, __Ovale.Ovale:GetName() .. "Max", scoreMax)
             end
         end
     end,

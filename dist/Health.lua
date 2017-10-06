@@ -228,6 +228,14 @@ local OvaleHealthClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler
         end
         return verified, requirement, index
     end,
+    constructor = function(self)
+        self.health = {}
+        self.maxHealth = {}
+        self.totalDamage = {}
+        self.totalHealing = {}
+        self.firstSeen = {}
+        self.lastUpdated = {}
+    end
 })
 local HealthState = __class(nil, {
     CleanState = function(self)

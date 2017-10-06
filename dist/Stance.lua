@@ -111,13 +111,13 @@ local OvaleStanceClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler
         _wipe(array)
         for k, v in _pairs(self.stanceList) do
             if self.stance == k then
-                tinsert(array, v)
+                tinsert(array, v .. " (active)")
             else
                 tinsert(array, v)
             end
         end
         tsort(array)
-        return tconcat(array, "\n")
+        return tconcat(array, "\\n")
     end,
     GetStance = function(self, stanceId)
         stanceId = stanceId or self.stance
@@ -182,6 +182,13 @@ local OvaleStanceClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler
         end
         return verified, requirement, index
     end,
+    constructor = function(self)
+        self.ready = false
+        self.stanceList = {}
+        self.stanceId = {}
+        self.stance = nil
+        self.STANCE_NAME = STANCE_NAME
+    end
 })
 local StanceState = __class(nil, {
     InitializeState = function(self)
@@ -211,6 +218,9 @@ local StanceState = __class(nil, {
     RequireStanceHandler = function(self, spellId, atTime, requirement, tokens, index, targetGUID)
         return __exports.OvaleStance:RequireStanceHandler(spellId, atTime, requirement, tokens, index, targetGUID)
     end,
+    constructor = function(self)
+        self.stance = nil
+    end
 })
 __exports.stanceState = StanceState()
 __State.OvaleState:RegisterState(__exports.stanceState)

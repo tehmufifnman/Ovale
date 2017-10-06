@@ -63,7 +63,7 @@ local OvaleScoreClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleScoreB
     end,
     ScoreSpell = function(self, spellId)
         if OvaleFuture.inCombat and self.scoredSpell[spellId] then
-            local scored = __Ovale.Ovale.frame:GetScore(spellId)
+            local scored = __Ovale.Ovale.frame.GetScore(spellId)
             self:DebugTimestamp("Scored %s for %d.", scored, spellId)
             if scored then
                 self.score = self.score + scored
@@ -82,6 +82,13 @@ local OvaleScoreClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleScoreB
             end
         end
     end,
+    constructor = function(self)
+        self.damageMeter = {}
+        self.damageMeterMethod = {}
+        self.score = 0
+        self.maxScore = 0
+        self.scoredSpell = {}
+    end
 })
 __exports.OvaleScore = OvaleScoreClass()
 end)

@@ -38,7 +38,7 @@ local _INVSLOT_TRINKET2 = INVSLOT_TRINKET2
 local _INVSLOT_WAIST = INVSLOT_WAIST
 local _INVSLOT_WRIST = INVSLOT_WRIST
 local self_tooltip = nil
-local OVALE_ITEM_LEVEL_PATTERN = strgsub(ITEM_LEVEL, "%%d", "(%%d+)")
+local OVALE_ITEM_LEVEL_PATTERN = "^" .. strgsub(ITEM_LEVEL, "%%d", "(%%d+)")
 local OVALE_SLOTNAME = {
     AmmoSlot = _INVSLOT_AMMO,
     BackSlot = _INVSLOT_BACK,
@@ -1306,7 +1306,7 @@ local GetItemLevel = function(slotId)
     self_tooltip:SetInventoryItem("player", slotId)
     local itemLevel
     for i = 2, self_tooltip:NumLines(), 1 do
-        local text = _G[i]:GetText()
+        local text = (_G["OvaleEquipment_ScanningTooltipTextLeft" .. i]):GetText()
         if text then
             itemLevel = strmatch(text, OVALE_ITEM_LEVEL_PATTERN)
             if itemLevel then
@@ -1624,5 +1624,16 @@ local OvaleEquipmentClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profi
             self:Print("Player has %d piece(s) of %s armor set.", v, k)
         end
     end,
+    constructor = function(self)
+        self.ready = false
+        self.equippedItems = {}
+        self.equippedItemLevels = {}
+        self.mainHandItemType = nil
+        self.offHandItemType = nil
+        self.armorSetCount = {}
+        self.metaGem = nil
+        self.mainHandWeaponSpeed = nil
+        self.offHandWeaponSpeed = nil
+    end
 })
 end)

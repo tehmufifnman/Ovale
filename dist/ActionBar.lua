@@ -19,22 +19,22 @@ local API_GetMacroSpell = GetMacroSpell
 local OvaleActionBarClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(__Debug.OvaleDebug:RegisterDebugging(OvaleActionBarBase)), {
     constructor = function(self)
         self.debugOptions = {
-                actionbar = {
-                    name = __Localization.L["Action bar"],
-                    type = "group",
-                    args = {
-                        spellbook = {
-                            name = __Localization.L["Action bar"],
-                            type = "input",
-                            multiline = 25,
-                            width = "full",
-                            get = function(info)
-                                return self:DebugActions()
-                            end
-                        }
+            actionbar = {
+                name = __Localization.L["Action bar"],
+                type = "group",
+                args = {
+                    spellbook = {
+                        name = __Localization.L["Action bar"],
+                        type = "input",
+                        multiline = 25,
+                        width = "full",
+                        get = function(info)
+                            return self:DebugActions()
+                        end
                     }
                 }
             }
+        }
         self.action = {}
         self.keybind = {}
         self.spell = {}
@@ -49,18 +49,18 @@ local OvaleActionBarClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(_
     GetKeyBinding = function(self, slot)
         local name
         if Bartender4 then
-            name = slot
+            name = "CLICK BT4Button " .. slot .. ":LeftButton"
         else
             if slot <= 24 or slot > 72 then
-                name = ((slot - 1) % 12) + 1
+                name = "ACTIONBUTTON" .. ((slot - 1) % 12) + 1
             elseif slot <= 36 then
-                name = slot - 24
+                name = "MULTIACTIONBAR3BUTTON" .. slot - 24
             elseif slot <= 48 then
-                name = slot - 36
+                name = "MULTIACTIONBAR4BUTTON" .. slot - 36
             elseif slot <= 60 then
-                name = slot - 48
+                name = "MULTIACTIONBAR2BUTTON" .. slot - 48
             else
-                name = slot - 60
+                name = "MULTIACTIONBAR1BUTTON" .. slot - 60
             end
         end
         local key = name and API_GetBindingKey(name)
@@ -236,7 +236,7 @@ local OvaleActionBarClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(_
         _wipe(self.output)
         local array = {}
         for k, v in pairs(self.spell) do
-            tinsert(array, tostring(self:GetKeyBinding(v)) .. tostring(k) .. tostring(__SpellBook.OvaleSpellBook:GetSpellName(k)))
+            tinsert(array, tostring(self:GetKeyBinding(v)) .. ": " .. tostring(k) .. " " .. tostring(__SpellBook.OvaleSpellBook:GetSpellName(k)))
         end
         tsort(array)
         for _, v in ipairs(array) do
@@ -246,8 +246,8 @@ local OvaleActionBarClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(_
         for _ in pairs(self.spell) do
             total = total + 1
         end
-        self.output[#self.output + 1] = total
-        return tconcat(self.output, "\n")
+        self.output[#self.output + 1] = "Total spells: " .. total
+        return tconcat(self.output, "\\n")
     end,
 })
 __exports.OvaleActionBar = OvaleActionBarClass()

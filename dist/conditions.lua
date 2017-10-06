@@ -503,7 +503,7 @@ end
 do
     local CheckBoxOff = function(positionalParams, namedParams, state, atTime)
         for _, id in _ipairs(positionalParams) do
-            if __Ovale.Ovale:IsChecked(id) then
+            if __Ovale.Ovale.IsChecked(id) then
                 return nil
             end
         end
@@ -512,7 +512,7 @@ do
 
     local CheckBoxOn = function(positionalParams, namedParams, state, atTime)
         for _, id in _ipairs(positionalParams) do
-            if  not __Ovale.Ovale:IsChecked(id) then
+            if  not __Ovale.Ovale.IsChecked(id) then
                 return nil
             end
         end
@@ -1307,7 +1307,7 @@ end
 do
     local List = function(positionalParams, namedParams, state, atTime)
         local name, value = positionalParams[1], positionalParams[2]
-        if name and __Ovale.Ovale:GetListValue(name) == value then
+        if name and __Ovale.Ovale.GetListValue(name) == value then
             return 0, INFINITY
         end
         return nil
@@ -2225,7 +2225,7 @@ do
     local TargetIsPlayer = function(positionalParams, namedParams, state, atTime)
         local yesno = positionalParams[1]
         local target = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local boolean = API_UnitIsUnit("player", target)
+        local boolean = API_UnitIsUnit("player", target .. "target")
         return __Condition.TestBoolean(boolean, yesno)
     end
 

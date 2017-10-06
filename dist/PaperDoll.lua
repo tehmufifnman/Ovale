@@ -401,6 +401,68 @@ local OvalePaperDollClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profi
         local paperDollModule = state or self
         self:UpdateSnapshot(spellcast, true)
     end,
+    constructor = function(self)
+        self.class = __Ovale.Ovale.playerClass
+        self.level = API_UnitLevel("player")
+        self.specialization = nil
+        self.STAT_NAME = {
+            snapshotTime = true,
+            agility = true,
+            intellect = true,
+            spirit = true,
+            stamina = true,
+            strength = true,
+            attackPower = true,
+            rangedAttackPower = true,
+            spellBonusDamage = true,
+            spellBonusHealing = true,
+            masteryEffect = true,
+            meleeCrit = true,
+            meleeHaste = true,
+            rangedCrit = true,
+            rangedHaste = true,
+            spellCrit = true,
+            spellHaste = true,
+            multistrike = true,
+            critRating = true,
+            hasteRating = true,
+            masteryRating = true,
+            multistrikeRating = true,
+            mainHandWeaponDamage = true,
+            offHandWeaponDamage = true,
+            baseDamageMultiplier = true
+        }
+        self.SNAPSHOT_STAT_NAME = {
+            snapshotTime = true,
+            masteryEffect = true,
+            baseDamageMultiplier = true
+        }
+        self.snapshotTime = 0
+        self.agility = 0
+        self.intellect = 0
+        self.spirit = 0
+        self.stamina = 0
+        self.strength = 0
+        self.attackPower = 0
+        self.rangedAttackPower = 0
+        self.spellBonusDamage = 0
+        self.spellBonusHealing = 0
+        self.masteryEffect = 0
+        self.meleeCrit = 0
+        self.meleeHaste = 0
+        self.rangedCrit = 0
+        self.rangedHaste = 0
+        self.spellCrit = 0
+        self.spellHaste = 0
+        self.multistrike = 0
+        self.critRating = 0
+        self.hasteRating = 0
+        self.masteryRating = 0
+        self.multistrikeRating = 0
+        self.mainHandWeaponDamage = 0
+        self.offHandWeaponDamage = 0
+        self.baseDamageMultiplier = 1
+    end
 })
 local PaperDollState = __class(nil, {
     InitializeState = function(self)
@@ -459,6 +521,36 @@ local PaperDollState = __class(nil, {
     UpdateSnapshot = function(self, target, snapshot, updateAllStats)
         __exports.OvalePaperDoll:UpdateSnapshot(target, snapshot, updateAllStats)
     end,
+    constructor = function(self)
+        self.class = nil
+        self.level = nil
+        self.specialization = nil
+        self.snapshotTime = nil
+        self.agility = nil
+        self.intellect = nil
+        self.spirit = nil
+        self.stamina = nil
+        self.strength = nil
+        self.attackPower = nil
+        self.rangedAttackPower = nil
+        self.spellBonusDamage = nil
+        self.spellBonusHealing = nil
+        self.masteryEffect = nil
+        self.meleeCrit = nil
+        self.meleeHaste = nil
+        self.rangedCrit = nil
+        self.rangedHaste = nil
+        self.spellCrit = nil
+        self.spellHaste = nil
+        self.multistrike = nil
+        self.critRating = nil
+        self.hasteRating = nil
+        self.masteryRating = nil
+        self.multistrikeRating = nil
+        self.mainHandWeaponDamage = nil
+        self.offHandWeaponDamage = nil
+        self.baseDamageMultiplier = nil
+    end
 })
 __exports.paperDollState = PaperDollState()
 __State.OvaleState:RegisterState(__exports.paperDollState)

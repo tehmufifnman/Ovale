@@ -45,8 +45,8 @@ interface Action {
     dy?: number;
 }
 
-const OvaleFrameBase = Ovale.NewModule("OvaleFrame", "AceEvent-3.0");
-class OvaleFrame extends OvaleFrameBase {
+
+class OvaleFrame extends AceGUI.WidgetContainerBase {
     checkBox = {}
     list = {}
     checkBoxWidget = {}
@@ -124,28 +124,6 @@ class OvaleFrame extends OvaleFrameBase {
         return 0;
     }
 
-    Ovale_OptionChanged(event, eventType) {
-        if (eventType == "visibility") {
-            this.UpdateVisibility();
-        }
-        else {
-            if (eventType == "layout") {
-                this.UpdateFrame(); // TODO
-            }
-            this.UpdateFrame();
-        }    
-    }
-
-    PLAYER_TARGET_CHANGED() {
-        this.UpdateVisibility();
-    }
-    Ovale_CombatStarted(event, atTime) {
-        this.UpdateVisibility();
-    }
-    Ovale_CombatEnded(event, atTime) {
-        this.UpdateVisibility();
-    }
-    
     UpdateVisibility() {
         let visible = true;
         let profile = Ovale.db.profile;
@@ -366,16 +344,16 @@ class OvaleFrame extends OvaleFrameBase {
         }
     }
 
-    OnCheckBoxValueChanged = (widget: UIFrame) => {
-        let name = widget.GetUserData("name");
+    OnCheckBoxValueChanged = (widget: AceGUIWidgetCheckBox) => {
+        let name = widget.GetUserData<string>("name");
         Ovale.db.profile.check[name] = widget.GetValue();
-        this.SendMessage("Ovale_CheckBoxValueChanged", name);
+        OvaleFrameModule.SendMessage("Ovale_CheckBoxValueChanged", name);
     }
 
-    OnDropDownValueChanged = (widget: UIFrame) => {
-        let name = widget.GetUserData("name");
+    OnDropDownValueChanged = (widget: AceGUIWidgetCheckBox) => {
+        let name = widget.GetUserData<string>("name");
         Ovale.db.profile.list[name] = widget.GetValue();
-        this.SendMessage("Ovale_ListValueChanged", name);
+        OvaleFrameModule.SendMessage("Ovale_ListValueChanged", name);
     }
     FinalizeString(s) {
         let [item, id] = strmatch(s, "^(item:)(.+)");
@@ -401,7 +379,7 @@ class OvaleFrame extends OvaleFrameBase {
                 }
                 widget.SetUserData("name", name);
                 widget.SetCallback("OnValueChanged", this.OnCheckBoxValueChanged);
-                widget.SetParent(this.frame);
+                this.AddChild(widget);
                 this.checkBoxWidget[name] = widget;
             } else {
                 Ovale.OneTimeMessage("Warning: checkbox '%s' is used but not defined.", name);
@@ -420,7 +398,7 @@ class OvaleFrame extends OvaleFrameBase {
                 }
                 widget.SetUserData("name", name);
                 widget.SetCallback("OnValueChanged", this.OnDropDownValueChanged);
-                widget.SetParent(this.frame);
+                this.AddChild(widget);
                 this.listWidget[name] = widget;
             } else {
                 Ovale.OneTimeMessage("Warning: list '%s' is used but has no items.", name);
@@ -561,9 +539,9 @@ class OvaleFrame extends OvaleFrameBase {
     constructor() {
         super();
         let hider = API_CreateFrame("Frame", `${Ovale.GetName()}PetBattleFrameHider`, UIParent, "SecureHandlerStateTemplate");
-        hider.SetAllPoints(this.frame);
-        API_RegisterStateDriver(hider, "visibility", "[petbattle] hide; show");
         let frame = API_CreateFrame("Frame", undefined, hider);
+        hider.SetAllPoints(frame);
+        API_RegisterStateDriver(hider, "visibility", "[petbattle] hide; show");
         
         const profile = Ovale.db.profile;
         
@@ -614,12 +592,44 @@ class OvaleFrame extends OvaleFrameBase {
         content.SetWidth(200);
         content.SetHeight(100);
         content.Hide();
-        content.SetAlpha(profile.apparence.optionsAlpha);
-        AceGUI.RegisterAsContainer(this);
+        content.SetAlpha(profile.apparence.optionsAlpha);        
+    }
+}
+
+const OvaleFrameWidget = AceGUI.RegisterAsContainer(OvaleFrame);
+export const frame = new OvaleFrameWidget();
+
+const OvaleFrameBase = Ovale.NewModule("OvaleFrame", "AceEvent-3.0");
+class OvaleFrameModuleClass extends OvaleFrameBase {
+    
+    Ovale_OptionChanged(event, eventType) {
+        if (eventType == "visibility") {
+            frame.UpdateVisibility();
+        }
+        else {
+            if (eventType == "layout") {
+                frame.UpdateFrame(); // TODO
+            }
+            frame.UpdateFrame();
+        }    
+    }
+
+    PLAYER_TARGET_CHANGED() {
+        frame.UpdateVisibility();
+    }
+    Ovale_CombatStarted(event, atTime) {
+        frame.UpdateVisibility();
+    }
+    Ovale_CombatEnded(event, atTime) {
+        frame.UpdateVisibility();
+    }
+    
+    constructor(){
+        super();
         this.RegisterMessage("Ovale_OptionChanged");
         this.RegisterMessage("Ovale_CombatStarted");
         this.RegisterEvent("PLAYER_TARGET_CHANGED");
     }
 }
 
-const frame = new OvaleFrame();
+export const OvaleFrameModule = new OvaleFrameModuleClass();

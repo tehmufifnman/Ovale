@@ -7,18 +7,18 @@ local API_CreateFrame = CreateFrame
 local API_EasyMenu = EasyMenu
 local API_IsShiftKeyDown = IsShiftKeyDown
 local CLASS_ICONS = {
-    ["DEATHKNIGHT"] = "Interface\Icons\ClassIcon_DeathKnight",
-    ["DEMONHUNTER"] = "Interface\Icons\ClassIcon_DemonHunter",
-    ["DRUID"] = "Interface\Icons\ClassIcon_Druid",
-    ["HUNTER"] = "Interface\Icons\ClassIcon_Hunter",
-    ["MAGE"] = "Interface\Icons\ClassIcon_Mage",
-    ["MONK"] = "Interface\Icons\ClassIcon_Monk",
-    ["PALADIN"] = "Interface\Icons\ClassIcon_Paladin",
-    ["PRIEST"] = "Interface\Icons\ClassIcon_Priest",
-    ["ROGUE"] = "Interface\Icons\ClassIcon_Rogue",
-    ["SHAMAN"] = "Interface\Icons\ClassIcon_Shaman",
-    ["WARLOCK"] = "Interface\Icons\ClassIcon_Warlock",
-    ["WARRIOR"] = "Interface\Icons\ClassIcon_Warrior"
+    ["DEATHKNIGHT"] = "Interface\\Icons\\ClassIcon_DeathKnight",
+    ["DEMONHUNTER"] = "Interface\\Icons\\ClassIcon_DemonHunter",
+    ["DRUID"] = "Interface\\Icons\\ClassIcon_Druid",
+    ["HUNTER"] = "Interface\\Icons\\ClassIcon_Hunter",
+    ["MAGE"] = "Interface\\Icons\\ClassIcon_Mage",
+    ["MONK"] = "Interface\\Icons\\ClassIcon_Monk",
+    ["PALADIN"] = "Interface\\Icons\\ClassIcon_Paladin",
+    ["PRIEST"] = "Interface\\Icons\\ClassIcon_Priest",
+    ["ROGUE"] = "Interface\\Icons\\ClassIcon_Rogue",
+    ["SHAMAN"] = "Interface\\Icons\\ClassIcon_Shaman",
+    ["WARLOCK"] = "Interface\\Icons\\ClassIcon_Warlock",
+    ["WARRIOR"] = "Interface\\Icons\\ClassIcon_Warrior"
 }
 local self_menuFrame = nil
 local self_tooltipTitle = nil
@@ -73,7 +73,7 @@ local OnClick = function(frame, button)
         self_menuFrame = self_menuFrame or API_CreateFrame("Frame", "OvaleDataBroker_MenuFrame", UIParent, "UIDropDownMenuTemplate")
         API_EasyMenu(menu, self_menuFrame, "cursor", 0, 0, "MENU")
     elseif button == "MiddleButton" then
-        __Ovale.Ovale:ToggleOptions()
+        __Ovale.Ovale.ToggleOptions()
     elseif button == "RightButton" then
         if API_IsShiftKeyDown() then
             __Debug.OvaleDebug:DoTrace(true)
@@ -84,7 +84,7 @@ local OnClick = function(frame, button)
 end
 
 local OnTooltipShow = function(tooltip)
-    self_tooltipTitle = self_tooltipTitle or __Ovale.Ovale:GetName() .. __Version.OvaleVersion.version
+    self_tooltipTitle = self_tooltipTitle or __Ovale.Ovale:GetName() .. " " .. __Version.OvaleVersion.version
     tooltip:SetText(self_tooltipTitle, 1, 1, 1)
     tooltip:AddLine(__Localization.L["Click to select the script."])
     tooltip:AddLine(__Localization.L["Middle-Click to toggle the script options panel."])
@@ -136,6 +136,9 @@ local OvaleDataBrokerClass = __class(OvaleDataBrokerBase, {
     Ovale_ScriptChanged = function(self)
         self.broker.text = __Ovale.Ovale.db.profile.source
     end,
+    constructor = function(self)
+        self.broker = nil
+    end
 })
 __exports.OvaleDataBroker = OvaleDataBrokerClass()
 end)

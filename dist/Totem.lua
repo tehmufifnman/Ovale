@@ -48,6 +48,9 @@ local OvaleTotemClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(Ovale
         self_serial = self_serial + 1
         __Ovale.Ovale.refreshNeeded[__Ovale.Ovale.playerGUID] = true
     end,
+    constructor = function(self)
+        self.totem = {}
+    end
 })
 local TotemState = __class(nil, {
     InitializeState = function(self)
@@ -221,6 +224,9 @@ local TotemState = __class(nil, {
         totem.duration = duration
         __exports.OvaleTotem:StopProfiling("OvaleTotem_state_DestroyTotem")
     end,
+    constructor = function(self)
+        self.totem = nil
+    end
 })
 __exports.totemState = TotemState()
 __State.OvaleState:RegisterState(__exports.totemState)

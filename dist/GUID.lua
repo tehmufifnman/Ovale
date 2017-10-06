@@ -15,17 +15,17 @@ local PET_UNIT = {}
 do
     PET_UNIT["player"] = "pet"
     for i = 1, 5, 1 do
-        PET_UNIT[i] = i
+        PET_UNIT["arena" .. i] = "arenapet" .. i
     end
     for i = 1, 4, 1 do
-        PET_UNIT[i] = i
+        PET_UNIT["party" .. i] = "partypet" .. i
     end
     for i = 1, 40, 1 do
-        PET_UNIT[i] = i
+        PET_UNIT["raid" .. i] = "raidpet" .. i
     end
     _setmetatable(PET_UNIT, {
         __index = function(t, unitId)
-            return unitId
+            return unitId .. "pet"
         end
 
     })
@@ -38,20 +38,20 @@ do
     tinsert(UNIT_AURA_UNITS, "target")
     tinsert(UNIT_AURA_UNITS, "focus")
     for i = 1, 40, 1 do
-        local unitId = i
+        local unitId = "raid" .. i
         tinsert(UNIT_AURA_UNITS, unitId)
         tinsert(UNIT_AURA_UNITS, PET_UNIT[unitId])
     end
     for i = 1, 4, 1 do
-        local unitId = i
+        local unitId = "party" .. i
         tinsert(UNIT_AURA_UNITS, unitId)
         tinsert(UNIT_AURA_UNITS, PET_UNIT[unitId])
     end
     for i = 1, 4, 1 do
-        tinsert(UNIT_AURA_UNITS, i)
+        tinsert(UNIT_AURA_UNITS, "boss" .. i)
     end
     for i = 1, 5, 1 do
-        local unitId = i
+        local unitId = "arena" .. i
         tinsert(UNIT_AURA_UNITS, unitId)
         tinsert(UNIT_AURA_UNITS, PET_UNIT[unitId])
     end
@@ -153,7 +153,7 @@ local OvaleGUIDClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleGUIDBas
     INSTANCE_ENCOUNTER_ENGAGE_UNIT = function(self, event)
         self:Debug(event)
         for i = 1, 4, 1 do
-            self:UpdateUnitWithTarget(i)
+            self:UpdateUnitWithTarget("boss" .. i)
         end
     end,
     PLAYER_FOCUS_CHANGED = function(self, event)
@@ -184,7 +184,7 @@ local OvaleGUIDClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleGUIDBas
     UNIT_TARGET = function(self, event, unitId)
         if unitId ~= "player" then
             self:Debug(event, unitId)
-            local target = unitId
+            local target = unitId .. "target"
             self:UpdateUnit(target)
         end
     end,
@@ -258,7 +258,7 @@ local OvaleGUIDClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleGUIDBas
     end,
     UpdateUnitWithTarget = function(self, unitId)
         self:UpdateUnit(unitId)
-        self:UpdateUnit(unitId)
+        self:UpdateUnit(unitId .. "target")
     end,
     IsPlayerPet = function(self, guid)
         local atTime = self.petGUID[guid]
@@ -300,6 +300,16 @@ local OvaleGUIDClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleGUIDBas
         end
         return nil
     end,
+    constructor = function(self)
+        self.unitGUID = {}
+        self.guidUnit = {}
+        self.unitName = {}
+        self.nameUnit = {}
+        self.guidName = {}
+        self.nameGUID = {}
+        self.petGUID = {}
+        self.UNIT_AURA_UNIT = UNIT_AURA_UNIT
+    end
 })
 __exports.OvaleGUID = OvaleGUIDClass()
 end)

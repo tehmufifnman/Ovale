@@ -683,6 +683,9 @@ local OvaleFutureClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(__De
         end
         return false
     end,
+    InFlight = function(self, spellId)
+        return self:IsActive(spellId)
+    end,
     LastInFlightSpell = function(self)
         local spellcast
         if self.lastGCDSpellcast.success then
@@ -792,6 +795,16 @@ local OvaleFutureClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(__De
             end
         end
     end,
+    constructor = function(self)
+        self.inCombat = nil
+        self.combatStartTime = nil
+        self.queue = {}
+        self.lastCastTime = {}
+        self.lastSpellcast = nil
+        self.lastGCDSpellcast = {}
+        self.lastOffGCDSpellcast = {}
+        self.counter = {}
+    end
 })
 local FutureState = __class(nil, {
     InitializeState = function(self)
@@ -1007,6 +1020,23 @@ local FutureState = __class(nil, {
     UpdateCounters = function(self, spellId, atTime, targetGUID)
         return __exports.OvaleFuture:UpdateCounters(spellId, atTime, targetGUID)
     end,
+    constructor = function(self)
+        self.inCombat = nil
+        self.combatStartTime = nil
+        self.currentTime = nil
+        self.currentSpellId = nil
+        self.startCast = nil
+        self.endCast = nil
+        self.nextCast = nil
+        self.lastCast = nil
+        self.channel = nil
+        self.lastSpellId = nil
+        self.lastGCDSpellId = nil
+        self.lastGCDSpellIds = {}
+        self.lastOffGCDSpellId = nil
+        self.counter = nil
+        self.staticSpellcast = {}
+    end
 })
 __exports.futureState = FutureState()
 __State.OvaleState:RegisterState(__exports.futureState)

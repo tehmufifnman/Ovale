@@ -94,7 +94,7 @@ local GetActionItemInfo = function(element, state, atTime, target)
         local action = __ActionBar.OvaleActionBar:GetForItem(itemId)
         local spellName = API_GetItemSpell(itemId)
         if element.namedParams.texture then
-            actionTexture = element.namedParams.texture
+            actionTexture = "Interface\\Icons\\" .. element.namedParams.texture
         end
         actionTexture = actionTexture or API_GetItemIcon(itemId)
         actionInRange = API_IsItemInRange(itemId, target)
@@ -120,7 +120,7 @@ local GetActionMacroInfo = function(element, state, atTime, target)
         state:Log("Unknown macro '%s'.", macro)
     else
         if element.namedParams.texture then
-            actionTexture = element.namedParams.texture
+            actionTexture = "Interface\\Icons\\" .. element.namedParams.texture
         end
         actionTexture = actionTexture or API_GetActionTexture(action)
         actionInRange = API_IsActionInRange(action, target)
@@ -167,7 +167,7 @@ local GetActionSpellInfo = function(element, state, atTime, target)
         local isUsable, noMana = __SpellBook.spellBookState:IsUsableSpell(spellId, atTime, targetGUID)
         if isUsable or noMana then
             if element.namedParams.texture then
-                actionTexture = element.namedParams.texture
+                actionTexture = "Interface\\Icons\\" .. element.namedParams.texture
             end
             actionTexture = actionTexture or API_GetSpellTexture(spellId)
             actionInRange = __SpellBook.OvaleSpellBook:IsSpellInRange(spellId, target)
@@ -183,7 +183,7 @@ local GetActionSpellInfo = function(element, state, atTime, target)
             actionId = spellId
             if si then
                 if si.texture then
-                    actionTexture = si.texture
+                    actionTexture = "Interface\\Icons\\" .. si.texture
                 end
                 if actionCooldownStart and actionCooldownDuration then
                     local extraPower = element.namedParams.extra_amount or 0
@@ -213,7 +213,7 @@ local GetActionTextureInfo = function(element, state, atTime, target)
         if spellId then
             actionTexture = API_GetSpellTexture(spellId)
         else
-            actionTexture = texture
+            actionTexture = "Interface\\Icons\\" .. texture
         end
     end
     local actionInRange = nil
@@ -767,6 +767,9 @@ local OvaleBestActionClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Prof
         local timeSpan = GetTimeSpan(element, __TimeSpan.UNIVERSE)
         self:StopProfiling("OvaleBestAction_Compute")
         return timeSpan, element
+    end,
+    Compute = function(self, element, state, atTime)
+        return self:PostOrderCompute(element, state, atTime)
     end,
 })
 __exports.OvaleBestAction = OvaleBestActionClass()

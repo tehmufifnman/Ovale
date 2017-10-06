@@ -57,7 +57,7 @@ local OvaleScriptsClass = __class(OvaleScriptsBase, {
         for name, script in _pairs(self.script) do
             if ( not scriptType or script.type == scriptType) and ( not script.specialization or __PaperDoll.OvalePaperDoll:IsSpecialization(script.specialization)) then
                 if name == DEFAULT_NAME then
-                    descriptionsTable[name] = script.desc .. self:GetScriptName(name)
+                    descriptionsTable[name] = script.desc .. " (" .. self:GetScriptName(name) .. ")"
                 else
                     descriptionsTable[name] = script.desc
                 end
@@ -165,7 +165,7 @@ local OvaleScriptsClass = __class(OvaleScriptsBase, {
     end,
     CreateOptions = function(self)
         local options = {
-            name = __Ovale.Ovale:GetName() .. __Localization.L["Script"],
+            name = __Ovale.Ovale:GetName() .. " " .. __Localization.L["Script"],
             type = "group",
             args = {
                 source = {
@@ -239,6 +239,9 @@ local OvaleScriptsClass = __class(OvaleScriptsBase, {
         AceConfig:RegisterOptionsTable(appName, options)
         AceConfigDialog:AddToBlizOptions(appName, __Localization.L["Script"], __Ovale.Ovale:GetName())
     end,
+    constructor = function(self)
+        self.script = {}
+    end
 })
 __exports.OvaleScripts = OvaleScriptsClass()
 end)

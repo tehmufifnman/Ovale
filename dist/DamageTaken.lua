@@ -109,6 +109,9 @@ local OvaleDamageTakenClass = __class(__Ovale.RegisterPrinter(__Profiler.OvalePr
             self:Print("%d: %d damage", event.timestamp, event.damage)
         end
     end,
+    constructor = function(self)
+        self.damageEvent = __Queue.OvaleQueue("OvaleDamageTaken_damageEvent")
+    end
 })
 __exports.OvaleDamageTaken = OvaleDamageTakenClass()
 end)

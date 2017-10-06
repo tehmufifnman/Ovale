@@ -57,114 +57,114 @@ local OvalePowerClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.
         self.activeRegen = 0
         self.inactiveRegen = 0
         self.POWER_INFO = {
-                alternate = {
-                    id = SPELL_POWER_ALTERNATE_POWER,
-                    token = "ALTERNATE_RESOURCE_TEXT",
-                    mini = 0
-                },
-                chi = {
-                    id = SPELL_POWER_CHI,
-                    token = "CHI",
-                    mini = 0,
-                    costString = CHI_COST
-                },
-                combopoints = {
-                    id = SPELL_POWER_COMBO_POINTS,
-                    token = "COMBO_POINTS",
-                    mini = 0,
-                    costString = COMBO_POINTS_COST
-                },
-                energy = {
-                    id = SPELL_POWER_ENERGY,
-                    token = "ENERGY",
-                    mini = 0,
-                    costString = ENERGY_COST
-                },
-                focus = {
-                    id = SPELL_POWER_FOCUS,
-                    token = "FOCUS",
-                    mini = 0,
-                    costString = FOCUS_COST
-                },
-                holy = {
-                    id = SPELL_POWER_HOLY_POWER,
-                    token = "HOLY_POWER",
-                    mini = 0,
-                    costString = HOLY_POWER_COST
-                },
-                mana = {
-                    id = SPELL_POWER_MANA,
-                    token = "MANA",
-                    mini = 0,
-                    costString = MANA_COST
-                },
-                rage = {
-                    id = SPELL_POWER_RAGE,
-                    token = "RAGE",
-                    mini = 0,
-                    costString = RAGE_COST
-                },
-                runicpower = {
-                    id = SPELL_POWER_RUNIC_POWER,
-                    token = "RUNIC_POWER",
-                    mini = 0,
-                    costString = RUNIC_POWER_COST
-                },
-                soulshards = {
-                    id = SPELL_POWER_SOUL_SHARDS,
-                    token = "SOUL_SHARDS",
-                    mini = 0,
-                    costString = SOUL_SHARDS_COST
-                },
-                astralpower = {
-                    id = SPELL_POWER_LUNAR_POWER,
-                    token = "LUNAR_POWER",
-                    mini = 0,
-                    costString = LUNAR_POWER_COST
-                },
-                insanity = {
-                    id = SPELL_POWER_INSANITY,
-                    token = "INSANITY",
-                    mini = 0,
-                    costString = INSANITY_COST
-                },
-                maelstrom = {
-                    id = SPELL_POWER_MAELSTROM,
-                    token = "MAELSTROM",
-                    mini = 0,
-                    costString = MAELSTROM_COST
-                },
-                arcanecharges = {
-                    id = SPELL_POWER_ARCANE_CHARGES,
-                    token = "ARCANE_CHARGES",
-                    mini = 0,
-                    costString = ARCANE_CHARGES_COST
-                },
-                pain = {
-                    id = SPELL_POWER_PAIN,
-                    token = "PAIN",
-                    mini = 0,
-                    costString = PAIN_COST
-                },
-                fury = {
-                    id = SPELL_POWER_FURY,
-                    token = "FURY",
-                    mini = 0,
-                    costString = FURY_COST
-                }
+            alternate = {
+                id = SPELL_POWER_ALTERNATE_POWER,
+                token = "ALTERNATE_RESOURCE_TEXT",
+                mini = 0
+            },
+            chi = {
+                id = SPELL_POWER_CHI,
+                token = "CHI",
+                mini = 0,
+                costString = CHI_COST
+            },
+            combopoints = {
+                id = SPELL_POWER_COMBO_POINTS,
+                token = "COMBO_POINTS",
+                mini = 0,
+                costString = COMBO_POINTS_COST
+            },
+            energy = {
+                id = SPELL_POWER_ENERGY,
+                token = "ENERGY",
+                mini = 0,
+                costString = ENERGY_COST
+            },
+            focus = {
+                id = SPELL_POWER_FOCUS,
+                token = "FOCUS",
+                mini = 0,
+                costString = FOCUS_COST
+            },
+            holy = {
+                id = SPELL_POWER_HOLY_POWER,
+                token = "HOLY_POWER",
+                mini = 0,
+                costString = HOLY_POWER_COST
+            },
+            mana = {
+                id = SPELL_POWER_MANA,
+                token = "MANA",
+                mini = 0,
+                costString = MANA_COST
+            },
+            rage = {
+                id = SPELL_POWER_RAGE,
+                token = "RAGE",
+                mini = 0,
+                costString = RAGE_COST
+            },
+            runicpower = {
+                id = SPELL_POWER_RUNIC_POWER,
+                token = "RUNIC_POWER",
+                mini = 0,
+                costString = RUNIC_POWER_COST
+            },
+            soulshards = {
+                id = SPELL_POWER_SOUL_SHARDS,
+                token = "SOUL_SHARDS",
+                mini = 0,
+                costString = SOUL_SHARDS_COST
+            },
+            astralpower = {
+                id = SPELL_POWER_LUNAR_POWER,
+                token = "LUNAR_POWER",
+                mini = 0,
+                costString = LUNAR_POWER_COST
+            },
+            insanity = {
+                id = SPELL_POWER_INSANITY,
+                token = "INSANITY",
+                mini = 0,
+                costString = INSANITY_COST
+            },
+            maelstrom = {
+                id = SPELL_POWER_MAELSTROM,
+                token = "MAELSTROM",
+                mini = 0,
+                costString = MAELSTROM_COST
+            },
+            arcanecharges = {
+                id = SPELL_POWER_ARCANE_CHARGES,
+                token = "ARCANE_CHARGES",
+                mini = 0,
+                costString = ARCANE_CHARGES_COST
+            },
+            pain = {
+                id = SPELL_POWER_PAIN,
+                token = "PAIN",
+                mini = 0,
+                costString = PAIN_COST
+            },
+            fury = {
+                id = SPELL_POWER_FURY,
+                token = "FURY",
+                mini = 0,
+                costString = FURY_COST
             }
+        }
         self.PRIMARY_POWER = {
-                energy = true,
-                focus = true,
-                mana = true
-            }
+            energy = true,
+            focus = true,
+            mana = true
+        }
         self.POWER_TYPE = {}
         self.POOLED_RESOURCE = {
-                ["DRUID"] = "energy",
-                ["HUNTER"] = "focus",
-                ["MONK"] = "energy",
-                ["ROGUE"] = "energy"
-            }
+            ["DRUID"] = "energy",
+            ["HUNTER"] = "focus",
+            ["MONK"] = "energy",
+            ["ROGUE"] = "energy"
+        }
         __Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvalePowerBase)).constructor(self)
         for powerType, v in _pairs(__exports.OvalePower.POWER_INFO) do
             if  not v.id then
@@ -345,7 +345,7 @@ local OvalePowerClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.
     end,
     PowerCost = function(self, spellId, powerType, atTime, targetGUID, maximumCost)
         __exports.OvalePower:StartProfiling("OvalePower_PowerCost")
-        local buffParam = powerType
+        local buffParam = "buff_" .. powerType
         local spellCost = 0
         local spellRefund = 0
         local si = __Data.OvaleData.spellInfo[spellId]
@@ -353,8 +353,8 @@ local OvalePowerClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.
             local cost = __Data.OvaleData:GetSpellInfoProperty(spellId, atTime, powerType, targetGUID)
             if cost == "finisher" then
                 cost = self:GetPower(powerType, atTime)
-                local minCostParam = powerType
-                local maxCostParam = powerType
+                local minCostParam = "min_" .. powerType
+                local maxCostParam = "max_" .. powerType
                 local minCost = si[minCostParam] or 1
                 local maxCost = si[maxCostParam]
                 if cost < minCost then
@@ -367,7 +367,7 @@ local OvalePowerClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.
                 cost = self:GetPower(powerType, atTime) - __exports.OvalePower.maxPower[powerType]
             else
                 local buffExtraParam = buffParam
-                local buffAmountParam = buffParam
+                local buffAmountParam = buffParam .. "_amount"
                 local buffExtra = si[buffExtraParam]
                 if buffExtra then
                     local aura = __Aura.OvaleAura:GetAura("player", buffExtra, nil, true)
@@ -394,11 +394,11 @@ local OvalePowerClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.
                     end
                 end
             end
-            local extraPowerParam = powerType
+            local extraPowerParam = "extra_" .. powerType
             local extraPower = __Data.OvaleData:GetSpellInfoProperty(spellId, atTime, extraPowerParam, targetGUID)
             if extraPower then
                 if  not maximumCost then
-                    local power = math:floor(self:GetPower(powerType, atTime))
+                    local power = math.floor(self:GetPower(powerType, atTime))
                     power = power > cost and power - cost or 0
                     if extraPower >= power then
                         extraPower = power
@@ -407,7 +407,7 @@ local OvalePowerClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.
                 cost = cost + extraPower
             end
             spellCost = ceil(cost)
-            local refundParam = powerType
+            local refundParam = "refund_" .. powerType
             local refund = __Data.OvaleData:GetSpellInfoProperty(spellId, atTime, refundParam, targetGUID)
             if refund == "cost" then
                 refund = spellCost
@@ -475,11 +475,11 @@ local OvalePowerClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.
                 local powerModule = state or self
                 for _, powerType in _pairs(self_SpellcastInfoPowerTypes) do
                     if si[powerType] == "finisher" then
-                        local maxCostParam = powerType
+                        local maxCostParam = "max_" .. powerType
                         local maxCost = si[maxCostParam] or 1
-                        local cost = dataModule:GetSpellInfoProperty(spellId, atTime, powerType, spellcast.target)
+                        local cost = dataModule.GetSpellInfoProperty(spellId, atTime, powerType, spellcast.target)
                         if cost == "finisher" then
-                            local power = powerModule:GetPower(powerType, atTime)
+                            local power = powerModule.GetPower(powerType, atTime)
                             if power > maxCost then
                                 cost = maxCost
                             else
@@ -614,8 +614,11 @@ local PowerState = __class(nil, {
         for powerType in _pairs(__exports.OvalePower.POWER_INFO) do
             output[#output + 1] = __Ovale.MakeString("%s = %d", powerType, self[powerType])
         end
-        return tconcat(output, "\n")
+        return tconcat(output, "\\n")
     end,
+    constructor = function(self)
+        self.powerRate = nil
+    end
 })
 __exports.powerState = PowerState()
 __State.OvaleState:RegisterState(__exports.powerState)

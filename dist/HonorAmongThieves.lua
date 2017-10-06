@@ -42,6 +42,14 @@ local OvaleHonorAmongThievesClass = __class(OvaleHonorAmongThievesBase, {
             end
         end
     end,
+    constructor = function(self)
+        self.spellName = "Honor Among Thieves Cooldown"
+        self.spellId = HONOR_AMONG_THIEVES
+        self.start = 0
+        self.ending = 0
+        self.duration = MEAN_TIME_TO_HAT
+        self.stacks = 0
+    end
 })
 __exports.OvaleHonorAmongThieves = OvaleHonorAmongThievesClass()
 end)

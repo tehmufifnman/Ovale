@@ -51,7 +51,7 @@ local IsTagEvent = function(cleuEvent)
         isTagEvent = true
     else
         for _, suffix in _ipairs(CLEU_TAG_SUFFIXES) do
-            if strfind(cleuEvent, suffix) then
+            if strfind(cleuEvent, suffix .. "$") then
                 isTagEvent = true
                 break
             end
@@ -204,6 +204,10 @@ local OvaleEnemiesClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profile
         self:Print("Total enemies: %d", self.activeEnemies)
         self:Print("Total tagged enemies: %d", self.taggedEnemies)
     end,
+    constructor = function(self)
+        self.activeEnemies = 0
+        self.taggedEnemies = 0
+    end
 })
 local EnemiesState = __class(nil, {
     InitializeState = function(self)
@@ -220,8 +224,13 @@ local EnemiesState = __class(nil, {
         self.taggedEnemies = nil
         self.enemies = nil
     end,
+    constructor = function(self)
+        self.activeEnemies = nil
+        self.taggedEnemies = nil
+        self.enemies = nil
+    end
 })
 __exports.OvaleEnemies = OvaleEnemiesClass()
-__exports.enemiesState = EnemiesState()
-__State.OvaleState:RegisterState(__exports.enemiesState)
+__exports.EnemiesState = EnemiesState()
+__State.OvaleState:RegisterState(EnemiesState)
 end)

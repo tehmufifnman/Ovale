@@ -37,6 +37,15 @@ local OvaleConditionClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleCo
     EvaluateCondition = function(self, name, positionalParams, namedParams, state, atTime)
         return self_condition[name](positionalParams, namedParams, state, atTime)
     end,
+    constructor = function(self)
+        self.COMPARATOR = {
+            atLeast = true,
+            atMost = true,
+            equal = true,
+            less = true,
+            more = true
+        }
+    end
 })
 __exports.OvaleCondition = OvaleConditionClass()
 __exports.ParseCondition = function(positionalParams, namedParams, state, defaultTarget)

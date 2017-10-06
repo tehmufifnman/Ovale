@@ -9,22 +9,22 @@ local OvaleArtifactClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleArt
     constructor = function(self)
         self.self_traits = {}
         self.debugOptions = {
-                artifacttraits = {
-                    name = __Localization.L["Artifact traits"],
-                    type = "group",
-                    args = {
-                        artifacttraits = {
-                            name = __Localization.L["Artifact traits"],
-                            type = "input",
-                            multiline = 25,
-                            width = "full",
-                            get = function(info)
-                                return self:DebugTraits()
-                            end
-                        }
+            artifacttraits = {
+                name = __Localization.L["Artifact traits"],
+                type = "group",
+                args = {
+                    artifacttraits = {
+                        name = __Localization.L["Artifact traits"],
+                        type = "input",
+                        multiline = 25,
+                        width = "full",
+                        get = function(info)
+                            return self:DebugTraits()
+                        end
                     }
                 }
             }
+        }
         self.output = {}
         __Debug.OvaleDebug:RegisterDebugging(OvaleArtifactBase).constructor(self)
         for k, v in pairs(self.debugOptions) do
@@ -70,13 +70,13 @@ local OvaleArtifactClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleArt
         wipe(self.output)
         local array = {}
         for k, v in pairs(self.self_traits) do
-            tinsert(array, tostring(v.name) .. tostring(k))
+            tinsert(array, tostring(v.name) .. ": " .. tostring(k))
         end
         tsort(array)
         for _, v in ipairs(array) do
             self.output[#self.output + 1] = v
         end
-        return tconcat(self.output, "\n")
+        return tconcat(self.output, "\\n")
     end,
 })
 __exports.OvaleArtifact = OvaleArtifactClass()

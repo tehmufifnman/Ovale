@@ -5,7 +5,7 @@ type LayoutFunc = (content: AceGUIWidgetBase, children: LuaArray<AceGUIWidgetBas
 
 interface AceGUIWidgetBase {
     SetParent(parent: AceGUIWidgetBase):void;
-    SetCallback(name: string, func:() => void):void;
+    SetCallback(name: string, func:(widget: AceGUIWidgetBase) => void):void;
     Fire(name: string, ...args:any[]):void;
     SetWidth(width: number):void;
     SetRelativeWidth(width: number):void;
@@ -26,7 +26,7 @@ interface AceGUIWidgetBase {
     SetFullWidth(isFull: boolean):void;
 }
 
-interface AceGUIWidgetContainerBase {
+interface AceGUIWidgetContainerBase extends AceGUIWidgetBase {
     PauseLayout():void;
     ResumeLayout():void;
     PerformLayout():void;
@@ -48,7 +48,8 @@ interface AceGUIWidgetCheckBox extends AceGUIWidgetBase {
     SetImage(path: string, ...coords:number[]):void;
 }
 
-type AceGUIDWidgetDropDownItemType = "Dropdown-Item-Toggle";
+type AceGUIDWidgetDropDownItemType = "Dropdown-Item-Toggle" | "Dropdown-Item-Header"
+    | "Dropdown-Item-Execute" | "Dropdown-Item-Menu" | "Dropdown-Item-Separator";
 
 interface AceGUIWidgetDropDown extends AceGUIWidgetBase {
     SetDisabled(disabled: boolean):void;
@@ -59,7 +60,7 @@ interface AceGUIWidgetDropDown extends AceGUIWidgetBase {
     GetValue<T>(): T;
     SetItemValue<T>(item: string, value: T):void;
     SetItemDisabled(item: string, disabled: boolean):void;
-    SetList<T>(list: LuaObj<T>, order: LuaArray<string>, itemType?: AceGUIDWidgetDropDownItemType):void;
+    SetList<T>(list: LuaObj<T>, order?: LuaArray<string>, itemType?: AceGUIDWidgetDropDownItemType):void;
     AddItem<T>(value: T, text: string, itemType?: AceGUIDWidgetDropDownItemType)
     SetMultiselect(multi: boolean):void;
     GetMultiselect():boolean;
@@ -69,6 +70,8 @@ type Widgeted<T> = T & { obj: T }
 type Framed<T> = T & { frame: Widgeted<T> }
 
 interface AceGUI {
+    WidgetBase: new() => AceGUIWidgetBase;
+    WidgetContainerBase: new() => AceGUIWidgetContainerBase;
     Create(name: "CheckBox"): AceGUIWidgetCheckBox;
     Create(name: "Dropdown"): AceGUIWidgetDropDown;
     Create(name: string): AceGUIWidgetBase;

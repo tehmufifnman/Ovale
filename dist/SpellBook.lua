@@ -82,7 +82,7 @@ end
 local OutputTableValues = function(output, tbl)
     local array = {}
     for k, v in _pairs(tbl) do
-        tinsert(array, _tostring(v) .. _tostring(k))
+        tinsert(array, _tostring(v) .. ": " .. _tostring(k))
     end
     tsort(array)
     for _, v in _ipairs(array) do
@@ -344,13 +344,13 @@ local OvaleSpellBookClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(_
         for _ in _pairs(self.spell) do
             total = total + 1
         end
-        output[#output + 1] = total
-        return tconcat(output, "\n")
+        output[#output + 1] = "Total spells: " .. total
+        return tconcat(output, "\\n")
     end,
     DebugTalents = function(self)
         _wipe(output)
         OutputTableValues(output, self.talent)
-        return tconcat(output, "\n")
+        return tconcat(output, "\\n")
     end,
     RequireSpellCountHandler = function(self, spellId, atTime, requirement, tokens, index, targetGUID)
         local verified = false
@@ -368,6 +368,19 @@ local OvaleSpellBookClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(_
         end
         return verified, requirement, index
     end,
+    constructor = function(self)
+        self.ready = false
+        self.spell = {}
+        self.spellbookId = {
+            [_BOOKTYPE_PET] = {},
+            [_BOOKTYPE_SPELL] = {}
+        }
+        self.isHarmful = {}
+        self.isHelpful = {}
+        self.texture = {}
+        self.talent = {}
+        self.talentPoints = {}
+    end
 })
 local SpellBookState = __class(nil, {
     CleanState = function(self)

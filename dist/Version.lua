@@ -17,7 +17,7 @@ local self_userVersion = {}
 local self_timer
 local MSG_PREFIX = __Ovale.Ovale.MSG_PREFIX
 local OVALE_VERSION = "@project-version@"
-local REPOSITORY_KEYWORD = "project-version"
+local REPOSITORY_KEYWORD = "@" .. "project-version" .. "@"
 do
     local actions = {
         ping = {
@@ -95,6 +95,10 @@ local OvaleVersionClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleVers
         end
         self_timer = nil
     end,
+    constructor = function(self)
+        self.version = (OVALE_VERSION == REPOSITORY_KEYWORD) and "development version" or OVALE_VERSION
+        self.warned = false
+    end
 })
 __exports.OvaleVersion = OvaleVersionClass()
 end)

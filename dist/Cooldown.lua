@@ -184,13 +184,26 @@ local OvaleCooldownClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profil
     SaveSpellcastInfo = function(self, spellcast, atTime, state)
         local spellId = spellcast.spellId
         if spellId then
-            local dataModule = state or __Data.OvaleData
-            local gcd = dataModule:GetSpellInfoProperty(spellId, spellcast.start, "gcd", spellcast.target)
+            local gcd
+            if state then
+                gcd = state:GetSpellInfoProperty(spellId, spellcast.start, "gcd", spellcast.target)
+            else
+                gcd = __Data.OvaleData:GetSpellInfoProperty(spellId, spellcast.start, "gcd", spellcast.target)
+            end
             if gcd and gcd == 0 then
                 spellcast.offgcd = true
             end
         end
     end,
+    constructor = function(self)
+        self.serial = 0
+        self.sharedCooldown = {}
+        self.gcd = {
+            serial = 0,
+            start = 0,
+            duration = 0
+        }
+    end
 })
 local CooldownState = __class(nil, {
     ApplySpellStartCast = function(self, spellId, targetGUID, startCast, endCast, isChanneled, spellcast)
@@ -422,6 +435,9 @@ local CooldownState = __class(nil, {
             end
         end
     end,
+    constructor = function(self)
+        self.cd = nil
+    end
 })
 __exports.OvaleCooldown = OvaleCooldownClass()
 __exports.cooldownState = CooldownState()

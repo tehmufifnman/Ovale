@@ -86,13 +86,16 @@ local OvaleRunesClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.
         local now = API_GetTime()
         for slot = 1, RUNE_SLOTS, 1 do
             local rune = self.rune[slot]
-            if rune:IsActiveRune(now) then
+            if rune.IsActiveRune(now) then
                 self:Print("rune[%d] is active.", slot)
             else
                 self:Print("rune[%d] comes off cooldown in %f seconds.", slot, rune.endCooldown - now)
             end
         end
     end,
+    constructor = function(self)
+        self.rune = {}
+    end
 })
 local count = {}
 local usedRune = {}
@@ -233,6 +236,10 @@ local RunesState = __class(nil, {
         __exports.OvaleRunes:StopProfiling("OvaleRunes_state_GetRunesCooldown")
         return usedRune[runes]
     end,
+    constructor = function(self)
+        self.rune = nil
+        self.runicpower = nil
+    end
 })
 __exports.runesState = RunesState()
 __State.OvaleState:RegisterState(__exports.runesState)

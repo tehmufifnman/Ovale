@@ -26,10 +26,10 @@ local OvaleBossModClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(__D
         end
         if _BigWigsLoader then
             self:Debug("BigWigs is loaded")
-            _BigWigsLoader:RegisterMessage(__exports.OvaleBossMod, "BigWigs_OnBossEngage", function(_, mod, diff)
+            _BigWigsLoader.RegisterMessage(__exports.OvaleBossMod, "BigWigs_OnBossEngage", function(_, mod, diff)
                 self.EngagedBigWigs = mod
             end)
-            _BigWigsLoader:RegisterMessage(__exports.OvaleBossMod, "BigWigs_OnBossDisable", function(_, mod)
+            _BigWigsLoader.RegisterMessage(__exports.OvaleBossMod, "BigWigs_OnBossDisable", function(_, mod)
                 self.EngagedBigWigs = nil
             end)
         end
@@ -60,7 +60,7 @@ local OvaleBossModClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(__D
             if isWorldBoss then
                 self:Debug("%s is worldboss (%s)", target, UnitName(target))
             end
-            return isWorldBoss or (dep <= 3 and RecursiveScanTargets(target, dep + 1))
+            return isWorldBoss or (dep <= 3 and RecursiveScanTargets(target .. "target", dep + 1))
         end
         local bossEngaged = false
         bossEngaged = bossEngaged or API_UnitExists("boss1") or API_UnitExists("boss2") or API_UnitExists("boss3") or API_UnitExists("boss4")
@@ -68,28 +68,32 @@ local OvaleBossModClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(__D
         if  not bossEngaged then
             if (API_IsInInstance() and API_IsInGroup(LE_PARTY_CATEGORY_INSTANCE) and API_GetNumGroupMembers(LE_PARTY_CATEGORY_INSTANCE) > 1) then
                 for i = 1, API_GetNumGroupMembers(LE_PARTY_CATEGORY_INSTANCE), 1 do
-                    bossEngaged = bossEngaged or RecursiveScanTargets(i) or RecursiveScanTargets(i)
+                    bossEngaged = bossEngaged or RecursiveScanTargets("party" .. i) or RecursiveScanTargets("party" .. i .. "pet")
                 end
             end
             if ( not API_IsInInstance() and API_IsInGroup(LE_PARTY_CATEGORY_HOME) and API_GetNumGroupMembers(LE_PARTY_CATEGORY_HOME) > 1) then
                 for i = 1, API_GetNumGroupMembers(LE_PARTY_CATEGORY_HOME), 1 do
-                    bossEngaged = bossEngaged or RecursiveScanTargets(i) or RecursiveScanTargets(i)
+                    bossEngaged = bossEngaged or RecursiveScanTargets("party" .. i) or RecursiveScanTargets("party" .. i .. "pet")
                 end
             end
             if (API_IsInInstance() and API_IsInRaid(LE_PARTY_CATEGORY_INSTANCE) and API_GetNumGroupMembers(LE_PARTY_CATEGORY_INSTANCE) > 1) then
                 for i = 1, API_GetNumGroupMembers(LE_PARTY_CATEGORY_INSTANCE), 1 do
-                    bossEngaged = bossEngaged or RecursiveScanTargets(i) or RecursiveScanTargets(i)
+                    bossEngaged = bossEngaged or RecursiveScanTargets("raid" .. i) or RecursiveScanTargets("raid" .. i .. "pet")
                 end
             end
             if ( not API_IsInInstance() and API_IsInRaid(LE_PARTY_CATEGORY_HOME) and API_GetNumGroupMembers(LE_PARTY_CATEGORY_HOME) > 1) then
                 for i = 1, API_GetNumGroupMembers(LE_PARTY_CATEGORY_HOME), 1 do
-                    bossEngaged = bossEngaged or RecursiveScanTargets(i) or RecursiveScanTargets(i)
+                    bossEngaged = bossEngaged or RecursiveScanTargets("raid" .. i) or RecursiveScanTargets("raid" .. i .. "pet")
                 end
             end
         end
         self:StopProfiling("OvaleBossMod:ScanTargets")
         return bossEngaged
     end,
+    constructor = function(self)
+        self.EngagedDBM = nil
+        self.EngagedBigWigs = nil
+    end
 })
 __exports.OvaleBossMod = OvaleBossModClass()
 end)
