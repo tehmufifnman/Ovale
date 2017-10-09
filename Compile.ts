@@ -332,7 +332,7 @@ const EvaluateSpellInfo = function(node) {
     let addpower = {
     }
     for (const [powertype,] of _pairs(OvalePower.POWER_INFO)) {
-        let key = "add" + powertype;
+        let key = `add${powertype}`;
         addpower[key] = powertype;
     }
     let ok = true;
@@ -581,8 +581,7 @@ class OvaleCompileClass extends OvaleCompileClassBase {
             ast = this.ast;
         }
         let changed = false;
-        self_canEvaluate = self_canEvaluate;
-        if (self_canEvaluate && ast && (forceEvaluation || !this.serial || this.serial < self_serial)) {
+        if (ast && (forceEvaluation || !this.serial || this.serial < self_serial)) {
             this.Debug("Evaluating script.");
             changed = true;
             let ok = true;

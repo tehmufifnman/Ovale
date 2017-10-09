@@ -43,7 +43,11 @@ __exports.newFromArgs = function(...)
     return __exports.newTimeSpan():Copy(...)
 end
 __exports.newTimeSpanFromArray = function(a)
-    return __exports.newTimeSpan():copyFromArray(a)
+    if a then
+        return __exports.newTimeSpan():copyFromArray(a)
+    else
+        return __exports.newTimeSpan()
+    end
 end
 __exports.releaseTimeSpans = function(...)
     local argc = _select("#", ...)

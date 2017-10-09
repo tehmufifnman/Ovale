@@ -39,19 +39,19 @@ export class OvaleIcon {
     fontFlags: any;
     fontHeight: any;
     fontName: any;
-    normalTexture: any;
-    cd: any;
-    rangeIndicator: any;
-    remains: any;
-    shortcut: any;
-    icone: any;
+    normalTexture: UITexture;
+    cd: UICooldown;
+    rangeIndicator: UIFontString;
+    remains: UIFontString;
+    shortcut: UIFontString;
+    icone: UITexture;
     frame: UICheckButton;
 
     HasScriptControls() {
         return (_next(this.parent.checkBoxWidget) != undefined || _next(this.parent.listWidget) != undefined);
     }
 
-    constructor(name: string, private parent: IconParent, secure: boolean) {
+    constructor(private name: string, private parent: IconParent, secure: boolean) {
         if (!secure) {
             this.frame = CreateFrame("CheckButton", name, parent.frame, "ActionButtonTemplate");
         }        
@@ -294,7 +294,7 @@ export class OvaleIcon {
         }
     }
     OvaleIcon_OnLoad() {
-        let name = Ovale.GetName();
+        let name = this.name;
         const profile = Ovale.db.profile;
         this.icone = _G[`${name}Icon`];
         this.shortcut = _G[`${name}HotKey`];

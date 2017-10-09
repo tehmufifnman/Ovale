@@ -46,8 +46,13 @@ export function newFromArgs(...__args:number[]){
     return newTimeSpan().Copy(...__args);
 }
 
-export function newTimeSpanFromArray(a: LuaArray<number>) {
-    return newTimeSpan().copyFromArray(a);
+export function newTimeSpanFromArray(a?: LuaArray<number>) {
+    if (a) {
+        return newTimeSpan().copyFromArray(a);
+    }
+    else {
+        return newTimeSpan();
+    }
 }
 
 export function releaseTimeSpans(...__args:OvaleTimeSpan[]) {

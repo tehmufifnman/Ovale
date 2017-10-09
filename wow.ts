@@ -260,7 +260,7 @@ function lualength<T>(array: (LuaArray<T>|string)):number {
 }
 
 // WoW Class 
-type UIPosition = "TOPLEFT" | "CENTER";
+type UIPosition = "TOPLEFT" | "CENTER" | "BOTTOMLEFT";
 type UIAnchor = "ANCHOR_BOTTOMLEFT" | "ANCHOR_NONE";
 
 interface UIRegion {
@@ -305,7 +305,11 @@ interface UIFontString extends UIFrame {
     SetText(text: string):void;
     SetFont(font: string, height: number, flags):void;
     SetFontObject(name: "GameFontNormalSmall"):void;
-    SetTextColor(r:number, g:number, b: number):void;
+    SetTextColor(r:number, g:number, b: number, alpha?:number):void;
+    SetFormattedText(text: string, ...args:any[]):void;
+    SetVertexColor(r: number, g: number, b: number, alpha?:number):void;
+    SetJustifyH(justify: "left" | "right"):void;
+    GetFont():[string, number, number];
 }
 
 interface UICheckButton extends UIFrame {
@@ -315,7 +319,9 @@ interface UICheckButton extends UIFrame {
 }
 
 interface UITexture extends UIFrame {
-    SetTexture(r, g, b):void;
+    SetTexture(name: string):void;
+    SetTexture(r: number, g: number, b: number, alpha?:number):void;
+    SetVertexColor(r: number, g: number, b: number, alpha?:number):void;
 }
 interface UIGameTooltip extends UIFrame {
     SetOwner(frame: UIFrame, anchor: UIAnchor):void;
@@ -325,6 +331,13 @@ interface UIGameTooltip extends UIFrame {
     SetInventoryItem(unit: string, slot: number):void;
     NumLines():number;
     GetText():string;
+}
+
+interface UICooldown extends UIFrame {
+    GetCooldownDuration(): number;
+    SetDrawEdge(enable: boolean): void;
+    SetSwipeColor(r: number, g: number, b: number, alpha?:number):void;
+    SetCooldown(start: number, duration: number):void;
 }
 
 // WOW global functions

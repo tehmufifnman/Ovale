@@ -220,7 +220,7 @@ export type NodeType = "function" | "string" | "variable" | "value" | "number" |
      "logical" | "group" | "unless" | "comment" | "if" | "simc_pool_resource" |
      "simc_wait" | "custom_function" | "wait" | "action" | "operand";
 
-export type OperatorType = "not" | "or" | "and";
+export type OperatorType = "not" | "or" | "and" | "-";
 
 export interface Node {
     child: LuaArray<Node>;
@@ -251,6 +251,11 @@ export interface Node {
     for_next: boolean;
     extra_amount: number;
     comment: string;
+    property: string;
+    keyword: string;
+    description: string;
+    csv?: LuaArray<Node>;
+    item?: string;
 
     // Not sure (used in EmitActionList)
     action: string;
@@ -317,7 +322,7 @@ const MATCHES:LuaArray<TokenizerDefinition> = {
         2: TokenizeString
     },
     6: {
-        1: `^(['\"]).-[^\]%1`,
+        1: `^(['\\"]).-[^\\]%1`,
         2: TokenizeString
     },
     7: {
@@ -373,6 +378,7 @@ class SelfPool extends OvalePool<Node> {
 }
 
 type ParserFunction = (tokenStream: OvaleLexer, nodeList: LuaArray<Node>, annotation: Annotation, minPrecedence?: number) => [boolean, Node];
+type UnparserFunction = (node: Node) => string;
 
 class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(OvaleASTBase)) {
     self_indent:number = 0;
@@ -496,34 +502,6 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         return node.rawPositionalParams && _next(node.rawPositionalParams) || node.rawNamedParams && _next(node.rawNamedParams);
     }
 
-// let UNPARSE_VISITOR = undefined;
-// let Unparse = undefined;
-// let UnparseAddCheckBox = undefined;
-// let UnparseAddFunction = undefined;
-// let UnparseAddIcon = undefined;
-// let UnparseAddListItem = undefined;
-// let UnparseBangValue = undefined;
-// let UnparseComment = undefined;
-// let UnparseCommaSeparatedValues = undefined;
-// let UnparseDefine = undefined;
-// let UnparseExpression = undefined;
-// let UnparseFunction = undefined;
-// let UnparseGroup = undefined;
-// let UnparseIf = undefined;
-// let UnparseItemInfo = undefined;
-// let UnparseItemRequire = undefined;
-// let UnparseList = undefined;
-// let UnparseNumber = undefined;
-// let UnparseParameters = undefined;
-// let UnparseScoreSpells = undefined;
-// let UnparseScript = undefined;
-// let UnparseSpellAuraList = undefined;
-// let UnparseSpellInfo = undefined;
-// let UnparseSpellRequire = undefined;
-// let UnparseString = undefined;
-// let UnparseUnless = undefined;
-// let UnparseVariable = undefined;
-
     Unparse(node) {
         if (node.asString) {
             return node.asString;
@@ -542,7 +520,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         }
     }
 
-    UnparseAddCheckBox = (node) => {
+    UnparseAddCheckBox: UnparserFunction = (node) => {
         let s;
         if (node.rawPositionalParams && _next(node.rawPositionalParams) || node.rawNamedParams && _next(node.rawNamedParams)) {
             s = format("AddCheckBox(%s %s %s)", node.name, this.Unparse(node.description), this.UnparseParameters(node.rawPositionalParams, node.rawNamedParams));
@@ -551,7 +529,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         }
         return s;
     }
-    UnparseAddFunction = (node) => {
+    UnparseAddFunction: UnparserFunction = (node) => {
         let s;
         if (this.HasParameters(node)) {
             s = format("AddFunction %s %s%s", node.name, this.UnparseParameters(node.rawPositionalParams, node.rawNamedParams), this.UnparseGroup(node.child[1]));
@@ -560,7 +538,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         }
         return s;
     }
-    UnparseAddIcon = (node) => {
+    UnparseAddIcon: UnparserFunction = (node) => {
         let s;
         if (this.HasParameters(node)) {
             s = format("AddIcon %s%s", this.UnparseParameters(node.rawPositionalParams, node.rawNamedParams), this.UnparseGroup(node.child[1]));
@@ -569,7 +547,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         }
         return s;
     }
-    UnparseAddListItem = (node) => {
+    UnparseAddListItem: UnparserFunction = (node) => {
         let s;
         if (this.HasParameters(node)) {
             s = format("AddListItem(%s %s %s %s)", node.name, node.item, this.Unparse(node.description), this.UnparseParameters(node.rawPositionalParams, node.rawNamedParams));
@@ -578,17 +556,17 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         }
         return s;
     }
-    UnparseBangValue = (node) => {
+    UnparseBangValue: UnparserFunction = (node) => {
         return `!${this.Unparse(node.child[1])}`;
     }
-    UnparseComment = (node) => {
+    UnparseComment: UnparserFunction = (node) => {
         if (!node.comment || node.comment == "") {
             return "";
         } else {
             return `#${node.comment}`;
         }
     }
-    UnparseCommaSeparatedValues = (node) => {
+    UnparseCommaSeparatedValues: UnparserFunction = (node) => {
         let output = this.self_outputPool.Get();
         for (const [k, v] of _ipairs(node.csv)) {
             output[k] = this.Unparse(v);
@@ -597,10 +575,10 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         this.self_outputPool.Release(output);
         return outputString;
     }
-    UnparseDefine = (node) => {
+    UnparseDefine: UnparserFunction = (node) => {
         return format("Define(%s %s)", node.name, node.value);
     }
-    UnparseExpression = (node) => {
+    UnparseExpression: UnparserFunction = (node) => {
         let expression;
         let precedence = this.GetPrecedence(node);
         if (node.expressionType == "unary") {
@@ -643,7 +621,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         }
         return expression;
     }
-    UnparseFunction(node) {
+    UnparseFunction: UnparserFunction = (node) => {
         let s;
         if (this.HasParameters(node)) {
             let name;
@@ -664,7 +642,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         }
         return s;
     }
-    UnparseGroup(node) {
+    UnparseGroup: UnparserFunction = (node) => {
         let output = this.self_outputPool.Get();
         output[lualength(output) + 1] = "";
         output[lualength(output) + 1] = `${INDENT(this.self_indent)}{`;
@@ -683,25 +661,25 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         this.self_outputPool.Release(output);
         return outputString;
     }
-    UnparseIf(node) {
+    UnparseIf:UnparserFunction = (node) => {
         if (node.child[2].type == "group") {
             return format("if %s%s", this.Unparse(node.child[1]), this.UnparseGroup(node.child[2]));
         } else {
             return format("if %s %s", this.Unparse(node.child[1]), this.Unparse(node.child[2]));
         }
     }
-    UnparseItemInfo(node) {
+    UnparseItemInfo:UnparserFunction = (node) => {
         let identifier = node.name && node.name || node.itemId;
         return format("ItemInfo(%s %s)", identifier, this.UnparseParameters(node.rawPositionalParams, node.rawNamedParams));
     }
-    UnparseItemRequire(node) {
+    UnparseItemRequire: UnparserFunction = (node) => {
         let identifier = node.name && node.name || node.itemId;
         return format("ItemRequire(%s %s %s)", identifier, node.property, this.UnparseParameters(node.rawPositionalParams, node.rawNamedParams));
     }
-    UnparseList(node) {
+    UnparseList:UnparserFunction = (node) => {
         return format("%s(%s %s)", node.keyword, node.name, this.UnparseParameters(node.rawPositionalParams, node.rawNamedParams));
     }
-    UnparseNumber(node) {
+    UnparseNumber:UnparserFunction = (node) => {
         return _tostring(node.value);
     }
     UnparseParameters(positionalParams, namedParams) {
@@ -730,10 +708,10 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         this.self_outputPool.Release(output);
         return outputString;
     }
-    UnparseScoreSpells(node) {
+    UnparseScoreSpells: UnparserFunction = (node) => {
         return format("ScoreSpells(%s)", this.UnparseParameters(node.rawPositionalParams, node.rawNamedParams));
     }
-    UnparseScript(node: Node) {
+    UnparseScript:UnparserFunction = (node: Node) => {
         let output = this.self_outputPool.Get();
         let previousDeclarationType;
         for (const [, declarationNode] of _ipairs(node.child)) {
@@ -763,33 +741,33 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         this.self_outputPool.Release(output);
         return outputString;
     }
-    UnparseSpellAuraList(node) {
+    UnparseSpellAuraList: UnparserFunction = (node) => {
         let identifier = node.name && node.name || node.spellId;
         return format("%s(%s %s)", node.keyword, identifier, this.UnparseParameters(node.rawPositionalParams, node.rawNamedParams));
     }
-    UnparseSpellInfo(node) {
+    UnparseSpellInfo: UnparserFunction = (node) => {
         let identifier = node.name && node.name || node.spellId;
         return format("SpellInfo(%s %s)", identifier, this.UnparseParameters(node.rawPositionalParams, node.rawNamedParams));
     }
-    UnparseSpellRequire(node) {
+    UnparseSpellRequire: UnparserFunction = (node) => {
         let identifier = node.name && node.name || node.spellId;
         return format("SpellRequire(%s %s %s)", identifier, node.property, this.UnparseParameters(node.rawPositionalParams, node.rawNamedParams));
     }
-    UnparseString(node) {
+    UnparseString: UnparserFunction = (node) => {
         return `"${node.value}"`;
     }
-    UnparseUnless(node) {
+    UnparseUnless: UnparserFunction = (node) => {
         if (node.child[2].type == "group") {
             return format("unless %s%s", this.Unparse(node.child[1]), this.UnparseGroup(node.child[2]));
         } else {
             return format("unless %s %s", this.Unparse(node.child[1]), this.Unparse(node.child[2]));
         }
     }
-    UnparseVariable(node) {
+    UnparseVariable: UnparserFunction = (node) => {
         return node.name;
     }
 
-    UNPARSE_VISITOR = {
+    UNPARSE_VISITOR: LuaObj<UnparserFunction> = {
         ["action"]: this.UnparseFunction,
         ["add_function"]: this.UnparseAddFunction,
         ["arithmetic"]: this.UnparseExpression,
@@ -821,7 +799,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         ["variable"]: this.UnparseVariable
     }
 
-    SyntaxError(tokenStream, ...__args) {
+    SyntaxError(tokenStream: OvaleLexer , ...__args) {
         this.Print(...__args);
         let context = {
             1: "Next tokens:"
@@ -838,7 +816,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         this.Print(tconcat(context, " "));
     }
 
-    Parse(nodeType, tokenStream, nodeList, annotation) {
+    Parse(nodeType, tokenStream: OvaleLexer, nodeList, annotation) {
         let visitor = this.PARSE_VISITOR[nodeType];
         if (!visitor) {
             this.Error("Unable to parse node of type '%s'.", nodeType);
@@ -1046,7 +1024,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
     ParseComment: ParserFunction = (tokenStream, nodeList, annotation): [boolean, Node] => {
         return undefined;
     }
-    ParseDeclaration(tokenStream, nodeList, annotation): [boolean, Node] {
+    ParseDeclaration: ParserFunction = (tokenStream, nodeList, annotation): [boolean, Node] => {
         let ok = true;
         let node: Node;
         let [tokenType, token] = tokenStream.Peek();
@@ -1686,7 +1664,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         }
         return [ok, node];
     }
-    ParseParameters(tokenStream, nodeList, annotation, isList?:boolean): [boolean, LuaArray<string>, LuaObj<LuaArray<Node>>] {
+    ParseParameters(tokenStream: OvaleLexer, nodeList, annotation, isList?:boolean): [boolean, LuaArray<string>, LuaObj<LuaArray<Node>>] {
         let ok = true;
         let positionalParams = this.self_positionalParametersPool.Get();
         let namedParams = this.self_parametersPool.Get();
@@ -1803,7 +1781,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         }
         return [ok, positionalParams, namedParams];
     }
-    ParseParentheses(tokenStream, nodeList, annotation) {
+    ParseParentheses(tokenStream: OvaleLexer, nodeList, annotation) {
         let ok = true;
         let leftToken, rightToken;
         {
@@ -1873,7 +1851,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         }
         return [ok, node];
     }
-    ParseScriptStream(tokenStream: OvaleLexer, nodeList, annotation) {
+    ParseScriptStream: ParserFunction = (tokenStream: OvaleLexer, nodeList, annotation) => {
         this.StartProfiling("OvaleAST_ParseScript");
         let ok = true;
         let child = this.self_childrenPool.Get();
@@ -2146,7 +2124,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         }
         return [ok, node];
     }
-    ParseStatement(tokenStream, nodeList, annotation) {
+    ParseStatement(tokenStream: OvaleLexer, nodeList, annotation) {
         let ok = true;
         let node;
         let [tokenType, token] = tokenStream.Peek();
@@ -2286,7 +2264,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         ["list_item"]: this.ParseAddListItem,
         ["logical"]: this.ParseExpression,
         ["score_spells"]: this.ParseScoreSpells,
-        ["script"]: this.ParseScript,
+        ["script"]: this.ParseScriptStream,
         ["spell_aura_list"]: this.ParseSpellAuraList,
         ["spell_info"]: this.ParseSpellInfo,
         ["spell_require"]: this.ParseSpellRequire,
@@ -2351,12 +2329,12 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         }
         this.self_pool.Release(ast);
     }
-    ParseCode(nodeType, code, nodeList, annotation): [Node, LuaArray<Node>, any] {
+    ParseCode(nodeType, code: string, nodeList, annotation): [Node, LuaArray<Node>, any] {
         nodeList = nodeList || {
         }
         annotation = annotation || {
         }
-        let tokenStream = new OvaleLexer("Ovale", code, MATCHES);
+        let tokenStream = new OvaleLexer("Ovale", code, MATCHES, { comments:  TokenizeComment, space: TokenizeWhitespace });
         let [, node] = this.Parse(nodeType, tokenStream, nodeList, annotation);
         tokenStream.Release();
         return [node, nodeList, annotation];

@@ -331,7 +331,7 @@ end
 local EvaluateSpellInfo = function(node)
     local addpower = {}
     for powertype in _pairs(__Power.OvalePower.POWER_INFO) do
-        local key = "add" + powertype
+        local key = "add" .. powertype
         addpower[key] = powertype
     end
     local ok = true
@@ -577,8 +577,7 @@ local OvaleCompileClass = __class(OvaleCompileClassBase, {
             ast = self.ast
         end
         local changed = false
-        self_canEvaluate = self_canEvaluate
-        if self_canEvaluate and ast and (forceEvaluation or  not self.serial or self.serial < self_serial) then
+        if ast and (forceEvaluation or  not self.serial or self.serial < self_serial) then
             self:Debug("Evaluating script.")
             changed = true
             local ok = true
