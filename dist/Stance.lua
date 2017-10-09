@@ -1,7 +1,6 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Stance", { "./Localization", "./Debug", "./Profiler", "./Ovale", "./Data", "./State" }, function(__exports, __Localization, __Debug, __Profiler, __Ovale, __Data, __State)
+__addon.require(__addonName, __addon, "./Stance", { "./Localization", "./Debug", "./Profiler", "./Ovale", "./Requirement" }, function(__exports, __Localization, __Debug, __Profiler, __Ovale, __Requirement)
 local OvaleStanceBase = __Ovale.Ovale:NewModule("OvaleStance", "AceEvent-3.0")
-local _ipairs = ipairs
 local _pairs = pairs
 local substr = string.sub
 local tconcat = table.concat
@@ -63,18 +62,22 @@ do
 end
 local array = {}
 local OvaleStanceClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleStanceBase)), {
-    OnInitialize = function(self)
-    end,
-    OnEnable = function(self)
+    constructor = function(self)
+        self.ready = false
+        self.stanceList = {}
+        self.stanceId = {}
+        self.stance = nil
+        self.STANCE_NAME = STANCE_NAME
+        __Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleStanceBase)).constructor(self)
         self:RegisterEvent("PLAYER_ENTERING_WORLD", "UpdateStances")
         self:RegisterEvent("UPDATE_SHAPESHIFT_FORM")
         self:RegisterEvent("UPDATE_SHAPESHIFT_FORMS")
         self:RegisterMessage("Ovale_SpellsChanged", "UpdateStances")
         self:RegisterMessage("Ovale_TalentsChanged", "UpdateStances")
-        __Data.OvaleData:RegisterRequirement("stance", "RequireStanceHandler", self)
+        __Requirement.RegisterRequirement("stance", "RequireStanceHandler", self)
     end,
     OnDisable = function(self)
-        __Data.OvaleData:UnregisterRequirement("stance")
+        __Requirement.UnregisterRequirement("stance")
         self:UnregisterEvent("PLAYER_ALIVE")
         self:UnregisterEvent("PLAYER_ENTERING_WORLD")
         self:UnregisterEvent("UPDATE_SHAPESHIFT_FORM")
@@ -117,7 +120,7 @@ local OvaleStanceClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler
             end
         end
         tsort(array)
-        return tconcat(array, "\\n")
+        return tconcat(array, "\n")
     end,
     GetStance = function(self, stanceId)
         stanceId = stanceId or self.stance
@@ -143,7 +146,7 @@ local OvaleStanceClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler
         local newStance = API_GetShapeshiftForm()
         if oldStance ~= newStance then
             self.stance = newStance
-            __Ovale.Ovale.refreshNeeded[__Ovale.Ovale.playerGUID] = true
+            __Ovale.Ovale:needRefresh()
             self:SendMessage("Ovale_StanceChanged", self:GetStance(newStance), self:GetStance(oldStance))
         end
         self:StopProfiling("OvaleStance_ShapeshiftEventHandler")
@@ -182,47 +185,6 @@ local OvaleStanceClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler
         end
         return verified, requirement, index
     end,
-    constructor = function(self)
-        self.ready = false
-        self.stanceList = {}
-        self.stanceId = {}
-        self.stance = nil
-        self.STANCE_NAME = STANCE_NAME
-    end
 })
-local StanceState = __class(nil, {
-    InitializeState = function(self)
-        self.stance = nil
-    end,
-    CleanState = function(self)
-    end,
-    ResetState = function(self)
-        __exports.OvaleStance:StartProfiling("OvaleStance_ResetState")
-        self.stance = __exports.OvaleStance.stance or 0
-        __exports.OvaleStance:StopProfiling("OvaleStance_ResetState")
-    end,
-    ApplySpellAfterCast = function(self, spellId, targetGUID, startCast, endCast, isChanneled, spellcast)
-        __exports.OvaleStance:StartProfiling("OvaleStance_ApplySpellAfterCast")
-        local stance = __Data.dataState:GetSpellInfoProperty(spellId, endCast, "to_stance", targetGUID)
-        if stance then
-            if _type(stance) == "string" then
-                stance = __exports.OvaleStance.stanceId[stance]
-            end
-            self.stance = stance
-        end
-        __exports.OvaleStance:StopProfiling("OvaleStance_ApplySpellAfterCast")
-    end,
-    IsStance = function(self, name)
-        return __exports.OvaleStance:IsStance(name)
-    end,
-    RequireStanceHandler = function(self, spellId, atTime, requirement, tokens, index, targetGUID)
-        return __exports.OvaleStance:RequireStanceHandler(spellId, atTime, requirement, tokens, index, targetGUID)
-    end,
-    constructor = function(self)
-        self.stance = nil
-    end
-})
-__exports.stanceState = StanceState()
-__State.OvaleState:RegisterState(__exports.stanceState)
 __exports.OvaleStance = OvaleStanceClass()
 end)

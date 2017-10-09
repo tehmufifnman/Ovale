@@ -2,9 +2,7 @@ import { OvaleDebug } from "./Debug";
 import { OvaleProfiler } from "./Profiler";
 import { Ovale } from "./Ovale";
 import { OvaleData } from "./Data";
-import { OvaleEquipment } from "./Equipment";
 import { OvalePower } from "./Power";
-import { OvaleStance } from "./Stance";
 import { OvaleState, baseState, StateModule } from "./State";
 import { paperDollState } from "./PaperDoll";
 
@@ -12,10 +10,7 @@ let OvaleRunesBase = Ovale.NewModule("OvaleRunes", "AceEvent-3.0");
 export let OvaleRunes: OvaleRunesClass;
 let _ipairs = ipairs;
 let _pairs = pairs;
-let _type = type;
-let _wipe = wipe;
 let API_GetRuneCooldown = GetRuneCooldown;
-let API_GetSpellInfo = GetSpellInfo;
 let API_GetTime = GetTime;
 let INFINITY = math.huge;
 let _sort = table.sort;
@@ -33,9 +28,8 @@ const IsActiveRune = function(rune: Rune, atTime) {
 class OvaleRunesClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(OvaleRunesBase)) {
     rune = {}
     
-    OnInitialize() {
-    }
-    OnEnable() {
+    constructor() {
+        super();
         if (Ovale.playerClass == "DEATHKNIGHT") {
             for (let slot = 1; slot <= RUNE_SLOTS; slot += 1) {
                 this.rune[slot] = {
@@ -48,7 +42,7 @@ class OvaleRunesClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Registe
             this.RegisterEvent("RUNE_TYPE_UPDATE");
             this.RegisterEvent("UNIT_RANGEDDAMAGE");
             this.RegisterEvent("UNIT_SPELL_HASTE", "UNIT_RANGEDDAMAGE");
-            this.UpdateAllRunes();
+            if (Ovale.playerGUID) this.UpdateAllRunes();
         }
     }
     OnDisable() {
@@ -78,7 +72,7 @@ class OvaleRunesClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Registe
     UpdateRune(slot) {
         this.StartProfiling("OvaleRunes_UpdateRune");
         let rune = this.rune[slot];
-        let [start, duration, runeReady] = API_GetRuneCooldown(slot);
+        let [start, duration] = API_GetRuneCooldown(slot);
         if (start && duration) {
             if (start > 0) {
                 rune.startCooldown = start;
@@ -87,7 +81,7 @@ class OvaleRunesClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Registe
                 rune.startCooldown = 0;
                 rune.endCooldown = 0;
             }
-            Ovale.refreshNeeded[Ovale.playerGUID] = true;
+            Ovale.needRefresh();
         } else {
             this.Debug("Warning: rune information for slot %d not available.", slot);
         }
@@ -111,8 +105,6 @@ class OvaleRunesClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Registe
     }
 }
 
-let count = {
-}
 let usedRune = {
 }
 

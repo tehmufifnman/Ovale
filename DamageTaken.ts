@@ -1,4 +1,3 @@
-import { L } from "./Localization";
 import { OvaleDebug } from "./Debug";
 import { OvalePool } from "./Pool";
 import { OvaleProfiler } from "./Profiler";
@@ -15,8 +14,8 @@ let _SCHOOL_MASK_FIRE = SCHOOL_MASK_FIRE;
 let _SCHOOL_MASK_FROST = SCHOOL_MASK_FROST;
 let _SCHOOL_MASK_HOLY = SCHOOL_MASK_HOLY;
 let _SCHOOL_MASK_NATURE = SCHOOL_MASK_NATURE;
-let _SCHOOL_MASK_NONE = SCHOOL_MASK_NONE;
-let _SCHOOL_MASK_PHYSICAL = SCHOOL_MASK_PHYSICAL;
+// let _SCHOOL_MASK_NONE = SCHOOL_MASK_NONE;
+// let _SCHOOL_MASK_PHYSICAL = SCHOOL_MASK_PHYSICAL;
 let _SCHOOL_MASK_SHADOW = SCHOOL_MASK_SHADOW;
 
 interface Event{
@@ -24,7 +23,6 @@ interface Event{
     damage;
     magic;
 }
-let self_playerGUID = undefined;
 let self_pool = new OvalePool<Event>("OvaleDamageTaken_pool");
 let DAMAGE_TAKEN_WINDOW = 20;
 let SCHOOL_MASK_MAGIC = bit_bor(_SCHOOL_MASK_ARCANE, _SCHOOL_MASK_FIRE, _SCHOOL_MASK_FROST, _SCHOOL_MASK_HOLY, _SCHOOL_MASK_NATURE, _SCHOOL_MASK_SHADOW);
@@ -33,8 +31,8 @@ let SCHOOL_MASK_MAGIC = bit_bor(_SCHOOL_MASK_ARCANE, _SCHOOL_MASK_FIRE, _SCHOOL_
 class OvaleDamageTakenClass extends RegisterPrinter(OvaleProfiler.RegisterProfiling(OvaleDebug.RegisterDebugging(OvaleDamageTakenBase))) {
     damageEvent = new OvaleQueue<Event>("OvaleDamageTaken_damageEvent");
 
-    OnEnable() {
-        self_playerGUID = Ovale.playerGUID;
+    constructor() {
+        super();
         this.RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
         this.RegisterEvent("PLAYER_REGEN_ENABLED");
     }
@@ -44,8 +42,8 @@ class OvaleDamageTakenClass extends RegisterPrinter(OvaleProfiler.RegisterProfil
         self_pool.Drain();
     }
     COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, cleuEvent, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, ...__args) {
-        let [arg12, arg13, arg14, arg15, arg16, arg17, arg18, arg19, arg20, arg21, arg22, arg23, arg24, arg25] = __args;
-        if (destGUID == self_playerGUID && strsub(cleuEvent, -7) == "_DAMAGE") {
+        let [arg12, arg13, arg14, arg15, , , , , , , , , , ] = __args;
+        if (destGUID == Ovale.playerGUID && strsub(cleuEvent, -7) == "_DAMAGE") {
             this.StartProfiling("OvaleDamageTaken_COMBAT_LOG_EVENT_UNFILTERED");
             let now = API_GetTime();
             let eventPrefix = strsub(cleuEvent, 1, 6);
@@ -77,7 +75,7 @@ class OvaleDamageTakenClass extends RegisterPrinter(OvaleProfiler.RegisterProfil
         event.magic = isMagicDamage;
         this.damageEvent.InsertFront(event);
         this.RemoveExpiredEvents(timestamp);
-        Ovale.refreshNeeded[self_playerGUID] = true;
+        Ovale.needRefresh();
         this.StopProfiling("OvaleDamageTaken_AddDamageTaken");
     }
     GetRecentDamage(interval) {
@@ -111,7 +109,7 @@ class OvaleDamageTakenClass extends RegisterPrinter(OvaleProfiler.RegisterProfil
                 }
                 this.damageEvent.RemoveBack();
                 self_pool.Release(event);
-                Ovale.refreshNeeded[self_playerGUID] = true;
+                Ovale.needRefresh();
             }
         }
         this.StopProfiling("OvaleDamageTaken_RemoveExpiredEvents");

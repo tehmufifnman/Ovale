@@ -117,11 +117,22 @@ local CompareUnit = function(a, b)
 end
 
 local OvaleGUIDClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleGUIDBase), {
-    OnEnable = function(self)
+    constructor = function(self)
+        self.unitGUID = {}
+        self.guidUnit = {}
+        self.unitName = {}
+        self.nameUnit = {}
+        self.guidName = {}
+        self.nameGUID = {}
+        self.petGUID = {}
+        self.UNIT_AURA_UNIT = UNIT_AURA_UNIT
+        __Debug.OvaleDebug:RegisterDebugging(OvaleGUIDBase).constructor(self)
         self:RegisterEvent("ARENA_OPPONENT_UPDATE")
         self:RegisterEvent("GROUP_ROSTER_UPDATE")
         self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
-        self:RegisterEvent("PLAYER_ENTERING_WORLD", self.UpdateAllUnits)
+        self:RegisterEvent("PLAYER_ENTERING_WORLD", function(event)
+            return self:UpdateAllUnits()
+        end)
         self:RegisterEvent("PLAYER_FOCUS_CHANGED")
         self:RegisterEvent("PLAYER_TARGET_CHANGED")
         self:RegisterEvent("UNIT_NAME_UPDATE")
@@ -300,16 +311,6 @@ local OvaleGUIDClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleGUIDBas
         end
         return nil
     end,
-    constructor = function(self)
-        self.unitGUID = {}
-        self.guidUnit = {}
-        self.unitName = {}
-        self.nameUnit = {}
-        self.guidName = {}
-        self.nameGUID = {}
-        self.petGUID = {}
-        self.UNIT_AURA_UNIT = UNIT_AURA_UNIT
-    end
 })
 __exports.OvaleGUID = OvaleGUIDClass()
 end)

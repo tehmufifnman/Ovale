@@ -3,7 +3,6 @@ import { OvaleDebug } from "./Debug";
 import { OvaleProfiler } from "./Profiler";
 import { OvaleSpellBook } from "./SpellBook";
 import { Ovale } from "./Ovale";
-let OvaleActionBarBase = Ovale.NewModule("OvaleActionBar", "AceEvent-3.0", "AceTimer-3.0");
 let gsub = string.gsub;
 let strlen = string.len;
 let strmatch = string.match;
@@ -20,7 +19,8 @@ let API_GetBonusBarIndex = GetBonusBarIndex;
 let API_GetMacroItem = GetMacroItem;
 let API_GetMacroSpell = GetMacroSpell;
 
-class OvaleActionBarClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.RegisterDebugging(OvaleActionBarBase)) {
+const OvaleActionBarBase = OvaleProfiler.RegisterProfiling(OvaleDebug.RegisterDebugging(Ovale.NewModule("OvaleActionBar", "AceEvent-3.0", "AceTimer-3.0")));
+class OvaleActionBarClass extends OvaleActionBarBase {
     debugOptions = {
         actionbar: {
             name: L["Action bar"],
@@ -38,19 +38,25 @@ class OvaleActionBarClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Reg
             }
         }
     }
-    
-    constructor(){
-        super();
-        for (const [k, v] of pairs(this.debugOptions)) {
-            OvaleDebug.options.args[k] = v;
-        }
-    }
     action = {}
     keybind = {}
     spell = {}
     macro = {}
 
     item = {}
+    constructor(){
+        super();
+        for (const [k, v] of pairs(this.debugOptions)) {
+            OvaleDebug.options.args[k] = v;
+        }
+        this.RegisterEvent("ACTIONBAR_SLOT_CHANGED");
+        this.RegisterEvent("PLAYER_ENTERING_WORLD", event => this.UpdateActionSlots(event));
+        this.RegisterEvent("UPDATE_BINDINGS");
+        this.RegisterEvent("UPDATE_BONUS_ACTIONBAR", event => this.UpdateActionSlots(event));
+        this.RegisterMessage("Ovale_StanceChanged", event => this.UpdateActionSlots(event));
+        this.RegisterMessage("Ovale_TalentsChanged", event => this.UpdateActionSlots(event));
+    }
+
     GetKeyBinding(slot) {
         let name;
         if (Bartender4) {
@@ -87,15 +93,6 @@ class OvaleActionBarClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Reg
     ParseHyperlink(hyperlink) {
         let [color, linkType, linkData, text] = strmatch(hyperlink, "|?c?f?f?(%x*)|?H?([^:]*):?(%d+)|?h?%[?([^%[%]]*)%]?|?h?|?r?");
         return [color, linkType, linkData, text];
-    }
-
-    OnEnable() {
-        this.RegisterEvent("ACTIONBAR_SLOT_CHANGED");
-        this.RegisterEvent("PLAYER_ENTERING_WORLD", this.UpdateActionSlots);
-        this.RegisterEvent("UPDATE_BINDINGS");
-        this.RegisterEvent("UPDATE_BONUS_ACTIONBAR", this.UpdateActionSlots);
-        this.RegisterMessage("Ovale_StanceChanged", this.UpdateActionSlots);
-        this.RegisterMessage("Ovale_TalentsChanged", this.UpdateActionSlots);
     }
 
     OnDisable() {
@@ -161,7 +158,7 @@ class OvaleActionBarClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Reg
             this.macro[action] = undefined;
         }
         this.action[slot] = undefined;
-        let [actionType, actionId, subType] = API_GetActionInfo(slot);
+        let [actionType, actionId] = API_GetActionInfo(slot);
         if (actionType == "spell") {
             const id = _tonumber(actionId);
             if (id) {
@@ -186,16 +183,16 @@ class OvaleActionBarClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Reg
                     if (!this.macro[actionText] || slot < this.macro[actionText]) {
                         this.macro[actionText] = slot;
                     }
-                    let [_, __, spellId] = API_GetMacroSpell(id);
+                    let [, , spellId] = API_GetMacroSpell(id);
                     if (spellId) {
                         if (!this.spell[spellId] || slot < this.spell[spellId]) {
                             this.spell[spellId] = slot;
                         }
                         this.action[slot] = spellId;
                     } else {
-                        let [_, hyperlink] = API_GetMacroItem(id);
+                        let [, hyperlink] = API_GetMacroItem(id);
                         if (hyperlink) {
-                            let [_, __, linkData] = this.ParseHyperlink(hyperlink);
+                            let [, , linkData] = this.ParseHyperlink(hyperlink);
                             let itemIdText = gsub(linkData, ":.*", "");
                             const itemId = _tonumber(itemIdText);
                             if (itemId) {
@@ -251,11 +248,11 @@ class OvaleActionBarClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Reg
             tinsert(array, `${tostring(this.GetKeyBinding(v))}: ${tostring(k)} ${tostring(OvaleSpellBook.GetSpellName(k))}`);
         }
         tsort(array);
-        for (const [_, v] of ipairs(array)) {
+        for (const [, v] of ipairs(array)) {
             this.output[lualength(this.output) + 1] = v;
         }
         let total = 0;
-        for (const [_] of pairs(this.spell)) {
+        for (const [] of pairs(this.spell)) {
             total = total + 1;
         }
         this.output[lualength(this.output) + 1] = `Total spells: ${total}`;

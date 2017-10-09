@@ -1,6 +1,5 @@
 local __addonName, __addon = ...
 __addon.require(__addonName, __addon, "./ActionBar", { "./Localization", "./Debug", "./Profiler", "./SpellBook", "./Ovale" }, function(__exports, __Localization, __Debug, __Profiler, __SpellBook, __Ovale)
-local OvaleActionBarBase = __Ovale.Ovale:NewModule("OvaleActionBar", "AceEvent-3.0", "AceTimer-3.0")
 local gsub = string.gsub
 local strlen = string.len
 local strmatch = string.match
@@ -16,7 +15,8 @@ local API_GetBindingKey = GetBindingKey
 local API_GetBonusBarIndex = GetBonusBarIndex
 local API_GetMacroItem = GetMacroItem
 local API_GetMacroSpell = GetMacroSpell
-local OvaleActionBarClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(__Debug.OvaleDebug:RegisterDebugging(OvaleActionBarBase)), {
+local OvaleActionBarBase = __Profiler.OvaleProfiler:RegisterProfiling(__Debug.OvaleDebug:RegisterDebugging(__Ovale.Ovale:NewModule("OvaleActionBar", "AceEvent-3.0", "AceTimer-3.0")))
+local OvaleActionBarClass = __class(OvaleActionBarBase, {
     constructor = function(self)
         self.debugOptions = {
             actionbar = {
@@ -41,10 +41,24 @@ local OvaleActionBarClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(_
         self.macro = {}
         self.item = {}
         self.output = {}
-        __Profiler.OvaleProfiler:RegisterProfiling(__Debug.OvaleDebug:RegisterDebugging(OvaleActionBarBase)).constructor(self)
+        OvaleActionBarBase.constructor(self)
         for k, v in pairs(self.debugOptions) do
             __Debug.OvaleDebug.options.args[k] = v
         end
+        self:RegisterEvent("ACTIONBAR_SLOT_CHANGED")
+        self:RegisterEvent("PLAYER_ENTERING_WORLD", function(event)
+            return self:UpdateActionSlots(event)
+        end)
+        self:RegisterEvent("UPDATE_BINDINGS")
+        self:RegisterEvent("UPDATE_BONUS_ACTIONBAR", function(event)
+            return self:UpdateActionSlots(event)
+        end)
+        self:RegisterMessage("Ovale_StanceChanged", function(event)
+            return self:UpdateActionSlots(event)
+        end)
+        self:RegisterMessage("Ovale_TalentsChanged", function(event)
+            return self:UpdateActionSlots(event)
+        end)
     end,
     GetKeyBinding = function(self, slot)
         local name
@@ -81,14 +95,6 @@ local OvaleActionBarClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(_
     ParseHyperlink = function(self, hyperlink)
         local color, linkType, linkData, text = strmatch(hyperlink, "|?c?f?f?(%x*)|?H?([^:]*):?(%d+)|?h?%[?([^%[%]]*)%]?|?h?|?r?")
         return color, linkType, linkData, text
-    end,
-    OnEnable = function(self)
-        self:RegisterEvent("ACTIONBAR_SLOT_CHANGED")
-        self:RegisterEvent("PLAYER_ENTERING_WORLD", self.UpdateActionSlots)
-        self:RegisterEvent("UPDATE_BINDINGS")
-        self:RegisterEvent("UPDATE_BONUS_ACTIONBAR", self.UpdateActionSlots)
-        self:RegisterMessage("Ovale_StanceChanged", self.UpdateActionSlots)
-        self:RegisterMessage("Ovale_TalentsChanged", self.UpdateActionSlots)
     end,
     OnDisable = function(self)
         self:UnregisterEvent("ACTIONBAR_SLOT_CHANGED")
@@ -152,7 +158,7 @@ local OvaleActionBarClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(_
             self.macro[action] = nil
         end
         self.action[slot] = nil
-        local actionType, actionId, subType = API_GetActionInfo(slot)
+        local actionType, actionId = API_GetActionInfo(slot)
         if actionType == "spell" then
             local id = _tonumber(actionId)
             if id then
@@ -177,7 +183,7 @@ local OvaleActionBarClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(_
                     if  not self.macro[actionText] or slot < self.macro[actionText] then
                         self.macro[actionText] = slot
                     end
-                    local _, __, spellId = API_GetMacroSpell(id)
+                    local _, _, spellId = API_GetMacroSpell(id)
                     if spellId then
                         if  not self.spell[spellId] or slot < self.spell[spellId] then
                             self.spell[spellId] = slot
@@ -186,7 +192,7 @@ local OvaleActionBarClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(_
                     else
                         local _, hyperlink = API_GetMacroItem(id)
                         if hyperlink then
-                            local _, __, linkData = self:ParseHyperlink(hyperlink)
+                            local _, _, linkData = self:ParseHyperlink(hyperlink)
                             local itemIdText = gsub(linkData, ":.*", "")
                             local itemId = _tonumber(itemIdText)
                             if itemId then
@@ -247,7 +253,7 @@ local OvaleActionBarClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(_
             total = total + 1
         end
         self.output[#self.output + 1] = "Total spells: " .. total
-        return tconcat(self.output, "\\n")
+        return tconcat(self.output, "\n")
     end,
 })
 __exports.OvaleActionBar = OvaleActionBarClass()

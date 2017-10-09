@@ -1,15 +1,16 @@
-import { L } from "./Localization";
 import { OvaleDebug } from "./Debug";
 import { OvaleProfiler } from "./Profiler";
 import { OvaleAura, auraState } from "./Aura";
-import { OvaleData, dataState } from "./Data";
+import { OvaleData } from "./Data";
 import { OvaleEquipment } from "./Equipment";
-import { OvaleFuture } from "./Future";
 import { OvalePaperDoll } from "./PaperDoll";
 import { OvalePower } from "./Power";
 import { OvaleSpellBook } from "./SpellBook";
 import { Ovale, RegisterPrinter } from "./Ovale";
-import { OvaleState, StateModule, BaseState } from "./State";
+import { OvaleState, StateModule } from "./State";
+import { RegisterRequirement, UnregisterRequirement } from "./Requirement";
+import { lastSpell } from "./LastSpell";
+import { dataState } from "./DataState";
 
 let OvaleComboPointsBase = Ovale.NewModule("OvaleComboPoints", "AceEvent-3.0");
 export let OvaleComboPoints: OvaleComboPointsClass;
@@ -19,7 +20,6 @@ let API_GetTime = GetTime;
 let API_UnitPower = UnitPower;
 let _MAX_COMBO_POINTS = MAX_COMBO_POINTS;
 let _UNKNOWN = UNKNOWN;
-let self_playerGUID = undefined;
 let ANTICIPATION = 115189;
 let ANTICIPATION_DURATION = 15;
 let ANTICIPATION_TALENT = 18;
@@ -31,8 +31,6 @@ let self_hasAssassination4pT17 = false;
 let self_pendingComboEvents = {
 }
 let PENDING_THRESHOLD = 0.8;
-let self_updateSpellcastInfo = {
-}
 
 const AddPendingComboEvent = function(atTime, spellId, guid, reason, combo) {
     let comboEvent = {
@@ -43,7 +41,7 @@ const AddPendingComboEvent = function(atTime, spellId, guid, reason, combo) {
         combo: combo
     }
     tinsert(self_pendingComboEvents, comboEvent);
-    Ovale.refreshNeeded[self_playerGUID] = true;
+    Ovale.needRefresh();
 }
 const RemovePendingComboEvents = function(atTime, spellId?, guid?, reason?, combo?) {
     let count = 0;
@@ -57,7 +55,7 @@ const RemovePendingComboEvents = function(atTime, spellId?, guid?, reason?, comb
             }
             count = count + 1;
             tremove(self_pendingComboEvents, k);
-            Ovale.refreshNeeded[self_playerGUID] = true;
+            Ovale.needRefresh();
         }
     }
     return count;
@@ -65,25 +63,23 @@ const RemovePendingComboEvents = function(atTime, spellId?, guid?, reason?, comb
 class OvaleComboPointsClass extends RegisterPrinter(OvaleProfiler.RegisterProfiling(OvaleDebug.RegisterDebugging(OvaleComboPointsBase))) {
     combo = 0;
 
-    OnInitialize() {
-    }
-    OnEnable() {
-        self_playerGUID = Ovale.playerGUID;
+    constructor() {
+        super();
         if (Ovale.playerClass == "ROGUE" || Ovale.playerClass == "DRUID") {
-            this.RegisterEvent("PLAYER_ENTERING_WORLD", this.Update);
+            this.RegisterEvent("PLAYER_ENTERING_WORLD", () => this.Update());
             this.RegisterEvent("PLAYER_TARGET_CHANGED");
             this.RegisterEvent("UNIT_POWER");
             this.RegisterEvent("Ovale_EquipmentChanged");
             this.RegisterMessage("Ovale_SpellFinished");
             this.RegisterMessage("Ovale_TalentsChanged");
-            OvaleData.RegisterRequirement("combo", "RequireComboPointsHandler", this);
-            OvaleFuture.RegisterSpellcastInfo(this);
+            RegisterRequirement("combo", "RequireComboPointsHandler", this);
+            lastSpell.RegisterSpellcastInfo(this);
         }
     }
     OnDisable() {
         if (Ovale.playerClass == "ROGUE" || Ovale.playerClass == "DRUID") {
-            OvaleFuture.UnregisterSpellcastInfo(this);
-            OvaleData.UnregisterRequirement("combo");
+            lastSpell.UnregisterSpellcastInfo(this);
+            UnregisterRequirement("combo");
             this.UnregisterEvent("PLAYER_ENTERING_WORLD");
             this.UnregisterEvent("PLAYER_TARGET_CHANGED");
             this.UnregisterEvent("UNIT_POWER");
@@ -112,7 +108,7 @@ class OvaleComboPointsClass extends RegisterPrinter(OvaleProfiler.RegisterProfil
             let pendingMatched = false;
             if (lualength(self_pendingComboEvents) > 0) {
                 let comboEvent = self_pendingComboEvents[1];
-                let [spellId, guid, reason, combo] = [comboEvent.spellId, comboEvent.guid, comboEvent.reason, comboEvent.combo];
+                let [spellId, , reason, combo] = [comboEvent.spellId, comboEvent.guid, comboEvent.reason, comboEvent.combo];
                 if (combo == difference || (combo == "finisher" && this.combo == 0 && difference < 0)) {
                     this.Debug("    Matches pending %s event for %d.", reason, spellId);
                     pendingMatched = true;
@@ -138,9 +134,9 @@ class OvaleComboPointsClass extends RegisterPrinter(OvaleProfiler.RegisterProfil
                 this.Debug("    Spell %d refunds 1 combo point from Assassination 4pT17 set bonus.", spellId);
                 AddPendingComboEvent(atTime, spellId, targetGUID, "Assassination 4pT17", 1);
             }
-            if (self_hasAnticipation && targetGUID != self_playerGUID) {
+            if (self_hasAnticipation && targetGUID != Ovale.playerGUID) {
                 if (OvaleSpellBook.IsHarmfulSpell(spellId)) {
-                    let aura = OvaleAura.GetAuraByGUID(self_playerGUID, ANTICIPATION, "HELPFUL", true);
+                    let aura = OvaleAura.GetAuraByGUID(Ovale.playerGUID, ANTICIPATION, "HELPFUL", true);
                     if (OvaleAura.IsActiveAura(aura, atTime)) {
                         this.Debug("    Spell %d hit with %d Anticipation charges.", spellId, aura.stacks);
                         AddPendingComboEvent(atTime, spellId, targetGUID, "Anticipation", aura.stacks);
@@ -158,7 +154,7 @@ class OvaleComboPointsClass extends RegisterPrinter(OvaleProfiler.RegisterProfil
     Update() {
         this.StartProfiling("OvaleComboPoints_Update");
         this.combo = API_UnitPower("player", 4);
-        Ovale.refreshNeeded[self_playerGUID] = true;
+        Ovale.needRefresh();
         this.StopProfiling("OvaleComboPoints_Update");
     }
     GetComboPoints() {
@@ -258,7 +254,7 @@ class OvaleComboPointsClass extends RegisterPrinter(OvaleProfiler.RegisterProfil
             dest.combo = spellcast.combo;
         }
     }
-    SaveSpellcastInfo(spellcast, atTime, state:ComboPointsState) {
+    SaveSpellcastInfo = (module, spellcast, atTime, state:ComboPointsState) => {
         let spellId = spellcast.spellId;
         if (spellId) {
             let si = OvaleData.spellInfo[spellId];
@@ -308,10 +304,10 @@ export class ComboPointsState implements StateModule {
                     power = power + 1;
                 }
                 if (self_hasAnticipation && this.combo > 0) {
-                    let aura = auraState.GetAuraByGUID(self_playerGUID, ANTICIPATION, "HELPFUL", true);
+                    let aura = auraState.GetAuraByGUID(Ovale.playerGUID, ANTICIPATION, "HELPFUL", true);
                     if (auraState.IsActiveAura(aura, endCast)) {
                         power = power + aura.stacks;
-                        auraState.RemoveAuraOnGUID(self_playerGUID, ANTICIPATION, "HELPFUL", true, endCast);
+                        auraState.RemoveAuraOnGUID(Ovale.playerGUID, ANTICIPATION, "HELPFUL", true, endCast);
                         if (power > _MAX_COMBO_POINTS) {
                             power = _MAX_COMBO_POINTS;
                         }
@@ -321,7 +317,7 @@ export class ComboPointsState implements StateModule {
             if (power > _MAX_COMBO_POINTS) {
                 if (self_hasAnticipation && !si.temp_combo) {
                     let stacks = power - _MAX_COMBO_POINTS;
-                    let aura = auraState.GetAuraByGUID(self_playerGUID, ANTICIPATION, "HELPFUL", true);
+                    let aura = auraState.GetAuraByGUID(Ovale.playerGUID, ANTICIPATION, "HELPFUL", true);
                     if (auraState.IsActiveAura(aura, endCast)) {
                         stacks = stacks + aura.stacks;
                         if (stacks > _MAX_COMBO_POINTS) {
@@ -330,7 +326,7 @@ export class ComboPointsState implements StateModule {
                     }
                     let start = endCast;
                     let ending = start + ANTICIPATION_DURATION;
-                    aura = auraState.AddAuraToGUID(self_playerGUID, ANTICIPATION, self_playerGUID, "HELPFUL", undefined, start, ending);
+                    aura = auraState.AddAuraToGUID(Ovale.playerGUID, ANTICIPATION, Ovale.playerGUID, "HELPFUL", undefined, start, ending);
                     aura.stacks = stacks;
                 }
                 power = _MAX_COMBO_POINTS;
@@ -359,7 +355,7 @@ export class ComboPointsState implements StateModule {
         for (let k = 1; k <= lualength(self_pendingComboEvents); k += 1) {
             let comboEvent = self_pendingComboEvents[k];
             if (comboEvent.reason == "Anticipation") {
-                auraState.RemoveAuraOnGUID(self_playerGUID, ANTICIPATION, "HELPFUL", true, comboEvent.atTime);
+                auraState.RemoveAuraOnGUID(Ovale.playerGUID, ANTICIPATION, "HELPFUL", true, comboEvent.atTime);
                 break;
             }
         }

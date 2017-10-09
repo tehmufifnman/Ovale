@@ -6,14 +6,12 @@ local _select = select
 local strgsub = string.gsub
 local strmatch = string.match
 local _tonumber = tonumber
-local _tostring = tostring
 local _type = type
 local _unpack = unpack
 local _wipe = wipe
 local API_CreateFrame = CreateFrame
 local API_GetAuctionItemSubClasses = GetAuctionItemSubClasses
 local API_GetInventoryItemID = GetInventoryItemID
-local API_GetInventoryItemGems = GetInventoryItemGems
 local API_GetItemInfo = GetItemInfo
 local _INVSLOT_AMMO = INVSLOT_AMMO
 local _INVSLOT_BACK = INVSLOT_BACK
@@ -30,7 +28,6 @@ local _INVSLOT_LEGS = INVSLOT_LEGS
 local _INVSLOT_MAINHAND = INVSLOT_MAINHAND
 local _INVSLOT_NECK = INVSLOT_NECK
 local _INVSLOT_OFFHAND = INVSLOT_OFFHAND
-local _INVSLOT_RANGED = INVSLOT_RANGED
 local _INVSLOT_SHOULDER = INVSLOT_SHOULDER
 local _INVSLOT_TABARD = INVSLOT_TABARD
 local _INVSLOT_TRINKET1 = INVSLOT_TRINKET1
@@ -1285,16 +1282,15 @@ do
 end
 local OVALE_META_GEM = nil
 do
-    local _1, _2, _3, _4, _5, _6, name = API_GetAuctionItemSubClasses(8)
+    local _, _, _, _, _, _, name = API_GetAuctionItemSubClasses(8)
     OVALE_META_GEM = name
 end
-local OVALE_NORMALIZED_WEAPON_SPEED = {}
 local GetEquippedItemType = function(slotId)
     __exports.OvaleEquipment:StartProfiling("OvaleEquipment_GetEquippedItemType")
     local itemId = __exports.OvaleEquipment:GetEquippedItem(slotId)
     local itemType
     if itemId then
-        local _1, _2, _3, _4, _5, _6, _7, _8, inventoryType = API_GetItemInfo(itemId)
+        local _, _, _, _, _, _, _, _, inventoryType = API_GetItemInfo(itemId)
         itemType = inventoryType
     end
     __exports.OvaleEquipment:StopProfiling("OvaleEquipment_GetEquippedItemType")
@@ -1325,7 +1321,7 @@ local GetNormalizedWeaponSpeed = function(slotId)
     if slotId == _INVSLOT_MAINHAND or slotId == _INVSLOT_OFFHAND then
         local itemId = __exports.OvaleEquipment:GetEquippedItem(slotId)
         if itemId then
-            local _1, _2, _3, _4, _5, _6, weaponClass = API_GetItemInfo(itemId)
+            weaponSpeed = 1.8
         end
     end
     __exports.OvaleEquipment:StopProfiling("OvaleEquipment_GetNormalizedWeaponSpeed")
@@ -1356,11 +1352,19 @@ local armorSetName = {
     }
 }
 local OvaleEquipmentClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleEquipmentBase)), {
-    OnInitialize = function(self)
+    constructor = function(self)
+        self.ready = false
+        self.equippedItems = {}
+        self.equippedItemLevels = {}
+        self.mainHandItemType = nil
+        self.offHandItemType = nil
+        self.armorSetCount = {}
+        self.metaGem = nil
+        self.mainHandWeaponSpeed = nil
+        self.offHandWeaponSpeed = nil
+        __Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleEquipmentBase)).constructor(self)
         self_tooltip = API_CreateFrame("GameTooltip", "OvaleEquipment_ScanningTooltip", nil, "GameTooltipTemplate")
         self_tooltip:SetOwner(UIParent, "ANCHOR_NONE")
-    end,
-    OnEnable = function(self)
         self:RegisterEvent("GET_ITEM_INFO_RECEIVED")
         self:RegisterEvent("PLAYER_ENTERING_WORLD", "UpdateEquippedItems")
         self:RegisterEvent("PLAYER_AVG_ITEM_LEVEL_UPDATE", "UpdateEquippedItemLevels")
@@ -1380,7 +1384,7 @@ local OvaleEquipmentClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profi
         self.offHandWeaponSpeed = self:HasOffHandWeapon() and GetNormalizedWeaponSpeed(_INVSLOT_OFFHAND)
         local changed = false
         if changed then
-            __Ovale.Ovale.refreshNeeded[__Ovale.Ovale.playerGUID] = true
+            __Ovale.Ovale:needRefresh()
             self:SendMessage("Ovale_EquipmentChanged")
         end
         self:StopProfiling("OvaleEquipment_GET_ITEM_INFO_RECEIVED")
@@ -1407,7 +1411,7 @@ local OvaleEquipmentClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profi
             end
         end
         self:UpdateArmorSetCount()
-        __Ovale.Ovale.refreshNeeded[__Ovale.Ovale.playerGUID] = true
+        __Ovale.Ovale:needRefresh()
         self:SendMessage("Ovale_EquipmentChanged")
         self:StopProfiling("OvaleEquipment_PLAYER_EQUIPMENT_CHANGED")
     end,
@@ -1590,7 +1594,7 @@ local OvaleEquipmentClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profi
         self.offHandWeaponSpeed = self:HasOffHandWeapon() and GetNormalizedWeaponSpeed(_INVSLOT_OFFHAND)
         if changed then
             self:UpdateArmorSetCount()
-            __Ovale.Ovale.refreshNeeded[__Ovale.Ovale.playerGUID] = true
+            __Ovale.Ovale:needRefresh()
             self:SendMessage("Ovale_EquipmentChanged")
         end
         self.ready = true
@@ -1608,7 +1612,7 @@ local OvaleEquipmentClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profi
             end
         end
         if changed then
-            __Ovale.Ovale.refreshNeeded[__Ovale.Ovale.playerGUID] = true
+            __Ovale.Ovale:needRefresh()
             self:SendMessage("Ovale_EquipmentChanged")
         end
         self:StopProfiling("OvaleEquipment_UpdateEquippedItemLevels")
@@ -1624,16 +1628,6 @@ local OvaleEquipmentClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profi
             self:Print("Player has %d piece(s) of %s armor set.", v, k)
         end
     end,
-    constructor = function(self)
-        self.ready = false
-        self.equippedItems = {}
-        self.equippedItemLevels = {}
-        self.mainHandItemType = nil
-        self.offHandItemType = nil
-        self.armorSetCount = {}
-        self.metaGem = nil
-        self.mainHandWeaponSpeed = nil
-        self.offHandWeaponSpeed = nil
-    end
 })
+__exports.OvaleEquipment = OvaleEquipmentClass()
 end)

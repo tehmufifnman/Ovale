@@ -1,10 +1,8 @@
-import { OvaleState, BaseState } from "./State";
+import { BaseState } from "./State";
 import { Ovale } from "./Ovale";
 import { OvaleDebug } from "./Debug";
 let OvaleConditionBase = Ovale.NewModule("OvaleCondition");
 export let OvaleCondition: OvaleConditionClass;
-let _type = type;
-let _wipe = wipe;
 let INFINITY = math.huge;
 let self_condition = {
 }
@@ -17,10 +15,6 @@ let self_spellBookCondition = {
 export type ConditionResult = number[];
 export type ConditionFunction = (positionalParams: LuaArray<string>, namedParams: LuaObj<string>, state: BaseState, atTime: number) => ConditionResult;
 
-function isString(s): s is string {
-    return _type(s) == "string";
-}
-
 class OvaleConditionClass extends OvaleDebug.RegisterDebugging(OvaleConditionBase) {
     COMPARATOR = {
         atLeast: true,
@@ -30,12 +24,6 @@ class OvaleConditionClass extends OvaleDebug.RegisterDebugging(OvaleConditionBas
         more: true
     }
 
-    OnInitialize() {
-    }
-    OnEnable() {
-    }
-    OnDisable() {
-    }
     RegisterCondition(name: string, isSpellBookCondition: boolean, func: ConditionFunction) { //, arg?: LuaObj<ConditionFunction>) {
         // if (arg) {
         //     if (isString(func)) {

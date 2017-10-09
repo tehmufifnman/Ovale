@@ -1,11 +1,8 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Options", { "AceConfig-3.0", "AceConfigDialog-3.0", "./Localization", "AceDB-3.0", "AceDBOptions-3.0", "LibDualSpec-1.0", "./Ovale" }, function(__exports, AceConfig, AceConfigDialog, __Localization, AceDB, AceDBOptions, LibDualSpec, __Ovale)
+__addon.require(__addonName, __addon, "./Options", { "AceConfig-3.0", "AceConfigDialog-3.0", "./Localization", "AceDB-3.0", "AceDBOptions-3.0", "./Ovale" }, function(__exports, AceConfig, AceConfigDialog, __Localization, AceDB, AceDBOptions, __Ovale)
 local OvaleOptionsBase = __Ovale.Ovale:NewModule("OvaleOptions", "AceConsole-3.0", "AceEvent-3.0")
-local _ipairs = ipairs
-local _pairs = pairs
-local tinsert = table.insert
-local _type = type
 local API_InterfaceOptionsFrame_OpenToCategory = InterfaceOptionsFrame_OpenToCategory
+local _ipairs = ipairs
 local self_register = {}
 local OvaleOptionsClass = __class(OvaleOptionsBase, {
     constructor = function(self)
@@ -54,7 +51,9 @@ local OvaleOptionsClass = __class(OvaleOptionsBase, {
                     auraLag = 400,
                     moving = false,
                     spellFlash = nil,
-                    minimap = nil
+                    minimap = {
+                        hide = false
+                    }
                 }
             },
             global = nil
@@ -441,14 +440,17 @@ local OvaleOptionsClass = __class(OvaleOptionsBase, {
         AceConfig:RegisterOptionsTable(ovale .. " Actions", self.options.args.actions, "Ovale")
         AceConfigDialog:AddToBlizOptions(ovale)
         AceConfigDialog:AddToBlizOptions(ovale .. " Profiles", "Profiles", ovale)
-    end,
-    OnEnable = function(self)
         self:HandleProfileChanges()
     end,
     RegisterOptions = function(self, addon)
-        tinsert(self_register, addon)
     end,
     UpgradeSavedVariables = function(self)
+        for _, addon in _ipairs(self_register) do
+            if addon.UpgradeSavedVariables then
+                addon:UpgradeSavedVariables()
+            end
+        end
+        __Ovale.Ovale.db.RegisterDefaults(self.defaultDB)
     end,
     HandleProfileChanges = function(self)
         self:SendMessage("Ovale_ProfileChanged")

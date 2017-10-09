@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./BestAction", { "./Debug", "./Pool", "./Profiler", "./TimeSpan", "./AST", "./ActionBar", "./Compile", "./Condition", "./Cooldown", "./Data", "./Equipment", "./GUID", "./Future", "./Power", "./SpellBook", "./Stance", "./Ovale", "./State", "./PaperDoll" }, function(__exports, __Debug, __Pool, __Profiler, __TimeSpan, __AST, __ActionBar, __Compile, __Condition, __Cooldown, __Data, __Equipment, __GUID, __Future, __Power, __SpellBook, __Stance, __Ovale, __State, __PaperDoll)
+__addon.require(__addonName, __addon, "./BestAction", { "./Debug", "./Pool", "./Profiler", "./TimeSpan", "./ActionBar", "./Compile", "./Condition", "./Data", "./Equipment", "./GUID", "./SpellBook", "./Ovale", "./State", "./PaperDoll", "./DataState", "./SpellBookState", "./FutureState", "./CooldownState" }, function(__exports, __Debug, __Pool, __Profiler, __TimeSpan, __ActionBar, __Compile, __Condition, __Data, __Equipment, __GUID, __SpellBook, __Ovale, __State, __PaperDoll, __DataState, __SpellBookState, __FutureState, __CooldownState)
 local OvaleBestActionBase = __Ovale.Ovale:NewModule("OvaleBestAction", "AceEvent-3.0")
 local abs = math.abs
 local _assert = assert
@@ -11,7 +11,6 @@ local _tonumber = tonumber
 local _type = type
 local _wipe = wipe
 local INFINITY = math.huge
-local API_GetTime = GetTime
 local API_GetActionCooldown = GetActionCooldown
 local API_GetActionTexture = GetActionTexture
 local API_GetItemIcon = GetItemIcon
@@ -99,7 +98,7 @@ local GetActionItemInfo = function(element, state, atTime, target)
         actionTexture = actionTexture or API_GetItemIcon(itemId)
         actionInRange = API_IsItemInRange(itemId, target)
         actionCooldownStart, actionCooldownDuration, actionEnable = API_GetItemCooldown(itemId)
-        actionUsable = spellName and API_IsUsableItem(itemId) and __SpellBook.spellBookState:IsUsableItem(itemId)
+        actionUsable = spellName and API_IsUsableItem(itemId) and __SpellBookState.spellBookState:IsUsableItem(itemId)
         if action then
             actionShortcut = __ActionBar.OvaleActionBar:GetBinding(action)
             actionIsCurrent = API_IsCurrentAction(action)
@@ -143,7 +142,7 @@ local GetActionSpellInfo = function(element, state, atTime, target)
     local si = __Data.OvaleData.spellInfo[spellId]
     local replacedSpellId = nil
     if si and si.replace then
-        local replacement = __Data.dataState:GetSpellInfoProperty(spellId, atTime, "replace", targetGUID)
+        local replacement = __DataState.dataState:GetSpellInfoProperty(spellId, atTime, "replace", targetGUID)
         if replacement then
             replacedSpellId = spellId
             spellId = replacement
@@ -164,15 +163,15 @@ local GetActionSpellInfo = function(element, state, atTime, target)
     if  not isKnownSpell and  not action then
         state:Log("Unknown spell ID '%s'.", spellId)
     else
-        local isUsable, noMana = __SpellBook.spellBookState:IsUsableSpell(spellId, atTime, targetGUID)
+        local isUsable, noMana = __SpellBookState.spellBookState:IsUsableSpell(spellId, atTime, targetGUID)
         if isUsable or noMana then
             if element.namedParams.texture then
                 actionTexture = "Interface\\Icons\\" .. element.namedParams.texture
             end
             actionTexture = actionTexture or API_GetSpellTexture(spellId)
             actionInRange = __SpellBook.OvaleSpellBook:IsSpellInRange(spellId, target)
-            actionCooldownStart, actionCooldownDuration, actionEnable = __Cooldown.cooldownState:GetSpellCooldown(spellId)
-            actionCharges = __Cooldown.cooldownState:GetSpellCharges(spellId)
+            actionCooldownStart, actionCooldownDuration, actionEnable = __CooldownState.cooldownState:GetSpellCooldown(spellId)
+            actionCharges = __CooldownState.cooldownState:GetSpellCharges(spellId)
             actionResourceExtend = 0
             actionUsable = isUsable
             if action then
@@ -187,7 +186,7 @@ local GetActionSpellInfo = function(element, state, atTime, target)
                 end
                 if actionCooldownStart and actionCooldownDuration then
                     local extraPower = element.namedParams.extra_amount or 0
-                    local seconds = __SpellBook.spellBookState:GetTimeToSpell(spellId, atTime, targetGUID, extraPower)
+                    local seconds = __SpellBookState.spellBookState:GetTimeToSpell(spellId, atTime, targetGUID, extraPower)
                     if seconds > 0 and seconds > actionCooldownDuration then
                         if actionCooldownDuration > 0 then
                             actionResourceExtend = seconds - actionCooldownDuration
@@ -230,9 +229,8 @@ local GetActionTextureInfo = function(element, state, atTime, target)
 end
 
 local OvaleBestActionClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleBestActionBase)), {
-    OnInitialize = function(self)
-    end,
-    OnEnable = function(self)
+    constructor = function(self)
+        __Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleBestActionBase)).constructor(self)
         self:RegisterMessage("Ovale_ScriptChanged")
     end,
     OnDisable = function(self)
@@ -250,7 +248,7 @@ local OvaleBestActionClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Prof
     end,
     StartNewAction = function(self)
         __State.OvaleState:ResetState()
-        __Future.OvaleFuture:ApplyInFlightSpells()
+        __FutureState.futureState:ApplyInFlightSpells()
         self_serial = self_serial + 1
     end,
     GetActionInfo = function(self, element, state, atTime)
@@ -447,16 +445,16 @@ local OvaleBestActionClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Prof
             elseif start < atTime then
                 state:Log("[%d]    Action %s is waiting for the global cooldown.", nodeId, action)
                 local newStart = atTime
-                if __Future.futureState:IsChanneling(atTime) then
-                    local spellId = __Future.futureState.currentSpellId
+                if __FutureState.futureState:IsChanneling(atTime) then
+                    local spellId = __FutureState.futureState.currentSpellId
                     local si = spellId and __Data.OvaleData.spellInfo[spellId]
                     if si then
                         local channel = si.channel or si.canStopChannelling
                         if channel then
                             local hasteMultiplier = __PaperDoll.paperDollState:GetHasteMultiplier(si.haste)
                             local numTicks = floor(channel * hasteMultiplier + 0.5)
-                            local tick = (__Future.futureState.endCast - __Future.futureState.startCast) / numTicks
-                            local tickTime = __Future.futureState.startCast
+                            local tick = (__FutureState.futureState.endCast - __FutureState.futureState.startCast) / numTicks
+                            local tickTime = __FutureState.futureState.startCast
                             for i = 1, numTicks, 1 do
                                 tickTime = tickTime + tick
                                 if newStart <= tickTime then
@@ -640,7 +638,7 @@ local OvaleBestActionClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Prof
                 if currentElement then
                     currentCastTime = currentElement.castTime
                 end
-                local gcd = __Cooldown.cooldownState:GetGCD()
+                local gcd = __FutureState.futureState:GetGCD()
                 if  not currentCastTime or currentCastTime < gcd then
                     currentCastTime = gcd
                 end

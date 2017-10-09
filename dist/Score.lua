@@ -1,6 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Score", { "./Ovale", "./Localization", "./Debug" }, function(__exports, __Ovale, __Localization, __Debug)
-local OvaleFuture = nil
+__addon.require(__addonName, __addon, "./Score", { "./Ovale", "./Debug", "./Future" }, function(__exports, __Ovale, __Debug, __Future)
 local OvaleScoreBase = __Ovale.Ovale:NewModule("OvaleScore", "AceEvent-3.0", "AceSerializer-3.0")
 local _pairs = pairs
 local _type = type
@@ -11,23 +10,33 @@ local _LE_PARTY_CATEGORY_INSTANCE = LE_PARTY_CATEGORY_INSTANCE
 local MSG_PREFIX = __Ovale.Ovale.MSG_PREFIX
 local self_playerGUID = nil
 local self_name = nil
+local API_GetTime = GetTime
+local API_UnitCastingInfo = UnitCastingInfo
+local API_UnitChannelInfo = UnitChannelInfo
 local OvaleScoreClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleScoreBase), {
-    OnInitialize = function(self)
-    end,
-    OnEnable = function(self)
+    constructor = function(self)
+        self.damageMeter = {}
+        self.damageMeterMethod = {}
+        self.score = 0
+        self.maxScore = 0
+        self.scoredSpell = {}
+        __Debug.OvaleDebug:RegisterDebugging(OvaleScoreBase).constructor(self)
         self_playerGUID = __Ovale.Ovale.playerGUID
         self_name = API_UnitName("player")
         self:RegisterEvent("CHAT_MSG_ADDON")
         self:RegisterEvent("PLAYER_REGEN_ENABLED")
         self:RegisterEvent("PLAYER_REGEN_DISABLED")
+        self:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START")
+        self:RegisterEvent("UNIT_SPELLCAST_START")
     end,
     OnDisable = function(self)
         self:UnregisterEvent("CHAT_MSG_ADDON")
         self:UnregisterEvent("PLAYER_REGEN_ENABLED")
         self:UnregisterEvent("PLAYER_REGEN_DISABLED")
+        self:UnregisterEvent("UNIT_SPELLCAST_START")
     end,
     CHAT_MSG_ADDON = function(self, event, ...)
-        local prefix, message, channel, sender = ...
+        local prefix, message, _, sender = ...
         if prefix == MSG_PREFIX then
             local ok, msgType, scored, scoreMax, guid = self:Deserialize(message)
             if ok and msgType == "S" then
@@ -62,15 +71,6 @@ local OvaleScoreClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleScoreB
         self.scoredSpell[spellId] = true
     end,
     ScoreSpell = function(self, spellId)
-        if OvaleFuture.inCombat and self.scoredSpell[spellId] then
-            local scored = __Ovale.Ovale.frame.GetScore(spellId)
-            self:DebugTimestamp("Scored %s for %d.", scored, spellId)
-            if scored then
-                self.score = self.score + scored
-                self.maxScore = self.maxScore + 1
-                self:SendScore(self_name, self_playerGUID, scored, 1)
-            end
-        end
     end,
     SendScore = function(self, name, guid, scored, scoreMax)
         for moduleName, method in _pairs(self.damageMeterMethod) do
@@ -82,13 +82,44 @@ local OvaleScoreClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleScoreB
             end
         end
     end,
-    constructor = function(self)
-        self.damageMeter = {}
-        self.damageMeterMethod = {}
-        self.score = 0
-        self.maxScore = 0
-        self.scoredSpell = {}
-    end
+    UNIT_SPELLCAST_CHANNEL_START = function(self, event, unitId, spell, rank, lineId, spellId)
+        if unitId == "player" or unitId == "pet" then
+            local now = API_GetTime()
+            local spellcast = __Future.OvaleFuture:GetSpellcast(spell, spellId, nil, now)
+            if spellcast then
+                local name = API_UnitChannelInfo(unitId)
+                if name == spell then
+                    self:ScoreSpell(spellId)
+                end
+            end
+        end
+    end,
+    UNIT_SPELLCAST_START = function(self, event, unitId, spell, rank, lineId, spellId)
+        if unitId == "player" or unitId == "pet" then
+            local now = API_GetTime()
+            local spellcast = __Future.OvaleFuture:GetSpellcast(spell, spellId, lineId, now)
+            if spellcast then
+                local name, _, _, _, _, _, _, castId = API_UnitCastingInfo(unitId)
+                if lineId == castId and name == spell then
+                    self:ScoreSpell(spellId)
+                end
+            end
+        end
+    end,
+    UNIT_SPELLCAST_SUCCEEDED = function(self, event, unitId, spell, rank, lineId, spellId)
+        if unitId == "player" or unitId == "pet" then
+            local now = API_GetTime()
+            local spellcast = __Future.OvaleFuture:GetSpellcast(spell, spellId, lineId, now)
+            if spellcast then
+                if spellcast.success or ( not spellcast.start) or ( not spellcast.stop) or spellcast.channel then
+                    local name = API_UnitChannelInfo(unitId)
+                    if  not name then
+                        __exports.OvaleScore:ScoreSpell(spellId)
+                    end
+                end
+            end
+        end
+    end,
 })
 __exports.OvaleScore = OvaleScoreClass()
 end)

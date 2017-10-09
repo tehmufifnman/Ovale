@@ -1,7 +1,6 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Data", { "./Ovale", "./GUID", "./PaperDoll", "./State", "./Debug" }, function(__exports, __Ovale, __GUID, __PaperDoll, __State, __Debug)
+__addon.require(__addonName, __addon, "./Data", { "./Ovale", "./GUID", "./PaperDoll", "./State", "./Debug", "./Requirement" }, function(__exports, __Ovale, __GUID, __PaperDoll, __State, __Debug, __Requirement)
 local OvaleDataBase = __Ovale.Ovale:NewModule("OvaleData")
-local format = string.format
 local _type = type
 local _pairs = pairs
 local strfind = string.find
@@ -10,7 +9,6 @@ local _wipe = wipe
 local INFINITY = math.huge
 local floor = math.floor
 local ceil = math.ceil
-local self_requirement = {}
 local BLOODELF_CLASSES = {
     ["DEATHKNIGHT"] = true,
     ["DEMONHUNTER"] = true,
@@ -278,21 +276,6 @@ local OvaleDataClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleDataBas
             end
         end
     end,
-    OnInitialize = function(self)
-    end,
-    OnEnable = function(self)
-    end,
-    OnDisable = function(self)
-    end,
-    RegisterRequirement = function(self, name, method, arg)
-        self_requirement[name] = {
-            [1] = method,
-            [2] = arg
-        }
-    end,
-    UnregisterRequirement = function(self, name)
-        self_requirement[name] = nil
-    end,
     Reset = function(self)
         _wipe(self.itemInfo)
         _wipe(self.spellInfo)
@@ -369,31 +352,6 @@ local OvaleDataClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleDataBas
         end
         return tag, invokesGCD
     end,
-    CheckRequirements = function(self, spellId, atTime, tokens, index, targetGUID)
-        targetGUID = targetGUID or __GUID.OvaleGUID:UnitGUID(__State.baseState.defaultTarget or "target")
-        local name = tokens[index]
-        index = index + 1
-        if name then
-            self:Log("Checking requirements:")
-            local verified = true
-            local requirement = name
-            while verified and name do
-                local handler = self_requirement[name]
-                if handler then
-                    local method = handler[1]
-                    local arg = self[method] and self or handler[2]
-                    verified, requirement, index = arg[method](arg, spellId, atTime, name, tokens, index, targetGUID)
-                    name = tokens[index]
-                    index = index + 1
-                else
-                    __Ovale.Ovale:OneTimeMessage("Warning: requirement '%s' has no registered handler; FAILING requirement.", name)
-                    verified = false
-                end
-            end
-            return verified, requirement, index
-        end
-        return true, nil, nil
-    end,
     CheckSpellAuraData = function(self, auraId, spellData, atTime, guid)
         guid = guid or __GUID.OvaleGUID:UnitGUID("player")
         local index, value, data
@@ -431,7 +389,7 @@ local OvaleDataClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleDataBas
         end
         local verified = true
         if index then
-            verified = self:CheckRequirements(auraId, atTime, spellData, index, guid)
+            verified = __Requirement.CheckRequirements(auraId, atTime, spellData, index, guid)
         end
         return verified, value, data
     end,
@@ -439,7 +397,7 @@ local OvaleDataClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleDataBas
         targetGUID = targetGUID or __GUID.OvaleGUID:UnitGUID(__State.baseState.defaultTarget or "target")
         local verified = true
         local requirement
-        for name, handler in _pairs(self_requirement) do
+        for name, handler in _pairs(__Requirement.self_requirement) do
             local value = self:GetSpellInfoProperty(spellId, atTime, name, targetGUID)
             if value then
                 local method, arg = handler[1], handler[2]
@@ -460,7 +418,7 @@ local OvaleDataClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleDataBas
         local requirements = ii and ii.require[property]
         if requirements then
             for v, requirement in _pairs(requirements) do
-                local verified = self:CheckRequirements(itemId, atTime, requirement, 1, targetGUID)
+                local verified = __Requirement.CheckRequirements(itemId, atTime, requirement, 1, targetGUID)
                 if verified then
                     value = _tonumber(v) or v
                     break
@@ -476,7 +434,7 @@ local OvaleDataClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleDataBas
         local requirements = si and si.require[property]
         if requirements then
             for v, requirement in _pairs(requirements) do
-                local verified = self:CheckRequirements(spellId, atTime, requirement, 1, targetGUID)
+                local verified = __Requirement.CheckRequirements(spellId, atTime, requirement, 1, targetGUID)
                 if verified then
                     value = _tonumber(v) or v
                     break
@@ -499,7 +457,7 @@ local OvaleDataClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleDataBas
         local multipliers = si and si.require[property .. "_percent"]
         if multipliers then
             for v, requirement in _pairs(multipliers) do
-                local verified = self:CheckRequirements(spellId, atTime, requirement, 1, targetGUID)
+                local verified = __Requirement.CheckRequirements(spellId, atTime, requirement, 1, targetGUID)
                 if verified then
                     ratio = ratio * (_tonumber(v) or 0) / 100
                 end
@@ -573,30 +531,5 @@ local OvaleDataClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleDataBas
         return tick
     end,
 })
-__exports.DataState = __class(nil, {
-    CleanState = function(self)
-    end,
-    InitializeState = function(self)
-    end,
-    ResetState = function(self)
-    end,
-    CheckRequirements = function(self, spellId, atTime, tokens, index, targetGUID)
-        return __exports.OvaleData:CheckRequirements(spellId, atTime, tokens, index, targetGUID)
-    end,
-    CheckSpellAuraData = function(self, auraId, spellData, atTime, guid)
-        return __exports.OvaleData:CheckSpellAuraData(auraId, spellData, atTime, guid)
-    end,
-    CheckSpellInfo = function(self, spellId, atTime, targetGUID)
-        return __exports.OvaleData:CheckSpellInfo(spellId, atTime, targetGUID)
-    end,
-    GetItemInfoProperty = function(self, itemId, atTime, property)
-        return __exports.OvaleData:GetItemInfoProperty(itemId, atTime, property)
-    end,
-    GetSpellInfoProperty = function(self, spellId, atTime, property, targetGUID)
-        return __exports.OvaleData:GetSpellInfoProperty(spellId, atTime, property, targetGUID)
-    end,
-})
-__exports.dataState = __exports.DataState()
-__State.OvaleState:RegisterState(__exports.dataState)
 __exports.OvaleData = OvaleDataClass()
 end)

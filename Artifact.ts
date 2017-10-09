@@ -1,11 +1,9 @@
 import LibArtifactData from "LibArtifactData-1.0";
 import { OvaleDebug } from "./Debug";
 import { L } from "./Localization";
-import { OvaleState } from "./State";
 import { Ovale } from "./Ovale";
 let tsort = table.sort;
 let tinsert = table.insert;
-let tremove = table.remove;
 let tconcat = table.concat;
 
 
@@ -36,31 +34,27 @@ class OvaleArtifactClass extends OvaleDebug.RegisterDebugging(OvaleArtifactBase)
         for (const [k, v] of pairs(this.debugOptions)) {
             OvaleDebug.options.args[k] = v;
         }
-    }
-
-    OnInitialize() {
-    }
-    OnEnable() {
-        this.RegisterEvent("SPELLS_CHANGED", this.UpdateTraits);
-        LibArtifactData.RegisterCallback(OvaleArtifact, "ARTIFACT_ADDED", this.UpdateTraits);
-        LibArtifactData.RegisterCallback(OvaleArtifact, "ARTIFACT_EQUIPPED_CHANGED", this.UpdateTraits);
-        LibArtifactData.RegisterCallback(OvaleArtifact, "ARTIFACT_ACTIVE_CHANGED", this.UpdateTraits);
-        LibArtifactData.RegisterCallback(OvaleArtifact, "ARTIFACT_TRAITS_CHANGED", this.UpdateTraits);
+    
+        this.RegisterEvent("SPELLS_CHANGED", (message) => this.UpdateTraits(message));
+        LibArtifactData.RegisterCallback(this, "ARTIFACT_ADDED", message => this.UpdateTraits(message));
+        LibArtifactData.RegisterCallback(this, "ARTIFACT_EQUIPPED_CHANGED", m => this.UpdateTraits(m));
+        LibArtifactData.RegisterCallback(this, "ARTIFACT_ACTIVE_CHANGED", m => this.UpdateTraits(m));
+        LibArtifactData.RegisterCallback(this, "ARTIFACT_TRAITS_CHANGED", m => this.UpdateTraits(m));
     }
     OnDisable() {
-        LibArtifactData.UnregisterCallback(OvaleArtifact, "ARTIFACT_ADDED");
-        LibArtifactData.UnregisterCallback(OvaleArtifact, "ARTIFACT_EQUIPPED_CHANGED");
-        LibArtifactData.UnregisterCallback(OvaleArtifact, "ARTIFACT_ACTIVE_CHANGED");
-        LibArtifactData.UnregisterCallback(OvaleArtifact, "ARTIFACT_TRAITS_CHANGED");
+        LibArtifactData.UnregisterCallback(this, "ARTIFACT_ADDED");
+        LibArtifactData.UnregisterCallback(this, "ARTIFACT_EQUIPPED_CHANGED");
+        LibArtifactData.UnregisterCallback(this, "ARTIFACT_ACTIVE_CHANGED");
+        LibArtifactData.UnregisterCallback(this, "ARTIFACT_TRAITS_CHANGED");
         this.UnregisterEvent("SPELLS_CHANGED");
     }
     UpdateTraits(message) {
-        let [artifactId, traits] = LibArtifactData.GetArtifactTraits();
+        let [, traits] = LibArtifactData.GetArtifactTraits();
         this.self_traits = {}
         if (!traits) {
             return;
         }
-        for (const [k, v] of ipairs(traits)) {
+        for (const [, v] of ipairs(traits)) {
             this.self_traits[v.spellID] = v;
         }
     }
@@ -82,7 +76,7 @@ class OvaleArtifactClass extends OvaleDebug.RegisterDebugging(OvaleArtifactBase)
             tinsert(array, `${tostring(v.name)}: ${tostring(k)}`);
         }
         tsort(array);
-        for (const [_, v] of ipairs(array)) {
+        for (const [, v] of ipairs(array)) {
             this.output[lualength(this.output) + 1] = v;
         }
         return tconcat(this.output, "\n");

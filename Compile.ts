@@ -1,4 +1,3 @@
-import { L } from "./Localization";
 import { OvaleDebug } from "./Debug";
 import { OvaleProfiler } from "./Profiler";
 import { OvaleArtifact } from "./Artifact";
@@ -10,10 +9,10 @@ import { OvaleEquipment } from "./Equipment";
 import { OvalePaperDoll } from "./PaperDoll";
 import { OvalePower } from "./Power";
 import { OvaleScore } from "./Score";
-import { OvaleScripts } from "./Scripts";
 import { OvaleSpellBook } from "./SpellBook";
 import { OvaleStance } from "./Stance";
 import { RegisterPrinter, Ovale } from "./Ovale";
+import { checkBoxes, lists, ResetControls } from "./Controls";
 let OvaleCompileBase = Ovale.NewModule("OvaleCompile", "AceEvent-3.0");
 export let OvaleCompile: OvaleCompileClass;
 let _ipairs = ipairs;
@@ -28,11 +27,7 @@ let _wipe = wipe;
 let API_GetSpellInfo = GetSpellInfo;
 let self_compileOnStances = false;
 let self_canEvaluate = false;
-let self_requirePreload = {
-    1: "OvaleEquipment",
-    2: "OvaleSpellBook",
-    3: "OvaleStance"
-}
+ 
 let self_serial = 0;
 let self_timesEvaluated = 0;
 let self_icon: LuaArray<Node> = {
@@ -110,7 +105,7 @@ const TestConditions = function(positionalParams, namedParams) {
     for (const [param, dispatch] of _pairs(TEST_CONDITION_DISPATCH)) {
         let value = namedParams[param];
         if (_type(value) == "table") {
-            for (const [_, v] of _ipairs(value)) {
+            for (const [, v] of _ipairs(value)) {
                 boolean = dispatch(v);
                 if (!boolean) {
                     break;
@@ -129,11 +124,11 @@ const TestConditions = function(positionalParams, namedParams) {
     }
     if (boolean && namedParams.checkbox) {
         const profile = Ovale.db.profile;
-        for (const [_, checkbox] of _ipairs(namedParams.checkbox)) {
+        for (const [,checkbox] of _ipairs(namedParams.checkbox)) {
             let [name, required] = RequireValue(checkbox);
-            const control = Ovale.checkBox[name] || {}
+            const control = checkBoxes[name] || {}
             control.triggerEvaluation = true;
-            Ovale.checkBox[name] = control;
+            checkBoxes[name] = control;
             let isChecked = profile.check[name];
             boolean = (required && isChecked) || (!required && !isChecked);
             if (!boolean) {
@@ -145,9 +140,9 @@ const TestConditions = function(positionalParams, namedParams) {
         const profile = Ovale.db.profile;
         for (const [name, listitem] of _pairs(namedParams.listitem)) {
             let [item, required] = RequireValue(listitem);
-            const control = Ovale.list[name] || { items: {}, default: undefined };
+            const control = lists[name] || { items: {}, default: undefined };
             control.triggerEvaluation = true;
-            Ovale.list[name] = control;
+            lists[name] = control;
             let isSelected = (profile.list[name] == item);
             boolean = (required && isSelected) || (!required && !isSelected);
             if (!boolean) {
@@ -162,7 +157,7 @@ const EvaluateAddCheckBox = function(node) {
     let ok = true;
     let [name, positionalParams, namedParams] = [node.name, node.positionalParams, node.namedParams];
     if (TestConditions(positionalParams, namedParams)) {
-        let checkBox = Ovale.checkBox[name]
+        let checkBox = checkBoxes[name]
         if (!checkBox) {
             self_serial = self_serial + 1;
             OvaleCompile.Debug("New checkbox '%s': advance age to %d.", name, self_serial);
@@ -170,13 +165,13 @@ const EvaluateAddCheckBox = function(node) {
         checkBox = checkBox || {
         }
         checkBox.text = node.description.value;
-        for (const [_, v] of _ipairs(positionalParams)) {
+        for (const [, v] of _ipairs(positionalParams)) {
             if (v == "default") {
                 checkBox.checked = true;
                 break;
             }
         }
-        Ovale.checkBox[name] = checkBox;
+        checkBoxes[name] = checkBox;
     }
     return ok;
 }
@@ -192,7 +187,7 @@ const EvaluateAddListItem = function(node) {
     let ok = true;
     let [name, item, positionalParams, namedParams] = [node.name, node.item, node.positionalParams, node.namedParams];
     if (TestConditions(positionalParams, namedParams)) {
-        let list = Ovale.list[name]
+        let list = lists[name]
         if (!(list && list.items && list.items[item])) {
             self_serial = self_serial + 1;
             OvaleCompile.Debug("New list '%s': advance age to %d.", name, self_serial);
@@ -203,13 +198,13 @@ const EvaluateAddListItem = function(node) {
             default: undefined
         }
         list.items[item] = node.description.value;
-        for (const [_, v] of _ipairs(positionalParams)) {
+        for (const [, v] of _ipairs(positionalParams)) {
             if (v == "default") {
                 list.default = item;
                 break;
             }
         }
-        Ovale.list[name] = list;
+        lists[name] = list;
     }
     return ok;
 }
@@ -262,7 +257,7 @@ const EvaluateItemRequire = function(node) {
 }
 const EvaluateList = function(node) {
     let ok = true;
-    let [name, positionalParams, namedParams] = [node.name, node.positionalParams, node.namedParams];
+    let [name, positionalParams, ] = [node.name, node.positionalParams, node.namedParams];
     let listDB;
     if (node.keyword == "ItemList") {
         listDB = "itemList";
@@ -271,7 +266,7 @@ const EvaluateList = function(node) {
     }
     let list = OvaleData[listDB][name] || {
     }
-    for (const [_, _id] of _pairs(positionalParams)) {
+    for (const [, _id] of _pairs(positionalParams)) {
         let id = _tonumber(_id);
         if (id) {
             list[id] = true;
@@ -285,8 +280,8 @@ const EvaluateList = function(node) {
 }
 const EvaluateScoreSpells = function(node) {
     let ok = true;
-    let [positionalParams, namedParams] = [node.positionalParams, node.namedParams];
-    for (const [_, _spellId] of _ipairs(positionalParams)) {
+    let [positionalParams,] = [node.positionalParams, node.namedParams];
+    for (const [, _spellId] of _ipairs(positionalParams)) {
         let spellId = _tonumber(_spellId);
         if (spellId) {
             OvaleScore.AddSpell(_tonumber(spellId));
@@ -336,7 +331,7 @@ const EvaluateSpellAuraList = function(node) {
 const EvaluateSpellInfo = function(node) {
     let addpower = {
     }
-    for (const [powertype, _] of _pairs(OvalePower.POWER_INFO)) {
+    for (const [powertype,] of _pairs(OvalePower.POWER_INFO)) {
         let key = "add" + powertype;
         addpower[key] = powertype;
     }
@@ -382,7 +377,6 @@ const EvaluateSpellInfo = function(node) {
                 si[k] = v;
                 OvaleCooldown.AddSharedCooldown(v, spellId);
             } else if (addpower[k] != undefined) {
-                let powertype = addpower[k];
                 let value = _tonumber(v);
                 if (value) {
                     let realValue = value;
@@ -425,8 +419,8 @@ const EvaluateSpellRequire = function(node) {
 }
 const AddMissingVariantSpells = function(annotation) {
     if (annotation.functionReference) {
-        for (const [_, node] of _ipairs<Node>(annotation.functionReference)) {
-            let [positionalParams, namedParams] = [node.positionalParams, node.namedParams];
+        for (const [, node] of _ipairs<Node>(annotation.functionReference)) {
+            let [positionalParams,] = [node.positionalParams, node.namedParams];
             let spellId = positionalParams[1];
             if (spellId && OvaleCondition.IsSpellBookCondition(node.func)) {
                 if (!OvaleSpellBook.IsKnownSpell(spellId) && !OvaleCooldown.IsSharedCooldown(spellId)) {
@@ -454,7 +448,7 @@ const AddMissingVariantSpells = function(annotation) {
 }
 const AddToBuffList = function(buffId, statName?, isStacking?) {
     if (statName) {
-        for (const [_, useName] of _pairs(OvaleData.STAT_USE_NAMES)) {
+        for (const [, useName] of _pairs(OvaleData.STAT_USE_NAMES)) {
             if (isStacking || !strfind(useName, "_stacking_")) {
                 let name = `${useName}_${statName}_buff`;
                 let list = OvaleData.buffSpellList[name] || {
@@ -482,7 +476,7 @@ const AddToBuffList = function(buffId, statName?, isStacking?) {
         if (si && si.stat) {
             let stat = si.stat;
             if (_type(stat) == "table") {
-                for (const [_, name] of _ipairs(stat)) {
+                for (const [, name] of _ipairs(stat)) {
                     AddToBuffList(buffId, name, isStacking);
                 }
             } else {
@@ -503,7 +497,7 @@ let UpdateTrinketInfo = undefined;
             let buffId = ii && ii.buff;
             if (buffId) {
                 if (_type(buffId) == "table") {
-                    for (const [_, id] of _ipairs(buffId)) {
+                    for (const [, id] of _ipairs(buffId)) {
                         AddToBuffList(id);
                     }
                 } else {
@@ -514,13 +508,13 @@ let UpdateTrinketInfo = undefined;
     }
 }
 
-class OvaleCompileClass extends RegisterPrinter(OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(OvaleCompileBase))) {
+const OvaleCompileClassBase = RegisterPrinter(OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(OvaleCompileBase)));
+class OvaleCompileClass extends OvaleCompileClassBase {
     serial = undefined;
     ast = undefined;
-        
-    OnInitialize() {
-    }
-    OnEnable() {
+     
+    constructor() {
+        super();
         this.RegisterMessage("Ovale_CheckBoxValueChanged", "ScriptControlChanged");
         this.RegisterMessage("Ovale_EquipmentChanged", "EventHandler");
         this.RegisterMessage("Ovale_ListValueChanged", "ScriptControlChanged");
@@ -556,9 +550,9 @@ class OvaleCompileClass extends RegisterPrinter(OvaleDebug.RegisterDebugging(Ova
         } else {
             let control;
             if (event == "Ovale_CheckBoxValueChanged") {
-                control = Ovale.checkBox[name];
+                control = checkBoxes[name];
             } else if (event == "Ovale_ListValueChanged") {
-                control = Ovale.list[name];
+                control = checkBoxes[name];
             }
             if (control && control.triggerEvaluation) {
                 this.EventHandler(event);
@@ -568,7 +562,7 @@ class OvaleCompileClass extends RegisterPrinter(OvaleDebug.RegisterDebugging(Ova
     EventHandler(event) {
         self_serial = self_serial + 1;
         this.Debug("%s: advance age to %d.", event, self_serial);
-        Ovale.refreshNeeded[Ovale.playerGUID] = true;
+        Ovale.needRefresh();
     }
     CompileScript(name) {
         OvaleDebug.ResetTrace();
@@ -578,7 +572,7 @@ class OvaleCompileClass extends RegisterPrinter(OvaleDebug.RegisterDebugging(Ova
             this.ast = undefined;
         }
         this.ast = OvaleAST.ParseScript(name);
-        Ovale.ResetControls();
+        ResetControls();
     }
     EvaluateScript(ast?, forceEvaluation?) {
         this.StartProfiling("OvaleCompile_EvaluateScript");
@@ -587,7 +581,7 @@ class OvaleCompileClass extends RegisterPrinter(OvaleDebug.RegisterDebugging(Ova
             ast = this.ast;
         }
         let changed = false;
-        self_canEvaluate = self_canEvaluate || Ovale.IsPreloaded(self_requirePreload);
+        self_canEvaluate = self_canEvaluate;
         if (self_canEvaluate && ast && (forceEvaluation || !this.serial || this.serial < self_serial)) {
             this.Debug("Evaluating script.");
             changed = true;
@@ -598,7 +592,7 @@ class OvaleCompileClass extends RegisterPrinter(OvaleDebug.RegisterDebugging(Ova
             OvaleCooldown.ResetSharedCooldowns();
             self_timesEvaluated = self_timesEvaluated + 1;
             this.serial = self_serial;
-            for (const [_, node] of _ipairs<Node>(ast.child)) {
+            for (const [, node] of _ipairs<Node>(ast.child)) {
                 let nodeType = node.type;
                 if (nodeType == "checkbox") {
                     ok = EvaluateAddCheckBox(node);

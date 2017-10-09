@@ -18,6 +18,7 @@ end
 
 __exports.OvaleLexer = __class(nil, {
     constructor = function(self, name, stream, matches, filter)
+        self.name = name
         self.typeQueue = __Queue.OvaleQueue("typeQueue")
         self.tokenQueue = __Queue.OvaleQueue("tokenQueue")
         self.endOfStream = nil

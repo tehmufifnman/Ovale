@@ -43,7 +43,10 @@ do
     __Options.OvaleOptions:RegisterOptions(__exports.OvaleVersion)
 end
 local OvaleVersionClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleVersionBase), {
-    OnEnable = function(self)
+    constructor = function(self)
+        self.version = (OVALE_VERSION == REPOSITORY_KEYWORD) and "development version" or OVALE_VERSION
+        self.warned = false
+        __Debug.OvaleDebug:RegisterDebugging(OvaleVersionBase).constructor(self)
         self:RegisterComm(MSG_PREFIX)
     end,
     OnCommReceived = function(self, prefix, message, channel, sender)
@@ -95,10 +98,6 @@ local OvaleVersionClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleVers
         end
         self_timer = nil
     end,
-    constructor = function(self)
-        self.version = (OVALE_VERSION == REPOSITORY_KEYWORD) and "development version" or OVALE_VERSION
-        self.warned = false
-    end
 })
 __exports.OvaleVersion = OvaleVersionClass()
 end)

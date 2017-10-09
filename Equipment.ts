@@ -8,14 +8,12 @@ let _select = select;
 let strgsub = string.gsub;
 let strmatch = string.match;
 let _tonumber = tonumber;
-let _tostring = tostring;
 let _type = type;
 let _unpack = unpack;
 let _wipe = wipe;
 let API_CreateFrame = CreateFrame;
 let API_GetAuctionItemSubClasses = GetAuctionItemSubClasses;
 let API_GetInventoryItemID = GetInventoryItemID;
-let API_GetInventoryItemGems = GetInventoryItemGems;
 let API_GetItemInfo = GetItemInfo;
 let _INVSLOT_AMMO = INVSLOT_AMMO;
 let _INVSLOT_BACK = INVSLOT_BACK;
@@ -32,7 +30,6 @@ let _INVSLOT_LEGS = INVSLOT_LEGS;
 let _INVSLOT_MAINHAND = INVSLOT_MAINHAND;
 let _INVSLOT_NECK = INVSLOT_NECK;
 let _INVSLOT_OFFHAND = INVSLOT_OFFHAND;
-let _INVSLOT_RANGED = INVSLOT_RANGED;
 let _INVSLOT_SHOULDER = INVSLOT_SHOULDER;
 let _INVSLOT_TABARD = INVSLOT_TABARD;
 let _INVSLOT_TRINKET1 = INVSLOT_TRINKET1;
@@ -1289,17 +1286,16 @@ let OVALE_WEAPON_CLASS = {
 }
 let OVALE_META_GEM = undefined;
 {
-    let [_1, _2, _3, _4, _5, _6, name] = API_GetAuctionItemSubClasses(8);
+    let [,,,,,, name] = API_GetAuctionItemSubClasses(8);
     OVALE_META_GEM = name;
 }
-let OVALE_NORMALIZED_WEAPON_SPEED = {
-}
+
 const GetEquippedItemType = function(slotId) {
     OvaleEquipment.StartProfiling("OvaleEquipment_GetEquippedItemType");
     let [itemId] = OvaleEquipment.GetEquippedItem(slotId);
     let itemType;
     if (itemId) {
-        let [_1, _2, _3, _4, _5, _6, _7, _8, inventoryType] = API_GetItemInfo(itemId);
+        let [, , , , ,,, , inventoryType] = API_GetItemInfo(itemId);
         itemType = inventoryType;
     }
     OvaleEquipment.StopProfiling("OvaleEquipment_GetEquippedItemType");
@@ -1328,7 +1324,8 @@ const GetNormalizedWeaponSpeed = function(slotId) {
     if (slotId == _INVSLOT_MAINHAND || slotId == _INVSLOT_OFFHAND) {
         let [itemId] = OvaleEquipment.GetEquippedItem(slotId);
         if (itemId) {
-            let [_1, _2, _3, _4, _5, _6, weaponClass] = API_GetItemInfo(itemId);
+            // let [_1, _2, _3, _4, _5, _6, weaponClass] = API_GetItemInfo(itemId);
+            weaponSpeed = 1.8
         }
     }
     OvaleEquipment.StopProfiling("OvaleEquipment_GetNormalizedWeaponSpeed");
@@ -1372,11 +1369,10 @@ class OvaleEquipmentClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
     offHandWeaponSpeed = undefined;
 
     
-    OnInitialize() {
+    constructor() {
+        super();
         self_tooltip = API_CreateFrame("GameTooltip", "OvaleEquipment_ScanningTooltip", undefined, "GameTooltipTemplate");
         self_tooltip.SetOwner(UIParent, "ANCHOR_NONE");
-    }
-    OnEnable() {
         this.RegisterEvent("GET_ITEM_INFO_RECEIVED");
         this.RegisterEvent("PLAYER_ENTERING_WORLD", "UpdateEquippedItems");
         this.RegisterEvent("PLAYER_AVG_ITEM_LEVEL_UPDATE", "UpdateEquippedItemLevels");
@@ -1396,7 +1392,7 @@ class OvaleEquipmentClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
         this.offHandWeaponSpeed = this.HasOffHandWeapon() && GetNormalizedWeaponSpeed(_INVSLOT_OFFHAND);
         let changed = false;
         if (changed) {
-            Ovale.refreshNeeded[Ovale.playerGUID] = true;
+            Ovale.needRefresh();
             this.SendMessage("Ovale_EquipmentChanged");
         }
         this.StopProfiling("OvaleEquipment_GET_ITEM_INFO_RECEIVED");
@@ -1423,7 +1419,7 @@ class OvaleEquipmentClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
             }
         }
         this.UpdateArmorSetCount();
-        Ovale.refreshNeeded[Ovale.playerGUID] = true;
+        Ovale.needRefresh();
         this.SendMessage("Ovale_EquipmentChanged");
         this.StopProfiling("OvaleEquipment_PLAYER_EQUIPMENT_CHANGED");
     }
@@ -1610,7 +1606,7 @@ class OvaleEquipmentClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
         this.offHandWeaponSpeed = this.HasOffHandWeapon() && GetNormalizedWeaponSpeed(_INVSLOT_OFFHAND);
         if (changed) {
             this.UpdateArmorSetCount();
-            Ovale.refreshNeeded[Ovale.playerGUID] = true;
+            Ovale.needRefresh();
             this.SendMessage("Ovale_EquipmentChanged");
         }
         this.ready = true;
@@ -1628,7 +1624,7 @@ class OvaleEquipmentClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
             }
         }
         if (changed) {
-            Ovale.refreshNeeded[Ovale.playerGUID] = true;
+            Ovale.needRefresh();
             this.SendMessage("Ovale_EquipmentChanged");
         }
         this.StopProfiling("OvaleEquipment_UpdateEquippedItemLevels");
@@ -1645,3 +1641,5 @@ class OvaleEquipmentClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
         }
     }
 }
+
+OvaleEquipment = new OvaleEquipmentClass();

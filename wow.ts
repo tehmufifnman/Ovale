@@ -121,21 +121,21 @@ var math = {
 };
 
 var coroutine = {
-    yield(key, value?){},
-    wrap<T>(f:() => IterableIterator<T>) {
+    yield: (key, value?) => {},
+    wrap: <T>(f:() => IterableIterator<T>) => {
         return makeLuaIterable(f());
     }
 }
 
 var bit = {
-    band(...other:number[]) {
+    band: (...other:number[]) => {
         let result = other[0];
         for (let i = 1; i < other.length; i++) {
             result &= other[i];
         }
         return result;
     },
-    bor(...other:number[]) {
+    bor: (...other:number[]) => {
         let result = other[0];
         for (let i = 1; i < other.length; i++) {
             result |= other[i];
@@ -281,7 +281,7 @@ interface UIRegion {
 
 interface UIFrame  extends UIRegion {
     SetAlpha(value:number):void;
-    SetScript(event:"OnMouseUp" | "OnEnter" | "OnLeave" | "OnMouseDown" | "OnHide" | "OnUpdate", func):void;
+    SetScript(event:"OnSizeChanged" | "OnMouseUp" | "OnEnter" | "OnLeave" | "OnMouseDown" | "OnHide" | "OnUpdate", func):void;
     StartMoving():void;
     StopMovingOrSizing():void;
     SetMovable(movable:boolean):void;
@@ -552,7 +552,7 @@ var Bartender4;
 var GameTooltip:UIGameTooltip = <UIGameTooltip>{}
 var MAX_COMBO_POINTS = 5;
 var UNKNOWN = -1;
-var DEFAULT_CHAT_FRAME:UIFrame = undefined;
+var DEFAULT_CHAT_FRAME:UIMessageFrame = undefined;
 var SCHOOL_MASK_NONE = 0;
 var SCHOOL_MASK_ARCANE = 1;
 var SCHOOL_MASK_FIRE = 2;
@@ -651,3 +651,13 @@ var COMBATLOG_OBJECT_AFFILIATION_PARTY = 2;
 var COMBATLOG_OBJECT_AFFILIATION_RAID = 3;
 var COMBATLOG_OBJECT_REACTION_FRIENDLY = 4;
 
+function AceGUIRegisterAsContainer(widget: AceGUIWidgetContainerBase){
+    // widget.children = {}
+    // widget.userdata = {}
+    // widget.events = {}
+    widget.content.obj = widget
+    widget.frame.obj = widget
+    // widget.content.SetScript("OnSizeChanged", widget.ContentResize)
+    // widget.frame.SetScript("OnSizeChanged", widget.FrameResize)
+    widget.SetLayout("List")
+}

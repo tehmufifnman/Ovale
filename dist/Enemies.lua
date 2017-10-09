@@ -1,12 +1,11 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Enemies", { "./Localization", "./Debug", "./Profiler", "./Ovale", "./GUID", "./State" }, function(__exports, __Localization, __Debug, __Profiler, __Ovale, __GUID, __State)
+__addon.require(__addonName, __addon, "./Enemies", { "./Debug", "./Profiler", "./Ovale", "./GUID", "./State" }, function(__exports, __Debug, __Profiler, __Ovale, __GUID, __State)
 local OvaleEnemiesBase = __Ovale.Ovale:NewModule("OvaleEnemies", "AceEvent-3.0", "AceTimer-3.0")
 local bit_band = bit.band
 local bit_bor = bit.bor
 local _ipairs = ipairs
 local _pairs = pairs
 local strfind = string.find
-local _tostring = tostring
 local _wipe = wipe
 local API_GetTime = GetTime
 local _COMBATLOG_OBJECT_AFFILIATION_MINE = COMBATLOG_OBJECT_AFFILIATION_MINE
@@ -39,7 +38,6 @@ local CLEU_UNIT_REMOVED = {
     UNIT_DIED = true,
     UNIT_DISSIPATES = true
 }
-local self_playerGUID = nil
 local self_enemyName = {}
 local self_enemyLastSeen = {}
 local self_taggedEnemyLastSeen = {}
@@ -65,10 +63,10 @@ local IsFriendly = function(unitFlags, isGroupMember)
 end
 
 local OvaleEnemiesClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleEnemiesBase)), {
-    OnInitialize = function(self)
-    end,
-    OnEnable = function(self)
-        self_playerGUID = __Ovale.Ovale.playerGUID
+    constructor = function(self)
+        self.activeEnemies = 0
+        self.taggedEnemies = 0
+        __Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleEnemiesBase)).constructor(self)
         if  not self_reaperTimer then
             self_reaperTimer = self:ScheduleRepeatingTimer("RemoveInactiveEnemies", REAP_INTERVAL)
         end
@@ -95,7 +93,7 @@ local OvaleEnemiesClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profile
                 end
             elseif IsFriendly(sourceFlags, true) and  not IsFriendly(destFlags) and IsTagEvent(cleuEvent) then
                 local now = API_GetTime()
-                local isPlayerTag = (sourceGUID == self_playerGUID) or __GUID.OvaleGUID:IsPlayerPet(sourceGUID)
+                local isPlayerTag = (sourceGUID == __Ovale.Ovale.playerGUID) or __GUID.OvaleGUID:IsPlayerPet(sourceGUID)
                 self:AddEnemy(cleuEvent, destGUID, destName, now, isPlayerTag)
             end
         end
@@ -143,7 +141,7 @@ local OvaleEnemiesClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profile
             end
             if changed then
                 self:DebugTimestamp("%s: %d/%d enemy seen: %s (%s)", cleuEvent, self.taggedEnemies, self.activeEnemies, guid, name)
-                __Ovale.Ovale.refreshNeeded[self_playerGUID] = true
+                __Ovale.Ovale:needRefresh()
             end
         end
         self:StopProfiling("OvaleEnemies_AddEnemy")
@@ -169,7 +167,7 @@ local OvaleEnemiesClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profile
             end
             if changed then
                 self:DebugTimestamp("%s: %d/%d enemy %s: %s (%s)", cleuEvent, self.taggedEnemies, self.activeEnemies, isDead and "died" or "removed", guid, name)
-                __Ovale.Ovale.refreshNeeded[self_playerGUID] = true
+                __Ovale.Ovale:needRefresh()
                 self:SendMessage("Ovale_InactiveUnit", guid, isDead)
             end
         end
@@ -186,7 +184,7 @@ local OvaleEnemiesClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profile
                     self.taggedEnemies = self.taggedEnemies - 1
                 end
                 self:DebugTimestamp("%s: %d/%d enemy removed: %s (%s), last tagged at %f", cleuEvent, self.taggedEnemies, self.activeEnemies, guid, name, tagged)
-                __Ovale.Ovale.refreshNeeded[self_playerGUID] = true
+                __Ovale.Ovale:needRefresh()
             end
         end
         self:StopProfiling("OvaleEnemies_RemoveEnemy")
@@ -204,12 +202,8 @@ local OvaleEnemiesClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profile
         self:Print("Total enemies: %d", self.activeEnemies)
         self:Print("Total tagged enemies: %d", self.taggedEnemies)
     end,
-    constructor = function(self)
-        self.activeEnemies = 0
-        self.taggedEnemies = 0
-    end
 })
-local EnemiesState = __class(nil, {
+local EnemiesStateClass = __class(nil, {
     InitializeState = function(self)
         self.enemies = nil
     end,
@@ -231,6 +225,6 @@ local EnemiesState = __class(nil, {
     end
 })
 __exports.OvaleEnemies = OvaleEnemiesClass()
-__exports.EnemiesState = EnemiesState()
-__State.OvaleState:RegisterState(EnemiesState)
+__exports.EnemiesState = EnemiesStateClass()
+__State.OvaleState:RegisterState(__exports.EnemiesState)
 end)

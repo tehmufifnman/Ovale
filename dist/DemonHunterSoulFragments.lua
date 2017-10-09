@@ -1,9 +1,7 @@
 local __addonName, __addon = ...
 __addon.require(__addonName, __addon, "./DemonHunterSoulFragments", { "./Ovale", "./Debug", "./State" }, function(__exports, __Ovale, __Debug, __State)
 local OvaleDemonHunterSoulFragmentsBase = __Ovale.Ovale:NewModule("OvaleDemonHunterSoulFragments", "AceEvent-3.0")
-local _ipairs = ipairs
 local tinsert = table.insert
-local tremove = table.remove
 local API_GetTime = GetTime
 local API_GetSpellCount = GetSpellCount
 local SOUL_FRAGMENTS_BUFF_ID = 228477
@@ -15,10 +13,9 @@ local SOUL_FRAGMENT_FINISHERS = {
     [227225] = true
 }
 local OvaleDemonHunterSoulFragmentsClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleDemonHunterSoulFragmentsBase), {
-    OnInitialize = function(self)
+    constructor = function(self)
+        __Debug.OvaleDebug:RegisterDebugging(OvaleDemonHunterSoulFragmentsBase).constructor(self)
         self:SetCurrentSoulFragments(0)
-    end,
-    OnEnable = function(self)
         if __Ovale.Ovale.playerClass == "DEMONHUNTER" then
             self:RegisterEvent("PLAYER_REGEN_ENABLED")
             self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
@@ -43,7 +40,6 @@ local OvaleDemonHunterSoulFragmentsClass = __class(__Debug.OvaleDebug:RegisterDe
     COMBAT_LOG_EVENT_UNFILTERED = function(self, event, _2, subtype, _4, sourceGUID, _6, _7, _8, _9, _10, _11, _12, spellID, spellName)
         local me = __Ovale.Ovale.playerGUID
         if sourceGUID == me then
-            local current_sould_fragment_count = self.last_soul_fragment_count
             if subtype == "SPELL_HEAL" and spellID == SOUL_FRAGMENTS_SPELL_HEAL_ID then
                 self:SetCurrentSoulFragments(self.last_soul_fragment_count.fragments - 1)
             end
@@ -82,29 +78,6 @@ local OvaleDemonHunterSoulFragmentsClass = __class(__Debug.OvaleDebug:RegisterDe
     DebugSoulFragments = function(self)
     end,
 })
-local spairs = function(t, order)
-    local keys = {}
-    for k in pairs(t) do
-        keys[#keys + 1] = k
-    end
-    if order then
-        table.sort(keys, function(a, b)
-            return order(t, a, b)
-        end
-)
-    else
-        table.sort(keys)
-    end
-    local i = 0
-    return function()
-        i = i + 1
-        if keys[i] then
-            return keys[i], t[keys[i]]
-        end
-    end
-
-end
-
 local DemonHunterSoulFragmentsState = __class(nil, {
     CleanState = function(self)
     end,
@@ -115,7 +88,7 @@ local DemonHunterSoulFragmentsState = __class(nil, {
     SoulFragments = function(self, atTime)
         local currentTime = nil
         local count = nil
-        for k, v in pairs(__exports.OvaleDemonHunterSoulFragments.soul_fragments) do
+        for _, v in pairs(__exports.OvaleDemonHunterSoulFragments.soul_fragments) do
             if v.timestamp >= atTime and (currentTime == nil or v.timestamp < currentTime) then
                 currentTime = v.timestamp
                 count = v.fragments

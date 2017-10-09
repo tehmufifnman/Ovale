@@ -1,27 +1,19 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Ovale", { "AceAddon-3.0", "AceGUI-3.0", "./Localization" }, function(__exports, AceAddon, AceGUI, __Localization)
+__addon.require(__addonName, __addon, "./Ovale", { "AceAddon-3.0", "./Localization" }, function(__exports, AceAddon, __Localization)
 local _assert = assert
 local format = string.format
 local _ipairs = ipairs
-local _next = next
 local _pairs = pairs
 local _select = select
 local strfind = string.find
 local _strjoin = strjoin
 local strlen = string.len
-local strmatch = string.match
 local _tostring = tostring
 local _tostringall = tostringall
-local _type = type
-local _unpack = unpack
 local _wipe = wipe
-local API_GetTime = GetTime
 local API_UnitClass = UnitClass
 local API_UnitGUID = UnitGUID
-local _DEFAULT_CHAT_FRAME = DEFAULT_CHAT_FRAME
 local INFINITY = math.huge
-local OVALE_VERSION = "7.3.0.2"
-local REPOSITORY_KEYWORD = "@" .. "project-version" .. "@"
 local self_oneTimeMessage = {}
 local MAX_REFRESH_INTERVALS = 500
 local self_refreshIntervals = {}
@@ -69,20 +61,18 @@ local OvaleClass = __class(OvaleBase, {
         _G["BINDING_NAME_OVALE_CHECKBOX2"] = toggleCheckBox .. "(3)"
         _G["BINDING_NAME_OVALE_CHECKBOX3"] = toggleCheckBox .. "(4)"
         _G["BINDING_NAME_OVALE_CHECKBOX4"] = toggleCheckBox .. "(5)"
-        self.playerGUID = API_UnitGUID("player")
         self:RegisterEvent("PLAYER_ENTERING_WORLD")
     end,
     PLAYER_ENTERING_WORLD = function(self)
+        self.playerGUID = API_UnitGUID("player")
         _wipe(self_refreshIntervals)
         self_refreshIndex = 1
         self:ClearOneTimeMessages()
     end,
-    IsPreloaded = function(self, moduleList)
-        local preloaded = true
-        for _, moduleName in _pairs(moduleList) do
-            preloaded = preloaded and self[moduleName].ready
+    needRefresh = function(self)
+        if self.playerGUID then
+            self.refreshNeeded[self.playerGUID] = true
         end
-        return preloaded
     end,
     AddRefreshInterval = function(self, milliseconds)
         if milliseconds < INFINITY then
@@ -92,7 +82,7 @@ local OvaleClass = __class(OvaleBase, {
     end,
     GetRefreshIntervalStatistics = function(self)
         local sumRefresh, minRefresh, maxRefresh, count = 0, INFINITY, 0, 0
-        for k, v in _ipairs(self_refreshIntervals) do
+        for _, v in _ipairs(self_refreshIntervals) do
             if v > 0 then
                 if minRefresh > v then
                     minRefresh = v

@@ -3,15 +3,16 @@ import AceConfigDialog from "AceConfigDialog-3.0";
 import { L } from "./Localization";
 import AceDB from "AceDB-3.0";
 import AceDBOptions from "AceDBOptions-3.0";
-import LibDualSpec from "LibDualSpec-1.0";
 import { OvaleDb, Ovale } from "./Ovale";
 let OvaleOptionsBase = Ovale.NewModule("OvaleOptions", "AceConsole-3.0", "AceEvent-3.0");
-let _ipairs = ipairs;
-let _pairs = pairs;
-let tinsert = table.insert;
-let _type = type;
+// let tinsert = table.insert;
 let API_InterfaceOptionsFrame_OpenToCategory = InterfaceOptionsFrame_OpenToCategory;
-let self_register = {  }
+let _ipairs = ipairs;
+interface OptionModule {
+    UpgradeSavedVariables():void;
+}
+
+let self_register:LuaObj<OptionModule> = {  }
 
 class OvaleOptionsClass extends OvaleOptionsBase {
     defaultDB:OvaleDb = {
@@ -61,7 +62,9 @@ class OvaleOptionsClass extends OvaleOptionsBase {
                 auraLag: 400,
                 moving: false,
                 spellFlash: undefined,
-                minimap: undefined
+                minimap: { 
+                    hide: false
+                }
             }
         },
         global:undefined
@@ -438,19 +441,17 @@ class OvaleOptionsClass extends OvaleOptionsBase {
         db.RegisterCallback(this, "OnProfileReset", "HandleProfileChanges");
         db.RegisterCallback(this, "OnProfileChanged", "HandleProfileChanges");
         db.RegisterCallback(this, "OnProfileCopied", "HandleProfileChanges");
-        Ovale.db = <OvaleDb><any>db;
+        Ovale.db = db;
         this.UpgradeSavedVariables();
         AceConfig.RegisterOptionsTable(ovale, this.options.args.apparence);
         AceConfig.RegisterOptionsTable(`${ovale} Profiles`, this.options.args.profile);
         AceConfig.RegisterOptionsTable(`${ovale} Actions`, this.options.args.actions, "Ovale");
         AceConfigDialog.AddToBlizOptions(ovale);
         AceConfigDialog.AddToBlizOptions(`${ovale} Profiles`, "Profiles", ovale);
-    }
-    OnEnable() {
         this.HandleProfileChanges();
     }
     RegisterOptions(addon) {
-        tinsert(self_register, addon);
+        // tinsert(self_register, addon);
     }
     UpgradeSavedVariables() {
         // const profile = Ovale.db.profile;
@@ -463,12 +464,12 @@ class OvaleOptionsClass extends OvaleOptionsBase {
         //     profile.top = undefined;
         //     Ovale.OneTimeMessage("The Ovale icon frames position has been reset.");
         // }
-        // for (const [_, addon] of _ipairs(self_register)) {
-        //     if (addon.UpgradeSavedVariables) {
-        //         addon.UpgradeSavedVariables();
-        //     }
-        // }
-        // Ovale.db.RegisterDefaults(this.defaultDB);
+        for (const [, addon] of _ipairs(self_register)) {
+            if (addon.UpgradeSavedVariables) {
+                addon.UpgradeSavedVariables();
+            }
+        }
+        Ovale.db.RegisterDefaults(this.defaultDB);
     }
     HandleProfileChanges() {
         this.SendMessage("Ovale_ProfileChanged");

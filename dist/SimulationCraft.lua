@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./SimulationCraft", { "AceConfig-3.0", "AceConfigDialog-3.0", "./Localization", "./Debug", "./Options", "./Pool", "./Ovale", "./AST", "./Compile", "./Data", "./HonorAmongThieves", "./Lexer", "./Power", "./Scripts" }, function(__exports, AceConfig, AceConfigDialog, __Localization, __Debug, __Options, __Pool, __Ovale, __AST, __Compile, __Data, __HonorAmongThieves, __Lexer, __Power, __Scripts)
+__addon.require(__addonName, __addon, "./SimulationCraft", { "AceConfig-3.0", "AceConfigDialog-3.0", "./Localization", "./Debug", "./Options", "./Pool", "./Ovale", "./AST", "./Compile", "./Data", "./HonorAmongThieves", "./Lexer", "./Power", "./Controls" }, function(__exports, AceConfig, AceConfigDialog, __Localization, __Debug, __Options, __Pool, __Ovale, __AST, __Compile, __Data, __HonorAmongThieves, __Lexer, __Power, __Controls)
 local OvaleSimulationCraftBase = __Ovale.Ovale:NewModule("OvaleSimulationCraft")
 local format = string.format
 local gmatch = string.gmatch
@@ -225,19 +225,7 @@ do
     setmetatable(INDENT, metatable)
 end
 local EMIT_DISAMBIGUATION = {}
-local EMIT_EXTRA_PARAMETERS = {}
 local OPERAND_TOKEN_PATTERN = "[^.]+"
-local POTION_STAT = {
-    ["draenic_agility"] = "agility",
-    ["draenic_armor"] = "armor",
-    ["draenic_intellect"] = "intellect",
-    ["draenic_strength"] = "strength",
-    ["jade_serpent"] = "intellect",
-    ["mogu_power"] = "strength",
-    ["mountains"] = "armor",
-    ["tolvir"] = "agility",
-    ["virmens_bite"] = "agility"
-}
 local OPTIONAL_SKILLS = {
     ["volley"] = {
         class = "HUNTER",
@@ -320,7 +308,6 @@ do
     for k, v in _pairs(actions) do
         __Options.OvaleOptions.options.args.actions.args[k] = v
     end
-    __Options.OvaleOptions:RegisterOptions(__exports.OvaleSimulationCraft)
 end
 local OVALE_TAGS = {
     [1] = "main",
@@ -367,11 +354,6 @@ local print_r = function(node, indent, done, output)
         end
     end
     return output
-end
-
-local debug_r = function(tbl)
-    local output = print_r(tbl)
-    __exports.OvaleSimulationCraft:Debug(tconcat(output, "\\n"))
 end
 
 local NewNode = function(nodeList, hasChild)
@@ -494,7 +476,7 @@ local UnparseActionList = function(node)
         local operator = (i == 1) and "=" or "+=/"
         output[#output + 1] = listName .. operator .. Unparse(actionNode)
     end
-    local s = tconcat(output, "\\n")
+    local s = tconcat(output, "\n")
     self_outputPool:Release(output)
     return s
 end
@@ -586,7 +568,6 @@ local ParseNumber = nil
 local ParseOperand = nil
 local ParseParentheses = nil
 local ParseSimpleExpression = nil
-local ParseIdentifer = nil
 local TicksRemainTranslationHelper = function(p1, p2, p3, p4)
     if p4 then
         return p1 .. p2 .. " < " .. _tostring(_tonumber(p4) + 1)
@@ -829,7 +810,7 @@ ParseFunction = function(tokenStream, nodeList, annotation)
 end
 
 local ParseIdentifier = function(tokenStream, nodeList, annotation)
-    local tokenType, token = tokenStream.Consume()
+    local _, token = tokenStream.Consume()
     local node = NewNode(nodeList)
     node.type = "operand"
     node.name = token
@@ -2603,7 +2584,7 @@ EmitOperandAction = function(operand, parseNode, nodeList, annotation, action, t
     local property
     if strsub(operand, 1, 7) == "action." then
         local tokenIterator = gmatch(operand, OPERAND_TOKEN_PATTERN)
-        local token = tokenIterator()
+        tokenIterator()
         name = tokenIterator()
         property = tokenIterator()
     else
@@ -3281,7 +3262,7 @@ EmitOperandRaidEvent = function(operand, parseNode, nodeList, annotation, action
     local property
     if strsub(operand, 1, 11) == "raid_event." then
         local tokenIterator = gmatch(operand, OPERAND_TOKEN_PATTERN)
-        local token = tokenIterator()
+        tokenIterator()
         name = tokenIterator()
         property = tokenIterator()
     else
@@ -4060,7 +4041,7 @@ local InsertInterruptFunction = function(child, annotation, interrupts)
     for _, spell in _pairs(spells) do
         AddSymbol(annotation, spell.name)
         if (spell.addSymbol ~= nil) then
-            for k, v in _pairs(spell.addSymbol) do
+            for _, v in _pairs(spell.addSymbol) do
                 AddSymbol(annotation, v)
             end
         end
@@ -4095,16 +4076,13 @@ local InsertInterruptFunction = function(child, annotation, interrupts)
 			}
 		}
 	]]
-    local code = format(fmt, camelSpecialization, tconcat(lines, "\\n"))
+    local code = format(fmt, camelSpecialization, tconcat(lines, "\n"))
     local node = __AST.OvaleAST:ParseCode("add_function", code, nodeList, annotation.astAnnotation)
     tinsert(child, 1, node)
     annotation.functionTag[node.name] = "cd"
 end
 
 local InsertInterruptFunctions = function(child, annotation)
-    local count = 0
-    local nodeList = annotation.astAnnotation.nodeList
-    local camelSpecialization = CamelSpecialization(annotation)
     local interrupts = {}
     if annotation.mind_freeze == "DEATHKNIGHT" then
         tinsert(interrupts, {
@@ -4855,7 +4833,7 @@ end
 
 local InsertVariables = function(child, annotation)
     if annotation.variable then
-        for k, v in _pairs(annotation.variable) do
+        for _, v in _pairs(annotation.variable) do
             tinsert(child, 1, v)
         end
     end
@@ -4866,17 +4844,17 @@ local GenerateIconBody = function(tag, profile)
     local precombatName = OvaleFunctionName("precombat", annotation)
     local defaultName = OvaleFunctionName("_default", annotation)
     local precombatBodyName, precombatConditionName = OvaleTaggedFunctionName(precombatName, tag)
-    local defaultBodyName, defaultConditionName = OvaleTaggedFunctionName(defaultName, tag)
+    local defaultBodyName = OvaleTaggedFunctionName(defaultName, tag)
     local mainBodyCode
     if annotation.using_apl and _next(annotation.using_apl) then
         local output = self_outputPool:Get()
         output[#output + 1] = format("if List(opt_using_apl normal) %s()", defaultBodyName)
         for name in _pairs(annotation.using_apl) do
             local aplName = OvaleFunctionName(name, annotation)
-            local aplBodyName, aplConditionName = OvaleTaggedFunctionName(aplName, tag)
+            local aplBodyName = OvaleTaggedFunctionName(aplName, tag)
             output[#output + 1] = format("if List(opt_using_apl %s) %s()", name, aplBodyName)
         end
-        mainBodyCode = tconcat(output, "\\n")
+        mainBodyCode = tconcat(output, "\n")
         self_outputPool:Release(output)
     else
         mainBodyCode = defaultBodyName .. "()"
@@ -4898,7 +4876,8 @@ local GenerateIconBody = function(tag, profile)
 end
 
 local OvaleSimulationCraftClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleSimulationCraftBase), {
-    OnInitialize = function(self)
+    constructor = function(self)
+        __Debug.OvaleDebug:RegisterDebugging(OvaleSimulationCraftBase).constructor(self)
         InitializeDisambiguation()
         self:CreateOptions()
     end,
@@ -4909,7 +4888,7 @@ local OvaleSimulationCraftClass = __class(__Debug.OvaleDebug:RegisterDebugging(O
     end,
     ToString = function(self, tbl)
         local output = print_r(tbl)
-        return tconcat(output, "\\n")
+        return tconcat(output, "\n")
     end,
     Release = function(self, profile)
         if profile.annotation then
@@ -4934,7 +4913,7 @@ local OvaleSimulationCraftClass = __class(__Debug.OvaleDebug:RegisterDebugging(O
     end,
     ParseProfile = function(self, simc)
         local profile = {}
-        for _line in gmatch(simc, "[^\\r\\n]+") do
+        for _line in gmatch(simc, "[^\r\n]+") do
             local line = strmatch(_line, "^%s*(.-)%s*$")
             if  not (strmatch(line, "^#.*") or strmatch(line, "^$")) then
                 local key, operator, value = strmatch(line, "([^%+=]+)(%+?=)(.*)")
@@ -4956,7 +4935,7 @@ local OvaleSimulationCraftClass = __class(__Debug.OvaleDebug:RegisterDebugging(O
             end
         end
         profile.templates = {}
-        for k, v in _pairs(profile) do
+        for k in _pairs(profile) do
             if strsub(k, 1, 2) == "$(" and strsub(k, -1) == ")" then
                 tinsert(profile.templates, k)
             end
@@ -5050,7 +5029,7 @@ local OvaleSimulationCraftClass = __class(__Debug.OvaleDebug:RegisterDebugging(O
                 output[#output + 1] = Unparse(node)
             end
         end
-        local s = tconcat(output, "\\n")
+        local s = tconcat(output, "\n")
         self_outputPool:Release(output)
         return s
     end,
@@ -5086,7 +5065,7 @@ local OvaleSimulationCraftClass = __class(__Debug.OvaleDebug:RegisterDebugging(O
                     __AST.OvaleAST:PropagateConstants(dictionaryAST)
                     __AST.OvaleAST:PropagateStrings(dictionaryAST)
                     __AST.OvaleAST:FlattenParameters(dictionaryAST)
-                    __Ovale.Ovale.ResetControls()
+                    __Controls.ResetControls()
                     __Compile.OvaleCompile:EvaluateScript(dictionaryAST, true)
                 end
             end
@@ -5209,7 +5188,6 @@ local OvaleSimulationCraftClass = __class(__Debug.OvaleDebug:RegisterDebugging(O
         return ast
     end,
     Emit = function(self, profile, noFinalNewLine)
-        local nodeList = {}
         local ast = self:EmitAST(profile)
         local annotation = profile.annotation
         local className = annotation.class
@@ -5265,7 +5243,7 @@ local OvaleSimulationCraftClass = __class(__Debug.OvaleDebug:RegisterDebugging(O
         if  not noFinalNewLine and output[#output] ~= "" then
             output[#output + 1] = ""
         end
-        local s = tconcat(output, "\\n")
+        local s = tconcat(output, "\n")
         self_outputPool:Release(output)
         __AST.OvaleAST:Release(ast)
         return s
@@ -5282,7 +5260,7 @@ local OvaleSimulationCraftClass = __class(__Debug.OvaleDebug:RegisterDebugging(O
                     args = {
                         description = {
                             order = 10,
-                            name = __Localization.L["The contents of a SimulationCraft profile."] .. "\\nhttps://code.google.com/p/simulationcraft/source/browse/profiles",
+                            name = __Localization.L["The contents of a SimulationCraft profile."] .. "\nhttps://code.google.com/p/simulationcraft/source/browse/profiles",
                             type = "description"
                         },
                         input = {

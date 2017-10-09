@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Icon", { "./Localization", "./SpellBook", "./State", "./Ovale" }, function(__exports, __Localization, __SpellBook, __State, __Ovale)
+__addon.require(__addonName, __addon, "./Icon", { "./Localization", "./SpellBook", "./Ovale" }, function(__exports, __Localization, __SpellBook, __Ovale)
 local format = string.format
 local _next = next
 local _pairs = pairs
@@ -10,16 +10,16 @@ local API_GetTime = GetTime
 local API_PlaySoundFile = PlaySoundFile
 local INFINITY = math.huge
 local COOLDOWN_THRESHOLD = 0.1
-local HasScriptControls = function()
-    return (_next(__Ovale.Ovale.checkBoxWidget) ~= nil or _next(__Ovale.Ovale.listWidget) ~= nil)
-end
-
 __exports.OvaleIcon = __class(nil, {
+    HasScriptControls = function(self)
+        return (_next(self.parent.checkBoxWidget) ~= nil or _next(self.parent.listWidget) ~= nil)
+    end,
     constructor = function(self, name, parent, secure)
+        self.parent = parent
         if  not secure then
-            self.frame = CreateFrame("CheckButton", name, parent, "ActionButtonTemplate")
+            self.frame = CreateFrame("CheckButton", name, parent.frame, "ActionButtonTemplate")
         else
-            self.frame = CreateFrame("CheckButton", name, parent, "SecureActionButtonTemplate, ActionButtonTemplate")
+            self.frame = CreateFrame("CheckButton", name, parent.frame, "SecureActionButtonTemplate, ActionButtonTemplate")
         end
         self:OvaleIcon_OnLoad()
     end,
@@ -221,12 +221,12 @@ __exports.OvaleIcon = __class(nil, {
     end,
     OvaleIcon_OnMouseUp = function(self)
         if  not self.actionButton then
-            __Ovale.Ovale.ToggleOptions()
+            self.parent:ToggleOptions()
         end
         self.frame:SetChecked(true)
     end,
     OvaleIcon_OnEnter = function(self)
-        if self.help or self.actionType or HasScriptControls() then
+        if self.help or self.actionType or self:HasScriptControls() then
             GameTooltip:SetOwner(self.frame, "ANCHOR_BOTTOMLEFT")
             if self.help then
                 GameTooltip:SetText(__Localization.L[self.help])
@@ -244,14 +244,14 @@ __exports.OvaleIcon = __class(nil, {
                 end
                 GameTooltip:AddLine(actionHelp, 0.5, 1, 0.75)
             end
-            if HasScriptControls() then
+            if self:HasScriptControls() then
                 GameTooltip:AddLine(__Localization.L["Cliquer pour afficher/cacher les options"], 1, 1, 1)
             end
             GameTooltip:Show()
         end
     end,
     OvaleIcon_OnLeave = function(self)
-        if self.help or HasScriptControls() then
+        if self.help or self:HasScriptControls() then
             GameTooltip:Hide()
         end
     end,

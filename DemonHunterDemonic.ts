@@ -22,9 +22,8 @@ class OvaleDemonHunterDemonicClass extends OvaleDebug.RegisterDebugging(OvaleDem
     isHavoc:boolean;
     hasDemonic: boolean;
 
-    OnInitialize() {
-    }
-    OnEnable() {
+    constructor() {
+        super();
         this.playerGUID = undefined;
         this.isDemonHunter = Ovale.playerClass == "DEMONHUNTER" && true || false;
         this.isHavoc = false;
@@ -55,7 +54,7 @@ class OvaleDemonHunterDemonicClass extends OvaleDebug.RegisterDebugging(OvaleDem
         }
     }
     COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, cleuEvent, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, ...__args) {
-        let [arg12, arg13, arg14, arg15, arg16, arg17, arg18, arg19, arg20, arg21, arg22, arg23, arg24, arg25] = __args;
+        let [arg12, arg13] = __args;
         if (sourceGUID == this.playerGUID && cleuEvent == "SPELL_CAST_SUCCESS") {
             let [spellId, spellName] = [arg12, arg13];
             if (HAVOC_EYE_BEAM_SPELL_ID == spellId) {

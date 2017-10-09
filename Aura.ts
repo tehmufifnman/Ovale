@@ -2,23 +2,19 @@ import { L } from "./Localization";
 import { OvaleDebug } from "./Debug";
 import { OvalePool } from "./Pool";
 import { OvaleProfiler } from "./Profiler";
-import { OvaleData, dataState } from "./Data";
+import { OvaleData } from "./Data";
 import { OvaleGUID } from "./GUID";
-import { OvalePaperDoll, paperDollState } from "./PaperDoll";
+import { paperDollState } from "./PaperDoll";
 import { OvaleSpellBook } from "./SpellBook";
 import { OvaleState, StateModule, baseState } from "./State";
 import { Ovale } from "./Ovale";
 import { lastSpell, SpellCast } from "./LastSpell";
-import { RegisterRequirement, UnregisterRequirement } from "./Requirement";
+import { RegisterRequirement, UnregisterRequirement, CheckRequirements } from "./Requirement";
+import { dataState } from "./DataState";
 let OvaleAuraBase = Ovale.NewModule("OvaleAura", "AceEvent-3.0");
 export let OvaleAura: OvaleAuraClass;
-let bit_band = bit.band;
-let bit_bor = bit.bor;
-let floor = math.floor;
-let _ipairs = ipairs;
 let _next = next;
 let _pairs = pairs;
-let strfind = string.find;
 let strlower = string.lower;
 let strsub = string.sub;
 let tconcat = table.concat;
@@ -30,12 +26,12 @@ let _wipe = wipe;
 let API_GetTime = GetTime;
 let API_UnitAura = UnitAura;
 let INFINITY = math.huge;
-let _SCHOOL_MASK_ARCANE = SCHOOL_MASK_ARCANE;
-let _SCHOOL_MASK_FIRE = SCHOOL_MASK_FIRE;
-let _SCHOOL_MASK_FROST = SCHOOL_MASK_FROST;
-let _SCHOOL_MASK_HOLY = SCHOOL_MASK_HOLY;
-let _SCHOOL_MASK_NATURE = SCHOOL_MASK_NATURE;
-let _SCHOOL_MASK_SHADOW = SCHOOL_MASK_SHADOW;
+// let _SCHOOL_MASK_ARCANE = SCHOOL_MASK_ARCANE;
+// let _SCHOOL_MASK_FIRE = SCHOOL_MASK_FIRE;
+// let _SCHOOL_MASK_FROST = SCHOOL_MASK_FROST;
+// let _SCHOOL_MASK_HOLY = SCHOOL_MASK_HOLY;
+// let _SCHOOL_MASK_NATURE = SCHOOL_MASK_NATURE;
+// let _SCHOOL_MASK_SHADOW = SCHOOL_MASK_SHADOW;
 
 let self_playerGUID = undefined;
 let self_petGUID = undefined;
@@ -133,7 +129,8 @@ let CLEU_TICK_EVENTS = {
     SPELL_PERIODIC_DRAIN: true,
     SPELL_PERIODIC_LEECH: true
 }
-let CLEU_SCHOOL_MASK_MAGIC = bit_bor(_SCHOOL_MASK_ARCANE, _SCHOOL_MASK_FIRE, _SCHOOL_MASK_FROST, _SCHOOL_MASK_HOLY, _SCHOOL_MASK_NATURE, _SCHOOL_MASK_SHADOW);
+
+//let CLEU_SCHOOL_MASK_MAGIC = bit_bor(_SCHOOL_MASK_ARCANE, _SCHOOL_MASK_FIRE, _SCHOOL_MASK_FROST, _SCHOOL_MASK_HOLY, _SCHOOL_MASK_NATURE, _SCHOOL_MASK_SHADOW);
 
 
 interface Aura {
@@ -187,7 +184,7 @@ const GetAura = function(auraDB, guid, auraId, casterGUID) {
 const GetAuraAnyCaster = function(auraDB, guid, auraId) {
     let auraFound;
     if (auraDB[guid] && auraDB[guid][auraId]) {
-        for (const [casterGUID, aura] of _pairs(auraDB[guid][auraId])) {
+        for (const [, aura] of _pairs(auraDB[guid][auraId])) {
             if (!auraFound || auraFound.ending < aura.ending) {
                 auraFound = aura;
             }
@@ -198,7 +195,7 @@ const GetAuraAnyCaster = function(auraDB, guid, auraId) {
 const GetDebuffType = function(auraDB, guid, debuffType, filter, casterGUID) {
     let auraFound;
     if (auraDB[guid]) {
-        for (const [auraId, whoseTable] of _pairs(auraDB[guid])) {
+        for (const [, whoseTable] of _pairs(auraDB[guid])) {
             let aura = whoseTable[casterGUID];
             if (aura && aura.debuffType == debuffType && aura.filter == filter) {
                 if (!auraFound || auraFound.ending < aura.ending) {
@@ -212,8 +209,8 @@ const GetDebuffType = function(auraDB, guid, debuffType, filter, casterGUID) {
 const GetDebuffTypeAnyCaster = function(auraDB, guid, debuffType, filter) {
     let auraFound;
     if (auraDB[guid]) {
-        for (const [auraId, whoseTable] of _pairs(auraDB[guid])) {
-            for (const [casterGUID, aura] of _pairs(whoseTable)) {
+        for (const [, whoseTable] of _pairs(auraDB[guid])) {
+            for (const [, aura] of _pairs(whoseTable)) {
                 if (aura && aura.debuffType == debuffType && aura.filter == filter) {
                     if (!auraFound || auraFound.ending < aura.ending) {
                         auraFound = aura;
@@ -283,9 +280,8 @@ class OvaleAuraClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Register
     serial = {}
     bypassState = {}
     
-    OnInitialize() {
-    }
-    OnEnable() {
+    constructor() {
+        super();
         self_playerGUID = Ovale.playerGUID;
         self_petGUID = OvaleGUID.petGUID;
         this.RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
@@ -333,14 +329,14 @@ class OvaleAuraClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Register
         self_pool.Drain();
     }
     COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, cleuEvent, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, ...__args) {
-        let [arg12, arg13, arg14, arg15, arg16, arg17, arg18, arg19, arg20, arg21, arg22, arg23, arg24, arg25] = __args;
+        let [arg12, arg13, arg14, arg15, arg16, , , arg19, , , , , , arg25] = __args;
         let mine = (sourceGUID == self_playerGUID || OvaleGUID.IsPlayerPet(sourceGUID));
         if (mine && cleuEvent == "SPELL_MISSED") {
-            let [spellId, spellName, spellSchool] = [arg12, arg13, arg14];
+            let [spellId, , ] = [arg12, arg13, arg14];
             let si = OvaleData.spellInfo[spellId];
             let bypassState = OvaleAura.bypassState;
             if (si && si.aura && si.aura.player) {
-                for (const [filter, auraTable] of _pairs(si.aura.player)) {
+                for (const [, auraTable] of _pairs(si.aura.player)) {
                     for (const [auraId] of _pairs(auraTable)) {
                         if (!bypassState[auraId]) {
                             bypassState[auraId] = {
@@ -351,7 +347,7 @@ class OvaleAuraClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Register
                 }
             }
             if (si && si.aura && si.aura.target) {
-                for (const [filter, auraTable] of _pairs(si.aura.target)) {
+                for (const [, auraTable] of _pairs(si.aura.target)) {
                     for (const [auraId] of _pairs(auraTable)) {
                         if (!bypassState[auraId]) {
                             bypassState[auraId] = {
@@ -362,8 +358,8 @@ class OvaleAuraClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Register
                 }
             }
             if (si && si.aura && si.aura.pet) {
-                for (const [filter, auraTable] of _pairs(si.aura.pet)) {
-                    for (const [auraId, index] of _pairs(auraTable)) {
+                for (const [, auraTable] of _pairs(si.aura.pet)) {
+                    for (const [auraId, ] of _pairs(auraTable)) {
                         for (const [petGUID] of _pairs(self_petGUID)) {
                             if (!bypassState[petGUID]) {
                                 bypassState[auraId] = {
@@ -383,7 +379,7 @@ class OvaleAuraClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Register
                     this.ScanAuras(unitId, destGUID);
                 }
             } else if (mine) {
-                let [spellId, spellName, spellSchool] = [arg12, arg13, arg14];
+                let [spellId, spellName, ] = [arg12, arg13, arg14];
                 this.DebugTimestamp("%s: %s (%d) on %s", cleuEvent, spellName, spellId, destGUID);
                 let now = API_GetTime();
                 if (cleuEvent == "SPELL_AURA_REMOVED" || cleuEvent == "SPELL_AURA_BROKEN" || cleuEvent == "SPELL_AURA_BROKEN_SPELL") {
@@ -417,7 +413,7 @@ class OvaleAuraClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Register
                 }
             }
         } else if (mine && CLEU_TICK_EVENTS[cleuEvent]) {
-            let [spellId, spellName, spellSchool] = [arg12, arg13, arg14];
+            let [spellId, , ] = [arg12, arg13, arg14];
             let multistrike;
             if (strsub(cleuEvent, -7) == "_DAMAGE") {
                 multistrike = arg25;
@@ -561,7 +557,7 @@ class OvaleAuraClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Register
                             if (spellData == "refresh_keep_snapshot") {
                                 keepSnapshot = true;
                             } else if (_type(spellData) == "table" && spellData[1] == "refresh_keep_snapshot") {
-                                [keepSnapshot] = OvaleData.CheckRequirements(spellId, atTime, spellData, 2, guid);
+                                [keepSnapshot] = CheckRequirements(spellId, atTime, spellData, 2, guid);
                             }
                         }
                     }
@@ -651,7 +647,7 @@ class OvaleAuraClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Register
             let filter = "HELPFUL";
             let now = API_GetTime();
             while (true) {
-                let [name, rank, icon, count, debuffType, duration, expirationTime, unitCaster, isStealable, shouldConsolidate, spellId, canApplyAura, isBossDebuff, isCastByPlayer, value1, value2, value3] = API_UnitAura(unitId, i, filter);
+                let [name, , icon, count, debuffType, duration, expirationTime, unitCaster, isStealable, , spellId, , , , value1, value2, value3] = API_UnitAura(unitId, i, filter);
                 if (!name) {
                     if (filter == "HELPFUL") {
                         filter = "HARMFUL";
@@ -792,6 +788,8 @@ class OvaleAuraClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Register
     }
 }
 
+OvaleAura = new OvaleAuraClass();
+
 let array = {}
 
 class AuraState implements StateModule {
@@ -910,7 +908,7 @@ class AuraState implements StateModule {
             }
         }
         if (this.aura[guid] && this.aura[guid][auraId]) {
-            for (const [casterGUID, aura] of _pairs(this.aura[guid][auraId])) {
+            for (const [, aura] of _pairs(this.aura[guid][auraId])) {
                 if (aura.stacks > 0) {
                     if (!auraFound || auraFound.ending < aura.ending) {
                         auraFound = aura;
@@ -936,7 +934,7 @@ class AuraState implements StateModule {
             }
         }
         if (this.aura[guid]) {
-            for (const [auraId, whoseTable] of _pairs(this.aura[guid])) {
+            for (const [, whoseTable] of _pairs(this.aura[guid])) {
                 let aura = whoseTable[casterGUID];
                 if (aura && aura.stacks > 0) {
                     if (aura.debuffType == debuffType && aura.filter == filter) {
@@ -966,8 +964,8 @@ class AuraState implements StateModule {
             }
         }
         if (this.aura[guid]) {
-            for (const [auraId, whoseTable] of _pairs(this.aura[guid])) {
-                for (const [casterGUID, aura] of _pairs(whoseTable)) {
+            for (const [, whoseTable] of _pairs(this.aura[guid])) {
+                for (const [, aura] of _pairs(whoseTable)) {
                     if (aura && !aura.state && aura.stacks > 0) {
                         if (aura.debuffType == debuffType && aura.filter == filter) {
                             if (!auraFound || auraFound.ending < aura.ending) {
@@ -1032,7 +1030,7 @@ class AuraState implements StateModule {
         }
         if (this.aura[guid]) {
             for (const [auraId, whoseTable] of _pairs(this.aura[guid])) {
-                for (const [casterGUID, aura] of _pairs(whoseTable)) {
+                for (const [, aura] of _pairs(whoseTable)) {
                     if (this.IsActiveAura(aura) && aura.filter == filter) {
                         let name = aura.name || "Unknown spell";
                         tinsert(array, `${name}: ${auraId}`);
@@ -1297,9 +1295,10 @@ class AuraState implements StateModule {
         let guid = OvaleGUID.UnitGUID(unitId);
         let [start, ending] = [INFINITY, 0];
         if (OvaleAura.aura[guid]) {
-            for (const [auraId, whoseTable] of _pairs(OvaleAura.aura[guid])) {
-                for (const [casterGUID] of _pairs(whoseTable)) {
-                    let aura = this.GetStateAura(guid, auraId, self_playerGUID);
+            for (const [, whoseTable] of _pairs(OvaleAura.aura[guid])) {
+                for (const [, aura] of _pairs(whoseTable)) {
+                    // TODO suspicious
+                    // let aura = this.GetStateAura(guid, auraId, self_playerGUID); 
                     if (this.IsActiveAura(aura, atTime) && !aura.state) {
                         if (aura[propertyName] && aura.filter == filter) {
                             count = count + 1;
@@ -1311,8 +1310,8 @@ class AuraState implements StateModule {
             }
         }
         if (this.aura[guid]) {
-            for (const [auraId, whoseTable] of _pairs(this.aura[guid])) {
-                for (const [casterGUID, aura] of _pairs(whoseTable)) {
+            for (const [, whoseTable] of _pairs(this.aura[guid])) {
+                for (const [, aura] of _pairs(whoseTable)) {
                     if (this.IsActiveAura(aura, atTime)) {
                         if (aura[propertyName] && aura.filter == filter) {
                             count = count + 1;
@@ -1398,7 +1397,7 @@ class AuraState implements StateModule {
                         }
                     }
                 } else {
-                    for (const [casterGUID, aura] of _pairs(auraTable[auraId])) {
+                    for (const [, aura] of _pairs(auraTable[auraId])) {
                         if (this.IsActiveAura(aura, atTime) && aura.filter == filter && aura.stacks >= minStacks) {
                             this.CountMatchingActiveAura(aura);
                         }

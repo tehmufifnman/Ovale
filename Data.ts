@@ -1,11 +1,10 @@
 import { Ovale } from "./Ovale";
 import { OvaleGUID } from "./GUID";
 import { OvalePaperDoll } from "./PaperDoll";
-import { OvaleState, StateModule, baseState } from "./State";
+import { baseState } from "./State";
 import { OvaleDebug } from "./Debug";
-import { requirement, self_requirement, CheckRequirements } from "./Requirement";
+import { self_requirement, CheckRequirements } from "./Requirement";
 let OvaleDataBase = Ovale.NewModule("OvaleData");
-let format = string.format;
 let _type = type;
 let _pairs = pairs;
 let strfind = string.find;
@@ -262,9 +261,9 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
     }
     constructor() {
         super();
-        for (const [_, useName] of _pairs(STAT_USE_NAMES)) {
+        for (const [, useName] of _pairs(STAT_USE_NAMES)) {
             let name;
-            for (const [_, statName] of _pairs(STAT_NAMES)) {
+            for (const [, statName] of _pairs(STAT_NAMES)) {
                 name = `${useName}_${statName}_buff`;
                 this.buffSpellList[name] = {
                 }
@@ -287,12 +286,6 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
     }
 
     DEFAULT_SPELL_LIST = {}
-    OnInitialize() {
-    }
-    OnEnable() {
-    }
-    OnDisable() {
-    }
     
     Reset() {
         _wipe(this.itemInfo);
@@ -556,34 +549,5 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
         return tick;
     }
 }
-
-export class DataState implements StateModule {
-    CleanState(): void {
-    }
-    InitializeState(): void {
-    }
-    ResetState(): void {
-    }
-    CheckRequirements(spellId, atTime, tokens, index, targetGUID) {
-        return CheckRequirements(spellId, atTime, tokens, index, targetGUID);
-    }
-
-    CheckSpellAuraData(auraId, spellData, atTime, guid) {
-        return OvaleData.CheckSpellAuraData(auraId, spellData, atTime, guid);
-    }
-    CheckSpellInfo(spellId, atTime, targetGUID) {
-        return OvaleData.CheckSpellInfo(spellId, atTime, targetGUID);
-    }
-    GetItemInfoProperty(itemId, atTime, property) {
-        return OvaleData.GetItemInfoProperty(itemId, atTime, property);
-    }
-    GetSpellInfoProperty(spellId, atTime, property, targetGUID?) {
-        return OvaleData.GetSpellInfoProperty(spellId, atTime, property, targetGUID);
-    }    
-}
-
-export const dataState = new DataState();
-
-OvaleState.RegisterState(dataState);
 
 export const OvaleData = new OvaleDataClass();

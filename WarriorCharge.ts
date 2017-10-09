@@ -15,9 +15,8 @@ let CHARGED_ATTACKS = {
 }
 class OvaleWarriorChargeClass extends OvaleDebug.RegisterDebugging(OvaleWarriorChargeBase) {
     targetGUID = undefined;
-    OnInitialize() {
-    }
-    OnEnable() {
+    constructor() {
+        super();
         if (Ovale.playerClass == "WARRIOR") {
             self_playerGUID = Ovale.playerGUID;
             this.RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
@@ -29,7 +28,7 @@ class OvaleWarriorChargeClass extends OvaleDebug.RegisterDebugging(OvaleWarriorC
         }
     }
     COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, cleuEvent, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, ...__args) {
-        let [arg12, arg13, arg14, arg15, arg16, arg17, arg18, arg19, arg20, arg21, arg22, arg23, arg24, arg25] = __args;
+        let [arg12, arg13, , , , , , , , , , , , ] = __args;
         if (sourceGUID == self_playerGUID && cleuEvent == "SPELL_CAST_SUCCESS") {
             let [spellId, spellName] = [arg12, arg13];
             if (CHARGED_ATTACKS[spellId] && destGUID != this.targetGUID) {

@@ -1,28 +1,19 @@
 import AceAddon from "AceAddon-3.0";
-import AceGUI from "AceGUI-3.0";
 import { L } from "./Localization";
 let _assert = assert;
 let format = string.format;
 let _ipairs = ipairs;
-let _next = next;
 let _pairs = pairs;
 let _select = select;
 let strfind = string.find;
 let _strjoin = strjoin;
 let strlen = string.len;
-let strmatch = string.match;
 let _tostring = tostring;
 let _tostringall = tostringall;
-let _type = type;
-let _unpack = unpack;
 let _wipe = wipe;
-let API_GetTime = GetTime;
 let API_UnitClass = UnitClass;
 let API_UnitGUID = UnitGUID;
-let _DEFAULT_CHAT_FRAME = DEFAULT_CHAT_FRAME;
 let INFINITY = math.huge;
-let OVALE_VERSION = "7.3.0.2";
-let REPOSITORY_KEYWORD = `@${"project-version"}@`;
 let self_oneTimeMessage = {
 }
 let MAX_REFRESH_INTERVALS = 500;
@@ -136,7 +127,7 @@ const OvaleBase = AceAddon.NewAddon("Ovale", "AceEvent-3.0");
 class OvaleClass extends OvaleBase {
     playerClass = _select(2, API_UnitClass("player"));
     playerGUID: string = undefined;
-    db: OvaleDb = undefined;
+    db: Database & OvaleDb = undefined;
     refreshNeeded:LuaObj<boolean> = {}
     inCombat = false;
     MSG_PREFIX = "Ovale";
@@ -152,7 +143,6 @@ class OvaleClass extends OvaleBase {
         _G["BINDING_NAME_OVALE_CHECKBOX3"] = `${toggleCheckBox}(4)`;
         _G["BINDING_NAME_OVALE_CHECKBOX4"] = `${toggleCheckBox}(5)`;
     
-        this.playerGUID = API_UnitGUID("player");
         this.RegisterEvent("PLAYER_ENTERING_WORLD");
     }
 
@@ -164,16 +154,16 @@ class OvaleClass extends OvaleBase {
     //     this.frame.Hide();
     // }
     PLAYER_ENTERING_WORLD() {
+        this.playerGUID = API_UnitGUID("player");
         _wipe(self_refreshIntervals);
         self_refreshIndex = 1;
         this.ClearOneTimeMessages();
     }
-    IsPreloaded(moduleList) {
-        let preloaded = true;
-        for (const [_, moduleName] of _pairs(moduleList)) {
-            preloaded = preloaded && this[moduleName].ready;
+
+    needRefresh() {
+        if (this.playerGUID) {
+            this.refreshNeeded[this.playerGUID] = true;
         }
-        return preloaded;
     }
     
     AddRefreshInterval(milliseconds) {
@@ -184,7 +174,7 @@ class OvaleClass extends OvaleBase {
     }
     GetRefreshIntervalStatistics() {
         let [sumRefresh, minRefresh, maxRefresh, count] = [0, INFINITY, 0, 0];
-        for (const [k, v] of _ipairs(self_refreshIntervals)) {
+        for (const [, v] of _ipairs(self_refreshIntervals)) {
             if (v > 0) {
                 if (minRefresh > v) {
                     minRefresh = v;

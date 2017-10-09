@@ -1,4 +1,3 @@
-import { L } from "./Localization";
 import { OvaleDebug } from "./Debug";
 import { OvaleProfiler } from "./Profiler";
 import { Ovale } from "./Ovale";
@@ -12,7 +11,6 @@ let bit_bor = bit.bor;
 let _ipairs = ipairs;
 let _pairs = pairs;
 let strfind = string.find;
-let _tostring = tostring;
 let _wipe = wipe;
 let API_GetTime = GetTime;
 let _COMBATLOG_OBJECT_AFFILIATION_MINE = COMBATLOG_OBJECT_AFFILIATION_MINE;
@@ -45,7 +43,6 @@ let CLEU_UNIT_REMOVED = {
     UNIT_DIED: true,
     UNIT_DISSIPATES: true
 }
-let self_playerGUID = undefined;
 let self_enemyName = {
 }
 let self_enemyLastSeen = {
@@ -59,7 +56,7 @@ const IsTagEvent = function(cleuEvent) {
     if (CLEU_AUTOATTACK[cleuEvent]) {
         isTagEvent = true;
     } else {
-        for (const [_, suffix] of _ipairs(CLEU_TAG_SUFFIXES)) {
+        for (const [, suffix] of _ipairs(CLEU_TAG_SUFFIXES)) {
             if (strfind(cleuEvent, `${suffix}$`)) {
                 isTagEvent = true;
                 break;
@@ -76,10 +73,8 @@ class OvaleEnemiesClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regis
     activeEnemies = 0;
     taggedEnemies = 0;
 
-    OnInitialize() {
-    }
-    OnEnable() {
-        self_playerGUID = Ovale.playerGUID;
+    constructor() {
+        super();
         if (!self_reaperTimer) {
             self_reaperTimer = this.ScheduleRepeatingTimer("RemoveInactiveEnemies", REAP_INTERVAL);
         }
@@ -106,7 +101,7 @@ class OvaleEnemiesClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regis
                 }
             } else if (IsFriendly(sourceFlags, true) && !IsFriendly(destFlags) && IsTagEvent(cleuEvent)) {
                 let now = API_GetTime();
-                let isPlayerTag = (sourceGUID == self_playerGUID) || OvaleGUID.IsPlayerPet(sourceGUID);
+                let isPlayerTag = (sourceGUID == Ovale.playerGUID) || OvaleGUID.IsPlayerPet(sourceGUID);
                 this.AddEnemy(cleuEvent, destGUID, destName, now, isPlayerTag);
             }
         }
@@ -154,7 +149,7 @@ class OvaleEnemiesClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regis
             }
             if (changed) {
                 this.DebugTimestamp("%s: %d/%d enemy seen: %s (%s)", cleuEvent, this.taggedEnemies, this.activeEnemies, guid, name);
-                Ovale.refreshNeeded[self_playerGUID] = true;
+                Ovale.needRefresh();
             }
         }
         this.StopProfiling("OvaleEnemies_AddEnemy");
@@ -180,7 +175,7 @@ class OvaleEnemiesClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regis
             }
             if (changed) {
                 this.DebugTimestamp("%s: %d/%d enemy %s: %s (%s)", cleuEvent, this.taggedEnemies, this.activeEnemies, isDead && "died" || "removed", guid, name);
-                Ovale.refreshNeeded[self_playerGUID] = true;
+                Ovale.needRefresh();
                 this.SendMessage("Ovale_InactiveUnit", guid, isDead);
             }
         }
@@ -197,7 +192,7 @@ class OvaleEnemiesClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regis
                     this.taggedEnemies = this.taggedEnemies - 1;
                 }
                 this.DebugTimestamp("%s: %d/%d enemy removed: %s (%s), last tagged at %f", cleuEvent, this.taggedEnemies, this.activeEnemies, guid, name, tagged);
-                Ovale.refreshNeeded[self_playerGUID] = true;
+                Ovale.needRefresh();
             }
         }
         this.StopProfiling("OvaleEnemies_RemoveEnemy");
@@ -218,7 +213,7 @@ class OvaleEnemiesClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regis
 }
 
 
-class EnemiesState implements StateModule {
+class EnemiesStateClass implements StateModule {
     activeEnemies = undefined;
     taggedEnemies = undefined;
     enemies = undefined;
@@ -240,5 +235,5 @@ class EnemiesState implements StateModule {
 }
 
 OvaleEnemies = new OvaleEnemiesClass();
-export const EnemiesState = new EnemiesState();
+export const EnemiesState = new EnemiesStateClass();
 OvaleState.RegisterState(EnemiesState);

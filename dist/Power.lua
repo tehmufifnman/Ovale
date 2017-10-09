@@ -1,16 +1,10 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Power", { "./Localization", "./Debug", "./Profiler", "./Ovale", "./Aura", "./Future", "./Data", "./State", "./PaperDoll" }, function(__exports, __Localization, __Debug, __Profiler, __Ovale, __Aura, __Future, __Data, __State, __PaperDoll)
+__addon.require(__addonName, __addon, "./Power", { "./Localization", "./Debug", "./Profiler", "./Ovale", "./Aura", "./Future", "./Data", "./State", "./PaperDoll", "./Requirement", "./FutureState", "./LastSpell" }, function(__exports, __Localization, __Debug, __Profiler, __Ovale, __Aura, __Future, __Data, __State, __PaperDoll, __Requirement, __FutureState, __LastSpell)
 local OvalePowerBase = __Ovale.Ovale:NewModule("OvalePower", "AceEvent-3.0")
 local ceil = math.ceil
-local format = string.format
-local gsub = string.gsub
 local _pairs = pairs
-local strmatch = string.match
 local tconcat = table.concat
-local _tonumber = tonumber
-local _tostring = tostring
 local _wipe = wipe
-local API_CreateFrame = CreateFrame
 local API_GetPowerRegen = GetPowerRegen
 local API_GetSpellPowerCost = GetSpellPowerCost
 local API_GetTime = GetTime
@@ -18,13 +12,10 @@ local API_UnitPower = UnitPower
 local API_UnitPowerMax = UnitPowerMax
 local API_UnitPowerType = UnitPowerType
 local INFINITY = math.huge
-local self_playerGUID = nil
-local self_updateSpellcastInfo = {}
 local self_SpellcastInfoPowerTypes = {
     [1] = "chi",
     [2] = "holy"
 }
-local self_button = nil
 do
     local debugOptions = {
         power = {
@@ -166,18 +157,13 @@ local OvalePowerClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.
             ["ROGUE"] = "energy"
         }
         __Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvalePowerBase)).constructor(self)
-        for powerType, v in _pairs(__exports.OvalePower.POWER_INFO) do
+        for powerType, v in _pairs(self.POWER_INFO) do
             if  not v.id then
                 self:Print("Unknown resource %s", v.token)
             end
-            __exports.OvalePower.POWER_TYPE[v.id] = powerType
-            __exports.OvalePower.POWER_TYPE[v.token] = powerType
+            self.POWER_TYPE[v.id] = powerType
+            self.POWER_TYPE[v.token] = powerType
         end
-    end,
-    OnInitialize = function(self)
-    end,
-    OnEnable = function(self)
-        self_playerGUID = __Ovale.Ovale.playerGUID
         self:RegisterEvent("PLAYER_ENTERING_WORLD", "EventHandler")
         self:RegisterEvent("PLAYER_LEVEL_UP", "EventHandler")
         self:RegisterEvent("UNIT_DISPLAYPOWER")
@@ -190,14 +176,14 @@ local OvalePowerClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.
         self:RegisterMessage("Ovale_StanceChanged", "EventHandler")
         self:RegisterMessage("Ovale_TalentsChanged", "EventHandler")
         for powerType in _pairs(self.POWER_INFO) do
-            __Data.OvaleData:RegisterRequirement(powerType, "RequirePowerHandler", self)
+            __Requirement.RegisterRequirement(powerType, "RequirePowerHandler", self)
         end
-        __Future.OvaleFuture.RegisterSpellcastInfo(self)
+        __LastSpell.lastSpell:RegisterSpellcastInfo(self)
     end,
     OnDisable = function(self)
-        __Future.OvaleFuture.UnregisterSpellcastInfo(self)
+        __LastSpell.lastSpell:UnregisterSpellcastInfo(self)
         for powerType in _pairs(self.POWER_INFO) do
-            __Data.OvaleData:UnregisterRequirement(powerType)
+            __Requirement.UnregisterRequirement(powerType)
         end
         self:UnregisterEvent("PLAYER_ENTERING_WORLD")
         self:UnregisterEvent("PLAYER_LEVEL_UP")
@@ -256,14 +242,14 @@ local OvalePowerClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.
             local maxPower = API_UnitPowerMax("player", powerInfo.id, powerInfo.segments)
             if self.maxPower[powerType] ~= maxPower then
                 self.maxPower[powerType] = maxPower
-                __Ovale.Ovale.refreshNeeded[self_playerGUID] = true
+                __Ovale.Ovale:needRefresh()
             end
         else
             for powerType, powerInfo in _pairs(self.POWER_INFO) do
                 local maxPower = API_UnitPowerMax("player", powerInfo.id, powerInfo.segments)
                 if self.maxPower[powerType] ~= maxPower then
                     self.maxPower[powerType] = maxPower
-                    __Ovale.Ovale.refreshNeeded[self_playerGUID] = true
+                    __Ovale.Ovale:needRefresh()
                 end
             end
         end
@@ -276,7 +262,7 @@ local OvalePowerClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.
             local power = API_UnitPower("player", powerInfo.id, powerInfo.segments)
             if self.power[powerType] ~= power then
                 self.power[powerType] = power
-                __Ovale.Ovale.refreshNeeded[self_playerGUID] = true
+                __Ovale.Ovale:needRefresh()
             end
             self:DebugTimestamp("%s: %d -> %d (%s).", event, self.power[powerType], power, powerType)
         else
@@ -284,12 +270,12 @@ local OvalePowerClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.
                 local power = API_UnitPower("player", powerInfo.id, powerInfo.segments)
                 if self.power[powerType] ~= power then
                     self.power[powerType] = power
-                    __Ovale.Ovale.refreshNeeded[self_playerGUID] = true
+                    __Ovale.Ovale:needRefresh()
                 end
                 self:DebugTimestamp("%s: %d -> %d (%s).", event, self.power[powerType], power, powerType)
             end
         end
-        __Ovale.Ovale.refreshNeeded[self_playerGUID] = true
+        __Ovale.Ovale:needRefresh()
         self:StopProfiling("OvalePower_UpdatePower")
     end,
     UpdatePowerRegen = function(self, event)
@@ -297,19 +283,19 @@ local OvalePowerClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.
         local inactiveRegen, activeRegen = API_GetPowerRegen()
         if self.inactiveRegen ~= inactiveRegen or self.activeRegen ~= activeRegen then
             self.inactiveRegen, self.activeRegen = inactiveRegen, activeRegen
-            __Ovale.Ovale.refreshNeeded[self_playerGUID] = true
+            __Ovale.Ovale:needRefresh()
         end
         self:StopProfiling("OvalePower_UpdatePowerRegen")
     end,
     UpdatePowerType = function(self, event)
         self:StartProfiling("OvalePower_UpdatePowerType")
-        local currentType, currentToken = API_UnitPowerType("player")
+        local currentType = API_UnitPowerType("player")
         local powerType = self.POWER_TYPE[currentType]
         if self.powerType ~= powerType then
             self.powerType = powerType
-            __Ovale.Ovale.refreshNeeded[self_playerGUID] = true
+            __Ovale.Ovale:needRefresh()
         end
-        __Ovale.Ovale.refreshNeeded[self_playerGUID] = true
+        __Ovale.Ovale:needRefresh()
         self:StopProfiling("OvalePower_UpdatePowerType")
     end,
     GetSpellCost = function(self, spellId, powerType)
@@ -344,7 +330,7 @@ local OvalePowerClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.
         return power
     end,
     PowerCost = function(self, spellId, powerType, atTime, targetGUID, maximumCost)
-        __exports.OvalePower:StartProfiling("OvalePower_PowerCost")
+        self:StartProfiling("OvalePower_PowerCost")
         local buffParam = "buff_" .. powerType
         local spellCost = 0
         local spellRefund = 0
@@ -364,7 +350,7 @@ local OvalePowerClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.
                     cost = maxCost
                 end
             elseif cost == "refill" then
-                cost = self:GetPower(powerType, atTime) - __exports.OvalePower.maxPower[powerType]
+                cost = self:GetPower(powerType, atTime) - self.maxPower[powerType]
             else
                 local buffExtraParam = buffParam
                 local buffAmountParam = buffParam .. "_amount"
@@ -415,12 +401,12 @@ local OvalePowerClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.
             refund = refund or 0
             spellRefund = ceil(refund)
         else
-            local cost = __exports.OvalePower:GetSpellCost(spellId, powerType)
+            local cost = self:GetSpellCost(spellId, powerType)
             if cost then
                 spellCost = cost
             end
         end
-        __exports.OvalePower:StopProfiling("OvalePower_PowerCost")
+        self:StopProfiling("OvalePower_PowerCost")
         return spellCost, spellRefund
     end,
     RequirePowerHandler = function(self, spellId, atTime, requirement, tokens, index, targetGUID)
@@ -561,7 +547,7 @@ local PowerState = __class(nil, {
                 local power = self[powerType] or 0
                 if cost then
                     power = power - cost + refund
-                    local seconds = __Future.futureState.nextCast - atTime
+                    local seconds = __FutureState.futureState.nextCast - atTime
                     if seconds > 0 then
                         local powerRate = self.powerRate[powerType] or 0
                         power = power + powerRate * seconds
@@ -614,7 +600,7 @@ local PowerState = __class(nil, {
         for powerType in _pairs(__exports.OvalePower.POWER_INFO) do
             output[#output + 1] = __Ovale.MakeString("%s = %d", powerType, self[powerType])
         end
-        return tconcat(output, "\\n")
+        return tconcat(output, "\n")
     end,
     constructor = function(self)
         self.powerRate = nil

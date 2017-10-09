@@ -1,7 +1,6 @@
 import { Ovale } from "./Ovale";
-import { L } from "./Localization";
 import { OvaleDebug } from "./Debug";
-let OvaleFuture = undefined;
+import { OvaleFuture } from "./Future";
 
 let OvaleScoreBase = Ovale.NewModule("OvaleScore", "AceEvent-3.0", "AceSerializer-3.0");
 export let OvaleScore: OvaleScoreClass;
@@ -14,6 +13,10 @@ let _LE_PARTY_CATEGORY_INSTANCE = LE_PARTY_CATEGORY_INSTANCE;
 let MSG_PREFIX = Ovale.MSG_PREFIX;
 let self_playerGUID = undefined;
 let self_name = undefined;
+let API_GetTime = GetTime;
+let API_UnitCastingInfo = UnitCastingInfo;
+let API_UnitChannelInfo = UnitChannelInfo;
+
 class OvaleScoreClass extends OvaleDebug.RegisterDebugging(OvaleScoreBase) {
     damageMeter = {
     }
@@ -23,22 +26,24 @@ class OvaleScoreClass extends OvaleDebug.RegisterDebugging(OvaleScoreBase) {
     maxScore = 0;
     scoredSpell = {}
     
-    OnInitialize() {
-    }
-    OnEnable() {
+    constructor() {
+        super();
         self_playerGUID = Ovale.playerGUID;
         self_name = API_UnitName("player");
         this.RegisterEvent("CHAT_MSG_ADDON");
         this.RegisterEvent("PLAYER_REGEN_ENABLED");
         this.RegisterEvent("PLAYER_REGEN_DISABLED");
+        this.RegisterEvent("UNIT_SPELLCAST_CHANNEL_START");
+        this.RegisterEvent("UNIT_SPELLCAST_START");
     }
     OnDisable() {
         this.UnregisterEvent("CHAT_MSG_ADDON");
         this.UnregisterEvent("PLAYER_REGEN_ENABLED");
         this.UnregisterEvent("PLAYER_REGEN_DISABLED");
+        this.UnregisterEvent("UNIT_SPELLCAST_START");
     }
     CHAT_MSG_ADDON(event, ...__args) {
-        let [prefix, message, channel, sender] = __args;
+        let [prefix, message, , sender] = __args;
         if (prefix == MSG_PREFIX) {
             let [ok, msgType, scored, scoreMax, guid] = this.Deserialize(message);
             if (ok && msgType == "S") {
@@ -73,15 +78,16 @@ class OvaleScoreClass extends OvaleDebug.RegisterDebugging(OvaleScoreBase) {
         this.scoredSpell[spellId] = true;
     }
     ScoreSpell(spellId) {
-        if (OvaleFuture.inCombat && this.scoredSpell[spellId]) {
-            let scored = Ovale.frame.GetScore(spellId)
-            this.DebugTimestamp("Scored %s for %d.", scored, spellId);
-            if (scored) {
-                this.score = this.score + scored;
-                this.maxScore = this.maxScore + 1;
-                this.SendScore(self_name, self_playerGUID, scored, 1);
-            }
-        }
+        // TODO need to solve problem of circular dependencies
+        // if (OvaleFuture.inCombat && this.scoredSpell[spellId]) {
+        //     let scored = frame.GetScore(spellId)
+        //     this.DebugTimestamp("Scored %s for %d.", scored, spellId);
+        //     if (scored) {
+        //         this.score = this.score + scored;
+        //         this.maxScore = this.maxScore + 1;
+        //         this.SendScore(self_name, self_playerGUID, scored, 1);
+        //     }
+        // }
     }
     SendScore(name, guid, scored, scoreMax) {
         for (const [moduleName, method] of _pairs(this.damageMeterMethod)) {
@@ -91,6 +97,47 @@ class OvaleScoreClass extends OvaleDebug.RegisterDebugging(OvaleScoreBase) {
             } else if (_type(method) == "function") {
                 method(name, guid, scored, scoreMax);
             }
+        }
+    }
+
+    UNIT_SPELLCAST_CHANNEL_START(event, unitId, spell, rank, lineId, spellId) {
+        if (unitId == "player" || unitId == "pet") {
+            let now = API_GetTime();
+            let [spellcast] = OvaleFuture.GetSpellcast(spell, spellId, undefined, now);
+            if (spellcast) {
+                let [name] = API_UnitChannelInfo(unitId);
+                if (name == spell) {
+                    this.ScoreSpell(spellId);
+                }
+            }
+        }
+    }
+
+    UNIT_SPELLCAST_START(event, unitId, spell, rank, lineId, spellId) {
+        if (unitId == "player" || unitId == "pet") {
+            let now = API_GetTime();
+            let [spellcast] = OvaleFuture.GetSpellcast(spell, spellId, lineId, now);
+            if (spellcast) {
+                let [name, ,, ,,, , castId] = API_UnitCastingInfo(unitId);
+                if (lineId == castId && name == spell) {
+                    this.ScoreSpell(spellId);
+                } 
+            } 
+        }
+    }
+
+    UNIT_SPELLCAST_SUCCEEDED(event, unitId, spell, rank, lineId, spellId) {
+        if (unitId == "player" || unitId == "pet") {
+            let now = API_GetTime();
+            let [spellcast] = OvaleFuture.GetSpellcast(spell, spellId, lineId, now);
+            if (spellcast) {
+                if (spellcast.success || (!spellcast.start) || (!spellcast.stop) || spellcast.channel) {
+                    let name = API_UnitChannelInfo(unitId);
+                    if (!name) {
+                        OvaleScore.ScoreSpell(spellId);
+                    }
+                }
+            } 
         }
     }
 }

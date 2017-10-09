@@ -2,14 +2,18 @@ local __addonName, __addon = ...
 __addon.require(__addonName, __addon, "./HonorAmongThieves", { "./Ovale", "./Aura", "./Data" }, function(__exports, __Ovale, __Aura, __Data)
 local OvaleHonorAmongThievesBase = __Ovale.Ovale:NewModule("OvaleHonorAmongThieves", "AceEvent-3.0")
 local API_GetTime = GetTime
-local INFINITY = math.huge
 local self_playerGUID = nil
 local HONOR_AMONG_THIEVES = 51699
 local MEAN_TIME_TO_HAT = 2.2
 local OvaleHonorAmongThievesClass = __class(OvaleHonorAmongThievesBase, {
-    OnInitialize = function(self)
-    end,
-    OnEnable = function(self)
+    constructor = function(self)
+        self.spellName = "Honor Among Thieves Cooldown"
+        self.spellId = HONOR_AMONG_THIEVES
+        self.start = 0
+        self.ending = 0
+        self.duration = MEAN_TIME_TO_HAT
+        self.stacks = 0
+        OvaleHonorAmongThievesBase.constructor(self)
         if __Ovale.Ovale.playerClass == "ROGUE" then
             self_playerGUID = __Ovale.Ovale.playerGUID
             self:RegisterMessage("Ovale_SpecializationChanged")
@@ -28,7 +32,7 @@ local OvaleHonorAmongThievesClass = __class(OvaleHonorAmongThievesBase, {
         end
     end,
     COMBAT_LOG_EVENT_UNFILTERED = function(self, event, timestamp, cleuEvent, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, ...)
-        local arg12, arg13, arg14, arg15, arg16, arg17, arg18, arg19, arg20, arg21, arg22, arg23, arg24, arg25 = ...
+        local arg12, _, _, _, arg16, _, _, _, _, _, _, _, _ = ...
         if sourceGUID == self_playerGUID and destGUID == self_playerGUID and cleuEvent == "SPELL_ENERGIZE" then
             local spellId, powerType = arg12, arg16
             if spellId == HONOR_AMONG_THIEVES and powerType == 4 then
@@ -42,14 +46,6 @@ local OvaleHonorAmongThievesClass = __class(OvaleHonorAmongThievesBase, {
             end
         end
     end,
-    constructor = function(self)
-        self.spellName = "Honor Among Thieves Cooldown"
-        self.spellId = HONOR_AMONG_THIEVES
-        self.start = 0
-        self.ending = 0
-        self.duration = MEAN_TIME_TO_HAT
-        self.stacks = 0
-    end
 })
 __exports.OvaleHonorAmongThieves = OvaleHonorAmongThievesClass()
 end)

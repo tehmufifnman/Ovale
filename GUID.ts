@@ -129,11 +129,12 @@ class OvaleGUIDClass extends OvaleDebug.RegisterDebugging(OvaleGUIDBase) {
     petGUID: LuaObj<number> = {}
     UNIT_AURA_UNIT = UNIT_AURA_UNIT;
     
-    OnEnable() {
+    constructor() {
+        super();
         this.RegisterEvent("ARENA_OPPONENT_UPDATE");
         this.RegisterEvent("GROUP_ROSTER_UPDATE");
         this.RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT");
-        this.RegisterEvent("PLAYER_ENTERING_WORLD", this.UpdateAllUnits);
+        this.RegisterEvent("PLAYER_ENTERING_WORLD", event => this.UpdateAllUnits());
         this.RegisterEvent("PLAYER_FOCUS_CHANGED");
         this.RegisterEvent("PLAYER_TARGET_CHANGED");
         this.RegisterEvent("UNIT_NAME_UPDATE");
@@ -201,7 +202,7 @@ class OvaleGUIDClass extends OvaleDebug.RegisterDebugging(OvaleGUIDBase) {
         }
     }
     UpdateAllUnits() {
-        for (const [_, unitId] of _ipairs(UNIT_AURA_UNITS)) {
+        for (const [, unitId] of _ipairs(UNIT_AURA_UNITS)) {
             this.UpdateUnitWithTarget(unitId);
         }
     }

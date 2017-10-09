@@ -2,22 +2,18 @@ import AceGUI from "AceGUI-3.0";
 import Masque from "Masque";
 import { OvaleBestAction } from "./BestAction";
 import { OvaleCompile } from "./Compile";
-import { OvaleCooldown } from "./Cooldown";
 import { OvaleDebug } from "./Debug";
-import { OvaleFuture, futureState } from "./Future";
+import { futureState } from "./FutureState";
 import { OvaleGUID } from "./GUID";
 import { OvaleSpellFlash } from "./SpellFlash";
 import { OvaleState, baseState, BaseState } from "./State";
-import { OvaleTimeSpan } from "./TimeSpan";
 import { Ovale } from "./Ovale";
 import { OvaleIcon } from "./Icon";
 import { EnemiesState } from "./Enemies";
-let Type = `OvaleFrame`;
-let Version = 7;
+import { lists, checkBoxes } from "./Controls";
 let _ipairs = ipairs;
 let _next = next;
 let _pairs = pairs;
-let _tostring = tostring;
 let _wipe = wipe;
 let _type = type;
 let strmatch = string.match;
@@ -47,8 +43,6 @@ interface Action {
 
 
 class OvaleFrame extends AceGUI.WidgetContainerBase {
-    checkBox = {}
-    list = {}
     checkBoxWidget = {}
     listWidget = {}
         
@@ -101,28 +95,29 @@ class OvaleFrame extends AceGUI.WidgetContainerBase {
         this.content.SetHeight(height + 50);
     }
         
-    GetScore(spellId) {
-        for (const [k, action] of _pairs(this.actions)) {
-            if (action.spellId == spellId) {
-                if (!action.waitStart) {
-                    return 1;
-                } else {
-                    let now = API_GetTime();
-                    let lag = now - action.waitStart;
-                    if (lag > 5) {
-                        return undefined;
-                    } else if (lag > 1.5) {
-                        return 0;
-                    } else if (lag > 0) {
-                        return 1 - lag / 1.5;
-                    } else {
-                        return 1;
-                    }
-                }
-            }
-        }
-        return 0;
-    }
+    // TODO need to be moved elsewhere
+    // GetScore(spellId) {
+    //     for (const [, action] of _pairs(this.actions)) {
+    //         if (action.spellId == spellId) {
+    //             if (!action.waitStart) {
+    //                 return 1;
+    //             } else {
+    //                 let now = API_GetTime();
+    //                 let lag = now - action.waitStart;
+    //                 if (lag > 5) {
+    //                     return undefined;
+    //                 } else if (lag > 1.5) {
+    //                     return 0;
+    //                 } else if (lag > 0) {
+    //                     return 1 - lag / 1.5;
+    //                 } else {
+    //                     return 1;
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     return 0;
+    // }
 
     UpdateVisibility() {
         let visible = true;
@@ -295,10 +290,6 @@ class OvaleFrame extends AceGUI.WidgetContainerBase {
         this.UpdateVisibility();
     }
 
-    ResetControls() {
-        _wipe(this.checkBox);
-        _wipe(this.list);
-    }
     
     
     GetCheckBox(name) {
@@ -307,7 +298,7 @@ class OvaleFrame extends AceGUI.WidgetContainerBase {
             widget = this.checkBoxWidget[name];
         } else if (_type(name) == "number") {
             let k = 0;
-            for (const [_, frame] of _pairs(this.checkBoxWidget)) {
+            for (const [, frame] of _pairs(this.checkBoxWidget)) {
                 if (k == name) {
                     widget = frame;
                     break;
@@ -366,7 +357,7 @@ class OvaleFrame extends AceGUI.WidgetContainerBase {
     UpdateControls() {
         let profile = Ovale.db.profile;
         _wipe(this.checkBoxWidget);
-        for (const [name, checkBox] of _pairs(this.checkBox)) {
+        for (const [name, checkBox] of _pairs(checkBoxes)) {
             if (checkBox.text) {
                 let widget = AceGUI.Create("CheckBox");
                 let text = this.FinalizeString(checkBox.text);
@@ -386,7 +377,7 @@ class OvaleFrame extends AceGUI.WidgetContainerBase {
             }
         }
         _wipe(this.listWidget);
-        for (const [name, list] of _pairs(this.list)) {
+        for (const [name, list] of _pairs(lists)) {
             if (_next(list.items)) {
                 let widget = AceGUI.Create("Dropdown");
                 widget.SetList(list.items);
@@ -408,11 +399,11 @@ class OvaleFrame extends AceGUI.WidgetContainerBase {
     
 
     UpdateIcons() {
-        for (const [k, action] of _pairs(this.actions)) {
-            for (const [i, icon] of _pairs(action.icons)) {
+        for (const [, action] of _pairs(this.actions)) {
+            for (const [, icon] of _pairs(action.icons)) {
                 icon.Hide();
             }
-            for (const [i, icon] of _pairs(action.secureIcons)) {
+            for (const [, icon] of _pairs(action.secureIcons)) {
                 icon.Hide();
             }
         }
@@ -473,12 +464,12 @@ class OvaleFrame extends AceGUI.WidgetContainerBase {
                 let icon: OvaleIcon;
                 if (!node.secure) {
                     if (!action.icons[l]) {
-                        action.icons[l] = new OvaleIcon(`Icon${k}n${l}`, this.frame, false);
+                        action.icons[l] = new OvaleIcon(`Icon${k}n${l}`, this, false);
                     }
                     icon = action.icons[l];
                 } else {
                     if (!action.secureIcons[l]) {
-                        action.secureIcons[l] = new OvaleIcon(`SecureIcon${k}n${l}`, this.frame, true);
+                        action.secureIcons[l] = new OvaleIcon(`SecureIcon${k}n${l}`, this, true);
                     }
                     icon = action.secureIcons[l];
                 }
@@ -526,12 +517,12 @@ class OvaleFrame extends AceGUI.WidgetContainerBase {
     }
 
     type = "Frame";
-    frame: UIFrame;
+ //   frame: UIFrame;
     localstatus = {}
     actions: LuaArray<Action> = {}
     hider: UIFrame;
     updateFrame: UIFrame;
-    content: UIFrame;
+   // content: UIFrame;
     timeSinceLastUpdate: number;
     barre: UITexture;
     skinGroup: any;
@@ -540,7 +531,7 @@ class OvaleFrame extends AceGUI.WidgetContainerBase {
         super();
         let hider = API_CreateFrame("Frame", `${Ovale.GetName()}PetBattleFrameHider`, UIParent, "SecureHandlerStateTemplate");
         let frame = API_CreateFrame("Frame", undefined, hider);
-        hider.SetAllPoints(frame);
+        hider.SetAllPoints(UIParent);
         API_RegisterStateDriver(hider, "visibility", "[petbattle] hide; show");
         
         const profile = Ovale.db.profile;
@@ -593,11 +584,11 @@ class OvaleFrame extends AceGUI.WidgetContainerBase {
         content.SetHeight(100);
         content.Hide();
         content.SetAlpha(profile.apparence.optionsAlpha);        
+        AceGUIRegisterAsContainer(this)
     }
 }
 
-const OvaleFrameWidget = AceGUI.RegisterAsContainer(OvaleFrame);
-export const frame = new OvaleFrameWidget();
+export const frame = new OvaleFrame();
 
 const OvaleFrameBase = Ovale.NewModule("OvaleFrame", "AceEvent-3.0");
 class OvaleFrameModuleClass extends OvaleFrameBase {

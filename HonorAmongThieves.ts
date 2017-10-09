@@ -5,7 +5,6 @@ import {  OvaleData } from "./Data";
 let OvaleHonorAmongThievesBase = Ovale.NewModule("OvaleHonorAmongThieves", "AceEvent-3.0");
 export let OvaleHonorAmongThieves: OvaleHonorAmongThievesClass;
 let API_GetTime = GetTime;
-let INFINITY = math.huge;
 let self_playerGUID = undefined;
 let HONOR_AMONG_THIEVES = 51699;
 let MEAN_TIME_TO_HAT = 2.2;
@@ -17,9 +16,8 @@ class OvaleHonorAmongThievesClass extends OvaleHonorAmongThievesBase {
     duration = MEAN_TIME_TO_HAT;
     stacks = 0;
 
-    OnInitialize() {
-    }
-    OnEnable() {
+    constructor() {
+        super();
         if (Ovale.playerClass == "ROGUE") {
             self_playerGUID = Ovale.playerGUID;
             this.RegisterMessage("Ovale_SpecializationChanged");
@@ -38,7 +36,7 @@ class OvaleHonorAmongThievesClass extends OvaleHonorAmongThievesBase {
         }
     }
     COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, cleuEvent, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, ...__args) {
-        let [arg12, arg13, arg14, arg15, arg16, arg17, arg18, arg19, arg20, arg21, arg22, arg23, arg24, arg25] = __args;
+        let [arg12, , , , arg16, , , , , , , , , ] = __args;
         if (sourceGUID == self_playerGUID && destGUID == self_playerGUID && cleuEvent == "SPELL_ENERGIZE") {
             let [spellId, powerType] = [arg12, arg16];
             if (spellId == HONOR_AMONG_THIEVES && powerType == 4) {

@@ -1,12 +1,9 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Runes", { "./Debug", "./Profiler", "./Ovale", "./Data", "./Equipment", "./Power", "./Stance", "./State", "./PaperDoll" }, function(__exports, __Debug, __Profiler, __Ovale, __Data, __Equipment, __Power, __Stance, __State, __PaperDoll)
+__addon.require(__addonName, __addon, "./Runes", { "./Debug", "./Profiler", "./Ovale", "./Data", "./Power", "./State", "./PaperDoll" }, function(__exports, __Debug, __Profiler, __Ovale, __Data, __Power, __State, __PaperDoll)
 local OvaleRunesBase = __Ovale.Ovale:NewModule("OvaleRunes", "AceEvent-3.0")
 local _ipairs = ipairs
 local _pairs = pairs
-local _type = type
-local _wipe = wipe
 local API_GetRuneCooldown = GetRuneCooldown
-local API_GetSpellInfo = GetSpellInfo
 local API_GetTime = GetTime
 local INFINITY = math.huge
 local _sort = table.sort
@@ -17,9 +14,9 @@ local IsActiveRune = function(rune, atTime)
 end
 
 local OvaleRunesClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleRunesBase)), {
-    OnInitialize = function(self)
-    end,
-    OnEnable = function(self)
+    constructor = function(self)
+        self.rune = {}
+        __Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleRunesBase)).constructor(self)
         if __Ovale.Ovale.playerClass == "DEATHKNIGHT" then
             for slot = 1, RUNE_SLOTS, 1 do
                 self.rune[slot] = {
@@ -32,7 +29,9 @@ local OvaleRunesClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.
             self:RegisterEvent("RUNE_TYPE_UPDATE")
             self:RegisterEvent("UNIT_RANGEDDAMAGE")
             self:RegisterEvent("UNIT_SPELL_HASTE", "UNIT_RANGEDDAMAGE")
-            self:UpdateAllRunes()
+            if __Ovale.Ovale.playerGUID then
+                self:UpdateAllRunes()
+            end
         end
     end,
     OnDisable = function(self)
@@ -62,7 +61,7 @@ local OvaleRunesClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.
     UpdateRune = function(self, slot)
         self:StartProfiling("OvaleRunes_UpdateRune")
         local rune = self.rune[slot]
-        local start, duration, runeReady = API_GetRuneCooldown(slot)
+        local start, duration = API_GetRuneCooldown(slot)
         if start and duration then
             if start > 0 then
                 rune.startCooldown = start
@@ -71,7 +70,7 @@ local OvaleRunesClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.
                 rune.startCooldown = 0
                 rune.endCooldown = 0
             end
-            __Ovale.Ovale.refreshNeeded[__Ovale.Ovale.playerGUID] = true
+            __Ovale.Ovale:needRefresh()
         else
             self:Debug("Warning: rune information for slot %d not available.", slot)
         end
@@ -93,11 +92,7 @@ local OvaleRunesClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.
             end
         end
     end,
-    constructor = function(self)
-        self.rune = {}
-    end
 })
-local count = {}
 local usedRune = {}
 local RunesState = __class(nil, {
     InitializeState = function(self)

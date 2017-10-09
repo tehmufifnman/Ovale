@@ -42,13 +42,12 @@ local sigil_end = {
 }
 local QUICKENED_SIGILS_TALENT = 15
 local OvaleSigilClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(OvaleSigilBase), {
-    OnInitialize = function(self)
+    constructor = function(self)
+        __Profiler.OvaleProfiler:RegisterProfiling(OvaleSigilBase).constructor(self)
         activated_sigils["flame"] = {}
         activated_sigils["silence"] = {}
         activated_sigils["misery"] = {}
         activated_sigils["chains"] = {}
-    end,
-    OnEnable = function(self)
         if __Ovale.Ovale.playerClass == "DEMONHUNTER" then
             self:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
         end

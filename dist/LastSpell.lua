@@ -1,8 +1,9 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./LastSpell", {}, function(__exports)
+__addon.require(__addonName, __addon, "./LastSpell", { "./Pool" }, function(__exports, __Pool)
 local _pairs = pairs
 local tremove = table.remove
 local tinsert = table.insert
+__exports.self_pool = __Pool.OvalePool("OvaleFuture_pool")
 local LastSpell = __class(nil, {
     LastInFlightSpell = function(self)
         local spellcast

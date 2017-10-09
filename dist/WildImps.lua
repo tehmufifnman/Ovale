@@ -1,8 +1,6 @@
 local __addonName, __addon = ...
 __addon.require(__addonName, __addon, "./WildImps", { "./State", "./Ovale" }, function(__exports, __State, __Ovale)
 local OvaleWildImpsBase = __Ovale.Ovale:NewModule("OvaleWildImps", "AceEvent-3.0")
-local tinsert = table.insert
-local tremove = table.remove
 local demonData = {
     [55659] = {
         duration = 12
@@ -24,9 +22,8 @@ local self_demons = {}
 local self_serial = 1
 local API_GetTime = GetTime
 local OvaleWildImpsClass = __class(OvaleWildImpsBase, {
-    OnInitialize = function(self)
-    end,
-    OnEnable = function(self)
+    constructor = function(self)
+        OvaleWildImpsBase.constructor(self)
         if __Ovale.Ovale.playerClass == "WARLOCK" then
             self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
             self_demons = {}
@@ -39,12 +36,12 @@ local OvaleWildImpsClass = __class(OvaleWildImpsBase, {
     end,
     COMBAT_LOG_EVENT_UNFILTERED = function(self, event, timestamp, cleuEvent, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, spellId)
         self_serial = self_serial + 1
-        __Ovale.Ovale.refreshNeeded[__Ovale.Ovale.playerGUID] = true
+        __Ovale.Ovale:needRefresh()
         if sourceGUID ~= __Ovale.Ovale.playerGUID then
             return 
         end
         if cleuEvent == "SPELL_SUMMON" then
-            local _1, _2, _3, _4, _5, _6, _7, creatureId = destGUID.find("(%S+)-(%d+)-(%d+)-(%d+)-(%d+)-(%d+)-(%S+)")
+            local _, _, _, _, _, _, _, creatureId = destGUID.find("(%S+)-(%d+)-(%d+)-(%d+)-(%d+)-(%d+)-(%S+)")
             creatureId = tonumber(creatureId)
             local now = API_GetTime()
             for id, v in pairs(demonData) do
@@ -68,7 +65,7 @@ local OvaleWildImpsClass = __class(OvaleWildImpsBase, {
             end
         elseif cleuEvent == "SPELL_CAST_SUCCESS" then
             if spellId == 193396 then
-                for k, d in pairs(self_demons) do
+                for _, d in pairs(self_demons) do
                     d.de = true
                 end
             end
@@ -84,7 +81,7 @@ local WildImpsState = __class(nil, {
     end,
     GetNotDemonicEmpoweredDemonsCount = function(self, creatureId, atTime)
         local count = 0
-        for k, d in pairs(self_demons) do
+        for _, d in pairs(self_demons) do
             if d.finish >= atTime and d.id == creatureId and  not d.de then
                 count = count + 1
             end
@@ -93,7 +90,7 @@ local WildImpsState = __class(nil, {
     end,
     GetDemonsCount = function(self, creatureId, atTime)
         local count = 0
-        for k, d in pairs(self_demons) do
+        for _, d in pairs(self_demons) do
             if d.finish >= atTime and d.id == creatureId then
                 count = count + 1
             end
@@ -102,7 +99,7 @@ local WildImpsState = __class(nil, {
     end,
     GetRemainingDemonDuration = function(self, creatureId, atTime)
         local max = 0
-        for k, d in pairs(self_demons) do
+        for _, d in pairs(self_demons) do
             if d.finish >= atTime and d.id == creatureId then
                 local remaining = d.finish - atTime
                 if remaining > max then

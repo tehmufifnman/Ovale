@@ -1,12 +1,10 @@
 local __addonName, __addon = ...
 __addon.require(__addonName, __addon, "./TimeSpan", {}, function(__exports)
 local _select = select
-local _setmetatable = setmetatable
 local format = string.format
 local tconcat = table.concat
 local tinsert = table.insert
 local tremove = table.remove
-local _type = type
 local _wipe = wipe
 local INFINITY = math.huge
 local self_pool = {}

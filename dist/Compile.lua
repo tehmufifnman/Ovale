@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Compile", { "./Localization", "./Debug", "./Profiler", "./Artifact", "./AST", "./Condition", "./Cooldown", "./Data", "./Equipment", "./PaperDoll", "./Power", "./Score", "./Scripts", "./SpellBook", "./Stance", "./Ovale" }, function(__exports, __Localization, __Debug, __Profiler, __Artifact, __AST, __Condition, __Cooldown, __Data, __Equipment, __PaperDoll, __Power, __Score, __Scripts, __SpellBook, __Stance, __Ovale)
+__addon.require(__addonName, __addon, "./Compile", { "./Debug", "./Profiler", "./Artifact", "./AST", "./Condition", "./Cooldown", "./Data", "./Equipment", "./PaperDoll", "./Power", "./Score", "./SpellBook", "./Stance", "./Ovale", "./Controls" }, function(__exports, __Debug, __Profiler, __Artifact, __AST, __Condition, __Cooldown, __Data, __Equipment, __PaperDoll, __Power, __Score, __SpellBook, __Stance, __Ovale, __Controls)
 local OvaleCompileBase = __Ovale.Ovale:NewModule("OvaleCompile", "AceEvent-3.0")
 local _ipairs = ipairs
 local _pairs = pairs
@@ -13,11 +13,6 @@ local _wipe = wipe
 local API_GetSpellInfo = GetSpellInfo
 local self_compileOnStances = false
 local self_canEvaluate = false
-local self_requirePreload = {
-    [1] = "OvaleEquipment",
-    [2] = "OvaleSpellBook",
-    [3] = "OvaleStance"
-}
 local self_serial = 0
 local self_timesEvaluated = 0
 local self_icon = {}
@@ -125,9 +120,9 @@ local TestConditions = function(positionalParams, namedParams)
         local profile = __Ovale.Ovale.db.profile
         for _, checkbox in _ipairs(namedParams.checkbox) do
             local name, required = RequireValue(checkbox)
-            local control = __Ovale.Ovale.checkBox[name] or {}
+            local control = __Controls.checkBoxes[name] or {}
             control.triggerEvaluation = true
-            __Ovale.Ovale.checkBox[name] = control
+            __Controls.checkBoxes[name] = control
             local isChecked = profile.check[name]
             boolean = (required and isChecked) or ( not required and  not isChecked)
             if  not boolean then
@@ -139,12 +134,12 @@ local TestConditions = function(positionalParams, namedParams)
         local profile = __Ovale.Ovale.db.profile
         for name, listitem in _pairs(namedParams.listitem) do
             local item, required = RequireValue(listitem)
-            local control = __Ovale.Ovale.list[name] or {
+            local control = __Controls.lists[name] or {
                 items = {},
                 default = nil
             }
             control.triggerEvaluation = true
-            __Ovale.Ovale.list[name] = control
+            __Controls.lists[name] = control
             local isSelected = (profile.list[name] == item)
             boolean = (required and isSelected) or ( not required and  not isSelected)
             if  not boolean then
@@ -160,7 +155,7 @@ local EvaluateAddCheckBox = function(node)
     local ok = true
     local name, positionalParams, namedParams = node.name, node.positionalParams, node.namedParams
     if TestConditions(positionalParams, namedParams) then
-        local checkBox = __Ovale.Ovale.checkBox[name]
+        local checkBox = __Controls.checkBoxes[name]
         if  not checkBox then
             self_serial = self_serial + 1
             __exports.OvaleCompile:Debug("New checkbox '%s': advance age to %d.", name, self_serial)
@@ -173,7 +168,7 @@ local EvaluateAddCheckBox = function(node)
                 break
             end
         end
-        __Ovale.Ovale.checkBox[name] = checkBox
+        __Controls.checkBoxes[name] = checkBox
     end
     return ok
 end
@@ -191,7 +186,7 @@ local EvaluateAddListItem = function(node)
     local ok = true
     local name, item, positionalParams, namedParams = node.name, node.item, node.positionalParams, node.namedParams
     if TestConditions(positionalParams, namedParams) then
-        local list = __Ovale.Ovale.list[name]
+        local list = __Controls.lists[name]
         if  not (list and list.items and list.items[item]) then
             self_serial = self_serial + 1
             __exports.OvaleCompile:Debug("New list '%s': advance age to %d.", name, self_serial)
@@ -207,7 +202,7 @@ local EvaluateAddListItem = function(node)
                 break
             end
         end
-        __Ovale.Ovale.list[name] = list
+        __Controls.lists[name] = list
     end
     return ok
 end
@@ -261,7 +256,7 @@ end
 
 local EvaluateList = function(node)
     local ok = true
-    local name, positionalParams, namedParams = node.name, node.positionalParams, node.namedParams
+    local name, positionalParams = node.name, node.positionalParams, node.namedParams
     local listDB
     if node.keyword == "ItemList" then
         listDB = "itemList"
@@ -284,7 +279,7 @@ end
 
 local EvaluateScoreSpells = function(node)
     local ok = true
-    local positionalParams, namedParams = node.positionalParams, node.namedParams
+    local positionalParams = node.positionalParams, node.namedParams
     for _, _spellId in _ipairs(positionalParams) do
         local spellId = _tonumber(_spellId)
         if spellId then
@@ -335,7 +330,7 @@ end
 
 local EvaluateSpellInfo = function(node)
     local addpower = {}
-    for powertype, _ in _pairs(__Power.OvalePower.POWER_INFO) do
+    for powertype in _pairs(__Power.OvalePower.POWER_INFO) do
         local key = "add" + powertype
         addpower[key] = powertype
     end
@@ -380,7 +375,6 @@ local EvaluateSpellInfo = function(node)
                 si[k] = v
                 __Cooldown.OvaleCooldown:AddSharedCooldown(v, spellId)
             elseif addpower[k] ~= nil then
-                local powertype = addpower[k]
                 local value = _tonumber(v)
                 if value then
                     local realValue = value
@@ -425,7 +419,7 @@ end
 local AddMissingVariantSpells = function(annotation)
     if annotation.functionReference then
         for _, node in _ipairs(annotation.functionReference) do
-            local positionalParams, namedParams = node.positionalParams, node.namedParams
+            local positionalParams = node.positionalParams, node.namedParams
             local spellId = positionalParams[1]
             if spellId and __Condition.OvaleCondition:IsSpellBookCondition(node.func) then
                 if  not __SpellBook.OvaleSpellBook:IsKnownSpell(spellId) and  not __Cooldown.OvaleCooldown:IsSharedCooldown(spellId) then
@@ -511,10 +505,12 @@ do
     end
 
 end
-local OvaleCompileClass = __class(__Ovale.RegisterPrinter(__Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleCompileBase))), {
-    OnInitialize = function(self)
-    end,
-    OnEnable = function(self)
+local OvaleCompileClassBase = __Ovale.RegisterPrinter(__Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleCompileBase)))
+local OvaleCompileClass = __class(OvaleCompileClassBase, {
+    constructor = function(self)
+        self.serial = nil
+        self.ast = nil
+        OvaleCompileClassBase.constructor(self)
         self:RegisterMessage("Ovale_CheckBoxValueChanged", "ScriptControlChanged")
         self:RegisterMessage("Ovale_EquipmentChanged", "EventHandler")
         self:RegisterMessage("Ovale_ListValueChanged", "ScriptControlChanged")
@@ -550,9 +546,9 @@ local OvaleCompileClass = __class(__Ovale.RegisterPrinter(__Debug.OvaleDebug:Reg
         else
             local control
             if event == "Ovale_CheckBoxValueChanged" then
-                control = __Ovale.Ovale.checkBox[name]
+                control = __Controls.checkBoxes[name]
             elseif event == "Ovale_ListValueChanged" then
-                control = __Ovale.Ovale.list[name]
+                control = __Controls.checkBoxes[name]
             end
             if control and control.triggerEvaluation then
                 self:EventHandler(event)
@@ -562,7 +558,7 @@ local OvaleCompileClass = __class(__Ovale.RegisterPrinter(__Debug.OvaleDebug:Reg
     EventHandler = function(self, event)
         self_serial = self_serial + 1
         self:Debug("%s: advance age to %d.", event, self_serial)
-        __Ovale.Ovale.refreshNeeded[__Ovale.Ovale.playerGUID] = true
+        __Ovale.Ovale:needRefresh()
     end,
     CompileScript = function(self, name)
         __Debug.OvaleDebug:ResetTrace()
@@ -572,7 +568,7 @@ local OvaleCompileClass = __class(__Ovale.RegisterPrinter(__Debug.OvaleDebug:Reg
             self.ast = nil
         end
         self.ast = __AST.OvaleAST:ParseScript(name)
-        __Ovale.Ovale.ResetControls()
+        __Controls.ResetControls()
     end,
     EvaluateScript = function(self, ast, forceEvaluation)
         self:StartProfiling("OvaleCompile_EvaluateScript")
@@ -581,7 +577,7 @@ local OvaleCompileClass = __class(__Ovale.RegisterPrinter(__Debug.OvaleDebug:Reg
             ast = self.ast
         end
         local changed = false
-        self_canEvaluate = self_canEvaluate or __Ovale.Ovale:IsPreloaded(self_requirePreload)
+        self_canEvaluate = self_canEvaluate
         if self_canEvaluate and ast and (forceEvaluation or  not self.serial or self.serial < self_serial) then
             self:Debug("Evaluating script.")
             changed = true
@@ -641,10 +637,6 @@ local OvaleCompileClass = __class(__Ovale.RegisterPrinter(__Debug.OvaleDebug:Reg
     DebugCompile = function(self)
         self:Print("Total number of times the script was evaluated: %d", self_timesEvaluated)
     end,
-    constructor = function(self)
-        self.serial = nil
-        self.ast = nil
-    end
 })
 __exports.OvaleCompile = OvaleCompileClass()
 end)

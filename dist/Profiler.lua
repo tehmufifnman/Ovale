@@ -3,14 +3,7 @@ __addon.require(__addonName, __addon, "./Profiler", { "AceConfig-3.0", "AceConfi
 local OvaleProfilerBase = __Ovale.Ovale:NewModule("OvaleProfiler")
 local _debugprofilestop = debugprofilestop
 local format = string.format
-local _ipairs = ipairs
-local _next = next
 local _pairs = pairs
-local tconcat = table.concat
-local tinsert = table.insert
-local tsort = table.sort
-local _wipe = wipe
-local API_GetTime = GetTime
 local self_timestamp = _debugprofilestop()
 local self_timeSpent = {}
 local self_timesInvoked = {}
@@ -101,15 +94,11 @@ local OvaleProfilerClass = __class(OvaleProfilerBase, {
         __Options.OvaleOptions.defaultDB.global = __Options.OvaleOptions.defaultDB.global or {}
         __Options.OvaleOptions.defaultDB.global.profiler = {}
         __Options.OvaleOptions:RegisterOptions(OvaleProfilerClass)
-    end,
-    OnInitialize = function(self)
         local appName = self:GetName()
         AceConfig:RegisterOptionsTable(appName, self.options)
         AceConfigDialog:AddToBlizOptions(appName, __Localization.L["Profiling"], __Ovale.Ovale:GetName())
-    end,
-    OnEnable = function(self)
         if  not self.self_profilingOutput then
-            self.self_profilingOutput = LibTextDump.New(__Ovale.Ovale:GetName() .. " - " .. __Localization.L["Profiling"], 750, 500)
+            self.self_profilingOutput = LibTextDump:New(__Ovale.Ovale:GetName() .. " - " .. __Localization.L["Profiling"], 750, 500)
         end
     end,
     OnDisable = function(self)

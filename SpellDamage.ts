@@ -5,25 +5,25 @@ let CLEU_DAMAGE_EVENT = {
     SPELL_DAMAGE: true,
     SPELL_PERIODIC_AURA: true
 }
-let self_playerGUID:string = undefined;
 
-class OvaleSpellDamageClass extends OvaleProfiler.RegisterProfiling(Ovale.NewModule("OvaleSpellDamage", "AceEvent-3.0")) {
+const OvaleSpellDamageBase = OvaleProfiler.RegisterProfiling(Ovale.NewModule("OvaleSpellDamage", "AceEvent-3.0"));
+class OvaleSpellDamageClass extends OvaleSpellDamageBase {
     value = {}
-    OnEnable() {
-        self_playerGUID = Ovale.playerGUID;
+    constructor() {
+        super();
         this.RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
     }
     OnDisable() {
         this.UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
     }
     COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, cleuEvent, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, ...__args) {
-        let [arg12, arg13, arg14, arg15, arg16, arg17, arg18, arg19, arg20, arg21, arg22, arg23, arg24, arg25] = __args;
-        if (sourceGUID == self_playerGUID) {
+        let [arg12, , , arg15, , , , , , , , , , ] = __args;
+        if (sourceGUID == Ovale.playerGUID) {
             this.StartProfiling("OvaleSpellDamage_COMBAT_LOG_EVENT_UNFILTERED");
             if (CLEU_DAMAGE_EVENT[cleuEvent]) {
                 let [spellId, amount] = [arg12, arg15];
                 this.value[spellId] = amount;
-                Ovale.refreshNeeded[self_playerGUID] = true;
+                Ovale.needRefresh();
             }
             this.StopProfiling("OvaleSpellDamage_COMBAT_LOG_EVENT_UNFILTERED");
         }

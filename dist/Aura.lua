@@ -1,13 +1,8 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Aura", { "./Localization", "./Debug", "./Pool", "./Profiler", "./Data", "./GUID", "./PaperDoll", "./SpellBook", "./State", "./Ovale", "./LastSpell" }, function(__exports, __Localization, __Debug, __Pool, __Profiler, __Data, __GUID, __PaperDoll, __SpellBook, __State, __Ovale, __LastSpell)
+__addon.require(__addonName, __addon, "./Aura", { "./Localization", "./Debug", "./Pool", "./Profiler", "./Data", "./GUID", "./PaperDoll", "./SpellBook", "./State", "./Ovale", "./LastSpell", "./Requirement", "./DataState" }, function(__exports, __Localization, __Debug, __Pool, __Profiler, __Data, __GUID, __PaperDoll, __SpellBook, __State, __Ovale, __LastSpell, __Requirement, __DataState)
 local OvaleAuraBase = __Ovale.Ovale:NewModule("OvaleAura", "AceEvent-3.0")
-local bit_band = bit.band
-local bit_bor = bit.bor
-local floor = math.floor
-local _ipairs = ipairs
 local _next = next
 local _pairs = pairs
-local strfind = string.find
 local strlower = string.lower
 local strsub = string.sub
 local tconcat = table.concat
@@ -19,12 +14,6 @@ local _wipe = wipe
 local API_GetTime = GetTime
 local API_UnitAura = UnitAura
 local INFINITY = math.huge
-local _SCHOOL_MASK_ARCANE = SCHOOL_MASK_ARCANE
-local _SCHOOL_MASK_FIRE = SCHOOL_MASK_FIRE
-local _SCHOOL_MASK_FROST = SCHOOL_MASK_FROST
-local _SCHOOL_MASK_HOLY = SCHOOL_MASK_HOLY
-local _SCHOOL_MASK_NATURE = SCHOOL_MASK_NATURE
-local _SCHOOL_MASK_SHADOW = SCHOOL_MASK_SHADOW
 local self_playerGUID = nil
 local self_petGUID = nil
 local self_pool = __Pool.OvalePool("OvaleAura_pool")
@@ -53,7 +42,7 @@ do
                             output[#output + 1] = "== DEBUFFS =="
                             output[#output + 1] = harmful
                         end
-                        return tconcat(output, "\\n")
+                        return tconcat(output, "\n")
                     end
 
                 }
@@ -80,7 +69,7 @@ do
                             output[#output + 1] = "== DEBUFFS =="
                             output[#output + 1] = harmful
                         end
-                        return tconcat(output, "\\n")
+                        return tconcat(output, "\n")
                     end
 
                 }
@@ -121,7 +110,6 @@ local CLEU_TICK_EVENTS = {
     SPELL_PERIODIC_DRAIN = true,
     SPELL_PERIODIC_LEECH = true
 }
-local CLEU_SCHOOL_MASK_MAGIC = bit_bor(_SCHOOL_MASK_ARCANE, _SCHOOL_MASK_FIRE, _SCHOOL_MASK_FROST, _SCHOOL_MASK_HOLY, _SCHOOL_MASK_NATURE, _SCHOOL_MASK_SHADOW)
 local PutAura = function(auraDB, guid, auraId, casterGUID, aura)
     if  not auraDB[guid] then
         auraDB[guid] = self_pool:Get()
@@ -156,7 +144,7 @@ end
 local GetAuraAnyCaster = function(auraDB, guid, auraId)
     local auraFound
     if auraDB[guid] and auraDB[guid][auraId] then
-        for casterGUID, aura in _pairs(auraDB[guid][auraId]) do
+        for _, aura in _pairs(auraDB[guid][auraId]) do
             if  not auraFound or auraFound.ending < aura.ending then
                 auraFound = aura
             end
@@ -168,7 +156,7 @@ end
 local GetDebuffType = function(auraDB, guid, debuffType, filter, casterGUID)
     local auraFound
     if auraDB[guid] then
-        for auraId, whoseTable in _pairs(auraDB[guid]) do
+        for _, whoseTable in _pairs(auraDB[guid]) do
             local aura = whoseTable[casterGUID]
             if aura and aura.debuffType == debuffType and aura.filter == filter then
                 if  not auraFound or auraFound.ending < aura.ending then
@@ -183,8 +171,8 @@ end
 local GetDebuffTypeAnyCaster = function(auraDB, guid, debuffType, filter)
     local auraFound
     if auraDB[guid] then
-        for auraId, whoseTable in _pairs(auraDB[guid]) do
-            for casterGUID, aura in _pairs(whoseTable) do
+        for _, whoseTable in _pairs(auraDB[guid]) do
+            for _, aura in _pairs(whoseTable) do
                 if aura and aura.debuffType == debuffType and aura.filter == filter then
                     if  not auraFound or auraFound.ending < aura.ending then
                         auraFound = aura
@@ -254,9 +242,11 @@ local IsWithinAuraLag = function(time1, time2, factor)
 end
 
 local OvaleAuraClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(__Debug.OvaleDebug:RegisterDebugging(OvaleAuraBase)), {
-    OnInitialize = function(self)
-    end,
-    OnEnable = function(self)
+    constructor = function(self)
+        self.aura = {}
+        self.serial = {}
+        self.bypassState = {}
+        __Profiler.OvaleProfiler:RegisterProfiling(__Debug.OvaleDebug:RegisterDebugging(OvaleAuraBase)).constructor(self)
         self_playerGUID = __Ovale.Ovale.playerGUID
         self_petGUID = __GUID.OvaleGUID.petGUID
         self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
@@ -265,32 +255,32 @@ local OvaleAuraClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(__Debu
         self:RegisterEvent("UNIT_AURA")
         self:RegisterMessage("Ovale_GroupChanged", "ScanAllUnitAuras")
         self:RegisterMessage("Ovale_UnitChanged")
-        __Data.OvaleData:RegisterRequirement("buff", "RequireBuffHandler", self)
-        __Data.OvaleData:RegisterRequirement("buff_any", "RequireBuffHandler", self)
-        __Data.OvaleData:RegisterRequirement("debuff", "RequireBuffHandler", self)
-        __Data.OvaleData:RegisterRequirement("debuff_any", "RequireBuffHandler", self)
-        __Data.OvaleData:RegisterRequirement("pet_buff", "RequireBuffHandler", self)
-        __Data.OvaleData:RegisterRequirement("pet_debuff", "RequireBuffHandler", self)
-        __Data.OvaleData:RegisterRequirement("stealth", "RequireStealthHandler", self)
-        __Data.OvaleData:RegisterRequirement("stealthed", "RequireStealthHandler", self)
-        __Data.OvaleData:RegisterRequirement("target_buff", "RequireBuffHandler", self)
-        __Data.OvaleData:RegisterRequirement("target_buff_any", "RequireBuffHandler", self)
-        __Data.OvaleData:RegisterRequirement("target_debuff", "RequireBuffHandler", self)
-        __Data.OvaleData:RegisterRequirement("target_debuff_any", "RequireBuffHandler", self)
+        __Requirement.RegisterRequirement("buff", "RequireBuffHandler", self)
+        __Requirement.RegisterRequirement("buff_any", "RequireBuffHandler", self)
+        __Requirement.RegisterRequirement("debuff", "RequireBuffHandler", self)
+        __Requirement.RegisterRequirement("debuff_any", "RequireBuffHandler", self)
+        __Requirement.RegisterRequirement("pet_buff", "RequireBuffHandler", self)
+        __Requirement.RegisterRequirement("pet_debuff", "RequireBuffHandler", self)
+        __Requirement.RegisterRequirement("stealth", "RequireStealthHandler", self)
+        __Requirement.RegisterRequirement("stealthed", "RequireStealthHandler", self)
+        __Requirement.RegisterRequirement("target_buff", "RequireBuffHandler", self)
+        __Requirement.RegisterRequirement("target_buff_any", "RequireBuffHandler", self)
+        __Requirement.RegisterRequirement("target_debuff", "RequireBuffHandler", self)
+        __Requirement.RegisterRequirement("target_debuff_any", "RequireBuffHandler", self)
     end,
     OnDisable = function(self)
-        __Data.OvaleData:UnregisterRequirement("buff")
-        __Data.OvaleData:UnregisterRequirement("buff_any")
-        __Data.OvaleData:UnregisterRequirement("debuff")
-        __Data.OvaleData:UnregisterRequirement("debuff_any")
-        __Data.OvaleData:UnregisterRequirement("pet_buff")
-        __Data.OvaleData:UnregisterRequirement("pet_debuff")
-        __Data.OvaleData:UnregisterRequirement("stealth")
-        __Data.OvaleData:UnregisterRequirement("stealthed")
-        __Data.OvaleData:UnregisterRequirement("target_buff")
-        __Data.OvaleData:UnregisterRequirement("target_buff_any")
-        __Data.OvaleData:UnregisterRequirement("target_debuff")
-        __Data.OvaleData:UnregisterRequirement("target_debuff_any")
+        __Requirement.UnregisterRequirement("buff")
+        __Requirement.UnregisterRequirement("buff_any")
+        __Requirement.UnregisterRequirement("debuff")
+        __Requirement.UnregisterRequirement("debuff_any")
+        __Requirement.UnregisterRequirement("pet_buff")
+        __Requirement.UnregisterRequirement("pet_debuff")
+        __Requirement.UnregisterRequirement("stealth")
+        __Requirement.UnregisterRequirement("stealthed")
+        __Requirement.UnregisterRequirement("target_buff")
+        __Requirement.UnregisterRequirement("target_buff_any")
+        __Requirement.UnregisterRequirement("target_debuff")
+        __Requirement.UnregisterRequirement("target_debuff_any")
         self:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
         self:UnregisterEvent("PLAYER_ENTERING_WORLD")
         self:UnregisterEvent("PLAYER_REGEN_ENABLED")
@@ -304,14 +294,14 @@ local OvaleAuraClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(__Debu
         self_pool:Drain()
     end,
     COMBAT_LOG_EVENT_UNFILTERED = function(self, event, timestamp, cleuEvent, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, ...)
-        local arg12, arg13, arg14, arg15, arg16, arg17, arg18, arg19, arg20, arg21, arg22, arg23, arg24, arg25 = ...
+        local arg12, arg13, arg14, arg15, arg16, _, _, arg19, _, _, _, _, _, arg25 = ...
         local mine = (sourceGUID == self_playerGUID or __GUID.OvaleGUID:IsPlayerPet(sourceGUID))
         if mine and cleuEvent == "SPELL_MISSED" then
-            local spellId, spellName, spellSchool = arg12, arg13, arg14
+            local spellId, _ = arg12, arg13, arg14
             local si = __Data.OvaleData.spellInfo[spellId]
             local bypassState = __exports.OvaleAura.bypassState
             if si and si.aura and si.aura.player then
-                for filter, auraTable in _pairs(si.aura.player) do
+                for _, auraTable in _pairs(si.aura.player) do
                     for auraId in _pairs(auraTable) do
                         if  not bypassState[auraId] then
                             bypassState[auraId] = {}
@@ -321,7 +311,7 @@ local OvaleAuraClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(__Debu
                 end
             end
             if si and si.aura and si.aura.target then
-                for filter, auraTable in _pairs(si.aura.target) do
+                for _, auraTable in _pairs(si.aura.target) do
                     for auraId in _pairs(auraTable) do
                         if  not bypassState[auraId] then
                             bypassState[auraId] = {}
@@ -331,8 +321,8 @@ local OvaleAuraClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(__Debu
                 end
             end
             if si and si.aura and si.aura.pet then
-                for filter, auraTable in _pairs(si.aura.pet) do
-                    for auraId, index in _pairs(auraTable) do
+                for _, auraTable in _pairs(si.aura.pet) do
+                    for auraId in _pairs(auraTable) do
                         for petGUID in _pairs(self_petGUID) do
                             if  not bypassState[petGUID] then
                                 bypassState[auraId] = {}
@@ -351,7 +341,7 @@ local OvaleAuraClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(__Debu
                     self:ScanAuras(unitId, destGUID)
                 end
             elseif mine then
-                local spellId, spellName, spellSchool = arg12, arg13, arg14
+                local spellId, spellName = arg12, arg13, arg14
                 self:DebugTimestamp("%s: %s (%d) on %s", cleuEvent, spellName, spellId, destGUID)
                 local now = API_GetTime()
                 if cleuEvent == "SPELL_AURA_REMOVED" or cleuEvent == "SPELL_AURA_BROKEN" or cleuEvent == "SPELL_AURA_BROKEN_SPELL" then
@@ -385,7 +375,7 @@ local OvaleAuraClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(__Debu
                 end
             end
         elseif mine and CLEU_TICK_EVENTS[cleuEvent] then
-            local spellId, spellName, spellSchool = arg12, arg13, arg14
+            local spellId, _ = arg12, arg13, arg14
             local multistrike
             if strsub(cleuEvent, -7) == "_DAMAGE" then
                 multistrike = arg25
@@ -529,7 +519,7 @@ local OvaleAuraClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(__Debu
                             if spellData == "refresh_keep_snapshot" then
                                 keepSnapshot = true
                             elseif _type(spellData) == "table" and spellData[1] == "refresh_keep_snapshot" then
-                                keepSnapshot = __Data.OvaleData:CheckRequirements(spellId, atTime, spellData, 2, guid)
+                                keepSnapshot = __Requirement.CheckRequirements(spellId, atTime, spellData, 2, guid)
                             end
                         end
                     end
@@ -619,7 +609,7 @@ local OvaleAuraClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(__Debu
             local filter = "HELPFUL"
             local now = API_GetTime()
             while true do
-                local name, rank, icon, count, debuffType, duration, expirationTime, unitCaster, isStealable, shouldConsolidate, spellId, canApplyAura, isBossDebuff, isCastByPlayer, value1, value2, value3 = API_UnitAura(unitId, i, filter)
+                local name, _, icon, count, debuffType, duration, expirationTime, unitCaster, isStealable, _, spellId, _, _, _, value1, value2, value3 = API_UnitAura(unitId, i, filter)
                 if  not name then
                     if filter == "HELPFUL" then
                         filter = "HARMFUL"
@@ -758,12 +748,8 @@ local OvaleAuraClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(__Debu
         end
         return verified, requirement, index
     end,
-    constructor = function(self)
-        self.aura = {}
-        self.serial = {}
-        self.bypassState = {}
-    end
 })
+__exports.OvaleAura = OvaleAuraClass()
 local array = {}
 local AuraState = __class(nil, {
     InitializeState = function(self)
@@ -877,7 +863,7 @@ local AuraState = __class(nil, {
             end
         end
         if self.aura[guid] and self.aura[guid][auraId] then
-            for casterGUID, aura in _pairs(self.aura[guid][auraId]) do
+            for _, aura in _pairs(self.aura[guid][auraId]) do
                 if aura.stacks > 0 then
                     if  not auraFound or auraFound.ending < aura.ending then
                         auraFound = aura
@@ -902,7 +888,7 @@ local AuraState = __class(nil, {
             end
         end
         if self.aura[guid] then
-            for auraId, whoseTable in _pairs(self.aura[guid]) do
+            for _, whoseTable in _pairs(self.aura[guid]) do
                 local aura = whoseTable[casterGUID]
                 if aura and aura.stacks > 0 then
                     if aura.debuffType == debuffType and aura.filter == filter then
@@ -932,8 +918,8 @@ local AuraState = __class(nil, {
             end
         end
         if self.aura[guid] then
-            for auraId, whoseTable in _pairs(self.aura[guid]) do
-                for casterGUID, aura in _pairs(whoseTable) do
+            for _, whoseTable in _pairs(self.aura[guid]) do
+                for _, aura in _pairs(whoseTable) do
                     if aura and  not aura.state and aura.stacks > 0 then
                         if aura.debuffType == debuffType and aura.filter == filter then
                             if  not auraFound or auraFound.ending < aura.ending then
@@ -998,7 +984,7 @@ local AuraState = __class(nil, {
         end
         if self.aura[guid] then
             for auraId, whoseTable in _pairs(self.aura[guid]) do
-                for casterGUID, aura in _pairs(whoseTable) do
+                for _, aura in _pairs(whoseTable) do
                     if self:IsActiveAura(aura) and aura.filter == filter then
                         local name = aura.name or "Unknown spell"
                         tinsert(array, name .. ": " .. auraId)
@@ -1008,7 +994,7 @@ local AuraState = __class(nil, {
         end
         if _next(array) then
             tsort(array)
-            return tconcat(array, "\\n")
+            return tconcat(array, "\n")
         end
     end,
     IsActiveAura = function(self, aura, atTime)
@@ -1043,7 +1029,7 @@ local AuraState = __class(nil, {
                 local toggle = nil
                 local refresh = false
                 local keepSnapshot = false
-                local verified, value, data = __Data.dataState:CheckSpellAuraData(auraId, spellData, atTime, guid)
+                local verified, value, data = __DataState.dataState:CheckSpellAuraData(auraId, spellData, atTime, guid)
                 if value == "refresh" then
                     refresh = true
                 elseif value == "refresh_keep_snapshot" then
@@ -1260,9 +1246,8 @@ local AuraState = __class(nil, {
         local guid = __GUID.OvaleGUID:UnitGUID(unitId)
         local start, ending = INFINITY, 0
         if __exports.OvaleAura.aura[guid] then
-            for auraId, whoseTable in _pairs(__exports.OvaleAura.aura[guid]) do
-                for casterGUID in _pairs(whoseTable) do
-                    local aura = self:GetStateAura(guid, auraId, self_playerGUID)
+            for _, whoseTable in _pairs(__exports.OvaleAura.aura[guid]) do
+                for _, aura in _pairs(whoseTable) do
                     if self:IsActiveAura(aura, atTime) and  not aura.state then
                         if aura[propertyName] and aura.filter == filter then
                             count = count + 1
@@ -1274,8 +1259,8 @@ local AuraState = __class(nil, {
             end
         end
         if self.aura[guid] then
-            for auraId, whoseTable in _pairs(self.aura[guid]) do
-                for casterGUID, aura in _pairs(whoseTable) do
+            for _, whoseTable in _pairs(self.aura[guid]) do
+                for _, aura in _pairs(whoseTable) do
                     if self:IsActiveAura(aura, atTime) then
                         if aura[propertyName] and aura.filter == filter then
                             count = count + 1
@@ -1360,7 +1345,7 @@ local AuraState = __class(nil, {
                         end
                     end
                 else
-                    for casterGUID, aura in _pairs(auraTable[auraId]) do
+                    for _, aura in _pairs(auraTable[auraId]) do
                         if self:IsActiveAura(aura, atTime) and aura.filter == filter and aura.stacks >= minStacks then
                             self:CountMatchingActiveAura(aura)
                         end

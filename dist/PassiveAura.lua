@@ -2,7 +2,6 @@ local __addonName, __addon = ...
 __addon.require(__addonName, __addon, "./PassiveAura", { "./Ovale", "./Aura", "./Equipment", "./PaperDoll" }, function(__exports, __Ovale, __Aura, __Equipment, __PaperDoll)
 local OvalePassiveAuraBase = __Ovale.Ovale:NewModule("OvalePassiveAura", "AceEvent-3.0")
 local exp = math.exp
-local log = math.log
 local _pairs = pairs
 local API_GetTime = GetTime
 local INFINITY = math.huge
@@ -126,9 +125,8 @@ local READINESS_ROLE = {
     }
 }
 local OvalePassiveAuraClass = __class(OvalePassiveAuraBase, {
-    OnInitialize = function(self)
-    end,
-    OnEnable = function(self)
+    constructor = function(self)
+        OvalePassiveAuraBase.constructor(self)
         self_playerGUID = __Ovale.Ovale.playerGUID
         self:RegisterMessage("Ovale_EquipmentChanged")
         self:RegisterMessage("Ovale_SpecializationChanged")

@@ -14,7 +14,7 @@ local strsub = string.sub
 
 -- Function used by define to call a factory that is ready
 local function call(exports) 
-    --print("calling " .. exports.name)
+    -- print("calling " .. exports.name)
     local parameters = {}
     local i = 1
     for _,v in ipairs(exports.imports) do
@@ -44,15 +44,18 @@ local function call(exports)
     end
 end 
 
+local addonlist = {}
+
 -- Used by the AMD-like module system
 Addon.require = function(addonName, addon, mod, dependencies, factory)
     local exports
 
-  -- print("Define " .. mod)
+    -- print("Define " .. mod)
 
     if not Addon[mod] then
       exports = { missing = {}, name = mod, defined = true }
       Addon[mod] = exports
+      addonlist[#addonlist + 1] = exports
     else
       exports = Addon[mod]
       exports.defined = true
@@ -95,13 +98,23 @@ Addon.require = function(addonName, addon, mod, dependencies, factory)
 
     exports.imports = imports
     
-    -- If missing nothing, call the factory
-    if not next(exports.missing) then
-      call(exports)
-    else
-      print(mod .. " has some missing dep")
-    end    
+    -- -- If missing nothing, call the factory
+    -- if not next(exports.missing) then
+    --   call(exports)
+    -- else
+    --   print(mod .. " has some missing dep")
+    -- end    
 end
+
+local frame = CreateFrame("FRAME", "FooAddonFrame");
+frame:RegisterEvent("ADDON_LOADED");
+local function eventHandler(self, event, addon)
+  if addon ~= ADDON_NAME then return end
+  for k, v in ipairs(addonlist) do 
+    call(v)
+  end
+end
+frame:SetScript("OnEvent", eventHandler);
 
 Addon.debug = function()
 print("debug")

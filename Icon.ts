@@ -1,6 +1,5 @@
 import { L } from "./Localization";
 import { OvaleSpellBook } from "./SpellBook";
-import { OvaleState, baseState } from "./State";
 import { Ovale } from "./Ovale";
 let format = string.format;
 let _next = next;
@@ -12,8 +11,12 @@ let API_GetTime = GetTime;
 let API_PlaySoundFile = PlaySoundFile;
 let INFINITY = math.huge;
 let COOLDOWN_THRESHOLD = 0.1;
-const HasScriptControls = function() {
-    return (_next(Ovale.checkBoxWidget) != undefined || _next(Ovale.listWidget) != undefined);
+
+interface IconParent {
+    checkBoxWidget: any;
+    listWidget: any;
+    frame: UIFrame;
+    ToggleOptions(); 
 }
 
 export class OvaleIcon {
@@ -44,12 +47,16 @@ export class OvaleIcon {
     icone: any;
     frame: UICheckButton;
 
-    constructor(name: string, parent: UIFrame, secure: boolean) {
+    HasScriptControls() {
+        return (_next(this.parent.checkBoxWidget) != undefined || _next(this.parent.listWidget) != undefined);
+    }
+
+    constructor(name: string, private parent: IconParent, secure: boolean) {
         if (!secure) {
-            this.frame = CreateFrame("CheckButton", name, parent, "ActionButtonTemplate");
+            this.frame = CreateFrame("CheckButton", name, parent.frame, "ActionButtonTemplate");
         }        
         else{
-            this.frame = CreateFrame("CheckButton", name, parent, "SecureActionButtonTemplate, ActionButtonTemplate");
+            this.frame = CreateFrame("CheckButton", name, parent.frame, "SecureActionButtonTemplate, ActionButtonTemplate");
         }
         this.OvaleIcon_OnLoad();
     }
@@ -252,12 +259,12 @@ export class OvaleIcon {
     }
     OvaleIcon_OnMouseUp() {
         if (!this.actionButton) {
-            Ovale.ToggleOptions();
+            this.parent.ToggleOptions();
         }
         this.frame.SetChecked(true);
     }
     OvaleIcon_OnEnter() {
-        if (this.help || this.actionType || HasScriptControls()) {
+        if (this.help || this.actionType || this.HasScriptControls()) {
             GameTooltip.SetOwner(this.frame, "ANCHOR_BOTTOMLEFT");
             if (this.help) {
                 GameTooltip.SetText(L[this.help]);
@@ -275,14 +282,14 @@ export class OvaleIcon {
                 }
                 GameTooltip.AddLine(actionHelp, 0.5, 1, 0.75);
             }
-            if (HasScriptControls()) {
+            if (this.HasScriptControls()) {
                 GameTooltip.AddLine(L["Cliquer pour afficher/cacher les options"], 1, 1, 1);
             }
             GameTooltip.Show();
         }
     }
     OvaleIcon_OnLeave() {
-        if (this.help || HasScriptControls()) {
+        if (this.help || this.HasScriptControls()) {
             GameTooltip.Hide();
         }
     }

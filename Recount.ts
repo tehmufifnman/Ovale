@@ -1,5 +1,4 @@
 import { Ovale } from "./Ovale";
-import { L } from "./Localization";
 import { OvaleScore } from "./Score";
 import AceLocale from "AceLocale-3.0";
 import Recount from "Recount";
@@ -24,12 +23,12 @@ const DataModes = function(self, data, num) {
     return [score, undefined];
 }
 const TooltipFuncs = function(self, name, data) {
-    let SortedData, total;
     GameTooltip.ClearLines();
     GameTooltip.AddLine(name);
 }
 class OvaleRecountClass extends OvaleRecountBase {
-    OnInitialize() {
+    constructor() {
+        super();
         if (Recount) {
             let aceLocale = AceLocale && AceLocale.GetLocale("Recount", true);
             if (!aceLocale) {
@@ -41,10 +40,7 @@ class OvaleRecountClass extends OvaleRecountBase {
                 });
             }
             Recount.AddModeTooltip(Ovale.GetName(), DataModes, TooltipFuncs, undefined, undefined, undefined, undefined);
-        }
-    }
-    OnEnable() {
-        if (Recount) {
+
             OvaleScore.RegisterDamageMeter("OvaleRecount", this, "ReceiveScore");
         }
     }

@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./ComboPoints", { "./Localization", "./Debug", "./Profiler", "./Aura", "./Data", "./Equipment", "./Future", "./PaperDoll", "./Power", "./SpellBook", "./Ovale", "./State" }, function(__exports, __Localization, __Debug, __Profiler, __Aura, __Data, __Equipment, __Future, __PaperDoll, __Power, __SpellBook, __Ovale, __State)
+__addon.require(__addonName, __addon, "./ComboPoints", { "./Debug", "./Profiler", "./Aura", "./Data", "./Equipment", "./PaperDoll", "./Power", "./SpellBook", "./Ovale", "./State", "./Requirement", "./LastSpell", "./DataState" }, function(__exports, __Debug, __Profiler, __Aura, __Data, __Equipment, __PaperDoll, __Power, __SpellBook, __Ovale, __State, __Requirement, __LastSpell, __DataState)
 local OvaleComboPointsBase = __Ovale.Ovale:NewModule("OvaleComboPoints", "AceEvent-3.0")
 local tinsert = table.insert
 local tremove = table.remove
@@ -7,7 +7,6 @@ local API_GetTime = GetTime
 local API_UnitPower = UnitPower
 local _MAX_COMBO_POINTS = MAX_COMBO_POINTS
 local _UNKNOWN = UNKNOWN
-local self_playerGUID = nil
 local ANTICIPATION = 115189
 local ANTICIPATION_DURATION = 15
 local ANTICIPATION_TALENT = 18
@@ -18,7 +17,6 @@ local ENVENOM = 32645
 local self_hasAssassination4pT17 = false
 local self_pendingComboEvents = {}
 local PENDING_THRESHOLD = 0.8
-local self_updateSpellcastInfo = {}
 local AddPendingComboEvent = function(atTime, spellId, guid, reason, combo)
     local comboEvent = {
         atTime = atTime,
@@ -28,7 +26,7 @@ local AddPendingComboEvent = function(atTime, spellId, guid, reason, combo)
         combo = combo
     }
     tinsert(self_pendingComboEvents, comboEvent)
-    __Ovale.Ovale.refreshNeeded[self_playerGUID] = true
+    __Ovale.Ovale:needRefresh()
 end
 
 local RemovePendingComboEvents = function(atTime, spellId, guid, reason, combo)
@@ -43,32 +41,61 @@ local RemovePendingComboEvents = function(atTime, spellId, guid, reason, combo)
             end
             count = count + 1
             tremove(self_pendingComboEvents, k)
-            __Ovale.Ovale.refreshNeeded[self_playerGUID] = true
+            __Ovale.Ovale:needRefresh()
         end
     end
     return count
 end
 
 local OvaleComboPointsClass = __class(__Ovale.RegisterPrinter(__Profiler.OvaleProfiler:RegisterProfiling(__Debug.OvaleDebug:RegisterDebugging(OvaleComboPointsBase))), {
-    OnInitialize = function(self)
-    end,
-    OnEnable = function(self)
-        self_playerGUID = __Ovale.Ovale.playerGUID
+    constructor = function(self)
+        self.combo = 0
+        self.SaveSpellcastInfo = function(module, spellcast, atTime, state)
+            local spellId = spellcast.spellId
+            if spellId then
+                local si = __Data.OvaleData.spellInfo[spellId]
+                if si then
+                    local comboPointModule = state or self
+                    if si.combo == "finisher" then
+                        local combo
+                        if state then
+                            combo = __DataState.dataState:GetSpellInfoProperty(spellId, atTime, "combo", spellcast.target)
+                        else
+                            combo = __Data.OvaleData:GetSpellInfoProperty(spellId, atTime, "combo", spellcast.target)
+                        end
+                        if combo == "finisher" then
+                            local min_combo = si.min_combo or si.mincombo or 1
+                            if comboPointModule.combo >= min_combo then
+                                combo = comboPointModule.combo
+                            else
+                                combo = min_combo
+                            end
+                        elseif combo == 0 then
+                            combo = _MAX_COMBO_POINTS
+                        end
+                        spellcast.combo = combo
+                    end
+                end
+            end
+        end
+        __Ovale.RegisterPrinter(__Profiler.OvaleProfiler:RegisterProfiling(__Debug.OvaleDebug:RegisterDebugging(OvaleComboPointsBase))).constructor(self)
         if __Ovale.Ovale.playerClass == "ROGUE" or __Ovale.Ovale.playerClass == "DRUID" then
-            self:RegisterEvent("PLAYER_ENTERING_WORLD", self.Update)
+            self:RegisterEvent("PLAYER_ENTERING_WORLD", function()
+                return self:Update()
+            end)
             self:RegisterEvent("PLAYER_TARGET_CHANGED")
             self:RegisterEvent("UNIT_POWER")
             self:RegisterEvent("Ovale_EquipmentChanged")
             self:RegisterMessage("Ovale_SpellFinished")
             self:RegisterMessage("Ovale_TalentsChanged")
-            __Data.OvaleData:RegisterRequirement("combo", "RequireComboPointsHandler", self)
-            __Future.OvaleFuture.RegisterSpellcastInfo(self)
+            __Requirement.RegisterRequirement("combo", "RequireComboPointsHandler", self)
+            __LastSpell.lastSpell:RegisterSpellcastInfo(self)
         end
     end,
     OnDisable = function(self)
         if __Ovale.Ovale.playerClass == "ROGUE" or __Ovale.Ovale.playerClass == "DRUID" then
-            __Future.OvaleFuture.UnregisterSpellcastInfo(self)
-            __Data.OvaleData:UnregisterRequirement("combo")
+            __LastSpell.lastSpell:UnregisterSpellcastInfo(self)
+            __Requirement.UnregisterRequirement("combo")
             self:UnregisterEvent("PLAYER_ENTERING_WORLD")
             self:UnregisterEvent("PLAYER_TARGET_CHANGED")
             self:UnregisterEvent("UNIT_POWER")
@@ -97,7 +124,7 @@ local OvaleComboPointsClass = __class(__Ovale.RegisterPrinter(__Profiler.OvalePr
             local pendingMatched = false
             if #self_pendingComboEvents > 0 then
                 local comboEvent = self_pendingComboEvents[1]
-                local spellId, guid, reason, combo = comboEvent.spellId, comboEvent.guid, comboEvent.reason, comboEvent.combo
+                local spellId, _, reason, combo = comboEvent.spellId, comboEvent.guid, comboEvent.reason, comboEvent.combo
                 if combo == difference or (combo == "finisher" and self.combo == 0 and difference < 0) then
                     self:Debug("    Matches pending %s event for %d.", reason, spellId)
                     pendingMatched = true
@@ -123,9 +150,9 @@ local OvaleComboPointsClass = __class(__Ovale.RegisterPrinter(__Profiler.OvalePr
                 self:Debug("    Spell %d refunds 1 combo point from Assassination 4pT17 set bonus.", spellId)
                 AddPendingComboEvent(atTime, spellId, targetGUID, "Assassination 4pT17", 1)
             end
-            if self_hasAnticipation and targetGUID ~= self_playerGUID then
+            if self_hasAnticipation and targetGUID ~= __Ovale.Ovale.playerGUID then
                 if __SpellBook.OvaleSpellBook:IsHarmfulSpell(spellId) then
-                    local aura = __Aura.OvaleAura:GetAuraByGUID(self_playerGUID, ANTICIPATION, "HELPFUL", true)
+                    local aura = __Aura.OvaleAura:GetAuraByGUID(__Ovale.Ovale.playerGUID, ANTICIPATION, "HELPFUL", true)
                     if __Aura.OvaleAura:IsActiveAura(aura, atTime) then
                         self:Debug("    Spell %d hit with %d Anticipation charges.", spellId, aura.stacks)
                         AddPendingComboEvent(atTime, spellId, targetGUID, "Anticipation", aura.stacks)
@@ -143,7 +170,7 @@ local OvaleComboPointsClass = __class(__Ovale.RegisterPrinter(__Profiler.OvalePr
     Update = function(self)
         self:StartProfiling("OvaleComboPoints_Update")
         self.combo = API_UnitPower("player", 4)
-        __Ovale.Ovale.refreshNeeded[self_playerGUID] = true
+        __Ovale.Ovale:needRefresh()
         self:StopProfiling("OvaleComboPoints_Update")
     end,
     GetComboPoints = function(self)
@@ -243,37 +270,6 @@ local OvaleComboPointsClass = __class(__Ovale.RegisterPrinter(__Profiler.OvalePr
             dest.combo = spellcast.combo
         end
     end,
-    SaveSpellcastInfo = function(self, spellcast, atTime, state)
-        local spellId = spellcast.spellId
-        if spellId then
-            local si = __Data.OvaleData.spellInfo[spellId]
-            if si then
-                local comboPointModule = state or self
-                if si.combo == "finisher" then
-                    local combo
-                    if state then
-                        combo = __Data.dataState:GetSpellInfoProperty(spellId, atTime, "combo", spellcast.target)
-                    else
-                        combo = __Data.OvaleData:GetSpellInfoProperty(spellId, atTime, "combo", spellcast.target)
-                    end
-                    if combo == "finisher" then
-                        local min_combo = si.min_combo or si.mincombo or 1
-                        if comboPointModule.combo >= min_combo then
-                            combo = comboPointModule.combo
-                        else
-                            combo = min_combo
-                        end
-                    elseif combo == 0 then
-                        combo = _MAX_COMBO_POINTS
-                    end
-                    spellcast.combo = combo
-                end
-            end
-        end
-    end,
-    constructor = function(self)
-        self.combo = 0
-    end
 })
 __exports.OvaleComboPoints = OvaleComboPointsClass()
 __exports.ComboPointsState = __class(nil, {
@@ -291,10 +287,10 @@ __exports.ComboPointsState = __class(nil, {
                     power = power + 1
                 end
                 if self_hasAnticipation and self.combo > 0 then
-                    local aura = __Aura.auraState:GetAuraByGUID(self_playerGUID, ANTICIPATION, "HELPFUL", true)
+                    local aura = __Aura.auraState:GetAuraByGUID(__Ovale.Ovale.playerGUID, ANTICIPATION, "HELPFUL", true)
                     if __Aura.auraState:IsActiveAura(aura, endCast) then
                         power = power + aura.stacks
-                        __Aura.auraState:RemoveAuraOnGUID(self_playerGUID, ANTICIPATION, "HELPFUL", true, endCast)
+                        __Aura.auraState:RemoveAuraOnGUID(__Ovale.Ovale.playerGUID, ANTICIPATION, "HELPFUL", true, endCast)
                         if power > _MAX_COMBO_POINTS then
                             power = _MAX_COMBO_POINTS
                         end
@@ -304,7 +300,7 @@ __exports.ComboPointsState = __class(nil, {
             if power > _MAX_COMBO_POINTS then
                 if self_hasAnticipation and  not si.temp_combo then
                     local stacks = power - _MAX_COMBO_POINTS
-                    local aura = __Aura.auraState:GetAuraByGUID(self_playerGUID, ANTICIPATION, "HELPFUL", true)
+                    local aura = __Aura.auraState:GetAuraByGUID(__Ovale.Ovale.playerGUID, ANTICIPATION, "HELPFUL", true)
                     if __Aura.auraState:IsActiveAura(aura, endCast) then
                         stacks = stacks + aura.stacks
                         if stacks > _MAX_COMBO_POINTS then
@@ -313,7 +309,7 @@ __exports.ComboPointsState = __class(nil, {
                     end
                     local start = endCast
                     local ending = start + ANTICIPATION_DURATION
-                    aura = __Aura.auraState:AddAuraToGUID(self_playerGUID, ANTICIPATION, self_playerGUID, "HELPFUL", nil, start, ending)
+                    aura = __Aura.auraState:AddAuraToGUID(__Ovale.Ovale.playerGUID, ANTICIPATION, __Ovale.Ovale.playerGUID, "HELPFUL", nil, start, ending)
                     aura.stacks = stacks
                 end
                 power = _MAX_COMBO_POINTS
@@ -339,7 +335,7 @@ __exports.ComboPointsState = __class(nil, {
         for k = 1, #self_pendingComboEvents, 1 do
             local comboEvent = self_pendingComboEvents[k]
             if comboEvent.reason == "Anticipation" then
-                __Aura.auraState:RemoveAuraOnGUID(self_playerGUID, ANTICIPATION, "HELPFUL", true, comboEvent.atTime)
+                __Aura.auraState:RemoveAuraOnGUID(__Ovale.Ovale.playerGUID, ANTICIPATION, "HELPFUL", true, comboEvent.atTime)
                 break
             end
         end

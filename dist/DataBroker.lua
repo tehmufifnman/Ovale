@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./DataBroker", { "./Localization", "LibDataBroker-1.1", "LibDBIcon-1.0", "./Debug", "./Options", "./Ovale", "./Scripts", "./Version" }, function(__exports, __Localization, LibDataBroker, LibDBIcon, __Debug, __Options, __Ovale, __Scripts, __Version)
+__addon.require(__addonName, __addon, "./DataBroker", { "./Localization", "LibDataBroker-1.1", "LibDBIcon-1.0", "./Debug", "./Options", "./Ovale", "./Scripts", "./Version", "./Frame" }, function(__exports, __Localization, LibDataBroker, LibDBIcon, __Debug, __Options, __Ovale, __Scripts, __Version, __Frame)
 local OvaleDataBrokerBase = __Ovale.Ovale:NewModule("OvaleDataBroker", "AceEvent-3.0")
 local _pairs = pairs
 local tinsert = table.insert
@@ -50,7 +50,7 @@ do
     end
     __Options.OvaleOptions:RegisterOptions(__exports.OvaleDataBroker)
 end
-local OnClick = function(frame, button)
+local OnClick = function(fr, button)
     if button == "LeftButton" then
         local menu = {
             [1] = {
@@ -73,7 +73,7 @@ local OnClick = function(frame, button)
         self_menuFrame = self_menuFrame or API_CreateFrame("Frame", "OvaleDataBroker_MenuFrame", UIParent, "UIDropDownMenuTemplate")
         API_EasyMenu(menu, self_menuFrame, "cursor", 0, 0, "MENU")
     elseif button == "MiddleButton" then
-        __Ovale.Ovale.ToggleOptions()
+        __Frame.frame:ToggleOptions()
     elseif button == "RightButton" then
         if API_IsShiftKeyDown() then
             __Debug.OvaleDebug:DoTrace(true)
@@ -93,7 +93,9 @@ local OnTooltipShow = function(tooltip)
 end
 
 local OvaleDataBrokerClass = __class(OvaleDataBrokerBase, {
-    OnInitialize = function(self)
+    constructor = function(self)
+        self.broker = nil
+        OvaleDataBrokerBase.constructor(self)
         if LibDataBroker then
             local broker = {
                 type = "data source",
@@ -107,8 +109,6 @@ local OvaleDataBrokerClass = __class(OvaleDataBrokerBase, {
                 LibDBIcon:Register(__Ovale.Ovale:GetName(), self.broker, __Ovale.Ovale.db.profile.apparence.minimap)
             end
         end
-    end,
-    OnEnable = function(self)
         if self.broker then
             self:RegisterMessage("Ovale_ProfileChanged", "UpdateIcon")
             self:RegisterMessage("Ovale_ScriptChanged")
@@ -126,7 +126,7 @@ local OvaleDataBrokerClass = __class(OvaleDataBrokerBase, {
         if LibDBIcon and self.broker then
             local minimap = __Ovale.Ovale.db.profile.apparence.minimap
             LibDBIcon:Refresh(__Ovale.Ovale:GetName(), minimap)
-            if minimap.hide then
+            if minimap and minimap.hide then
                 LibDBIcon:Hide(__Ovale.Ovale:GetName())
             else
                 LibDBIcon:Show(__Ovale.Ovale:GetName())
@@ -136,9 +136,6 @@ local OvaleDataBrokerClass = __class(OvaleDataBrokerBase, {
     Ovale_ScriptChanged = function(self)
         self.broker.text = __Ovale.Ovale.db.profile.source
     end,
-    constructor = function(self)
-        self.broker = nil
-    end
 })
 __exports.OvaleDataBroker = OvaleDataBrokerClass()
 end)

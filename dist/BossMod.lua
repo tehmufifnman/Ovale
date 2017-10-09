@@ -10,9 +10,10 @@ local API_UnitLevel = UnitLevel
 local _BigWigsLoader = BigWigsLoader
 local _DBM = DBM
 local OvaleBossModClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(__Debug.OvaleDebug:RegisterDebugging(OvaleBossModBase)), {
-    OnInitialize = function(self)
-    end,
-    OnEnable = function(self)
+    constructor = function(self)
+        self.EngagedDBM = nil
+        self.EngagedBigWigs = nil
+        __Profiler.OvaleProfiler:RegisterProfiling(__Debug.OvaleDebug:RegisterDebugging(OvaleBossModBase)).constructor(self)
         if _DBM then
             self:Debug("DBM is loaded")
             hooksecurefunc(_DBM, "StartCombat", function(_DBM, mod, delay, event, ...)
@@ -90,10 +91,6 @@ local OvaleBossModClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(__D
         self:StopProfiling("OvaleBossMod:ScanTargets")
         return bossEngaged
     end,
-    constructor = function(self)
-        self.EngagedDBM = nil
-        self.EngagedBigWigs = nil
-    end
 })
 __exports.OvaleBossMod = OvaleBossModClass()
 end)

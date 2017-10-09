@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./SpellBook", { "./Localization", "./Debug", "./Profiler", "./Cooldown", "./Data", "./Power", "./Runes", "./State", "./Ovale" }, function(__exports, __Localization, __Debug, __Profiler, __Cooldown, __Data, __Power, __Runes, __State, __Ovale)
+__addon.require(__addonName, __addon, "./SpellBook", { "./Localization", "./Debug", "./Profiler", "./Ovale", "./Requirement" }, function(__exports, __Localization, __Debug, __Profiler, __Ovale, __Requirement)
 local _ipairs = ipairs
 local _pairs = pairs
 local strmatch = string.match
@@ -8,7 +8,6 @@ local tinsert = table.insert
 local _tonumber = tonumber
 local _tostring = tostring
 local tsort = table.sort
-local _type = type
 local _wipe = wipe
 local _gsub = string.gsub
 local API_GetActiveSpecGroup = GetActiveSpecGroup
@@ -25,7 +24,6 @@ local API_HasPetSpells = HasPetSpells
 local API_IsHarmfulSpell = IsHarmfulSpell
 local API_IsHelpfulSpell = IsHelpfulSpell
 local API_IsSpellInRange = IsSpellInRange
-local API_IsUsableItem = IsUsableItem
 local API_IsUsableSpell = IsUsableSpell
 local API_UnitIsFriend = UnitIsFriend
 local _BOOKTYPE_PET = BOOKTYPE_PET
@@ -91,22 +89,33 @@ local OutputTableValues = function(output, tbl)
 end
 
 local output = {}
-local OvaleSpellBookClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(__Debug.OvaleDebug:RegisterDebugging(__Ovale.Ovale:NewModule("OvaleSpellBook", "AceEvent-3.0"))), {
-    OnInitialize = function(self)
-    end,
-    OnEnable = function(self)
+local OvaleSpellBookBase = __Profiler.OvaleProfiler:RegisterProfiling(__Debug.OvaleDebug:RegisterDebugging(__Ovale.Ovale:NewModule("OvaleSpellBook", "AceEvent-3.0")))
+local OvaleSpellBookClass = __class(OvaleSpellBookBase, {
+    constructor = function(self)
+        self.ready = false
+        self.spell = {}
+        self.spellbookId = {
+            [_BOOKTYPE_PET] = {},
+            [_BOOKTYPE_SPELL] = {}
+        }
+        self.isHarmful = {}
+        self.isHelpful = {}
+        self.texture = {}
+        self.talent = {}
+        self.talentPoints = {}
+        OvaleSpellBookBase.constructor(self)
         self:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED", "Update")
         self:RegisterEvent("CHARACTER_POINTS_CHANGED", "UpdateTalents")
         self:RegisterEvent("PLAYER_ENTERING_WORLD", "Update")
         self:RegisterEvent("PLAYER_TALENT_UPDATE", "UpdateTalents")
         self:RegisterEvent("SPELLS_CHANGED", "UpdateSpells")
         self:RegisterEvent("UNIT_PET")
-        __Data.OvaleData:RegisterRequirement("spellcount_min", "RequireSpellCountHandler", self)
-        __Data.OvaleData:RegisterRequirement("spellcount_max", "RequireSpellCountHandler", self)
+        __Requirement.RegisterRequirement("spellcount_min", "RequireSpellCountHandler", self)
+        __Requirement.RegisterRequirement("spellcount_max", "RequireSpellCountHandler", self)
     end,
     OnDisable = function(self)
-        __Data.OvaleData:UnregisterRequirement("spellcount_max")
-        __Data.OvaleData:UnregisterRequirement("spellcount_min")
+        __Requirement.UnregisterRequirement("spellcount_max")
+        __Requirement.UnregisterRequirement("spellcount_min")
         self:UnregisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
         self:UnregisterEvent("CHARACTER_POINTS_CHANGED")
         self:UnregisterEvent("PLAYER_ENTERING_WORLD")
@@ -131,7 +140,7 @@ local OvaleSpellBookClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(_
         local activeTalentGroup = API_GetActiveSpecGroup()
         for i = 1, _MAX_TALENT_TIERS, 1 do
             for j = 1, _NUM_TALENT_COLUMNS, 1 do
-                local talentId, name, _1, selected, _2, _3, _4, _5, _6, _7, selectedByLegendary = API_GetTalentInfo(i, j, activeTalentGroup)
+                local talentId, name, _, selected, _, _, _, _, _, _, selectedByLegendary = API_GetTalentInfo(i, j, activeTalentGroup)
                 if talentId then
                     local combinedSelected = selected or selectedByLegendary
                     local index = 3 * (i - 1) + j
@@ -147,7 +156,7 @@ local OvaleSpellBookClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(_
                 end
             end
         end
-        __Ovale.Ovale.refreshNeeded[__Ovale.Ovale.playerGUID] = true
+        __Ovale.Ovale:needRefresh()
         self:SendMessage("Ovale_TalentsChanged")
     end,
     UpdateSpells = function(self)
@@ -163,11 +172,11 @@ local OvaleSpellBookClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(_
                 self:ScanSpellBook(_BOOKTYPE_SPELL, numSpells, offset)
             end
         end
-        local numPetSpells, petToken = API_HasPetSpells()
+        local numPetSpells = API_HasPetSpells()
         if numPetSpells then
             self:ScanSpellBook(_BOOKTYPE_PET, numPetSpells)
         end
-        __Ovale.Ovale.refreshNeeded[__Ovale.Ovale.playerGUID] = true
+        __Ovale.Ovale:needRefresh()
         self:SendMessage("Ovale_SpellsChanged")
     end,
     ScanSpellBook = function(self, bookType, numSpells, offset)
@@ -178,7 +187,7 @@ local OvaleSpellBookClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(_
             if skillType == "SPELL" or skillType == "PETACTION" then
                 local spellLink = API_GetSpellLink(index, bookType)
                 if spellLink then
-                    local _1, _2, linkData, spellName = ParseHyperlink(spellLink)
+                    local _, _, linkData, spellName = ParseHyperlink(spellLink)
                     local id = _tonumber(linkData)
                     self:Debug("    %s (%d) is at offset %d (%s).", spellName, id, index, _gsub(spellLink, "|", "_"))
                     self.spell[id] = spellName
@@ -197,7 +206,7 @@ local OvaleSpellBookClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(_
                 end
             elseif skillType == "FLYOUT" then
                 local flyoutId = spellId
-                local _1, _2, numSlots, isKnown = API_GetFlyoutInfo(flyoutId)
+                local _, _, numSlots, isKnown = API_GetFlyoutInfo(flyoutId)
                 if numSlots > 0 and isKnown then
                     for flyoutIndex = 1, numSlots, 1 do
                         local id, overrideId, isKnown, spellName = API_GetFlyoutSlotInfo(flyoutId, flyoutIndex)
@@ -227,7 +236,7 @@ local OvaleSpellBookClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(_
     end,
     GetCastTime = function(self, spellId)
         if spellId then
-            local name, _1, _2, castTime = self:GetSpellInfo(spellId)
+            local name, _, _, castTime = self:GetSpellInfo(spellId)
             if name then
                 if castTime then
                     castTime = castTime / 1000
@@ -311,7 +320,7 @@ local OvaleSpellBookClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(_
         end
     end,
     IsPetSpell = function(self, spellId)
-        local index, bookType = self:GetSpellBookIndex(spellId)
+        local _, bookType = self:GetSpellBookIndex(spellId)
         return bookType == _BOOKTYPE_PET
     end,
     IsSpellInRange = function(self, spellId, unitId)
@@ -345,12 +354,12 @@ local OvaleSpellBookClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(_
             total = total + 1
         end
         output[#output + 1] = "Total spells: " .. total
-        return tconcat(output, "\\n")
+        return tconcat(output, "\n")
     end,
     DebugTalents = function(self)
         _wipe(output)
         OutputTableValues(output, self.talent)
-        return tconcat(output, "\\n")
+        return tconcat(output, "\n")
     end,
     RequireSpellCountHandler = function(self, spellId, atTime, requirement, tokens, index, targetGUID)
         local verified = false
@@ -368,115 +377,6 @@ local OvaleSpellBookClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(_
         end
         return verified, requirement, index
     end,
-    constructor = function(self)
-        self.ready = false
-        self.spell = {}
-        self.spellbookId = {
-            [_BOOKTYPE_PET] = {},
-            [_BOOKTYPE_SPELL] = {}
-        }
-        self.isHarmful = {}
-        self.isHelpful = {}
-        self.texture = {}
-        self.talent = {}
-        self.talentPoints = {}
-    end
 })
-local SpellBookState = __class(nil, {
-    CleanState = function(self)
-    end,
-    InitializeState = function(self)
-    end,
-    ResetState = function(self)
-    end,
-    IsUsableItem = function(self, itemId, atTime)
-        __exports.OvaleSpellBook:StartProfiling("OvaleSpellBook_state_IsUsableItem")
-        local isUsable = API_IsUsableItem(itemId)
-        local ii = __Data.OvaleData:ItemInfo(itemId)
-        if ii then
-            if isUsable then
-                local unusable = __Data.dataState:GetItemInfoProperty(itemId, atTime, "unusable")
-                if unusable and unusable > 0 then
-                    __exports.OvaleSpellBook:Log("Item ID '%s' is flagged as unusable.", itemId)
-                    isUsable = false
-                end
-            end
-        end
-        __exports.OvaleSpellBook:StopProfiling("OvaleSpellBook_state_IsUsableItem")
-        return isUsable
-    end,
-    IsUsableSpell = function(self, spellId, atTime, targetGUID)
-        __exports.OvaleSpellBook:StartProfiling("OvaleSpellBook_state_IsUsableSpell")
-        if _type(atTime) == "string" and  not targetGUID then
-            atTime, targetGUID = nil, atTime
-        end
-        atTime = atTime or __State.baseState.currentTime
-        local isUsable = __exports.OvaleSpellBook:IsKnownSpell(spellId)
-        local noMana = false
-        local si = __Data.OvaleData.spellInfo[spellId]
-        if si then
-            if isUsable then
-                local unusable = __Data.dataState:GetSpellInfoProperty(spellId, atTime, "unusable", targetGUID)
-                if unusable and unusable > 0 then
-                    __exports.OvaleSpellBook:Log("Spell ID '%s' is flagged as unusable.", spellId)
-                    isUsable = false
-                end
-            end
-            if isUsable then
-                local requirement
-                isUsable, requirement = __Data.dataState:CheckSpellInfo(spellId, atTime, targetGUID)
-                if  not isUsable then
-                    if __Power.OvalePower.PRIMARY_POWER[requirement] then
-                        noMana = true
-                    end
-                    if noMana then
-                        __exports.OvaleSpellBook:Log("Spell ID '%s' does not have enough %s.", spellId, requirement)
-                    else
-                        __exports.OvaleSpellBook:Log("Spell ID '%s' failed '%s' requirements.", spellId, requirement)
-                    end
-                end
-            end
-        else
-            isUsable, noMana = __exports.OvaleSpellBook:IsUsableSpell(spellId)
-        end
-        __exports.OvaleSpellBook:StopProfiling("OvaleSpellBook_state_IsUsableSpell")
-        return isUsable, noMana
-    end,
-    GetTimeToSpell = function(self, spellId, atTime, targetGUID, extraPower)
-        if _type(atTime) == "string" and  not targetGUID then
-            atTime, targetGUID = nil, atTime
-        end
-        atTime = atTime or __State.baseState.currentTime
-        local timeToSpell = 0
-        do
-            local start, duration = __Cooldown.cooldownState:GetSpellCooldown(spellId)
-            local seconds = (duration > 0) and (start + duration - atTime) or 0
-            if timeToSpell < seconds then
-                timeToSpell = seconds
-            end
-        end
-        do
-            local seconds = __Power.powerState:TimeToPower(spellId, atTime, targetGUID, nil, extraPower)
-            if timeToSpell < seconds then
-                timeToSpell = seconds
-            end
-        end
-        do
-            local runes = __Data.dataState:GetSpellInfoProperty(spellId, atTime, "runes", targetGUID)
-            if runes then
-                local seconds = __Runes.runesState:GetRunesCooldown(atTime, runes)
-                if timeToSpell < seconds then
-                    timeToSpell = seconds
-                end
-            end
-        end
-        return timeToSpell
-    end,
-    RequireSpellCountHandler = function(self, spellId, atTime, requirement, tokens, index, targetGUID)
-        return __exports.OvaleSpellBook:RequireSpellCountHandler(spellId, atTime, requirement, tokens, index, targetGUID)
-    end,
-})
-__exports.spellBookState = SpellBookState()
-__State.OvaleState:RegisterState(__exports.spellBookState)
 __exports.OvaleSpellBook = OvaleSpellBookClass()
 end)

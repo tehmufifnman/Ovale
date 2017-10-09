@@ -1,14 +1,3 @@
-// interface ModuleEvents {
-//     OnEnable?: () => void;
-//     OnInitialize?: () => void;
-//     RegisterEvent?: (name: string, method?: string) => void;
-//     RegisterMessage?: (name: string, method?: string) => void;
-//     UnregisterEvent?: (name: string) => void;
-//     UnregisterMessage?: (name: string) => void;
-//     GetName?: () => string;
-//     SendMessage?: (message:string) => void;
-// }
-
 declare class AceModule {
     GetName?(): string;
     //Print?(s: string, ...format): void;

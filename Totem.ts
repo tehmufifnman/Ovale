@@ -1,9 +1,10 @@
 import { OvaleProfiler } from "./Profiler";
 import { Ovale } from "./Ovale";
-import { OvaleData, dataState } from "./Data";
+import { OvaleData } from "./Data";
 import { OvaleSpellBook }from "./SpellBook";
 import { OvaleState, baseState, StateModule } from "./State";
 import { auraState } from "./Aura";
+import { dataState } from "./DataState";
 
 let OvaleTotemBase = Ovale.NewModule("OvaleTotem", "AceEvent-3.0");
 export let OvaleTotem: OvaleTotemClass;
@@ -37,9 +38,8 @@ let TOTEMIC_RECALL = 36936;
 class OvaleTotemClass extends OvaleProfiler.RegisterProfiling(OvaleTotemBase) {
     totem = {}
     
-    OnInitialize() {
-    }
-    OnEnable() {
+    constructor() {
+        super();
         if (TOTEM_CLASS[Ovale.playerClass]) {
             this.RegisterEvent("PLAYER_ENTERING_WORLD", "Update");
             this.RegisterEvent("PLAYER_TALENT_UPDATE", "Update");
@@ -57,7 +57,7 @@ class OvaleTotemClass extends OvaleProfiler.RegisterProfiling(OvaleTotemBase) {
     }
     Update() {
         self_serial = self_serial + 1;
-        Ovale.refreshNeeded[Ovale.playerGUID] = true;
+        Ovale.needRefresh();
     }
 }
 class TotemState implements StateModule {
@@ -213,7 +213,7 @@ class TotemState implements StateModule {
         OvaleTotem.StartProfiling("OvaleTotem_state_SummonTotem");
         atTime = atTime || baseState.currentTime;
         slot = TOTEM_SLOT[slot] || slot;
-        let [name, _, icon] = OvaleSpellBook.GetSpellInfo(spellId);
+        let [name, , icon] = OvaleSpellBook.GetSpellInfo(spellId);
         let duration = dataState.GetSpellInfoProperty(spellId, atTime, "duration");
         let totem = this.totem[slot];
         totem.name = name;

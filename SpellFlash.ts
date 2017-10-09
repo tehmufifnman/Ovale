@@ -10,7 +10,6 @@ import { BaseState } from "./State";
 let OvaleSpellFlashBase = Ovale.NewModule("OvaleSpellFlash", "AceEvent-3.0");
 export let OvaleSpellFlash: OvaleSpellFlashClass;
 let _pairs = pairs;
-let _type = type;
 let API_GetTime = GetTime;
 let API_UnitHasVehicleUI = UnitHasVehicleUI;
 let API_UnitExists = UnitExists;
@@ -260,9 +259,8 @@ let COLORTABLE = {
     OvaleOptions.RegisterOptions(OvaleSpellFlash);
 }
 class OvaleSpellFlashClass extends OvaleSpellFlashBase {
-    OnInitialize() {
-    }
-    OnEnable() {
+    constructor() {
+        super();
         SpellFlashCore = _G["SpellFlashCore"];
         this.RegisterMessage("Ovale_OptionChanged");
         this.Ovale_OptionChanged();

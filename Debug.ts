@@ -6,19 +6,11 @@ import { OvaleOptions } from "./Options";
 import { Constructor, MakeString, Ovale } from "./Ovale";
 let OvaleDebugBase = Ovale.NewModule("OvaleDebug", "AceTimer-3.0");
 let format = string.format;
-let gmatch = string.gmatch;
-let gsub = string.gsub;
-let _next = next;
 let _pairs = pairs;
-let strlen = string.len;
-let _tonumber = tonumber;
-let _tostring = tostring;
-let _type = type;
-let API_GetSpellInfo = GetSpellInfo;
 let API_GetTime = GetTime;
 let _DEFAULT_CHAT_FRAME = DEFAULT_CHAT_FRAME;
 let self_traced = false;
-let self_traceLog = undefined;
+let self_traceLog: TextDump = undefined;
 let OVALE_TRACELOG_MAXLINES = 4096;
 
 class OvaleDebugClass extends OvaleDebugBase {
@@ -90,20 +82,17 @@ class OvaleDebugClass extends OvaleDebugBase {
         OvaleOptions.defaultDB.global = OvaleOptions.defaultDB.global || {}
         OvaleOptions.defaultDB.global.debug = {}
         OvaleOptions.RegisterOptions(this);
-    }
-    
-    OnInitialize() {
+
         let appName = this.GetName();
         AceConfig.RegisterOptionsTable(appName, this.options);
         AceConfigDialog.AddToBlizOptions(appName, L["Debug"], Ovale.GetName());
-    }
-    OnEnable() {
+    
         self_traceLog = LibTextDump.New(`${Ovale.GetName()} - ${L["Trace Log"]}`, 750, 500);
     }
     DoTrace(displayLog) {
         self_traceLog.Clear();
         this.trace = true;
-        this.Print("=== Trace @%f", API_GetTime());
+        _DEFAULT_CHAT_FRAME.AddMessage(string.format("=== Trace @%f", API_GetTime()));
         if (displayLog) {
             this.ScheduleTimer("DisplayTraceLog", 0.5);
         }
@@ -127,8 +116,19 @@ class OvaleDebugClass extends OvaleDebugBase {
     }
 
     RegisterDebugging<T extends Constructor<AceModule>>(addon: T) {
+        const debug = this;
         return class extends addon {
-            private trace = false; 
+            private trace = false;
+            constructor(...args:any[]) {
+                super(...args);
+                const name = this.GetName();
+                debug.options.args.toggles.args[name] = {
+                    name: name,
+                    desc: format(L["Enable debugging messages for the %s module."], name),
+                    type: "toggle"
+                };
+            }
+
             Debug(...__args) {
                 let name = this.GetName();
                 if (Ovale.db.global.debug[name]) {

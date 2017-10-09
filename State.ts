@@ -1,14 +1,11 @@
-import { L } from "./Localization";
 import { OvaleDebug } from "./Debug";
 import { OvaleQueue } from "./Queue";
-import { Constructor, Ovale } from "./Ovale";
+import { Ovale } from "./Ovale";
 
 let OvaleStateBase = Ovale.NewModule("OvaleState");
 export let OvaleState: OvaleStateClass;
 
 let _pairs = pairs;
-let self_statePrototype:LuaObj<BaseState> = {
-}
 let self_stateAddons = new OvaleQueue<StateModule>("OvaleState_stateAddons");
 
 export interface StateModule {
@@ -21,8 +18,6 @@ export interface StateModule {
 }
 
 class OvaleStateClass extends OvaleDebug.RegisterDebugging(OvaleStateBase) {
-    OnEnable() {}
-    OnDisable() {}
     RegisterState(stateAddon: StateModule) {
         self_stateAddons.Insert(stateAddon);
     }

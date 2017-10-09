@@ -1,8 +1,10 @@
+import { OvalePool } from "./Pool";
+
 const _pairs = pairs;
 const tremove = table.remove;
 const tinsert = table.insert;
 
-export interface SpellCast {
+export interface SpellCast extends PaperDollSnapshot {
     stop?: number;
     start?: number;
     lineId?: number;
@@ -20,10 +22,41 @@ export interface SpellCast {
     damageMultiplier?: number;
 }
 
+
+export interface PaperDollSnapshot {
+    snapshotTime?: number;
+    agility?: number;
+    intellect?: number;
+    spirit?: number;
+    stamina?: number;
+    strength?: number;
+    attackPower?: number;
+    rangedAttackPower?: number;
+    spellBonusDamage?: number;
+    spellBonusHealing?: number;
+    masteryEffect?: number;
+    meleeCrit?: number;
+    meleeHaste?: number;
+    rangedCrit?: number;
+    rangedHaste?: number;
+    spellCrit?: number;
+    spellHaste?: number;
+    multistrike?: number;
+    critRating?: number;
+    hasteRating?: number;
+    masteryRating?: number;
+    multistrikeRating?: number;
+    mainHandWeaponDamage?: number;
+    offHandWeaponDamage?: number;
+    baseDamageMultiplier?: number;
+}
+
 export interface SpellCastModule {
     CopySpellcastInfo: (mod: SpellCastModule, spellcast: SpellCast, dest: SpellCast) => void;
     SaveSpellcastInfo: (mod: SpellCastModule, spellcast: SpellCast, atTime: number, future?: {}) => void;
 }
+
+export const self_pool = new OvalePool<SpellCast>("OvaleFuture_pool");
 
 
 class LastSpell {
@@ -52,7 +85,7 @@ class LastSpell {
         if (spellcast.damageMultiplier) {
             dest.damageMultiplier = spellcast.damageMultiplier;
         }
-        for (const [_, mod] of _pairs(this.modules)) {
+        for (const [, mod] of _pairs(this.modules)) {
             let func = mod.CopySpellcastInfo;
             if (func) {
                 func(mod, spellcast, dest);

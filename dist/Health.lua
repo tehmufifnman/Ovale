@@ -1,10 +1,9 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Health", { "./Debug", "./Profiler", "./Ovale", "./Data", "./GUID", "./State" }, function(__exports, __Debug, __Profiler, __Ovale, __Data, __GUID, __State)
+__addon.require(__addonName, __addon, "./Health", { "./Debug", "./Profiler", "./Ovale", "./GUID", "./State", "./Requirement" }, function(__exports, __Debug, __Profiler, __Ovale, __GUID, __State, __Requirement)
 local OvaleHealthBase = __Ovale.Ovale:NewModule("OvaleHealth", "AceEvent-3.0")
 local strsub = string.sub
 local _tonumber = tonumber
 local _wipe = wipe
-local API_GetTime = GetTime
 local API_UnitHealth = UnitHealth
 local API_UnitHealthMax = UnitHealthMax
 local INFINITY = math.huge
@@ -23,22 +22,27 @@ local CLEU_HEAL_EVENT = {
     SPELL_PERIODIC_HEAL = true
 }
 local OvaleHealthClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleHealthBase)), {
-    OnInitialize = function(self)
-    end,
-    OnEnable = function(self)
+    constructor = function(self)
+        self.health = {}
+        self.maxHealth = {}
+        self.totalDamage = {}
+        self.totalHealing = {}
+        self.firstSeen = {}
+        self.lastUpdated = {}
+        __Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleHealthBase)).constructor(self)
         self:RegisterEvent("PLAYER_REGEN_DISABLED")
         self:RegisterEvent("PLAYER_REGEN_ENABLED")
         self:RegisterEvent("UNIT_HEALTH_FREQUENT", "UpdateHealth")
         self:RegisterEvent("UNIT_MAXHEALTH", "UpdateHealth")
         self:RegisterMessage("Ovale_UnitChanged")
-        __Data.OvaleData:RegisterRequirement("health_pct", "RequireHealthPercentHandler", self)
-        __Data.OvaleData:RegisterRequirement("pet_health_pct", "RequireHealthPercentHandler", self)
-        __Data.OvaleData:RegisterRequirement("target_health_pct", "RequireHealthPercentHandler", self)
+        __Requirement.RegisterRequirement("health_pct", "RequireHealthPercentHandler", self)
+        __Requirement.RegisterRequirement("pet_health_pct", "RequireHealthPercentHandler", self)
+        __Requirement.RegisterRequirement("target_health_pct", "RequireHealthPercentHandler", self)
     end,
     OnDisable = function(self)
-        __Data.OvaleData:UnregisterRequirement("health_pct")
-        __Data.OvaleData:UnregisterRequirement("pet_health_pct")
-        __Data.OvaleData:UnregisterRequirement("target_health_pct")
+        __Requirement.UnregisterRequirement("health_pct")
+        __Requirement.UnregisterRequirement("pet_health_pct")
+        __Requirement.UnregisterRequirement("target_health_pct")
         self:UnregisterEvent("PLAYER_REGEN_ENABLED")
         self:UnregisterEvent("PLAYER_TARGET_CHANGED")
         self:UnregisterEvent("UNIT_HEALTH_FREQUENT")
@@ -46,7 +50,7 @@ local OvaleHealthClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler
         self:UnregisterMessage("Ovale_UnitChanged")
     end,
     COMBAT_LOG_EVENT_UNFILTERED = function(self, event, timestamp, cleuEvent, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, ...)
-        local arg12, arg13, arg14, arg15, arg16, arg17, arg18, arg19, arg20, arg21, arg22, arg23, arg24, arg25 = ...
+        local arg12, arg13, _, arg15, _, _, _, _, _, _, _, _, _ = ...
         self:StartProfiling("OvaleHealth_COMBAT_LOG_EVENT_UNFILTERED")
         local healthUpdate = false
         if CLEU_DAMAGE_EVENT[cleuEvent] then
@@ -228,14 +232,6 @@ local OvaleHealthClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler
         end
         return verified, requirement, index
     end,
-    constructor = function(self)
-        self.health = {}
-        self.maxHealth = {}
-        self.totalDamage = {}
-        self.totalHealing = {}
-        self.firstSeen = {}
-        self.lastUpdated = {}
-    end
 })
 local HealthState = __class(nil, {
     CleanState = function(self)

@@ -15,9 +15,8 @@ class OvaleBossModClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Regis
     EngagedDBM = undefined;
     EngagedBigWigs = undefined;
 
-    OnInitialize() {
-    }
-    OnEnable() {
+    constructor() {
+        super();
         if (_DBM) {
             this.Debug("DBM is loaded");
             hooksecurefunc(_DBM, "StartCombat", (_DBM, mod, delay, event, ...__args) => {

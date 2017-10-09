@@ -44,9 +44,8 @@ class OvaleSteadyFocusClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.R
     duration = INFINITY;
     stacks = 0;
 
-    OnInitialize() {
-    }
-    OnEnable() {
+    constructor() {
+        super();
         if (Ovale.playerClass == "HUNTER") {
             self_playerGUID = Ovale.playerGUID;
             this.RegisterMessage("Ovale_TalentsChanged");

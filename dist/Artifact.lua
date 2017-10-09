@@ -1,8 +1,7 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Artifact", { "LibArtifactData-1.0", "./Debug", "./Localization", "./State", "./Ovale" }, function(__exports, LibArtifactData, __Debug, __Localization, __State, __Ovale)
+__addon.require(__addonName, __addon, "./Artifact", { "LibArtifactData-1.0", "./Debug", "./Localization", "./Ovale" }, function(__exports, LibArtifactData, __Debug, __Localization, __Ovale)
 local tsort = table.sort
 local tinsert = table.insert
-local tremove = table.remove
 local tconcat = table.concat
 local OvaleArtifactBase = __Ovale.Ovale:NewModule("OvaleArtifact", "AceEvent-3.0")
 local OvaleArtifactClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleArtifactBase), {
@@ -30,30 +29,36 @@ local OvaleArtifactClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleArt
         for k, v in pairs(self.debugOptions) do
             __Debug.OvaleDebug.options.args[k] = v
         end
-    end,
-    OnInitialize = function(self)
-    end,
-    OnEnable = function(self)
-        self:RegisterEvent("SPELLS_CHANGED", self.UpdateTraits)
-        LibArtifactData:RegisterCallback(__exports.OvaleArtifact, "ARTIFACT_ADDED", self.UpdateTraits)
-        LibArtifactData:RegisterCallback(__exports.OvaleArtifact, "ARTIFACT_EQUIPPED_CHANGED", self.UpdateTraits)
-        LibArtifactData:RegisterCallback(__exports.OvaleArtifact, "ARTIFACT_ACTIVE_CHANGED", self.UpdateTraits)
-        LibArtifactData:RegisterCallback(__exports.OvaleArtifact, "ARTIFACT_TRAITS_CHANGED", self.UpdateTraits)
+        self:RegisterEvent("SPELLS_CHANGED", function(message)
+            return self:UpdateTraits(message)
+        end)
+        LibArtifactData.RegisterCallback(self, "ARTIFACT_ADDED", function(message)
+            return self:UpdateTraits(message)
+        end)
+        LibArtifactData.RegisterCallback(self, "ARTIFACT_EQUIPPED_CHANGED", function(m)
+            return self:UpdateTraits(m)
+        end)
+        LibArtifactData.RegisterCallback(self, "ARTIFACT_ACTIVE_CHANGED", function(m)
+            return self:UpdateTraits(m)
+        end)
+        LibArtifactData.RegisterCallback(self, "ARTIFACT_TRAITS_CHANGED", function(m)
+            return self:UpdateTraits(m)
+        end)
     end,
     OnDisable = function(self)
-        LibArtifactData:UnregisterCallback(__exports.OvaleArtifact, "ARTIFACT_ADDED")
-        LibArtifactData:UnregisterCallback(__exports.OvaleArtifact, "ARTIFACT_EQUIPPED_CHANGED")
-        LibArtifactData:UnregisterCallback(__exports.OvaleArtifact, "ARTIFACT_ACTIVE_CHANGED")
-        LibArtifactData:UnregisterCallback(__exports.OvaleArtifact, "ARTIFACT_TRAITS_CHANGED")
+        LibArtifactData.UnregisterCallback(self, "ARTIFACT_ADDED")
+        LibArtifactData.UnregisterCallback(self, "ARTIFACT_EQUIPPED_CHANGED")
+        LibArtifactData.UnregisterCallback(self, "ARTIFACT_ACTIVE_CHANGED")
+        LibArtifactData.UnregisterCallback(self, "ARTIFACT_TRAITS_CHANGED")
         self:UnregisterEvent("SPELLS_CHANGED")
     end,
     UpdateTraits = function(self, message)
-        local artifactId, traits = LibArtifactData:GetArtifactTraits()
+        local _, traits = LibArtifactData:GetArtifactTraits()
         self.self_traits = {}
         if  not traits then
             return 
         end
-        for k, v in ipairs(traits) do
+        for _, v in ipairs(traits) do
             self.self_traits[v.spellID] = v
         end
     end,
@@ -76,7 +81,7 @@ local OvaleArtifactClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleArt
         for _, v in ipairs(array) do
             self.output[#self.output + 1] = v
         end
-        return tconcat(self.output, "\\n")
+        return tconcat(self.output, "\n")
     end,
 })
 __exports.OvaleArtifact = OvaleArtifactClass()

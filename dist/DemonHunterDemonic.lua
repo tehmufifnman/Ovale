@@ -14,9 +14,8 @@ local HIDDEN_BUFF_ID = -HAVOC_DEMONIC_TALENT_ID
 local HIDDEN_BUFF_DURATION = INFINITY
 local HIDDEN_BUFF_EXTENDED_BY_DEMONIC = "Extended by Demonic"
 local OvaleDemonHunterDemonicClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleDemonHunterDemonicBase), {
-    OnInitialize = function(self)
-    end,
-    OnEnable = function(self)
+    constructor = function(self)
+        __Debug.OvaleDebug:RegisterDebugging(OvaleDemonHunterDemonicBase).constructor(self)
         self.playerGUID = nil
         self.isDemonHunter = __Ovale.Ovale.playerClass == "DEMONHUNTER" and true or false
         self.isHavoc = false
@@ -47,7 +46,7 @@ local OvaleDemonHunterDemonicClass = __class(__Debug.OvaleDebug:RegisterDebuggin
         end
     end,
     COMBAT_LOG_EVENT_UNFILTERED = function(self, event, timestamp, cleuEvent, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, ...)
-        local arg12, arg13, arg14, arg15, arg16, arg17, arg18, arg19, arg20, arg21, arg22, arg23, arg24, arg25 = ...
+        local arg12, arg13 = ...
         if sourceGUID == self.playerGUID and cleuEvent == "SPELL_CAST_SUCCESS" then
             local spellId, spellName = arg12, arg13
             if HAVOC_EYE_BEAM_SPELL_ID == spellId then

@@ -6,6 +6,7 @@ import { OvaleOptions } from "./Options";
 import { Ovale } from "./Ovale";
 import { OvaleScripts } from "./Scripts";
 import { OvaleVersion } from "./Version";
+import { frame } from "./Frame";
 let OvaleDataBrokerBase = Ovale.NewModule("OvaleDataBroker", "AceEvent-3.0");
 export let OvaleDataBroker: OvaleDataBrokerClass;
 
@@ -64,7 +65,7 @@ interface MenuItem {
     func?: () => void;
 }
 
-const OnClick = function(frame, button) {
+const OnClick = function(fr, button) {
     if (button == "LeftButton") {
         let menu:LuaArray<MenuItem> = {
             1: {
@@ -86,7 +87,7 @@ const OnClick = function(frame, button) {
         self_menuFrame = self_menuFrame || API_CreateFrame("Frame", "OvaleDataBroker_MenuFrame", UIParent, "UIDropDownMenuTemplate");
         API_EasyMenu(menu, self_menuFrame, "cursor", 0, 0, "MENU");
     } else if (button == "MiddleButton") {
-        Ovale.ToggleOptions();
+        frame.ToggleOptions();
     } else if (button == "RightButton") {
         if (API_IsShiftKeyDown()) {
             OvaleDebug.DoTrace(true);
@@ -105,7 +106,8 @@ const OnTooltipShow = function(tooltip: UIGameTooltip) {
 }
 class OvaleDataBrokerClass extends OvaleDataBrokerBase {
     broker = undefined;
-    OnInitialize() {
+    constructor() {
+        super();
         if (LibDataBroker) {
             let broker = {
                 type: "data source",
@@ -119,8 +121,7 @@ class OvaleDataBrokerClass extends OvaleDataBrokerBase {
                 LibDBIcon.Register(Ovale.GetName(), this.broker, Ovale.db.profile.apparence.minimap);
             }
         }
-    }
-    OnEnable() {
+    
         if (this.broker) {
             this.RegisterMessage("Ovale_ProfileChanged", "UpdateIcon");
             this.RegisterMessage("Ovale_ScriptChanged");
@@ -138,7 +139,7 @@ class OvaleDataBrokerClass extends OvaleDataBrokerBase {
         if (LibDBIcon && this.broker) {
             const minimap = Ovale.db.profile.apparence.minimap
             LibDBIcon.Refresh(Ovale.GetName(), minimap);
-            if (minimap.hide) {
+            if (minimap && minimap.hide) {
                 LibDBIcon.Hide(Ovale.GetName());
             } else {
                 LibDBIcon.Show(Ovale.GetName());

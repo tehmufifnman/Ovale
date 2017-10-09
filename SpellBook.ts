@@ -1,12 +1,8 @@
 import { L } from "./Localization";
 import { OvaleDebug } from "./Debug";
 import { OvaleProfiler } from "./Profiler";
-import { OvaleCooldown, cooldownState } from "./Cooldown";
-import { OvaleData, dataState } from "./Data";
-import { OvalePower, powerState } from "./Power";
-import { OvaleRunes, runesState } from "./Runes";
-import { OvaleState, StateModule, baseState } from "./State";
 import { Ovale } from "./Ovale";
+import { RegisterRequirement, UnregisterRequirement } from "./Requirement";
 
 export let OvaleSpellBook:OvaleSpellBookClass;
 
@@ -18,7 +14,6 @@ let tinsert = table.insert;
 let _tonumber = tonumber;
 let _tostring = tostring;
 let tsort = table.sort;
-let _type = type;
 let _wipe = wipe;
 let _gsub = string.gsub;
 let API_GetActiveSpecGroup = GetActiveSpecGroup;
@@ -35,7 +30,6 @@ let API_HasPetSpells = HasPetSpells;
 let API_IsHarmfulSpell = IsHarmfulSpell;
 let API_IsHelpfulSpell = IsHelpfulSpell;
 let API_IsSpellInRange = IsSpellInRange;
-let API_IsUsableItem = IsUsableItem;
 let API_IsUsableSpell = IsUsableSpell;
 let API_UnitIsFriend = UnitIsFriend;
 let _BOOKTYPE_PET = BOOKTYPE_PET;
@@ -93,14 +87,15 @@ const OutputTableValues = function(output, tbl) {
         tinsert(array, `${_tostring(v)}: ${_tostring(k)}`);
     }
     tsort(array);
-    for (const [_, v] of _ipairs(array)) {
+    for (const [, v] of _ipairs(array)) {
         output[lualength(output) + 1] = v;
     }
 }
 
 let output = {}
 
-class OvaleSpellBookClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.RegisterDebugging(Ovale.NewModule("OvaleSpellBook", "AceEvent-3.0"))) {
+const OvaleSpellBookBase = OvaleProfiler.RegisterProfiling(OvaleDebug.RegisterDebugging(Ovale.NewModule("OvaleSpellBook", "AceEvent-3.0")))
+class OvaleSpellBookClass extends OvaleSpellBookBase {
     ready = false;
     spell = {    }
     spellbookId = {
@@ -116,21 +111,20 @@ class OvaleSpellBookClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Reg
     talentPoints = {    }
 
     
-    OnInitialize() {
-    }
-    OnEnable() {
+    constructor() {
+        super();
         this.RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED", "Update");
         this.RegisterEvent("CHARACTER_POINTS_CHANGED", "UpdateTalents");
         this.RegisterEvent("PLAYER_ENTERING_WORLD", "Update");
         this.RegisterEvent("PLAYER_TALENT_UPDATE", "UpdateTalents");
         this.RegisterEvent("SPELLS_CHANGED", "UpdateSpells");
         this.RegisterEvent("UNIT_PET");
-        OvaleData.RegisterRequirement("spellcount_min", "RequireSpellCountHandler", this);
-        OvaleData.RegisterRequirement("spellcount_max", "RequireSpellCountHandler", this);
+        RegisterRequirement("spellcount_min", "RequireSpellCountHandler", this);
+        RegisterRequirement("spellcount_max", "RequireSpellCountHandler", this);
     }
     OnDisable() {
-        OvaleData.UnregisterRequirement("spellcount_max");
-        OvaleData.UnregisterRequirement("spellcount_min");
+        UnregisterRequirement("spellcount_max");
+        UnregisterRequirement("spellcount_min");
         this.UnregisterEvent("ACTIVE_TALENT_GROUP_CHANGED");
         this.UnregisterEvent("CHARACTER_POINTS_CHANGED");
         this.UnregisterEvent("PLAYER_ENTERING_WORLD");
@@ -155,7 +149,7 @@ class OvaleSpellBookClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Reg
         let activeTalentGroup = API_GetActiveSpecGroup();
         for (let i = 1; i <= _MAX_TALENT_TIERS; i += 1) {
             for (let j = 1; j <= _NUM_TALENT_COLUMNS; j += 1) {
-                let [talentId, name, _1, selected, _2, _3, _4, _5, _6, _7, selectedByLegendary] = API_GetTalentInfo(i, j, activeTalentGroup);
+                let [talentId, name,, selected,, , , ,,, selectedByLegendary] = API_GetTalentInfo(i, j, activeTalentGroup);
                 if (talentId) {
                     let combinedSelected = selected || selectedByLegendary;
                     let index = 3 * (i - 1) + j;
@@ -171,7 +165,7 @@ class OvaleSpellBookClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Reg
                 }
             }
         }
-        Ovale.refreshNeeded[Ovale.playerGUID] = true;
+        Ovale.needRefresh();
         this.SendMessage("Ovale_TalentsChanged");
     }
     UpdateSpells() {
@@ -182,16 +176,16 @@ class OvaleSpellBookClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Reg
         _wipe(this.isHelpful);
         _wipe(this.texture);
         for (let tab = 1; tab <= 2; tab += 1) {
-            let [name, _, offset, numSpells] = API_GetSpellTabInfo(tab);
+            let [name, , offset, numSpells] = API_GetSpellTabInfo(tab);
             if (name) {
                 this.ScanSpellBook(_BOOKTYPE_SPELL, numSpells, offset);
             }
         }
-        let [numPetSpells, petToken] = API_HasPetSpells();
+        let [numPetSpells, ] = API_HasPetSpells();
         if (numPetSpells) {
             this.ScanSpellBook(_BOOKTYPE_PET, numPetSpells);
         }
-        Ovale.refreshNeeded[Ovale.playerGUID] = true;
+        Ovale.needRefresh();
         this.SendMessage("Ovale_SpellsChanged");
     }
     ScanSpellBook(bookType, numSpells, offset?) {
@@ -202,7 +196,7 @@ class OvaleSpellBookClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Reg
             if (skillType == "SPELL" || skillType == "PETACTION") {
                 let spellLink = API_GetSpellLink(index, bookType);
                 if (spellLink) {
-                    let [_1, _2, linkData, spellName] = ParseHyperlink(spellLink);
+                    let [, , linkData, spellName] = ParseHyperlink(spellLink);
                     let id = _tonumber(linkData);
                     this.Debug("    %s (%d) is at offset %d (%s).", spellName, id, index, _gsub(spellLink, "|", "_"));
                     this.spell[id] = spellName;
@@ -221,7 +215,7 @@ class OvaleSpellBookClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Reg
                 }
             } else if (skillType == "FLYOUT") {
                 let flyoutId = spellId;
-                let [_1, _2, numSlots, isKnown] = API_GetFlyoutInfo(flyoutId);
+                let [, , numSlots, isKnown] = API_GetFlyoutInfo(flyoutId);
                 if (numSlots > 0 && isKnown) {
                     for (let flyoutIndex = 1; flyoutIndex <= numSlots; flyoutIndex += 1) {
                         let [id, overrideId, isKnown, spellName] = API_GetFlyoutSlotInfo(flyoutId, flyoutIndex);
@@ -251,7 +245,7 @@ class OvaleSpellBookClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Reg
     }
     GetCastTime(spellId) {
         if (spellId) {
-            let [name, _1, _2, castTime] = this.GetSpellInfo(spellId);
+            let [name, , , castTime] = this.GetSpellInfo(spellId);
             if (name) {
                 if (castTime) {
                     castTime = castTime / 1000;
@@ -335,7 +329,7 @@ class OvaleSpellBookClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Reg
         }
     }
     IsPetSpell(spellId) {
-        let [index, bookType] = this.GetSpellBookIndex(spellId);
+        let [, bookType] = this.GetSpellBookIndex(spellId);
         return bookType == _BOOKTYPE_PET;
     }
     IsSpellInRange(spellId, unitId) {
@@ -365,7 +359,7 @@ class OvaleSpellBookClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Reg
         _wipe(output);
         OutputTableValues(output, this.spell);
         let total = 0;
-        for (const [_] of _pairs(this.spell)) {
+        for (const [] of _pairs(this.spell)) {
             total = total + 1;
         }
         output[lualength(output) + 1] = `Total spells: ${total}`;
@@ -394,104 +388,5 @@ class OvaleSpellBookClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Reg
         return [verified, requirement, index];
     }
 }
-
-class SpellBookState implements StateModule {
-    CleanState(): void {
-    }
-    InitializeState(): void {
-    }
-    ResetState(): void {
-    }
-
-    IsUsableItem(itemId, atTime?) {
-        OvaleSpellBook.StartProfiling("OvaleSpellBook_state_IsUsableItem");
-        let isUsable = API_IsUsableItem(itemId);
-        let ii = OvaleData.ItemInfo(itemId);
-        if (ii) {
-            if (isUsable) {
-                let unusable = dataState.GetItemInfoProperty(itemId, atTime, "unusable");
-                if (unusable && unusable > 0) {
-                    OvaleSpellBook.Log("Item ID '%s' is flagged as unusable.", itemId);
-                    isUsable = false;
-                }
-            }
-        }
-        OvaleSpellBook.StopProfiling("OvaleSpellBook_state_IsUsableItem");
-        return isUsable;
-    }
-    IsUsableSpell(spellId, atTime, targetGUID) {
-        OvaleSpellBook.StartProfiling("OvaleSpellBook_state_IsUsableSpell");
-        if (_type(atTime) == "string" && !targetGUID) {
-            [atTime, targetGUID] = [undefined, atTime];
-        }
-        atTime = atTime || baseState.currentTime;
-        let isUsable = OvaleSpellBook.IsKnownSpell(spellId);
-        let noMana = false;
-        let si = OvaleData.spellInfo[spellId];
-        if (si) {
-            if (isUsable) {
-                let unusable = dataState.GetSpellInfoProperty(spellId, atTime, "unusable", targetGUID);
-                if (unusable && unusable > 0) {
-                    OvaleSpellBook.Log("Spell ID '%s' is flagged as unusable.", spellId);
-                    isUsable = false;
-                }
-            }
-            if (isUsable) {
-                let requirement;
-                [isUsable, requirement] = dataState.CheckSpellInfo(spellId, atTime, targetGUID);
-                if (!isUsable) {
-                    if (OvalePower.PRIMARY_POWER[requirement]) {
-                        noMana = true;
-                    }
-                    if (noMana) {
-                        OvaleSpellBook.Log("Spell ID '%s' does not have enough %s.", spellId, requirement);
-                    } else {
-                        OvaleSpellBook.Log("Spell ID '%s' failed '%s' requirements.", spellId, requirement);
-                    }
-                }
-            }
-        } else {
-            [isUsable, noMana] = OvaleSpellBook.IsUsableSpell(spellId);
-        }
-        OvaleSpellBook.StopProfiling("OvaleSpellBook_state_IsUsableSpell");
-        return [isUsable, noMana];
-    }
-    GetTimeToSpell(spellId, atTime, targetGUID, extraPower?) {
-        if (_type(atTime) == "string" && !targetGUID) {
-            [atTime, targetGUID] = [undefined, atTime];
-        }
-        atTime = atTime || baseState.currentTime;
-        let timeToSpell = 0;
-        {
-            let [start, duration] = cooldownState.GetSpellCooldown(spellId);
-            let seconds = (duration > 0) && (start + duration - atTime) || 0;
-            if (timeToSpell < seconds) {
-                timeToSpell = seconds;
-            }
-        }
-        {
-            let seconds = powerState.TimeToPower(spellId, atTime, targetGUID, undefined, extraPower);
-            if (timeToSpell < seconds) {
-                timeToSpell = seconds;
-            }
-        }
-        {
-            let runes = dataState.GetSpellInfoProperty(spellId, atTime, "runes", targetGUID);
-            if (runes) {
-                let seconds = runesState.GetRunesCooldown(atTime, runes);
-                if (timeToSpell < seconds) {
-                    timeToSpell = seconds;
-                }
-            }
-        }
-        return timeToSpell;
-    }
-    RequireSpellCountHandler(spellId, atTime, requirement, tokens, index, targetGUID) {
-        return OvaleSpellBook.RequireSpellCountHandler(spellId, atTime, requirement, tokens, index, targetGUID);
-    }
-}
-
-export const spellBookState = new SpellBookState();
-OvaleState.RegisterState(spellBookState);
 
 OvaleSpellBook = new OvaleSpellBookClass();

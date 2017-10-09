@@ -2,24 +2,29 @@ local __addonName, __addon = ...
 __addon.require(__addonName, __addon, "./Queue", { "./Ovale" }, function(__exports, __Ovale)
 local BackToFrontIterator = __class(nil, {
     constructor = function(self, invariant, control)
+        self.invariant = invariant
+        self.control = control
     end,
     Next = function(self)
         self.control = self.control - 1
         self.value = self.invariant[self.control]
-        return self.control <= self.invariant.last
+        return self.control >= self.invariant.first
     end,
 })
 local FrontToBackIterator = __class(nil, {
     constructor = function(self, invariant, control)
+        self.invariant = invariant
+        self.control = control
     end,
     Next = function(self)
         self.control = self.control + 1
         self.value = self.invariant[self.control]
-        return self.control >= self.invariant.first
+        return self.control <= self.invariant.last
     end,
 })
 __exports.OvaleDequeue = __class(nil, {
     constructor = function(self, name)
+        self.name = name
         self.first = 0
         self.last = -1
     end,

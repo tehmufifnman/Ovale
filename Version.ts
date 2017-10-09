@@ -50,7 +50,8 @@ class OvaleVersionClass extends OvaleDebug.RegisterDebugging(OvaleVersionBase) {
     version = (OVALE_VERSION == REPOSITORY_KEYWORD) && "development version" || OVALE_VERSION;
     warned = false;
     
-    OnEnable() {
+    constructor() {
+        super();
         this.RegisterComm(MSG_PREFIX);
     }
     OnCommReceived(prefix, message, channel, sender) {
@@ -94,7 +95,7 @@ class OvaleVersionClass extends OvaleDebug.RegisterDebugging(OvaleVersionBase) {
                 tinsert(self_printTable, format(">>> %s is using Ovale %s", sender, version));
             }
             tsort(self_printTable);
-            for (const [_, v] of _ipairs(self_printTable)) {
+            for (const [, v] of _ipairs(self_printTable)) {
                 this.Print(v);
             }
         } else {

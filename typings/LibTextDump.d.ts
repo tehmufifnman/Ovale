@@ -6,7 +6,7 @@ interface TextDump{
 }
 
 interface LibTextDump {
-    New: (name: string, width: number, height:number) => TextDump;
+    New(name: string, width: number, height:number): TextDump;
 }
 
 declare module "LibTextDump-1.0" {

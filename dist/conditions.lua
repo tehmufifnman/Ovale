@@ -1,12 +1,8 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./conditions", { "LibBabble-CreatureType-3.0", "LibRangeCheck-2.0", "./BestAction", "./Compile", "./Condition", "./Cooldown", "./DamageTaken", "./Data", "./Equipment", "./Future", "./GUID", "./Health", "./Power", "./Runes", "./SpellBook", "./SpellDamage", "./Artifact", "./BossMod", "./Ovale", "./State", "./PaperDoll", "./Aura", "./ComboPoints", "./WildImps", "./Enemies", "./Stance", "./Totem", "./DemonHunterSigils", "./DemonHunterSoulFragments" }, function(__exports, LibBabbleCreatureType, LibRangeCheck, __BestAction, __Compile, __Condition, __Cooldown, __DamageTaken, __Data, __Equipment, __Future, __GUID, __Health, __Power, __Runes, __SpellBook, __SpellDamage, __Artifact, __BossMod, __Ovale, __State, __PaperDoll, __Aura, __ComboPoints, __WildImps, __Enemies, __Stance, __Totem, __DemonHunterSigils, __DemonHunterSoulFragments)
-local floor = math.floor
+__addon.require(__addonName, __addon, "./conditions", { "LibBabble-CreatureType-3.0", "LibRangeCheck-2.0", "./BestAction", "./Compile", "./Condition", "./CooldownState", "./DamageTaken", "./Data", "./Equipment", "./Future", "./GUID", "./Health", "./Power", "./Runes", "./SpellBook", "./SpellDamage", "./Artifact", "./BossMod", "./Ovale", "./State", "./PaperDoll", "./Aura", "./ComboPoints", "./WildImps", "./Enemies", "./Totem", "./DemonHunterSigils", "./DemonHunterSoulFragments", "./Frame", "./LastSpell", "./DataState", "./StanceState", "./SpellBookState", "./FutureState" }, function(__exports, LibBabbleCreatureType, LibRangeCheck, __BestAction, __Compile, __Condition, __CooldownState, __DamageTaken, __Data, __Equipment, __Future, __GUID, __Health, __Power, __Runes, __SpellBook, __SpellDamage, __Artifact, __BossMod, __Ovale, __State, __PaperDoll, __Aura, __ComboPoints, __WildImps, __Enemies, __Totem, __DemonHunterSigils, __DemonHunterSoulFragments, __Frame, __LastSpell, __DataState, __StanceState, __SpellBookState, __FutureState)
 local _ipairs = ipairs
 local _pairs = pairs
-local _tonumber = tonumber
-local _tostring = tostring
 local _type = type
-local _wipe = wipe
 local API_GetBuildInfo = GetBuildInfo
 local API_GetItemCooldown = GetItemCooldown
 local API_GetItemCount = GetItemCount
@@ -16,7 +12,6 @@ local API_GetTrackingInfo = GetTrackingInfo
 local API_GetUnitSpeed = GetUnitSpeed
 local API_GetWeaponEnchantInfo = GetWeaponEnchantInfo
 local API_HasFullControl = HasFullControl
-local API_IsSpellOverlayed = IsSpellOverlayed
 local API_IsStealthed = IsStealthed
 local API_UnitCastingInfo = UnitCastingInfo
 local API_UnitChannelInfo = UnitChannelInfo
@@ -53,7 +48,7 @@ local ComputeParameter = function(spellId, paramName, state, atTime)
         local name = si[paramName]
         local node = __Compile.OvaleCompile:GetFunctionNode(name)
         if node then
-            local timeSpan, element = __BestAction.OvaleBestAction:Compute(node.child[1], state, atTime)
+            local _, element = __BestAction.OvaleBestAction:Compute(node.child[1], state, atTime)
             if element and element.type == "value" then
                 local value = element.value + (state.currentTime - element.origin) * element.rate
                 return value
@@ -71,15 +66,6 @@ local GetHastedTime = function(seconds, haste, state)
     return seconds / multiplier
 end
 
-do
-    local AfterWhiteHit = function(positionalParams, namedParams, state, atTime)
-        local seconds, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local value = 0
-        __Ovale.Ovale:OneTimeMessage("Warning: 'AfterWhiteHit()' is not implemented.")
-        return __Condition.TestValue(0, INFINITY, value, state.currentTime, -1, comparator, _tonumber(limit))
-    end
-
-end
 do
     local ArmorSetBonus = function(positionalParams, namedParams, state, atTime)
         local armorSet, count = positionalParams[1], positionalParams[2]
@@ -120,7 +106,6 @@ do
         local value
         if (__Data.OvaleData.buffSpellList[auraId]) then
             local spellList = __Data.OvaleData.buffSpellList[auraId]
-            local count = 0
             for id in _pairs(spellList) do
                 value = __Data.OvaleData:GetBaseDuration(id, state)
                 if value ~= math.huge then
@@ -202,7 +187,6 @@ do
         local spellList = __Data.OvaleData.buffSpellList[auraId]
         local count = 0
         for id in _pairs(spellList) do
-            local si = __Data.OvaleData.spellInfo[id]
             local aura = __Aura.auraState:GetAura(target, id, filter, mine)
             if __Aura.auraState:IsActiveAura(aura, atTime) then
                 count = count + 1
@@ -240,7 +224,7 @@ do
         local _, filter, mine = __Condition.ParseCondition(positionalParams, namedParams, state)
         local excludeUnitId = (namedParams.excludeTarget == 1) and state.defaultTarget or nil
         local fractional = (namedParams.count == 0) and true or false
-        local count, stacks, startChangeCount, endingChangeCount, startFirst, endingLast = __Aura.auraState:AuraCount(auraId, filter, mine, namedParams.stacks, atTime, excludeUnitId)
+        local count, _, startChangeCount, endingChangeCount, startFirst, endingLast = __Aura.auraState:AuraCount(auraId, filter, mine, namedParams.stacks, atTime, excludeUnitId)
         if count > 0 and startChangeCount < INFINITY and fractional then
             local origin = startChangeCount
             local rate = -1 / (endingChangeCount - startChangeCount)
@@ -259,7 +243,7 @@ do
         local target, filter, mine = __Condition.ParseCondition(positionalParams, namedParams, state)
         local aura = __Aura.auraState:GetAura(target, auraId, filter, mine)
         if aura then
-            local gain, start, ending, direction = aura.gain, aura.start, aura.ending, aura.direction
+            local gain, _, _, direction = aura.gain, aura.start, aura.ending, aura.direction
             return __Condition.TestValue(gain, INFINITY, direction, gain, 0, comparator, limit)
         end
         return __Condition.Compare(0, comparator, limit)
@@ -290,7 +274,7 @@ do
         local target, filter, mine = __Condition.ParseCondition(positionalParams, namedParams, state)
         local aura = __Aura.auraState:GetAura(target, auraId, filter, mine)
         if aura then
-            local gain, start, ending = aura.gain, aura.start, aura.ending
+            local gain, _, ending = aura.gain, aura.start, aura.ending
             seconds = GetHastedTime(seconds, namedParams.haste, state)
             if ending - seconds <= gain then
                 return gain, INFINITY
@@ -308,7 +292,7 @@ do
         local target, filter, mine = __Condition.ParseCondition(positionalParams, namedParams, state)
         local aura = __Aura.auraState:GetAura(target, auraId, filter, mine)
         if aura then
-            local gain, start, ending = aura.gain, aura.start, aura.ending
+            local gain, _, ending = aura.gain, aura.start, aura.ending
             seconds = GetHastedTime(seconds, namedParams.haste, state)
             if ending - seconds <= gain then
                 return nil
@@ -359,7 +343,7 @@ do
         local target, filter, mine = __Condition.ParseCondition(positionalParams, namedParams, state)
         local aura = __Aura.auraState:GetAura(target, auraId, filter, mine)
         if aura then
-            local gain, start, ending = aura.gain, aura.start, aura.ending
+            local gain, _, ending = aura.gain, aura.start, aura.ending
             return __Condition.TestValue(gain, INFINITY, 0, ending, -1, comparator, limit)
         end
         return __Condition.Compare(0, comparator, limit)
@@ -375,7 +359,7 @@ do
         local auraId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
         local _, filter, mine = __Condition.ParseCondition(positionalParams, namedParams, state)
         local excludeUnitId = (namedParams.excludeTarget == 1) and state.defaultTarget or nil
-        local count, stacks, startChangeCount, endingChangeCount, startFirst, endingLast = __Aura.auraState:AuraCount(auraId, filter, mine, namedParams.stacks, atTime, excludeUnitId)
+        local count, _, _, _, startFirst, endingLast = __Aura.auraState:AuraCount(auraId, filter, mine, namedParams.stacks, atTime, excludeUnitId)
         if count > 0 then
             local start, ending = startFirst, endingLast
             return __Condition.TestValue(start, INFINITY, 0, ending, -1, comparator, limit)
@@ -409,7 +393,7 @@ do
         local auraId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
         local _, filter, mine = __Condition.ParseCondition(positionalParams, namedParams, state)
         local excludeUnitId = (namedParams.excludeTarget == 1) and state.defaultTarget or nil
-        local count, stacks, startChangeCount, endingChangeCount, startFirst, endingLast = __Aura.auraState:AuraCount(auraId, filter, mine, 1, atTime, excludeUnitId)
+        local count, stacks, _, endingChangeCount, startFirst = __Aura.auraState:AuraCount(auraId, filter, mine, 1, atTime, excludeUnitId)
         if count > 0 then
             local start, ending = startFirst, endingChangeCount
             return __Condition.TestValue(start, ending, stacks, start, 0, comparator, limit)
@@ -431,7 +415,7 @@ end
 do
     local CanCast = function(positionalParams, namedParams, state, atTime)
         local spellId = positionalParams[1]
-        local start, duration = __Cooldown.cooldownState:GetSpellCooldown(spellId)
+        local start, duration = __CooldownState.cooldownState:GetSpellCooldown(spellId)
         return start + duration, INFINITY
     end
 
@@ -447,7 +431,7 @@ do
     local ExecuteTime = function(positionalParams, namedParams, state, atTime)
         local spellId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
         local castTime = __SpellBook.OvaleSpellBook:GetCastTime(spellId) or 0
-        local gcd = __Cooldown.cooldownState:GetGCD()
+        local gcd = __FutureState.futureState:GetGCD()
         local t = (castTime > gcd) and castTime or gcd
         return __Condition.Compare(t, comparator, limit)
     end
@@ -461,9 +445,9 @@ do
         local target = __Condition.ParseCondition(positionalParams, namedParams, state)
         local start, ending, castSpellId, castSpellName
         if target == "player" then
-            start = __Future.futureState.startCast
-            ending = __Future.futureState.endCast
-            castSpellId = __Future.futureState.currentSpellId
+            start = __FutureState.futureState.startCast
+            ending = __FutureState.futureState.endCast
+            castSpellId = __FutureState.futureState.currentSpellId
             castSpellName = __SpellBook.OvaleSpellBook:GetSpellName(castSpellId)
         else
             local spellName, _1, _2, _3, startTime, endTime = API_UnitCastingInfo(target)
@@ -503,7 +487,7 @@ end
 do
     local CheckBoxOff = function(positionalParams, namedParams, state, atTime)
         for _, id in _ipairs(positionalParams) do
-            if __Ovale.Ovale.IsChecked(id) then
+            if __Frame.frame:IsChecked(id) then
                 return nil
             end
         end
@@ -512,7 +496,7 @@ do
 
     local CheckBoxOn = function(positionalParams, namedParams, state, atTime)
         for _, id in _ipairs(positionalParams) do
-            if  not __Ovale.Ovale.IsChecked(id) then
+            if  not __Frame.frame:IsChecked(id) then
                 return nil
             end
         end
@@ -574,7 +558,7 @@ end
 do
     local Counter = function(positionalParams, namedParams, state, atTime)
         local counter, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local value = __Future.futureState:GetCounterValue(counter)
+        local value = __FutureState.futureState:GetCounterValue(counter)
         return __Condition.Compare(value, comparator, limit)
     end
 
@@ -713,7 +697,7 @@ do
 
     local DiseasesRemaining = function(positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local target, filter, mine = __Condition.ParseCondition(positionalParams, namedParams, state)
+        local target, _ = __Condition.ParseCondition(positionalParams, namedParams, state)
         local talented, npAura, bpAura, ffAura = GetDiseases(target, state)
         local aura
         if talented and __Aura.auraState:IsActiveAura(npAura, atTime) then
@@ -722,14 +706,14 @@ do
             aura = (bpAura.ending < ffAura.ending) and bpAura or ffAura
         end
         if aura then
-            local gain, start, ending = aura.gain, aura.start, aura.ending
+            local gain, _, ending = aura.gain, aura.start, aura.ending
             return __Condition.TestValue(gain, INFINITY, 0, ending, -1, comparator, limit)
         end
         return __Condition.Compare(0, comparator, limit)
     end
 
     local DiseasesTicking = function(positionalParams, namedParams, state, atTime)
-        local target, filter, mine = __Condition.ParseCondition(positionalParams, namedParams, state)
+        local target, _ = __Condition.ParseCondition(positionalParams, namedParams, state)
         local talented, npAura, bpAura, ffAura = GetDiseases(target, state)
         local gain, start, ending
         if talented and npAura then
@@ -746,7 +730,7 @@ do
     end
 
     local DiseasesAnyTicking = function(positionalParams, namedParams, state, atTime)
-        local target, filter, mine = __Condition.ParseCondition(positionalParams, namedParams, state)
+        local target, _ = __Condition.ParseCondition(positionalParams, namedParams, state)
         local talented, npAura, bpAura, ffAura = GetDiseases(target, state)
         local aura
         if talented and npAura then
@@ -758,7 +742,7 @@ do
             end
         end
         if aura then
-            local gain, start, ending = aura.gain, aura.start, aura.ending
+            local gain, _, ending = aura.gain, aura.start, aura.ending
             if ending > gain then
                 return gain, ending
             end
@@ -858,7 +842,7 @@ do
         local regenRate = __Power.powerState.powerRate.focus
         local power = 0
         local castTime = __SpellBook.OvaleSpellBook:GetCastTime(spellId) or 0
-        local gcd = __Cooldown.cooldownState:GetGCD()
+        local gcd = __FutureState.futureState:GetGCD()
         local castSeconds = (castTime > gcd) and castTime or gcd
         power = power + regenRate * castSeconds
         local aura = __Aura.auraState:GetAura("player", STEADY_FOCUS, "HELPFUL", true)
@@ -879,7 +863,7 @@ end
 do
     local GCD = function(positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
-        local value = __Cooldown.cooldownState:GetGCD()
+        local value = __FutureState.futureState:GetGCD()
         return __Condition.Compare(value, comparator, limit)
     end
 
@@ -889,9 +873,9 @@ do
     local GCDRemaining = function(positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
         local target = __Condition.ParseCondition(positionalParams, namedParams, state, "target")
-        if __Future.futureState.lastSpellId then
-            local duration = __Cooldown.cooldownState:GetGCD(__Future.futureState.lastSpellId, atTime, __GUID.OvaleGUID:UnitGUID(target))
-            local spellcast = __Future.OvaleFuture.LastInFlightSpell()
+        if __FutureState.futureState.lastSpellId then
+            local duration = __FutureState.futureState:GetGCD(__FutureState.futureState.lastSpellId, atTime, __GUID.OvaleGUID:UnitGUID(target))
+            local spellcast = __LastSpell.lastSpell:LastInFlightSpell()
             local start = (spellcast and spellcast.start) or 0
             local ending = start + duration
             if atTime < ending then
@@ -923,7 +907,7 @@ do
 end
 do
     local Glyph = function(positionalParams, namedParams, state, atTime)
-        local stub, yesno = positionalParams[1], positionalParams[2]
+        local _, yesno = positionalParams[1], positionalParams[2]
         return __Condition.TestBoolean(false, yesno)
     end
 
@@ -1122,7 +1106,7 @@ end
 do
     local InFlightToTarget = function(positionalParams, namedParams, state, atTime)
         local spellId, yesno = positionalParams[1], positionalParams[2]
-        local boolean = (__Future.futureState.currentSpellId == spellId) or __Future.OvaleFuture:InFlight(spellId)
+        local boolean = (__FutureState.futureState.currentSpellId == spellId) or __Future.OvaleFuture:InFlight(spellId)
         return __Condition.TestBoolean(boolean, yesno)
     end
 
@@ -1160,7 +1144,6 @@ do
 end
 do
     local IsEnraged = function(positionalParams, namedParams, state, atTime)
-        local yesno = positionalParams[1]
         local target = __Condition.ParseCondition(positionalParams, namedParams, state)
         return __Aura.auraState:GetAuraWithProperty(target, "enrage", "HELPFUL", atTime)
     end
@@ -1201,7 +1184,7 @@ do
     local IsInterruptible = function(positionalParams, namedParams, state, atTime)
         local yesno = positionalParams[1]
         local target = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local name, _1, _2, _3, _4, _5, _6, _7, notInterruptible = API_UnitCastingInfo(target)
+        local name, _1, _2, _3, _4, _5, _6, _, notInterruptible = API_UnitCastingInfo(target)
         if  not name then
             name, _1, _2, _3, _4, _5, _6, notInterruptible = API_UnitChannelInfo(target)
         end
@@ -1307,7 +1290,7 @@ end
 do
     local List = function(positionalParams, namedParams, state, atTime)
         local name, value = positionalParams[1], positionalParams[2]
-        if name and __Ovale.Ovale.GetListValue(name) == value then
+        if name and __Frame.frame:GetListValue(name) == value then
             return 0, INFINITY
         end
         return nil
@@ -1332,7 +1315,7 @@ end
 do
     local PTR = function(positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
-        local _1, _2, _3, uiVersion = API_GetBuildInfo()
+        local _, _, _, uiVersion = API_GetBuildInfo()
         local value = (uiVersion > 70200) and 1 or 0
         return __Condition.Compare(value, comparator, limit)
     end
@@ -1343,7 +1326,7 @@ do
     local PersistentMultiplier = function(positionalParams, namedParams, state, atTime)
         local spellId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
         local target = __Condition.ParseCondition(positionalParams, namedParams, state, "target")
-        local value = __Future.futureState:GetDamageMultiplier(spellId, __GUID.OvaleGUID:UnitGUID(target), atTime)
+        local value = __FutureState.futureState:GetDamageMultiplier(spellId, __GUID.OvaleGUID:UnitGUID(target), atTime)
         return __Condition.Compare(value, comparator, limit)
     end
 
@@ -1745,9 +1728,9 @@ do
         local count = namedParams.count
         local boolean
         if count and count > 1 then
-            boolean = (spellId == __Future.futureState.lastGCDSpellIds[#__Future.futureState.lastGCDSpellIds - count + 2])
+            boolean = (spellId == __FutureState.futureState.lastGCDSpellIds[#__FutureState.futureState.lastGCDSpellIds - count + 2])
         else
-            boolean = (spellId == __Future.futureState.lastGCDSpellId)
+            boolean = (spellId == __FutureState.futureState.lastGCDSpellId)
         end
         return __Condition.TestBoolean(boolean, yesno)
     end
@@ -1757,7 +1740,7 @@ end
 do
     local PreviousOffGCDSpell = function(positionalParams, namedParams, state, atTime)
         local spellId, yesno = positionalParams[1], positionalParams[2]
-        local boolean = (spellId == __Future.futureState.lastOffGCDSpellId)
+        local boolean = (spellId == __FutureState.futureState.lastOffGCDSpellId)
         return __Condition.TestBoolean(boolean, yesno)
     end
 
@@ -1766,7 +1749,7 @@ end
 do
     local PreviousSpell = function(positionalParams, namedParams, state, atTime)
         local spellId, yesno = positionalParams[1], positionalParams[2]
-        local boolean = (spellId == __Future.futureState.lastSpellId)
+        local boolean = (spellId == __FutureState.futureState.lastSpellId)
         return __Condition.TestBoolean(boolean, yesno)
     end
 
@@ -1813,7 +1796,7 @@ do
     local RemainingCastTime = function(positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
         local target = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local _1, _2, _3, _4, startTime, endTime = API_UnitCastingInfo(target)
+        local _, _, _, _, startTime, endTime = API_UnitCastingInfo(target)
         if startTime and endTime then
             startTime = startTime / 1000
             endTime = endTime / 1000
@@ -1976,7 +1959,7 @@ end
 do
     local SpellChargeCooldown = function(positionalParams, namedParams, state, atTime)
         local spellId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local charges, maxCharges, start, duration = __Cooldown.cooldownState:GetSpellCharges(spellId, atTime)
+        local charges, maxCharges, start, duration = __CooldownState.cooldownState:GetSpellCharges(spellId, atTime)
         if charges and charges < maxCharges then
             return __Condition.TestValue(start, start + duration, duration, start, -1, comparator, limit)
         end
@@ -1988,7 +1971,7 @@ end
 do
     local SpellCharges = function(positionalParams, namedParams, state, atTime)
         local spellId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local charges, maxCharges, start, duration = __Cooldown.cooldownState:GetSpellCharges(spellId, atTime)
+        local charges, maxCharges, start, duration = __CooldownState.cooldownState:GetSpellCharges(spellId, atTime)
         if  not charges then
             return nil
         end
@@ -2013,8 +1996,8 @@ do
             if __Condition.OvaleCondition.COMPARATOR[spellId] then
                 comparator, limit = spellId, positionalParams[i + 1]
                 break
-            elseif  not usable or __SpellBook.spellBookState:IsUsableSpell(spellId, atTime, __GUID.OvaleGUID:UnitGUID(target)) then
-                local start, duration = __Cooldown.cooldownState:GetSpellCooldown(spellId)
+            elseif  not usable or __SpellBookState.spellBookState:IsUsableSpell(spellId, atTime, __GUID.OvaleGUID:UnitGUID(target)) then
+                local start, duration = __CooldownState.cooldownState:GetSpellCooldown(spellId)
                 local t = 0
                 if start > 0 and duration > 0 then
                     t = start + duration
@@ -2038,7 +2021,7 @@ do
     local SpellCooldownDuration = function(positionalParams, namedParams, state, atTime)
         local spellId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
         local target = __Condition.ParseCondition(positionalParams, namedParams, state, "target")
-        local duration = __Cooldown.cooldownState:GetSpellCooldownDuration(spellId, atTime, target)
+        local duration = __CooldownState.cooldownState:GetSpellCooldownDuration(spellId, atTime, target)
         return __Condition.Compare(duration, comparator, limit)
     end
 
@@ -2048,8 +2031,8 @@ do
     local SpellRechargeDuration = function(positionalParams, namedParams, state, atTime)
         local spellId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
         local target = __Condition.ParseCondition(positionalParams, namedParams, state, "target")
-        local cd = __Cooldown.cooldownState:GetCD(spellId)
-        local duration = cd.chargeDuration or __Cooldown.cooldownState:GetSpellCooldownDuration(spellId, atTime, target)
+        local cd = __CooldownState.cooldownState:GetCD(spellId)
+        local duration = cd.chargeDuration or __CooldownState.cooldownState:GetSpellCooldownDuration(spellId, atTime, target)
         return __Condition.Compare(duration, comparator, limit)
     end
 
@@ -2073,7 +2056,7 @@ end
 do
     local SpellInfoProperty = function(positionalParams, namedParams, state, atTime)
         local spellId, key, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3], positionalParams[4]
-        local value = __Data.dataState:GetSpellInfoProperty(spellId, atTime, key)
+        local value = __DataState.dataState:GetSpellInfoProperty(spellId, atTime, key)
         if value then
             return __Condition.Compare(value, comparator, limit)
         end
@@ -2103,7 +2086,7 @@ end
 do
     local SpellMaxCharges = function(positionalParams, namedParams, state, atTime)
         local spellId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local charges, maxCharges, start, duration = __Cooldown.cooldownState:GetSpellCharges(spellId, atTime)
+        local _, maxCharges, _ = __CooldownState.cooldownState:GetSpellCharges(spellId, atTime)
         if  not maxCharges then
             return nil
         end
@@ -2117,7 +2100,7 @@ do
     local SpellUsable = function(positionalParams, namedParams, state, atTime)
         local spellId, yesno = positionalParams[1], positionalParams[2]
         local target = __Condition.ParseCondition(positionalParams, namedParams, state, "target")
-        local isUsable, noMana = __SpellBook.spellBookState:IsUsableSpell(spellId, atTime, __GUID.OvaleGUID:UnitGUID(target))
+        local isUsable, noMana = __SpellBookState.spellBookState:IsUsableSpell(spellId, atTime, __GUID.OvaleGUID:UnitGUID(target))
         local boolean = isUsable or noMana
         return __Condition.TestBoolean(boolean, yesno)
     end
@@ -2153,7 +2136,7 @@ end
 do
     local Stance = function(positionalParams, namedParams, state, atTime)
         local stance, yesno = positionalParams[1], positionalParams[2]
-        local boolean = __Stance.stanceState:IsStance(stance)
+        local boolean = __StanceState.stanceState:IsStance(stance)
         return __Condition.TestBoolean(boolean, yesno)
     end
 
@@ -2236,7 +2219,7 @@ do
     local Threat = function(positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
         local target = __Condition.ParseCondition(positionalParams, namedParams, state, "target")
-        local _1, _2, value = API_UnitDetailedThreatSituation("player", target)
+        local _, _, value = API_UnitDetailedThreatSituation("player", target)
         return __Condition.Compare(value, comparator, limit)
     end
 
@@ -2267,7 +2250,7 @@ do
         local target, filter, mine = __Condition.ParseCondition(positionalParams, namedParams, state)
         local aura = __Aura.auraState:GetAura(target, auraId, filter, mine)
         if aura then
-            local gain, start, ending, tick = aura.gain, aura.start, aura.ending, aura.tick
+            local gain, _, ending, tick = aura.gain, aura.start, aura.ending, aura.tick
             if tick and tick > 0 then
                 return __Condition.TestValue(gain, INFINITY, 1, ending, -1 / tick, comparator, limit)
             end
@@ -2282,7 +2265,7 @@ do
     local TimeInCombat = function(positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
         if state.inCombat then
-            local start = __Future.futureState.combatStartTime
+            local start = __FutureState.futureState.combatStartTime
             return __Condition.TestValue(start, INFINITY, 0, start, 1, comparator, limit)
         end
         return __Condition.Compare(0, comparator, limit)
@@ -2293,7 +2276,7 @@ end
 do
     local TimeSincePreviousSpell = function(positionalParams, namedParams, state, atTime)
         local spellId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local t = __Future.futureState:TimeOfLastCast(spellId)
+        local t = __FutureState.futureState:TimeOfLastCast(spellId)
         return __Condition.TestValue(0, INFINITY, 0, t, 1, comparator, limit)
     end
 
@@ -2310,7 +2293,7 @@ do
 end
 do
     local TimeToEclipse = function(positionalParams, namedParams, state, atTime)
-        local seconds, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
+        local _, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
         local value = 3600 * 24 * 7
         __Ovale.Ovale:OneTimeMessage("Warning: 'TimeToEclipse()' is not implemented.")
         return __Condition.TestValue(0, INFINITY, value, atTime, -1, comparator, limit)
@@ -2400,7 +2383,7 @@ do
     local TimeToSpell = function(positionalParams, namedParams, state, atTime)
         local spellId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
         local target = __Condition.ParseCondition(positionalParams, namedParams, state, "target")
-        local seconds = __SpellBook.spellBookState:GetTimeToSpell(spellId, atTime, __GUID.OvaleGUID:UnitGUID(target))
+        local seconds = __SpellBookState.spellBookState:GetTimeToSpell(spellId, atTime, __GUID.OvaleGUID:UnitGUID(target))
         if seconds == 0 then
             return __Condition.Compare(0, comparator, limit)
         elseif seconds < INFINITY then
@@ -2427,12 +2410,12 @@ do
         local id, seconds = positionalParams[1], positionalParams[2]
         seconds = seconds or 0
         if _type(id) == "string" then
-            local _, name, startTime, duration = __Totem.totemState:GetTotemInfo(id)
+            local _, _, startTime, duration = __Totem.totemState:GetTotemInfo(id)
             if startTime then
                 return startTime + duration - seconds, INFINITY
             end
         else
-            local count, start, ending = __Totem.totemState:GetTotemCount(id, atTime)
+            local count, _, ending = __Totem.totemState:GetTotemCount(id, atTime)
             if count > 0 then
                 return ending - seconds, INFINITY
             end
@@ -2443,7 +2426,7 @@ do
     local TotemPresent = function(positionalParams, namedParams, state, atTime)
         local id = positionalParams[1]
         if _type(id) == "string" then
-            local _, name, startTime, duration = __Totem.totemState:GetTotemInfo(id)
+            local _, _, startTime, duration = __Totem.totemState:GetTotemInfo(id)
             if startTime and duration > 0 then
                 return startTime, startTime + duration
             end
@@ -2461,7 +2444,7 @@ do
     local TotemRemaining = function(positionalParams, namedParams, state, atTime)
         local id, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
         if _type(id) == "string" then
-            local _, name, startTime, duration = __Totem.totemState:GetTotemInfo(id)
+            local _, _, startTime, duration = __Totem.totemState:GetTotemInfo(id)
             if startTime and duration > 0 then
                 local start, ending = startTime, startTime + duration
                 return __Condition.TestValue(start, ending, 0, ending, -1, comparator, limit)
@@ -2499,7 +2482,6 @@ end
 do
     local TravelTime = function(positionalParams, namedParams, state, atTime)
         local spellId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state, "target")
         local si = spellId and __Data.OvaleData.spellInfo[spellId]
         local travelTime = 0
         if si then

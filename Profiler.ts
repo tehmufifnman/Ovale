@@ -9,14 +9,7 @@ let OvaleProfilerBase = Ovale.NewModule("OvaleProfiler");
 
 let _debugprofilestop = debugprofilestop;
 let format = string.format;
-let _ipairs = ipairs;
-let _next = next;
 let _pairs = pairs;
-let tconcat = table.concat;
-let tinsert = table.insert;
-let tsort = table.sort;
-let _wipe = wipe;
-let API_GetTime = GetTime;
 let self_timestamp = _debugprofilestop();
 let self_timeSpent = {}
 let self_timesInvoked = {}
@@ -38,16 +31,6 @@ class OvaleProfilerClass extends OvaleProfilerBase {
                 AceConfigDialog.Open(appName);
             }
         }
-    }
-
-    constructor() {
-        super();
-        for (const [k, v] of _pairs(this.actions)) {
-            OvaleOptions.options.args.actions.args[k] = v;
-        }
-        OvaleOptions.defaultDB.global = OvaleOptions.defaultDB.global || {}
-        OvaleOptions.defaultDB.global.profiler = {}
-        OvaleOptions.RegisterOptions(OvaleProfilerClass);
     }
 
     options = {
@@ -112,13 +95,18 @@ class OvaleProfilerClass extends OvaleProfilerBase {
     DoNothing = function() {}
 
     
-    OnInitialize() {
+    constructor() {
+        super();
+        for (const [k, v] of _pairs(this.actions)) {
+            OvaleOptions.options.args.actions.args[k] = v;
+        }
+        OvaleOptions.defaultDB.global = OvaleOptions.defaultDB.global || {}
+        OvaleOptions.defaultDB.global.profiler = {}
+        OvaleOptions.RegisterOptions(OvaleProfilerClass);
         let appName = this.GetName();
         AceConfig.RegisterOptionsTable(appName, this.options);
         AceConfigDialog.AddToBlizOptions(appName, L["Profiling"], Ovale.GetName());
-    }
     
-    OnEnable() {
         if (!this.self_profilingOutput) {
             this.self_profilingOutput = LibTextDump.New(`${Ovale.GetName()} - ${L["Profiling"]}`, 750, 500);
         }

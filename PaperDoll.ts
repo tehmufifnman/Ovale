@@ -1,16 +1,14 @@
-import { L } from "./Localization";
 import { OvaleDebug } from "./Debug";
 import { OvaleProfiler } from "./Profiler";
 import { Ovale } from "./Ovale";
 import { OvaleEquipment } from "./Equipment";
 import { OvaleStance } from "./Stance";
 import { OvaleState, StateModule } from "./State";
-import { lastSpell, SpellCast } from "./LastSpell";
+import { lastSpell, SpellCast, PaperDollSnapshot } from "./LastSpell";
 
 let OvalePaperDollBase = Ovale.NewModule("OvalePaperDoll", "AceEvent-3.0");
 export let OvalePaperDoll: OvalePaperDollClass;
 let _pairs = pairs;
-let _select = select;
 let _tonumber = tonumber;
 let _type = type;
 let API_GetCombatRating = GetCombatRating;
@@ -36,7 +34,6 @@ let API_UnitSpellHaste = UnitSpellHaste;
 let API_UnitStat = UnitStat;
 let _CR_CRIT_MELEE = CR_CRIT_MELEE;
 let _CR_HASTE_MELEE = CR_HASTE_MELEE;
-let self_playerGUID = undefined;
 let OVALE_SPELLDAMAGE_SCHOOL = {
     DEATHKNIGHT: 4,
     DEMONHUNTER: 3,
@@ -51,13 +48,13 @@ let OVALE_SPELLDAMAGE_SCHOOL = {
     WARLOCK: 6,
     WARRIOR: 4
 }
-let OVALE_HEALING_CLASS = {
-    DRUID: true,
-    MONK: true,
-    PALADIN: true,
-    PRIEST: true,
-    SHAMAN: true
-}
+// let OVALE_HEALING_CLASS = {
+//     DRUID: true,
+//     MONK: true,
+//     PALADIN: true,
+//     PRIEST: true,
+//     SHAMAN: true
+// }
 let OVALE_SPECIALIZATION_NAME = {
     DEATHKNIGHT: {
         1: "blood",
@@ -121,7 +118,7 @@ let OVALE_SPECIALIZATION_NAME = {
     }
 }
 
-class OvalePaperDollClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(OvalePaperDollBase)) {
+class OvalePaperDollClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(OvalePaperDollBase)) implements PaperDollSnapshot {
     class = Ovale.playerClass;
     level = API_UnitLevel("player");
     specialization = undefined;
@@ -184,10 +181,8 @@ class OvalePaperDollClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
     baseDamageMultiplier = 1;
 
     
-    OnInitialize() {
-    }
-    OnEnable() {
-        self_playerGUID = Ovale.playerGUID;
+    constructor() {
+        super();
         this.RegisterEvent("COMBAT_RATING_UPDATE");
         this.RegisterEvent("MASTERY_UPDATE");
         this.RegisterEvent("MULTISTRIKE_UPDATE");
@@ -237,7 +232,7 @@ class OvalePaperDollClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
         this.critRating = API_GetCombatRating(_CR_CRIT_MELEE);
         this.hasteRating = API_GetCombatRating(_CR_HASTE_MELEE);
         this.snapshotTime = API_GetTime();
-        Ovale.refreshNeeded[self_playerGUID] = true;
+        Ovale.needRefresh();
         this.StopProfiling("OvalePaperDoll_UpdateStats");
     }
     MASTERY_UPDATE(event) {
@@ -247,7 +242,7 @@ class OvalePaperDollClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
             this.masteryEffect = 0;
         } else {
             this.masteryEffect = API_GetMasteryEffect();
-            Ovale.refreshNeeded[self_playerGUID] = true;
+            Ovale.needRefresh();
         }
         this.snapshotTime = API_GetTime();
         this.StopProfiling("OvalePaperDoll_UpdateStats");
@@ -257,14 +252,14 @@ class OvalePaperDollClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
         this.multistrikeRating = API_GetMultistrike();
         this.multistrike = API_GetMultistrikeEffect();
         this.snapshotTime = API_GetTime();
-        Ovale.refreshNeeded[self_playerGUID] = true;
+        Ovale.needRefresh();
         this.StopProfiling("OvalePaperDoll_UpdateStats");
     }
     PLAYER_LEVEL_UP(event, level, ...__args) {
         this.StartProfiling("OvalePaperDoll_UpdateStats");
         this.level = _tonumber(level) || API_UnitLevel("player");
         this.snapshotTime = API_GetTime();
-        Ovale.refreshNeeded[self_playerGUID] = true;
+        Ovale.needRefresh();
         this.DebugTimestamp("%s: level = %d", event, this.level);
         this.StopProfiling("OvalePaperDoll_UpdateStats");
     }
@@ -273,7 +268,7 @@ class OvalePaperDollClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
         this.spellBonusDamage = API_GetSpellBonusDamage(OVALE_SPELLDAMAGE_SCHOOL[this.class]);
         this.spellBonusHealing = API_GetSpellBonusHealing();
         this.snapshotTime = API_GetTime();
-        Ovale.refreshNeeded[self_playerGUID] = true;
+        Ovale.needRefresh();
         this.StopProfiling("OvalePaperDoll_UpdateStats");
     }
     SPELL_POWER_CHANGED(event) {
@@ -281,7 +276,7 @@ class OvalePaperDollClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
         this.spellBonusDamage = API_GetSpellBonusDamage(OVALE_SPELLDAMAGE_SCHOOL[this.class]);
         this.spellBonusDamage = API_GetSpellBonusDamage(OVALE_SPELLDAMAGE_SCHOOL[this.class]);
         this.snapshotTime = API_GetTime();
-        Ovale.refreshNeeded[self_playerGUID] = true;
+        Ovale.needRefresh();
         this.StopProfiling("OvalePaperDoll_UpdateStats");
     }
     UNIT_ATTACK_POWER(event, unitId) {
@@ -290,7 +285,7 @@ class OvalePaperDollClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
             let [base, posBuff, negBuff] = API_UnitAttackPower(unitId);
             this.attackPower = base + posBuff + negBuff;
             this.snapshotTime = API_GetTime();
-            Ovale.refreshNeeded[self_playerGUID] = true;
+            Ovale.needRefresh();
             this.UpdateDamage(event);
             this.StopProfiling("OvalePaperDoll_UpdateStats");
         }
@@ -310,7 +305,7 @@ class OvalePaperDollClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
             this.StartProfiling("OvalePaperDoll_UpdateStats");
             this.rangedHaste = API_GetRangedHaste();
             this.snapshotTime = API_GetTime();
-            Ovale.refreshNeeded[self_playerGUID] = true;
+            Ovale.needRefresh();
             this.StopProfiling("OvalePaperDoll_UpdateStats");
         }
     }
@@ -318,7 +313,7 @@ class OvalePaperDollClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
         if (unitId == "player") {
             this.StartProfiling("OvalePaperDoll_UpdateStats");
             let [base, posBuff, negBuff] = API_UnitRangedAttackPower(unitId);
-            Ovale.refreshNeeded[self_playerGUID] = true;
+            Ovale.needRefresh();
             this.rangedAttackPower = base + posBuff + negBuff;
             this.snapshotTime = API_GetTime();
             this.StopProfiling("OvalePaperDoll_UpdateStats");
@@ -330,7 +325,7 @@ class OvalePaperDollClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
             this.meleeHaste = API_GetMeleeHaste();
             this.spellHaste = API_UnitSpellHaste(unitId);
             this.snapshotTime = API_GetTime();
-            Ovale.refreshNeeded[self_playerGUID] = true;
+            Ovale.needRefresh();
             this.UpdateDamage(event);
             this.StopProfiling("OvalePaperDoll_UpdateStats");
         }
@@ -344,14 +339,17 @@ class OvalePaperDollClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
             this.intellect = API_UnitStat(unitId, 4);
             this.spirit = 0;
             this.snapshotTime = API_GetTime();
-            Ovale.refreshNeeded[self_playerGUID] = true;
+            Ovale.needRefresh();
             this.StopProfiling("OvalePaperDoll_UpdateStats");
         }
     }
     UpdateDamage(event) {
         this.StartProfiling("OvalePaperDoll_UpdateDamage");
-        let [minDamage, maxDamage, minOffHandDamage, maxOffHandDamage, _1, _2, damageMultiplier] = API_UnitDamage("player");
+        let [minDamage, maxDamage, minOffHandDamage, maxOffHandDamage, , , damageMultiplier] = API_UnitDamage("player");
         let [mainHandAttackSpeed, offHandAttackSpeed] = API_UnitAttackSpeed("player");
+
+        // TODO why?
+        if (damageMultiplier == 0) damageMultiplier = 1;
         this.baseDamageMultiplier = damageMultiplier;
         if (this.class == "DRUID" && OvaleStance.IsStance("druid_cat_form")) {
             damageMultiplier = damageMultiplier * 2;
@@ -386,7 +384,7 @@ class OvalePaperDollClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
             this.offHandWeaponDamage = 0;
         }
         this.snapshotTime = API_GetTime();
-        Ovale.refreshNeeded[self_playerGUID] = true;
+        Ovale.needRefresh();
         this.StopProfiling("OvalePaperDoll_UpdateDamage");
     }
     UpdateSpecialization(event) {
@@ -396,7 +394,7 @@ class OvalePaperDollClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
             let oldSpecialization = this.specialization;
             this.specialization = newSpecialization;
             this.snapshotTime = API_GetTime();
-            Ovale.refreshNeeded[self_playerGUID] = true;
+            Ovale.needRefresh();
             this.SendMessage("Ovale_SpecializationChanged", this.GetSpecialization(newSpecialization), this.GetSpecialization(oldSpecialization));
         }
         this.StopProfiling("OvalePaperDoll_UpdateSpecialization");
@@ -428,23 +426,23 @@ class OvalePaperDollClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
         }
         return false;
     }
-    GetMasteryMultiplier(snapshot?) {
+    GetMasteryMultiplier(snapshot?:PaperDollSnapshot) {
         snapshot = snapshot || this;
         return 1 + snapshot.masteryEffect / 100;
     }
-    GetMeleeHasteMultiplier(snapshot?) {
+    GetMeleeHasteMultiplier(snapshot?:PaperDollSnapshot) {
         snapshot = snapshot || this;
         return 1 + snapshot.meleeHaste / 100;
     }
-    GetRangedHasteMultiplier(snapshot?) {
+    GetRangedHasteMultiplier(snapshot?:PaperDollSnapshot) {
         snapshot = snapshot || this;
         return 1 + snapshot.rangedHaste / 100;
     }
-    GetSpellHasteMultiplier(snapshot?) {
+    GetSpellHasteMultiplier(snapshot?:PaperDollSnapshot) {
         snapshot = snapshot || this;
         return 1 + snapshot.spellHaste / 100;
     }
-    GetHasteMultiplier(haste, snapshot) {
+    GetHasteMultiplier(haste, snapshot:PaperDollSnapshot) {
         snapshot = snapshot || this;
         let multiplier = 1;
         if (haste == "melee") {
@@ -456,13 +454,10 @@ class OvalePaperDollClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
         }
         return multiplier;
     }
-    UpdateSnapshot(tbl, snapshot?, updateAllStats?) {
-        if (_type(snapshot) != "table") {
-            [snapshot, updateAllStats] = [this, snapshot];
-        }
+    UpdateSnapshot(target:PaperDollSnapshot, snapshot:PaperDollSnapshot, updateAllStats?: boolean) {
         let nameTable = updateAllStats && OvalePaperDoll.STAT_NAME || OvalePaperDoll.SNAPSHOT_STAT_NAME;
         for (const [k] of _pairs(nameTable)) {
-            tbl[k] = snapshot[k];
+            target[k] = snapshot[k];
         }
     }
     CopySpellcastInfo = (module: OvalePaperDollClass, spellcast: SpellCast, dest: SpellCast) => {
@@ -470,7 +465,7 @@ class OvalePaperDollClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
     }
     SaveSpellcastInfo = (module: OvalePaperDollClass, spellcast: SpellCast, atTime: number, state: PaperDollState) => {
         let paperDollModule = state || this;
-        this.UpdateSnapshot(spellcast, true);
+        this.UpdateSnapshot(paperDollModule, spellcast, true);
     }
 }
 class PaperDollState implements StateModule {
@@ -540,25 +535,25 @@ class PaperDollState implements StateModule {
         this.class = this.class;
         this.level = this.level;
         this.specialization = this.specialization;
-        this.UpdateSnapshot(this, true);
+        this.UpdateSnapshot(OvalePaperDoll, this, true);
     }
 
-    GetMasteryMultiplier(snapshot) {
+    GetMasteryMultiplier(snapshot:PaperDollSnapshot) {
         return OvalePaperDoll.GetMasteryMultiplier(snapshot);
     }
-    GetMeleeHasteMultiplier(snapshot) {
+    GetMeleeHasteMultiplier(snapshot:PaperDollSnapshot) {
         return OvalePaperDoll.GetMeleeHasteMultiplier(snapshot);
     }
-    GetRangedHasteMultiplier(snapshot) {
+    GetRangedHasteMultiplier(snapshot:PaperDollSnapshot) {
         return OvalePaperDoll.GetRangedHasteMultiplier(snapshot);
     }
-    GetSpellHasteMultiplier(snapshot) {
+    GetSpellHasteMultiplier(snapshot:PaperDollSnapshot) {
         return OvalePaperDoll.GetSpellHasteMultiplier(snapshot);
     }
-    GetHasteMultiplier(haste, snapshot?) {
+    GetHasteMultiplier(haste, snapshot?:PaperDollSnapshot) {
         return OvalePaperDoll.GetHasteMultiplier(haste, snapshot);
     }
-    UpdateSnapshot(target, snapshot?, updateAllStats?) {
+    UpdateSnapshot(target, snapshot?:PaperDollSnapshot, updateAllStats?) {
         OvalePaperDoll.UpdateSnapshot(target, snapshot, updateAllStats);
     }
 }

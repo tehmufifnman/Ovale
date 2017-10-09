@@ -1,3 +1,5 @@
+
+type Widgeted<T> = UIFrame & { obj?: T }
 interface AceLayout {
 }
 
@@ -27,6 +29,8 @@ interface AceGUIWidgetBase {
 }
 
 interface AceGUIWidgetContainerBase extends AceGUIWidgetBase {
+    frame: Widgeted<AceGUIWidgetContainerBase>;
+    content: Widgeted<AceGUIWidgetContainerBase>;
     PauseLayout():void;
     ResumeLayout():void;
     PerformLayout():void;
@@ -66,8 +70,6 @@ interface AceGUIWidgetDropDown extends AceGUIWidgetBase {
     GetMultiselect():boolean;
 }
 
-type Widgeted<T> = T & { obj: T }
-type Framed<T> = T & { frame: Widgeted<T> }
 
 interface AceGUI {
     WidgetBase: new() => AceGUIWidgetBase;

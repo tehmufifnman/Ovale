@@ -3,24 +3,21 @@ import { OvaleDebug } from "./Debug";
 import { OvaleProfiler } from "./Profiler";
 import { Ovale, MakeString } from "./Ovale";
 import { OvaleAura } from "./Aura";
-import { OvaleFuture, futureState } from "./Future";
+import { OvaleFuture } from "./Future";
 import { OvaleData } from "./Data";
 import { OvaleState, baseState, StateModule } from "./State";
 import { paperDollState } from "./PaperDoll";
+import { RegisterRequirement, UnregisterRequirement } from "./Requirement";
+import { futureState } from "./FutureState";
+import { lastSpell } from "./LastSpell";
 
 let OvalePowerBase = Ovale.NewModule("OvalePower", "AceEvent-3.0");
 export let OvalePower:OvalePowerClass;
 
 let ceil = math.ceil;
-let format = string.format;
-let gsub = string.gsub;
 let _pairs = pairs;
-let strmatch = string.match;
 let tconcat = table.concat;
-let _tonumber = tonumber;
-let _tostring = tostring;
 let _wipe = wipe;
-let API_CreateFrame = CreateFrame;
 let API_GetPowerRegen = GetPowerRegen;
 let API_GetSpellPowerCost = GetSpellPowerCost;
 let API_GetTime = GetTime;
@@ -28,14 +25,13 @@ let API_UnitPower = UnitPower;
 let API_UnitPowerMax = UnitPowerMax;
 let API_UnitPowerType = UnitPowerType;
 let INFINITY = math.huge;
-let self_playerGUID = undefined;
-let self_updateSpellcastInfo = {
-}
+// let self_updateSpellcastInfo = {
+// }
 let self_SpellcastInfoPowerTypes = {
     1: "chi",
     2: "holy"
 }
-let self_button = undefined;
+// let self_button = undefined;
 {
     let debugOptions = {
         power: {
@@ -179,26 +175,22 @@ class OvalePowerClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Registe
     }
     POWER_TYPE = {}
 
-    constructor() {
-        super();
-        for (const [powerType, v] of _pairs(OvalePower.POWER_INFO)) {
-            if (!v.id) {
-                this.Print("Unknown resource %s", v.token);
-            }
-            OvalePower.POWER_TYPE[v.id] = powerType;
-            OvalePower.POWER_TYPE[v.token] = powerType;
-        }
-    }
     POOLED_RESOURCE = {
         ["DRUID"]: "energy",
         ["HUNTER"]: "focus",
         ["MONK"]: "energy",
         ["ROGUE"]: "energy"
     }
-    OnInitialize() {
-    }
-    OnEnable() {
-        self_playerGUID = Ovale.playerGUID;
+   
+    constructor() {
+        super();
+        for (const [powerType, v] of _pairs(this.POWER_INFO)) {
+            if (!v.id) {
+                this.Print("Unknown resource %s", v.token);
+            }
+            this.POWER_TYPE[v.id] = powerType;
+            this.POWER_TYPE[v.token] = powerType;
+        }
         this.RegisterEvent("PLAYER_ENTERING_WORLD", "EventHandler");
         this.RegisterEvent("PLAYER_LEVEL_UP", "EventHandler");
         this.RegisterEvent("UNIT_DISPLAYPOWER");
@@ -211,14 +203,14 @@ class OvalePowerClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Registe
         this.RegisterMessage("Ovale_StanceChanged", "EventHandler");
         this.RegisterMessage("Ovale_TalentsChanged", "EventHandler");
         for (const [powerType] of _pairs(this.POWER_INFO)) {
-            OvaleData.RegisterRequirement(powerType, "RequirePowerHandler", this);
+            RegisterRequirement(powerType, "RequirePowerHandler", this);
         }
-        OvaleFuture.RegisterSpellcastInfo(this);
+        lastSpell.RegisterSpellcastInfo(this);
     }
     OnDisable() {
-        OvaleFuture.UnregisterSpellcastInfo(this);
+        lastSpell.UnregisterSpellcastInfo(this);
         for (const [powerType] of _pairs(this.POWER_INFO)) {
-            OvaleData.UnregisterRequirement(powerType);
+            UnregisterRequirement(powerType);
         }
         this.UnregisterEvent("PLAYER_ENTERING_WORLD");
         this.UnregisterEvent("PLAYER_LEVEL_UP");
@@ -277,14 +269,14 @@ class OvalePowerClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Registe
             let maxPower = API_UnitPowerMax("player", powerInfo.id, powerInfo.segments);
             if (this.maxPower[powerType] != maxPower) {
                 this.maxPower[powerType] = maxPower;
-                Ovale.refreshNeeded[self_playerGUID] = true;
+                Ovale.needRefresh();
             }
         } else {
             for (const [powerType, powerInfo] of _pairs(this.POWER_INFO)) {
                 let maxPower = API_UnitPowerMax("player", powerInfo.id, powerInfo.segments);
                 if (this.maxPower[powerType] != maxPower) {
                     this.maxPower[powerType] = maxPower;
-                    Ovale.refreshNeeded[self_playerGUID] = true;
+                    Ovale.needRefresh();
                 }
             }
         }
@@ -297,7 +289,7 @@ class OvalePowerClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Registe
             let power = API_UnitPower("player", powerInfo.id, powerInfo.segments);
             if (this.power[powerType] != power) {
                 this.power[powerType] = power;
-                Ovale.refreshNeeded[self_playerGUID] = true;
+                Ovale.needRefresh();
             }
             this.DebugTimestamp("%s: %d -> %d (%s).", event, this.power[powerType], power, powerType);
         } else {
@@ -305,12 +297,12 @@ class OvalePowerClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Registe
                 let power = API_UnitPower("player", powerInfo.id, powerInfo.segments);
                 if (this.power[powerType] != power) {
                     this.power[powerType] = power;
-                    Ovale.refreshNeeded[self_playerGUID] = true;
+                    Ovale.needRefresh();
                 }
                 this.DebugTimestamp("%s: %d -> %d (%s).", event, this.power[powerType], power, powerType);
             }
         }
-        Ovale.refreshNeeded[self_playerGUID] = true;
+        Ovale.needRefresh();
         this.StopProfiling("OvalePower_UpdatePower");
     }
     UpdatePowerRegen(event) {
@@ -318,19 +310,19 @@ class OvalePowerClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Registe
         let [inactiveRegen, activeRegen] = API_GetPowerRegen();
         if (this.inactiveRegen != inactiveRegen || this.activeRegen != activeRegen) {
             [this.inactiveRegen, this.activeRegen] = [inactiveRegen, activeRegen];
-            Ovale.refreshNeeded[self_playerGUID] = true;
+            Ovale.needRefresh();
         }
         this.StopProfiling("OvalePower_UpdatePowerRegen");
     }
     UpdatePowerType(event) {
         this.StartProfiling("OvalePower_UpdatePowerType");
-        let [currentType, currentToken] = API_UnitPowerType("player");
+        let [currentType, ] = API_UnitPowerType("player");
         let powerType = this.POWER_TYPE[currentType];
         if (this.powerType != powerType) {
             this.powerType = powerType;
-            Ovale.refreshNeeded[self_playerGUID] = true;
+            Ovale.needRefresh();
         }
-        Ovale.refreshNeeded[self_playerGUID] = true;
+        Ovale.needRefresh();
         this.StopProfiling("OvalePower_UpdatePowerType");
     }
     GetSpellCost(spellId, powerType?: string):[number, string] {
@@ -365,7 +357,7 @@ class OvalePowerClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Registe
         return power;
     }
     PowerCost(spellId, powerType, atTime, targetGUID, maximumCost?) {
-        OvalePower.StartProfiling("OvalePower_PowerCost");
+        this.StartProfiling("OvalePower_PowerCost");
         let buffParam = `buff_${powerType}`;
         let spellCost = 0;
         let spellRefund = 0;
@@ -385,7 +377,7 @@ class OvalePowerClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Registe
                     cost = maxCost;
                 }
             } else if (cost == "refill") {
-                cost = this.GetPower(powerType, atTime) - OvalePower.maxPower[powerType];
+                cost = this.GetPower(powerType, atTime) - this.maxPower[powerType];
             } else {
                 let buffExtraParam = buffParam;
                 let buffAmountParam = `${buffParam}_amount`;
@@ -436,12 +428,12 @@ class OvalePowerClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Registe
             refund = refund || 0;
             spellRefund = ceil(refund);
         } else {
-            let [cost] = OvalePower.GetSpellCost(spellId, powerType);
+            let [cost] = this.GetSpellCost(spellId, powerType);
             if (cost) {
                 spellCost = cost;
             }
         }
-        OvalePower.StopProfiling("OvalePower_PowerCost");
+        this.StopProfiling("OvalePower_PowerCost");
         return [spellCost, spellRefund];
     }
     RequirePowerHandler(spellId, atTime, requirement, tokens, index, targetGUID) {
@@ -481,7 +473,7 @@ class OvalePowerClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Registe
         this.Print("Inactive regen: %f", this.inactiveRegen);
     }
     CopySpellcastInfo(spellcast, dest) {
-        for (const [_, powerType] of _pairs(self_SpellcastInfoPowerTypes)) {
+        for (const [, powerType] of _pairs(self_SpellcastInfoPowerTypes)) {
             if (spellcast[powerType]) {
                 dest[powerType] = spellcast[powerType];
             }
@@ -494,7 +486,7 @@ class OvalePowerClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Registe
             if (si) {
                 let dataModule = state || OvaleData;
                 let powerModule = state || this;
-                for (const [_, powerType] of _pairs(self_SpellcastInfoPowerTypes)) {
+                for (const [, powerType] of _pairs(self_SpellcastInfoPowerTypes)) {
                     if (si[powerType] == "finisher") {
                         let maxCostParam = `max_${powerType}`;
                         let maxCost = si[maxCostParam] || 1;

@@ -1,10 +1,8 @@
 let _select = select;
-let _setmetatable = setmetatable;
 let format = string.format;
 let tconcat = table.concat;
 let tinsert = table.insert;
 let tremove = table.remove;
-let _type = type;
 let _wipe = wipe;
 let INFINITY = math.huge;
 let self_pool: LuaArray<OvaleTimeSpan> = {

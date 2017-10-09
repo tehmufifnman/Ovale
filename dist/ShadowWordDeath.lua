@@ -8,9 +8,14 @@ local SHADOW_WORD_DEATH = {
     [129176] = true
 }
 local OvaleShadowWordDeathClass = __class(OvaleShadowWordDeathBase, {
-    OnInitialize = function(self)
-    end,
-    OnEnable = function(self)
+    constructor = function(self)
+        self.spellName = "Shadow Word: Death Reset Cooldown"
+        self.spellId = 125927
+        self.start = 0
+        self.ending = 0
+        self.duration = 9
+        self.stacks = 0
+        OvaleShadowWordDeathBase.constructor(self)
         if __Ovale.Ovale.playerClass == "PRIEST" then
             self_playerGUID = __Ovale.Ovale.playerGUID
             self:RegisterMessage("Ovale_SpecializationChanged")
@@ -29,7 +34,7 @@ local OvaleShadowWordDeathClass = __class(OvaleShadowWordDeathBase, {
         end
     end,
     COMBAT_LOG_EVENT_UNFILTERED = function(self, event, timestamp, cleuEvent, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, ...)
-        local arg12, arg13, arg14, arg15, arg16, arg17, arg18, arg19, arg20, arg21, arg22, arg23, arg24, arg25 = ...
+        local arg12, _, _, _, arg16 = ...
         if sourceGUID == self_playerGUID then
             if cleuEvent == "SPELL_DAMAGE" then
                 local spellId, overkill = arg12, arg16
@@ -43,14 +48,6 @@ local OvaleShadowWordDeathClass = __class(OvaleShadowWordDeathBase, {
             end
         end
     end,
-    constructor = function(self)
-        self.spellName = "Shadow Word: Death Reset Cooldown"
-        self.spellId = 125927
-        self.start = 0
-        self.ending = 0
-        self.duration = 9
-        self.stacks = 0
-    end
 })
 __exports.OvaleShadowWordDeath = OvaleShadowWordDeathClass()
 end)

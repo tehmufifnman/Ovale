@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Scripts", { "AceConfig-3.0", "AceConfigDialog-3.0", "./Options", "./Localization", "./Equipment", "./PaperDoll", "./SpellBook", "./Stance", "./Ovale" }, function(__exports, AceConfig, AceConfigDialog, __Options, __Localization, __Equipment, __PaperDoll, __SpellBook, __Stance, __Ovale)
+__addon.require(__addonName, __addon, "./Scripts", { "AceConfig-3.0", "AceConfigDialog-3.0", "./Options", "./Localization", "./PaperDoll", "./Ovale" }, function(__exports, AceConfig, AceConfigDialog, __Options, __Localization, __PaperDoll, __Ovale)
 local OvaleScriptsBase = __Ovale.Ovale:NewModule("OvaleScripts", "AceEvent-3.0")
 local format = string.format
 local gsub = string.gsub
@@ -38,13 +38,13 @@ do
     __Options.OvaleOptions:RegisterOptions(__exports.OvaleScripts)
 end
 local OvaleScriptsClass = __class(OvaleScriptsBase, {
-    OnInitialize = function(self)
+    constructor = function(self)
+        self.script = {}
+        OvaleScriptsBase.constructor(self)
         self:CreateOptions()
         self:RegisterScript(nil, nil, DEFAULT_NAME, DEFAULT_DESCRIPTION, nil, "script")
         self:RegisterScript(__Ovale.Ovale.playerClass, nil, CUSTOM_NAME, CUSTOM_DESCRIPTION, __Ovale.Ovale.db.profile.code, "script")
         self:RegisterScript(nil, nil, DISABLED_NAME, DISABLED_DESCRIPTION, nil, "script")
-    end,
-    OnEnable = function(self)
         self:RegisterMessage("Ovale_StanceChanged")
     end,
     OnDisable = function(self)
@@ -239,9 +239,6 @@ local OvaleScriptsClass = __class(OvaleScriptsBase, {
         AceConfig:RegisterOptionsTable(appName, options)
         AceConfigDialog:AddToBlizOptions(appName, __Localization.L["Script"], __Ovale.Ovale:GetName())
     end,
-    constructor = function(self)
-        self.script = {}
-    end
 })
 __exports.OvaleScripts = OvaleScriptsClass()
 end)

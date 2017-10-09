@@ -2,10 +2,7 @@ import AceConfig from "AceConfig-3.0";
 import AceConfigDialog from "AceConfigDialog-3.0";
 import { OvaleOptions } from "./Options";
 import { L } from "./Localization";
-import { OvaleEquipment } from "./Equipment";
 import { OvalePaperDoll } from "./PaperDoll";
-import { OvaleSpellBook } from "./SpellBook";
-import { OvaleStance } from "./Stance";
 import { Ovale } from "./Ovale";
 
 let OvaleScriptsBase = Ovale.NewModule("OvaleScripts", "AceEvent-3.0");
@@ -54,13 +51,12 @@ class OvaleScriptsClass  extends OvaleScriptsBase {
 
     script:Script = {}
 
-    OnInitialize() {
+    constructor() {
+        super();
         this.CreateOptions();
         this.RegisterScript(undefined, undefined, DEFAULT_NAME, DEFAULT_DESCRIPTION, undefined, "script");
         this.RegisterScript(Ovale.playerClass, undefined, CUSTOM_NAME, CUSTOM_DESCRIPTION, Ovale.db.profile.code, "script");
         this.RegisterScript(undefined, undefined, DISABLED_NAME, DISABLED_DESCRIPTION, undefined, "script");
-    }
-    OnEnable() {
         this.RegisterMessage("Ovale_StanceChanged");
     }
     OnDisable() {

@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Totem", { "./Profiler", "./Ovale", "./Data", "./SpellBook", "./State", "./Aura" }, function(__exports, __Profiler, __Ovale, __Data, __SpellBook, __State, __Aura)
+__addon.require(__addonName, __addon, "./Totem", { "./Profiler", "./Ovale", "./Data", "./SpellBook", "./State", "./Aura", "./DataState" }, function(__exports, __Profiler, __Ovale, __Data, __SpellBook, __State, __Aura, __DataState)
 local OvaleTotemBase = __Ovale.Ovale:NewModule("OvaleTotem", "AceEvent-3.0")
 local _ipairs = ipairs
 local _pairs = pairs
@@ -26,9 +26,9 @@ local TOTEM_SLOT = {
 }
 local TOTEMIC_RECALL = 36936
 local OvaleTotemClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(OvaleTotemBase), {
-    OnInitialize = function(self)
-    end,
-    OnEnable = function(self)
+    constructor = function(self)
+        self.totem = {}
+        __Profiler.OvaleProfiler:RegisterProfiling(OvaleTotemBase).constructor(self)
         if TOTEM_CLASS[__Ovale.Ovale.playerClass] then
             self:RegisterEvent("PLAYER_ENTERING_WORLD", "Update")
             self:RegisterEvent("PLAYER_TALENT_UPDATE", "Update")
@@ -46,11 +46,8 @@ local OvaleTotemClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(Ovale
     end,
     Update = function(self)
         self_serial = self_serial + 1
-        __Ovale.Ovale.refreshNeeded[__Ovale.Ovale.playerGUID] = true
+        __Ovale.Ovale:needRefresh()
     end,
-    constructor = function(self)
-        self.totem = {}
-    end
 })
 local TotemState = __class(nil, {
     InitializeState = function(self)
@@ -204,7 +201,7 @@ local TotemState = __class(nil, {
         atTime = atTime or __State.baseState.currentTime
         slot = TOTEM_SLOT[slot] or slot
         local name, _, icon = __SpellBook.OvaleSpellBook:GetSpellInfo(spellId)
-        local duration = __Data.dataState:GetSpellInfoProperty(spellId, atTime, "duration")
+        local duration = __DataState.dataState:GetSpellInfoProperty(spellId, atTime, "duration")
         local totem = self.totem[slot]
         totem.name = name
         totem.start = atTime

@@ -47,7 +47,8 @@ let sigil_end = {
 }
 let QUICKENED_SIGILS_TALENT = 15;
 class OvaleSigilClass extends OvaleProfiler.RegisterProfiling(OvaleSigilBase) {
-    OnInitialize() {
+    constructor() {
+        super();
         activated_sigils["flame"] = {
         }
         activated_sigils["silence"] = {
@@ -56,8 +57,7 @@ class OvaleSigilClass extends OvaleProfiler.RegisterProfiling(OvaleSigilBase) {
         }
         activated_sigils["chains"] = {
         }
-    }
-    OnEnable() {
+    
         if (Ovale.playerClass == "DEMONHUNTER") {
             this.RegisterEvent("UNIT_SPELLCAST_SUCCEEDED");
         }
@@ -105,7 +105,7 @@ class SigilState implements StateModule {
             return false;
         }
         let charging = false;
-        for (const [_, v] of _ipairs(activated_sigils[type])) {
+        for (const [, v] of _ipairs(activated_sigils[type])) {
             let activation_time = SIGIL_ACTIVATION_TIME + UPDATE_DELAY;
             if ((OvaleSpellBook.GetTalentPoints(QUICKENED_SIGILS_TALENT) > 0)) {
                 activation_time = activation_time - 1;

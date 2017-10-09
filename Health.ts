@@ -1,9 +1,9 @@
 import { OvaleDebug } from "./Debug";
 import { OvaleProfiler } from "./Profiler";
 import { Ovale } from "./Ovale";
-import { OvaleData } from "./Data";
 import { OvaleGUID } from "./GUID";
 import { OvaleState, baseState, StateModule } from "./State";
+import { RegisterRequirement, UnregisterRequirement } from "./Requirement";
 
 let OvaleHealthBase = Ovale.NewModule("OvaleHealth", "AceEvent-3.0");
 export let OvaleHealth: OvaleHealthClass;
@@ -11,7 +11,6 @@ export let OvaleHealth: OvaleHealthClass;
 let strsub = string.sub;
 let _tonumber = tonumber;
 let _wipe = wipe;
-let API_GetTime = GetTime;
 let API_UnitHealth = UnitHealth;
 let API_UnitHealthMax = UnitHealthMax;
 let INFINITY = math.huge;
@@ -38,22 +37,21 @@ class OvaleHealthClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regist
     firstSeen = {    }
     lastUpdated = {    }
 
-    OnInitialize() {
-    }
-    OnEnable() {
+    constructor() {
+        super();
         this.RegisterEvent("PLAYER_REGEN_DISABLED");
         this.RegisterEvent("PLAYER_REGEN_ENABLED");
         this.RegisterEvent("UNIT_HEALTH_FREQUENT", "UpdateHealth");
         this.RegisterEvent("UNIT_MAXHEALTH", "UpdateHealth");
         this.RegisterMessage("Ovale_UnitChanged");
-        OvaleData.RegisterRequirement("health_pct", "RequireHealthPercentHandler", this);
-        OvaleData.RegisterRequirement("pet_health_pct", "RequireHealthPercentHandler", this);
-        OvaleData.RegisterRequirement("target_health_pct", "RequireHealthPercentHandler", this);
+        RegisterRequirement("health_pct", "RequireHealthPercentHandler", this);
+        RegisterRequirement("pet_health_pct", "RequireHealthPercentHandler", this);
+        RegisterRequirement("target_health_pct", "RequireHealthPercentHandler", this);
     }
     OnDisable() {
-        OvaleData.UnregisterRequirement("health_pct");
-        OvaleData.UnregisterRequirement("pet_health_pct");
-        OvaleData.UnregisterRequirement("target_health_pct");
+        UnregisterRequirement("health_pct");
+        UnregisterRequirement("pet_health_pct");
+        UnregisterRequirement("target_health_pct");
         this.UnregisterEvent("PLAYER_REGEN_ENABLED");
         this.UnregisterEvent("PLAYER_TARGET_CHANGED");
         this.UnregisterEvent("UNIT_HEALTH_FREQUENT");
@@ -61,7 +59,7 @@ class OvaleHealthClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regist
         this.UnregisterMessage("Ovale_UnitChanged");
     }
     COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, cleuEvent, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, ...__args) {
-        let [arg12, arg13, arg14, arg15, arg16, arg17, arg18, arg19, arg20, arg21, arg22, arg23, arg24, arg25] = __args;
+        let [arg12, arg13, , arg15, , , , , , , , , , ] = __args;
         this.StartProfiling("OvaleHealth_COMBAT_LOG_EVENT_UNFILTERED");
         let healthUpdate = false;
         if (CLEU_DAMAGE_EVENT[cleuEvent]) {

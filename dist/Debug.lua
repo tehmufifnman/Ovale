@@ -2,15 +2,7 @@ local __addonName, __addon = ...
 __addon.require(__addonName, __addon, "./Debug", { "AceConfig-3.0", "AceConfigDialog-3.0", "./Localization", "LibTextDump-1.0", "./Options", "./Ovale" }, function(__exports, AceConfig, AceConfigDialog, __Localization, LibTextDump, __Options, __Ovale)
 local OvaleDebugBase = __Ovale.Ovale:NewModule("OvaleDebug", "AceTimer-3.0")
 local format = string.format
-local gmatch = string.gmatch
-local gsub = string.gsub
-local _next = next
 local _pairs = pairs
-local strlen = string.len
-local _tonumber = tonumber
-local _tostring = tostring
-local _type = type
-local API_GetSpellInfo = GetSpellInfo
 local API_GetTime = GetTime
 local _DEFAULT_CHAT_FRAME = DEFAULT_CHAT_FRAME
 local self_traced = false
@@ -85,19 +77,15 @@ local OvaleDebugClass = __class(OvaleDebugBase, {
         __Options.OvaleOptions.defaultDB.global = __Options.OvaleOptions.defaultDB.global or {}
         __Options.OvaleOptions.defaultDB.global.debug = {}
         __Options.OvaleOptions:RegisterOptions(self)
-    end,
-    OnInitialize = function(self)
         local appName = self:GetName()
         AceConfig:RegisterOptionsTable(appName, self.options)
         AceConfigDialog:AddToBlizOptions(appName, __Localization.L["Debug"], __Ovale.Ovale:GetName())
-    end,
-    OnEnable = function(self)
-        self_traceLog = LibTextDump.New(__Ovale.Ovale:GetName() .. " - " .. __Localization.L["Trace Log"], 750, 500)
+        self_traceLog = LibTextDump:New(__Ovale.Ovale:GetName() .. " - " .. __Localization.L["Trace Log"], 750, 500)
     end,
     DoTrace = function(self, displayLog)
-        self_traceLog.Clear()
+        self_traceLog:Clear()
         self.trace = true
-        self.Print("=== Trace @%f", API_GetTime())
+        _DEFAULT_CHAT_FRAME:AddMessage(string.format("=== Trace @%f", API_GetTime()))
         if displayLog then
             self:ScheduleTimer("DisplayTraceLog", 0.5)
         end
@@ -120,11 +108,22 @@ local OvaleDebugClass = __class(OvaleDebugBase, {
         end
     end,
     RegisterDebugging = function(self, addon)
+        local debug = self
         return __class(addon, {
+            constructor = function(self, args)
+                self.trace = false
+                addon.constructor(self, args)
+                local name = self:GetName()
+                debug.options.args.toggles.args[name] = {
+                    name = name,
+                    desc = format(__Localization.L["Enable debugging messages for the %s module."], name),
+                    type = "toggle"
+                }
+            end,
             Debug = function(self, ...)
                 local name = self:GetName()
                 if __Ovale.Ovale.db.global.debug[name] then
-                    _DEFAULT_CHAT_FRAME.AddMessage(format("|cff33ff99%s|r: %s", name, __Ovale.MakeString(...)))
+                    _DEFAULT_CHAT_FRAME:AddMessage(format("|cff33ff99%s|r: %s", name, __Ovale.MakeString(...)))
                 end
             end,
             DebugTimestamp = function(self, ...)
@@ -132,16 +131,16 @@ local OvaleDebugClass = __class(OvaleDebugBase, {
                 if __Ovale.Ovale.db.global.debug[name] then
                     local now = API_GetTime()
                     local s = format("|cffffff00%f|r %s", now, __Ovale.MakeString(...))
-                    _DEFAULT_CHAT_FRAME.AddMessage(format("|cff33ff99%s|r: %s", name, s))
+                    _DEFAULT_CHAT_FRAME:AddMessage(format("|cff33ff99%s|r: %s", name, s))
                 end
             end,
             Log = function(self, ...)
                 if self.trace then
-                    local N = self_traceLog.Lines()
+                    local N = self_traceLog:Lines()
                     if N < OVALE_TRACELOG_MAXLINES - 1 then
-                        self_traceLog.AddLine(__Ovale.MakeString(...))
+                        self_traceLog:AddLine(__Ovale.MakeString(...))
                     elseif N == OVALE_TRACELOG_MAXLINES - 1 then
-                        self_traceLog.AddLine("WARNING: Maximum length of trace log has been reached.")
+                        self_traceLog:AddLine("WARNING: Maximum length of trace log has been reached.")
                     end
                 end
             end,
@@ -153,15 +152,15 @@ local OvaleDebugClass = __class(OvaleDebugBase, {
             Print = function(self, ...)
                 local name = self:GetName()
                 local s = __Ovale.MakeString(...)
-                _DEFAULT_CHAT_FRAME.AddMessage(format("|cff33ff99%s|r: %s", name, s))
+                _DEFAULT_CHAT_FRAME:AddMessage(format("|cff33ff99%s|r: %s", name, s))
             end,
         })
     end,
     DisplayTraceLog = function(self)
-        if self_traceLog.Lines() == 0 then
-            self_traceLog.AddLine("Trace log is empty.")
+        if self_traceLog:Lines() == 0 then
+            self_traceLog:AddLine("Trace log is empty.")
         end
-        self_traceLog.Display()
+        self_traceLog:Display()
     end,
 })
 __exports.OvaleDebug = OvaleDebugClass()

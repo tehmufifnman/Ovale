@@ -2,21 +2,20 @@ import { OvaleDebug } from "./Debug";
 import { OvalePool } from "./Pool";
 import { OvaleProfiler } from "./Profiler";
 import { OvaleTimeSpan, UNIVERSE, newTimeSpanFromArray, EMPTY_SET, newTimeSpan, releaseTimeSpans } from "./TimeSpan";
-import { OvaleAST } from "./AST";
 import { OvaleActionBar } from "./ActionBar";
 import { OvaleCompile } from "./Compile";
 import { OvaleCondition } from "./Condition";
-import { OvaleCooldown, cooldownState } from "./Cooldown";
-import { OvaleData, dataState } from "./Data";
+import { OvaleData } from "./Data";
 import { OvaleEquipment } from "./Equipment";
 import { OvaleGUID } from "./GUID";
-import { OvaleFuture, futureState } from "./Future";
-import { OvalePower } from "./Power";
-import { OvaleSpellBook, spellBookState } from "./SpellBook";
-import { OvaleStance } from "./Stance";
+import { OvaleSpellBook } from "./SpellBook";
 import { Ovale } from "./Ovale";
 import { OvaleState, BaseState } from "./State";
 import { paperDollState } from "./PaperDoll";
+import { dataState } from "./DataState";
+import { spellBookState } from "./SpellBookState";
+import { futureState } from "./FutureState";
+import { cooldownState } from "./CooldownState";
 let OvaleBestActionBase = Ovale.NewModule("OvaleBestAction", "AceEvent-3.0");
 let abs = math.abs;
 let _assert = assert;
@@ -28,7 +27,6 @@ let _tonumber = tonumber;
 let _type = type;
 let _wipe = wipe;
 let INFINITY = math.huge;
-let API_GetTime = GetTime;
 let API_GetActionCooldown = GetActionCooldown;
 let API_GetActionTexture = GetActionTexture;
 let API_GetItemIcon = GetItemIcon;
@@ -245,9 +243,9 @@ const GetActionTextureInfo = function(element, state: BaseState, atTime, target)
 }
 class OvaleBestActionClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(OvaleBestActionBase)) {
     
-    OnInitialize() {
-    }
-    OnEnable() {
+    
+    constructor() {
+        super();
         this.RegisterMessage("Ovale_ScriptChanged");
     }
     OnDisable() {
@@ -265,7 +263,7 @@ class OvaleBestActionClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Re
     }
     StartNewAction() {
         OvaleState.ResetState();
-        OvaleFuture.ApplyInFlightSpells();
+        futureState.ApplyInFlightSpells();
         self_serial = self_serial + 1;
     }
     GetActionInfo(element, state: BaseState, atTime) {
@@ -645,7 +643,7 @@ class OvaleBestActionClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Re
         let bestTimeSpan, bestElement, bestCastTime;
         let best = newTimeSpan();
         let current = newTimeSpan();
-        for (const [_, node] of _ipairs<{nodeId:number}>(element.child)) {
+        for (const [, node] of _ipairs<{nodeId:number}>(element.child)) {
             let [currentTimeSpan, currentElement] = this.Compute(node, state, atTime);
             currentTimeSpan.IntersectInterval(atTime, INFINITY, current);
             if (current.Measure() > 0) {
@@ -655,7 +653,7 @@ class OvaleBestActionClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Re
                 if (currentElement) {
                     currentCastTime = currentElement.castTime;
                 }
-                let gcd = cooldownState.GetGCD();
+                let gcd = futureState.GetGCD();
                 if (!currentCastTime || currentCastTime < gcd) {
                     currentCastTime = gcd;
                 }

@@ -11,7 +11,7 @@ import { OvaleData } from "./Data";
 import { OvaleHonorAmongThieves } from "./HonorAmongThieves";
 import { OvaleLexer, TokenizerDefinition, Tokenizer } from "./Lexer";
 import { OvalePower } from "./Power";
-import { OvaleScripts } from "./Scripts";
+import { ResetControls } from "./Controls";
 
 let OvaleSimulationCraftBase = Ovale.NewModule("OvaleSimulationCraft");
 export let OvaleSimulationCraft: OvaleSimulationCraftClass;
@@ -293,20 +293,20 @@ let INDENT = {
 }
 let EMIT_DISAMBIGUATION = {
 }
-let EMIT_EXTRA_PARAMETERS = {
-}
+// let EMIT_EXTRA_PARAMETERS = {
+// }
 let OPERAND_TOKEN_PATTERN = "[^.]+";
-let POTION_STAT = {
-    ["draenic_agility"]: "agility",
-    ["draenic_armor"]: "armor",
-    ["draenic_intellect"]: "intellect",
-    ["draenic_strength"]: "strength",
-    ["jade_serpent"]: "intellect",
-    ["mogu_power"]: "strength",
-    ["mountains"]: "armor",
-    ["tolvir"]: "agility",
-    ["virmens_bite"]: "agility"
-}
+// let POTION_STAT = {
+//     ["draenic_agility"]: "agility",
+//     ["draenic_armor"]: "armor",
+//     ["draenic_intellect"]: "intellect",
+//     ["draenic_strength"]: "strength",
+//     ["jade_serpent"]: "intellect",
+//     ["mogu_power"]: "strength",
+//     ["mountains"]: "armor",
+//     ["tolvir"]: "agility",
+//     ["virmens_bite"]: "agility"
+// }
 let OPTIONAL_SKILLS = {
     ["volley"]: {
         class: "HUNTER",
@@ -392,7 +392,7 @@ let self_lastScript = undefined;
     for (const [k, v] of _pairs(actions)) {
         OvaleOptions.options.args.actions.args[k] = v;
     }
-    OvaleOptions.RegisterOptions(OvaleSimulationCraft);
+    // OvaleOptions.RegisterOptions(OvaleSimulationCraft);
 }
 let OVALE_TAGS:LuaArray<string> = {
     1: "main",
@@ -441,10 +441,10 @@ const print_r = function(node, indent?, done?, output?) {
     }
     return output;
 }
-const debug_r = function(tbl) {
-    let output = print_r(tbl);
-    OvaleSimulationCraft.Debug(tconcat(output, "\n"));
-}
+// const debug_r = function(tbl) {
+//     let output = print_r(tbl);
+//     OvaleSimulationCraft.Debug(tconcat(output, "\n"));
+// }
 const NewNode = function(nodeList: LuaArray<Node>, hasChild?) {
     let node = self_pool.Get();
     if (nodeList) {
@@ -647,7 +647,7 @@ let ParseNumber: ParseFunction = undefined;
 let ParseOperand: ParseFunction = undefined;
 let ParseParentheses: ParseFunction = undefined;
 let ParseSimpleExpression: ParseFunction = undefined;
-let ParseIdentifer: ParseFunction = undefined;
+// let ParseIdentifer: ParseFunction = undefined;
 
 const TicksRemainTranslationHelper = function(p1: string, p2: string, p3: string, p4: string) {
     if (p4) {
@@ -888,7 +888,7 @@ ParseFunction = function (tokenStream, nodeList, annotation) {
     return [ok, node];
 }
 const ParseIdentifier = function (tokenStream, nodeList, annotation): [boolean, Node] {
-    let [tokenType, token] = tokenStream.Consume();
+    let [, token] = tokenStream.Consume();
     let node = NewNode(nodeList);
     node.type = "operand";
     node.name = token;
@@ -2299,7 +2299,7 @@ EmitActionList = function (parseNode: Node, nodeList, annotation) {
     let child = groupNode.child;
     let poolResourceNode;
     let emit = true;
-    for (const [_, actionNode] of _ipairs(parseNode.child)) {
+    for (const [, actionNode] of _ipairs(parseNode.child)) {
         let commentNode = OvaleAST.NewNode(nodeList);
         commentNode.type = "comment";
         commentNode.comment = actionNode.action;
@@ -2648,7 +2648,7 @@ EmitOperandAction = function (operand, parseNode, nodeList, annotation, action, 
     let property;
     if (strsub(operand, 1, 7) == "action.") {
         let tokenIterator = gmatch(operand, OPERAND_TOKEN_PATTERN);
-        let token = tokenIterator();
+        tokenIterator();
         name = tokenIterator();
         property = tokenIterator();
     } else {
@@ -3325,7 +3325,7 @@ EmitOperandRaidEvent = function (operand, parseNode, nodeList, annotation, actio
     let property;
     if (strsub(operand, 1, 11) == "raid_event.") {
         let tokenIterator = gmatch(operand, OPERAND_TOKEN_PATTERN);
-        let token = tokenIterator();
+        tokenIterator();
         name = tokenIterator();
         property = tokenIterator();
     } else {
@@ -3941,7 +3941,7 @@ const PreOrderTraversalMark = function(node) {
             self_functionDefined[node.name] = true;
         }
         if (node.child) {
-            for (const [_, childNode] of _ipairs(node.child)) {
+            for (const [, childNode] of _ipairs(node.child)) {
                 PreOrderTraversalMark(childNode);
             }
         }
@@ -4110,10 +4110,10 @@ const InsertInterruptFunction = function(child, annotation, interrupts: LuaArray
         return _tonumber(a.order || 0) < _tonumber(b.order || 0);
     });
     let lines:LuaArray<string> = {}
-    for (const [_, spell] of _pairs(spells)) {
+    for (const [, spell] of _pairs(spells)) {
         AddSymbol(annotation, spell.name);
         if ((spell.addSymbol != undefined)) {
-            for (const [k, v] of _pairs(spell.addSymbol)) {
+            for (const [, v] of _pairs(spell.addSymbol)) {
                 AddSymbol(annotation, v);
             }
         }
@@ -4154,9 +4154,6 @@ const InsertInterruptFunction = function(child, annotation, interrupts: LuaArray
     annotation.functionTag[node.name] = "cd";
 }
 const InsertInterruptFunctions = function(child, annotation) {
-    let count = 0;
-    let nodeList = annotation.astAnnotation.nodeList;
-    let camelSpecialization = CamelSpecialization(annotation);
     let interrupts = {
     }
     if (annotation.mind_freeze == "DEATHKNIGHT") {
@@ -4903,7 +4900,7 @@ const InsertSupportingDefines = function(child, annotation) {
 }
 const InsertVariables = function(child, annotation) {
     if (annotation.variable) {
-        for (const [k, v] of _pairs(annotation.variable)) {
+        for (const [, v] of _pairs(annotation.variable)) {
             tinsert(child, 1, v);
         }
     }
@@ -4913,14 +4910,14 @@ const GenerateIconBody = function(tag, profile) {
     let precombatName = OvaleFunctionName("precombat", annotation);
     let defaultName = OvaleFunctionName("_default", annotation);
     let [precombatBodyName, precombatConditionName] = OvaleTaggedFunctionName(precombatName, tag);
-    let [defaultBodyName, defaultConditionName] = OvaleTaggedFunctionName(defaultName, tag);
+    let [defaultBodyName, ] = OvaleTaggedFunctionName(defaultName, tag);
     let mainBodyCode;
     if (annotation.using_apl && _next(annotation.using_apl)) {
         let output = self_outputPool.Get();
         output[lualength(output) + 1] = format("if List(opt_using_apl normal) %s()", defaultBodyName);
         for (const [name] of _pairs(annotation.using_apl)) {
             let aplName = OvaleFunctionName(name, annotation);
-            let [aplBodyName, aplConditionName] = OvaleTaggedFunctionName(aplName, tag);
+            let [aplBodyName, ] = OvaleTaggedFunctionName(aplName, tag);
             output[lualength(output) + 1] = format("if List(opt_using_apl %s) %s()", name, aplBodyName);
         }
         mainBodyCode = tconcat(output, "\n");
@@ -4944,7 +4941,8 @@ const GenerateIconBody = function(tag, profile) {
     return code;
 }
 class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimulationCraftBase) {
-    OnInitialize() {
+    constructor() {
+        super();
         InitializeDisambiguation();
         this.CreateOptions();
     }
@@ -4964,7 +4962,7 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
                 OvaleAST.ReleaseAnnotation(annotation.astAnnotation);
             }
             if (annotation.nodeList) {
-                for (const [_, node] of _ipairs(annotation.nodeList)) {
+                for (const [, node] of _ipairs(annotation.nodeList)) {
                     self_pool.Release(node);
                 }
             }
@@ -5004,7 +5002,7 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
         }
         profile.templates = {
         }
-        for (const [k, v] of _pairs(profile)) {
+        for (const [k, ] of _pairs(profile)) {
             if (strsub(k, 1, 2) == "$(" && strsub(k, -1) == ")") {
                 tinsert(profile.templates, k);
             }
@@ -5071,10 +5069,10 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
             }
         }
         let taggedFunctionName: LuaObj<boolean> = { }
-        for (const [_, node] of _ipairs(actionList)) {
+        for (const [, node] of _ipairs(actionList)) {
             let fname = OvaleFunctionName(node.name, annotation);
             taggedFunctionName[fname] = true;
-            for (const [_, tag] of _pairs(OVALE_TAGS)) {
+            for (const [, tag] of _pairs(OVALE_TAGS)) {
                 let [bodyName, conditionName] = OvaleTaggedFunctionName(fname, tag);
                 taggedFunctionName[bodyName] = true;
                 taggedFunctionName[conditionName] = true;
@@ -5094,7 +5092,7 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
     Unparse(profile) {
         let output = self_outputPool.Get();
         if (profile.actionList) {
-            for (const [_, node] of _ipairs(profile.actionList)) {
+            for (const [, node] of _ipairs(profile.actionList)) {
                 output[lualength(output) + 1] = Unparse(node);
             }
         }
@@ -5137,11 +5135,11 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
                     OvaleAST.PropagateConstants(dictionaryAST);
                     OvaleAST.PropagateStrings(dictionaryAST);
                     OvaleAST.FlattenParameters(dictionaryAST);
-                    Ovale.ResetControls();
+                    ResetControls();
                     OvaleCompile.EvaluateScript(dictionaryAST, true);
                 }
             }
-            for (const [_, node] of _ipairs(profile.actionList)) {
+            for (const [, node] of _ipairs(profile.actionList)) {
                 let addFunctionNode = EmitActionList(node, nodeList, annotation);
                 if (addFunctionNode) {
                     let actionListName = gsub(node.name, "^_+", "");
@@ -5149,7 +5147,7 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
                     commentNode.type = "comment";
                     commentNode.comment = `## actions.${actionListName}`;
                     child[lualength(child) + 1] = commentNode;
-                    for (const [_, tag] of _pairs(OVALE_TAGS)) {
+                    for (const [, tag] of _pairs(OVALE_TAGS)) {
                         let [bodyNode, conditionNode] = SplitByTag(tag, addFunctionNode, nodeList, annotation);
                         child[lualength(child) + 1] = bodyNode;
                         child[lualength(child) + 1] = conditionNode;
@@ -5260,8 +5258,6 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
         return ast;
     }
     Emit(profile: Profile, noFinalNewLine?: boolean) {
-        let nodeList = {
-        }
         let ast = this.EmitAST(profile);
         let annotation = profile.annotation;
         let className = annotation.class;
@@ -5303,7 +5299,7 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
             output[lualength(output) + 1] = "";
             output[lualength(output) + 1] = "### Required symbols";
             tsort(profile.annotation.symbolTable);
-            for (const [_, symbol] of _ipairs(profile.annotation.symbolTable)) {
+            for (const [, symbol] of _ipairs(profile.annotation.symbolTable)) {
                 if (!_tonumber(symbol) && profile.annotation.dictionary && !profile.annotation.dictionary[symbol] && !OvaleData.buffSpellList[symbol]) {
                     this.Print("Warning: Symbol '%s' not defined", symbol);
                 }

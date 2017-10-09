@@ -4,9 +4,7 @@ import { OvaleState, StateModule } from "./State";
 
 let OvaleDemonHunterSoulFragmentsBase = Ovale.NewModule("OvaleDemonHunterSoulFragments", "AceEvent-3.0");
 export let OvaleDemonHunterSoulFragments: OvaleDemonHunterSoulFragmentsClass;
-let _ipairs = ipairs;
 let tinsert = table.insert;
-let tremove = table.remove;
 let API_GetTime = GetTime;
 let API_GetSpellCount = GetSpellCount;
 
@@ -29,10 +27,10 @@ class OvaleDemonHunterSoulFragmentsClass extends OvaleDebug.RegisterDebugging(Ov
     soul_fragments: LuaArray<SoulFragments>;
     last_soul_fragment_count:SoulFragments;
 
-    OnInitialize() {
+    constructor() {
+        super();
         this.SetCurrentSoulFragments(0);
-    }
-    OnEnable() {
+    
         if (Ovale.playerClass == "DEMONHUNTER") {
             this.RegisterEvent("PLAYER_REGEN_ENABLED");
             this.RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
@@ -59,7 +57,7 @@ class OvaleDemonHunterSoulFragmentsClass extends OvaleDebug.RegisterDebugging(Ov
     COMBAT_LOG_EVENT_UNFILTERED(event, _2, subtype, _4, sourceGUID, _6, _7, _8, _9, _10, _11, _12, spellID, spellName) {
         let me = Ovale.playerGUID;
         if (sourceGUID == me) {
-            let current_sould_fragment_count = this.last_soul_fragment_count;
+            //let current_sould_fragment_count = this.last_soul_fragment_count;
             if (subtype == "SPELL_HEAL" && spellID == SOUL_FRAGMENTS_SPELL_HEAL_ID) {
                 this.SetCurrentSoulFragments(this.last_soul_fragment_count.fragments - 1);
             }
@@ -100,29 +98,6 @@ class OvaleDemonHunterSoulFragmentsClass extends OvaleDebug.RegisterDebugging(Ov
     }
 }
 
-
-const spairs = function<T>(t:LuaObj<T>, order:(t: LuaObj<T>, a: string, b: string) => boolean) {
-    let keys:LuaArray<string> = {
-    }
-    for (const [k] of pairs(t)) {
-        keys[lualength(keys) + 1] = k;
-    }
-    if (order) {
-        table.sort(keys, function (a, b) {
-            return order(t, a, b);
-        });
-    } else {
-        table.sort(keys);
-    }
-    let i = 0;
-    return function () {
-        i = i + 1;
-        if (keys[i]) {
-            return [keys[i], t[keys[i]]];
-        }
-    };
-}
-
 class DemonHunterSoulFragmentsState implements StateModule {
     CleanState(): void {
     }
@@ -133,7 +108,7 @@ class DemonHunterSoulFragmentsState implements StateModule {
     SoulFragments(atTime: number) {
         let currentTime:number = undefined;
         let count: number = undefined;
-        for (const [k, v] of pairs(OvaleDemonHunterSoulFragments.soul_fragments)) {
+        for (const [, v] of pairs(OvaleDemonHunterSoulFragments.soul_fragments)) {
             if (v.timestamp >= atTime && (currentTime == undefined || v.timestamp < currentTime)) {
                 currentTime = v.timestamp;
                 count = v.fragments;

@@ -6,7 +6,6 @@ import { OvalePaperDoll } from "./PaperDoll";
 let OvalePassiveAuraBase = Ovale.NewModule("OvalePassiveAura", "AceEvent-3.0");
 export let OvalePassiveAura: OvalePassiveAuraClass;
 let exp = math.exp;
-let log = math.log;
 let _pairs = pairs;
 let API_GetTime = GetTime;
 let INFINITY = math.huge;
@@ -131,9 +130,8 @@ let READINESS_ROLE = {
     }
 }
 class OvalePassiveAuraClass extends OvalePassiveAuraBase {
-    OnInitialize() {
-    }
-    OnEnable() {
+    constructor() {
+        super();
         self_playerGUID = Ovale.playerGUID;
         this.RegisterMessage("Ovale_EquipmentChanged");
         this.RegisterMessage("Ovale_SpecializationChanged");
@@ -170,7 +168,7 @@ class OvalePassiveAuraClass extends OvalePassiveAuraBase {
         let hasAmplification = false;
         let critDamageIncrease = 0;
         let statMultiplier = 1;
-        for (const [_, slot] of _pairs(TRINKET_SLOTS)) {
+        for (const [, slot] of _pairs(TRINKET_SLOTS)) {
             let [trinket] = OvaleEquipment.GetEquippedItem(slot);
             if (trinket && AMPLIFICATION_TRINKET[trinket]) {
                 hasAmplification = true;
@@ -207,7 +205,7 @@ class OvalePassiveAuraClass extends OvalePassiveAuraBase {
         if (spellId) {
             let hasReadiness = false;
             let cdMultiplier;
-            for (const [_, slot] of _pairs(TRINKET_SLOTS)) {
+            for (const [, slot] of _pairs(TRINKET_SLOTS)) {
                 let [trinket] = OvaleEquipment.GetEquippedItem(slot);
                 let readinessId = trinket && READINESS_TRINKET[trinket];
                 if (readinessId) {

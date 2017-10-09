@@ -7,7 +7,7 @@ class BackToFrontIterator<T> {
 	Next() {
 		this.control = this.control - 1;
         this.value = this.invariant[this.control];
-        return this.control <= this.invariant.last;
+        return this.control >= this.invariant.first;
 	}
 }
 
@@ -17,7 +17,7 @@ class FrontToBackIterator<T> {
 	Next() {
 		this.control = this.control + 1;
         this.value = this.invariant[this.control];
-        return this.control >= this.invariant.first;
+        return this.control <= this.invariant.last;
 	}
 }
 

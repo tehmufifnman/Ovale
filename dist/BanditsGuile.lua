@@ -17,9 +17,14 @@ local BANDITS_GUILE_ATTACK = {
     [1752] = API_GetSpellInfo(1752)
 }
 local OvaleBanditsGuile = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleBanditsGuileBase), {
-    OnInitialize = function(self)
-    end,
-    OnEnable = function(self)
+    constructor = function(self)
+        self.spellName = "Bandit's Guile"
+        self.spellId = BANDITS_GUILE
+        self.start = 0
+        self.ending = 0
+        self.duration = 15
+        self.stacks = 0
+        __Debug.OvaleDebug:RegisterDebugging(OvaleBanditsGuileBase).constructor(self)
         if __Ovale.Ovale.playerClass == "ROGUE" then
             self_playerGUID = __Ovale.Ovale.playerGUID
             self:RegisterMessage("Ovale_SpecializationChanged")
@@ -45,7 +50,7 @@ local OvaleBanditsGuile = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleBand
         end
     end,
     COMBAT_LOG_EVENT_UNFILTERED = function(self, event, timestamp, cleuEvent, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, ...)
-        local arg12, arg13, arg14, arg15, arg16, arg17, arg18, arg19, arg20, arg21, arg22, arg23, arg24, arg25 = ...
+        local arg12, arg13, _, _, _, _, _, _, _, _, _, _, _, arg25 = ...
         if sourceGUID == self_playerGUID and cleuEvent == "SPELL_DAMAGE" then
             local spellId, spellName, multistrike = arg12, arg13, arg25
             if BANDITS_GUILE_ATTACK[spellId] and  not multistrike then
@@ -112,14 +117,6 @@ local OvaleBanditsGuile = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleBand
             self:Print("Player has Bandit's Guile aura with start=%s, end=%s, stacks=%d.", playerAura.start, playerAura.ending, playerAura.stacks)
         end
     end,
-    constructor = function(self)
-        self.spellName = "Bandit's Guile"
-        self.spellId = BANDITS_GUILE
-        self.start = 0
-        self.ending = 0
-        self.duration = 15
-        self.stacks = 0
-    end
 })
 __exports.banditsGuile = OvaleBanditsGuile()
 end)
