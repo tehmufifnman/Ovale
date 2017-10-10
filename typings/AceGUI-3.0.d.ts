@@ -52,7 +52,7 @@ interface AceGUIWidgetCheckBox extends AceGUIWidgetBase {
     SetImage(path: string, ...coords:number[]):void;
 }
 
-type AceGUIDWidgetDropDownItemType = "Dropdown-Item-Toggle" | "Dropdown-Item-Header"
+type AceGUIWidgetDropDownItemType = "Dropdown-Item-Toggle" | "Dropdown-Item-Header"
     | "Dropdown-Item-Execute" | "Dropdown-Item-Menu" | "Dropdown-Item-Separator";
 
 interface AceGUIWidgetDropDown extends AceGUIWidgetBase {
@@ -64,8 +64,8 @@ interface AceGUIWidgetDropDown extends AceGUIWidgetBase {
     GetValue<T>(): T;
     SetItemValue<T>(item: string, value: T):void;
     SetItemDisabled(item: string, disabled: boolean):void;
-    SetList<T>(list: LuaObj<T>, order?: LuaArray<string>, itemType?: AceGUIDWidgetDropDownItemType):void;
-    AddItem<T>(value: T, text: string, itemType?: AceGUIDWidgetDropDownItemType)
+    SetList<T>(list: LuaObj<T>, order?: LuaArray<string>, itemType?: AceGUIWidgetDropDownItemType):void;
+    AddItem<T>(value: T, text: string, itemType?: AceGUIWidgetDropDownItemType)
     SetMultiselect(multi: boolean):void;
     GetMultiselect():boolean;
 }

@@ -359,15 +359,15 @@ local OvaleSpellFlashClass = __class(OvaleSpellFlashBase, {
                 local brightness = db.brightness * 100
                 if element.lowername == "spell" then
                     if __Stance.OvaleStance:IsStanceSpell(spellId) then
-                        SpellFlashCore.FlashForm(spellId, color, size, brightness)
+                        SpellFlashCore:FlashForm(spellId, color, size, brightness)
                     end
                     if __SpellBook.OvaleSpellBook:IsPetSpell(spellId) then
-                        SpellFlashCore.FlashPet(spellId, color, size, brightness)
+                        SpellFlashCore:FlashPet(spellId, color, size, brightness)
                     end
-                    SpellFlashCore.FlashAction(spellId, color, size, brightness)
+                    SpellFlashCore:FlashAction(spellId, color, size, brightness)
                 elseif element.lowername == "item" then
                     local itemId = element.positionalParams[1]
-                    SpellFlashCore.FlashItem(itemId, color, size, brightness)
+                    SpellFlashCore:FlashItem(itemId, color, size, brightness)
                 end
             end
         end

@@ -19,10 +19,7 @@ local OvaleRunesClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.
         __Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleRunesBase)).constructor(self)
         if __Ovale.Ovale.playerClass == "DEATHKNIGHT" then
             for slot = 1, RUNE_SLOTS, 1 do
-                self.rune[slot] = {
-                    slot = slot,
-                    IsActiveRune = IsActiveRune
-                }
+                self.rune[slot] = {}
             end
             self:RegisterEvent("PLAYER_ENTERING_WORLD", "UpdateAllRunes")
             self:RegisterEvent("RUNE_POWER_UPDATE")
@@ -85,7 +82,7 @@ local OvaleRunesClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.
         local now = API_GetTime()
         for slot = 1, RUNE_SLOTS, 1 do
             local rune = self.rune[slot]
-            if rune.IsActiveRune(now) then
+            if IsActiveRune(rune, now) then
                 self:Print("rune[%d] is active.", slot)
             else
                 self:Print("rune[%d] comes off cooldown in %f seconds.", slot, rune.endCooldown - now)

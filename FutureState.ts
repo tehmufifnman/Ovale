@@ -301,7 +301,7 @@ class FutureState {
             }
         }
         targetGUID = targetGUID || OvaleGUID.UnitGUID(baseState.defaultTarget);
-        let gcd = spellId && dataState.GetSpellInfoProperty(spellId, atTime, "gcd", targetGUID);
+        let gcd = spellId && <number>dataState.GetSpellInfoProperty(spellId, atTime, "gcd", targetGUID);
         if (!gcd) {
             let haste;
             [gcd, haste] = OvaleCooldown.GetBaseGCD();

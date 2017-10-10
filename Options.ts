@@ -108,7 +108,7 @@ class OvaleOptionsClass extends OvaleOptionsBase {
                                 type: "toggle",
                                 name: L["Enabled"],
                                 width: "full",
-                                set: function (info, value) {
+                                set: (info, value) => {
                                     Ovale.db.profile.apparence.enableIcons = value;
                                     this.SendMessage("Ovale_OptionChanged", "visibility");
                                 }
@@ -117,7 +117,7 @@ class OvaleOptionsClass extends OvaleOptionsBase {
                                 order: 10,
                                 type: "toggle",
                                 name: L["Verrouiller position"],
-                                disabled: function () {
+                                disabled: () => {
                                     return !Ovale.db.profile.apparence.enableIcons;
                                 }
                             },
@@ -125,7 +125,7 @@ class OvaleOptionsClass extends OvaleOptionsBase {
                                 order: 20,
                                 type: "toggle",
                                 name: L["Ignorer les clics souris"],
-                                disabled: function () {
+                                disabled: () => {
                                     return !Ovale.db.profile.apparence.enableIcons;
                                 }
                             },
@@ -394,7 +394,7 @@ class OvaleOptionsClass extends OvaleOptionsBase {
                         type: "execute",
                         name: L["Afficher la fenêtre"],
                         guiHidden: true,
-                        func: function () {
+                        func: () => {
                             Ovale.db.profile.apparence.enableIcons = true;
                             this.SendMessage("Ovale_OptionChanged", "visibility");
                         }
@@ -403,7 +403,7 @@ class OvaleOptionsClass extends OvaleOptionsBase {
                         type: "execute",
                         name: L["Cacher la fenêtre"],
                         guiHidden: true,
-                        func: function () {
+                        func: () => {
                             Ovale.db.profile.apparence.enableIcons = false;
                             this.SendMessage("Ovale_OptionChanged", "visibility");
                         }
@@ -411,16 +411,16 @@ class OvaleOptionsClass extends OvaleOptionsBase {
                     config: {
                         name: "Configuration",
                         type: "execute",
-                        func: function () {
+                        func: () => {
                             this.ToggleConfig();
                         }
                     },
                     refresh: {
                         name: L["Display refresh statistics"],
                         type: "execute",
-                        func: function () {
-                            // let [avgRefresh, minRefresh, maxRefresh, count] = Ovale.GetRefreshIntervalStatistics();
-                            // Ovale.Print("Refresh intervals: count = %d, avg = %d, min = %d, max = %d (ms)", count, avgRefresh, minRefresh, maxRefresh);
+                        func: () => {
+                            let [avgRefresh, minRefresh, maxRefresh, count] = Ovale.GetRefreshIntervalStatistics();
+                            Ovale.Print("Refresh intervals: count = %d, avg = %d, min = %d, max = %d (ms)", count, avgRefresh, minRefresh, maxRefresh);
                         }
                     }
                 }

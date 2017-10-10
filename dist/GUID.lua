@@ -71,7 +71,7 @@ local compareDefault = function(a, b)
     return a < b
 end
 
-local BinaryInsert = function(t, value, unique, compare)
+local function BinaryInsert(t, value, unique, compare)
     if _type(unique) == "function" then
         unique, compare = nil, unique
     end
@@ -90,14 +90,7 @@ local BinaryInsert = function(t, value, unique, compare)
     tinsert(t, low, value)
     return low
 end
-local BinaryRemove = function(t, value, compare)
-    local index = BinarySearch(t, value, compare)
-    if index then
-        tremove(t, index)
-    end
-    return index
-end
-local BinarySearch = function(t, value, compare)
+local function BinarySearch(t, value, compare)
     compare = compare or compareDefault
     local low, high = 1, #t
     while low <= high do
@@ -111,6 +104,13 @@ local BinarySearch = function(t, value, compare)
         end
     end
     return nil
+end
+local function BinaryRemove(t, value, compare)
+    local index = BinarySearch(t, value, compare)
+    if index then
+        tremove(t, index)
+    end
+    return index
 end
 local CompareUnit = function(a, b)
     return UNIT_AURA_UNIT[a] < UNIT_AURA_UNIT[b]

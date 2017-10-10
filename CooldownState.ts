@@ -174,7 +174,7 @@ class CooldownState implements StateModule {
             OvaleCooldown.Log("Spell %d is on cooldown for %fs starting at %s.", spellId, duration, start);
         } else {
             let si = OvaleData.spellInfo[spellId];
-            duration = dataState.GetSpellInfoProperty(spellId, atTime, "cd", targetGUID);
+            duration = <number>dataState.GetSpellInfoProperty(spellId, atTime, "cd", targetGUID);
             if (duration) {
                 if (si && si.addcd) {
                     duration = duration + si.addcd;

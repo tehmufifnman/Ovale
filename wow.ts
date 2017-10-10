@@ -184,7 +184,7 @@ function makeLuaIterable<T>(iterable: Iterable<T>) {
 }
 
 var string = {
-    find: (t: string, pattern: string, start?:number):[number, number] => {
+    find: (t: string, pattern: string, start?:number):number[] => {
         if (start) {
             t = t.substring(start);
         }
@@ -557,7 +557,7 @@ function GetShapeshiftForm(){}
 function GetShapeshiftFormInfo(index:number){return []}
 function GetTotemInfo(slot) {return[]}
 
-var BigWigsLoader;
+var BigWigsLoader: AceModule & AceEvent;
 var UIParent: UIFrame;
 var Bartender4;
 

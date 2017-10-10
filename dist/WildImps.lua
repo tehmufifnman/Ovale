@@ -21,6 +21,7 @@ local demonData = {
 local self_demons = {}
 local self_serial = 1
 local API_GetTime = GetTime
+local sfind = string.find
 local OvaleWildImpsClass = __class(OvaleWildImpsBase, {
     constructor = function(self)
         OvaleWildImpsBase.constructor(self)
@@ -41,7 +42,7 @@ local OvaleWildImpsClass = __class(OvaleWildImpsBase, {
             return 
         end
         if cleuEvent == "SPELL_SUMMON" then
-            local _, _, _, _, _, _, _, creatureId = destGUID.find("(%S+)-(%d+)-(%d+)-(%d+)-(%d+)-(%d+)-(%S+)")
+            local _, _, _, _, _, _, _, creatureId = sfind(destGUID, "(%S+)-(%d+)-(%d+)-(%d+)-(%d+)-(%d+)-(%S+)")
             creatureId = tonumber(creatureId)
             local now = API_GetTime()
             for id, v in pairs(demonData) do

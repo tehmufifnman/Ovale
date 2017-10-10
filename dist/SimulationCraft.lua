@@ -551,7 +551,7 @@ local SyntaxError = function(tokenStream, ...)
         [1] = "Next tokens:"
     }
     for i = 1, 20, 1 do
-        local tokenType, token = tokenStream.Peek(i)
+        local tokenType, token = tokenStream:Peek(i)
         if tokenType then
             context[#context + 1] = token
         else
@@ -682,18 +682,18 @@ local ParseActionList = function(name, actionList, nodeList, annotation)
     return ok, node
 end
 
-local ParseExpression = function(tokenStream, nodeList, annotation, minPrecedence)
+local function ParseExpression(tokenStream, nodeList, annotation, minPrecedence)
     minPrecedence = minPrecedence or 0
     local ok = true
     local node
     do
-        local tokenType, token = tokenStream.Peek()
+        local tokenType, token = tokenStream:Peek()
         if tokenType then
             local opInfo = UNARY_OPERATOR[token]
             if opInfo then
                 local opType, precedence = opInfo[1], opInfo[2]
                 local asType = (opType == "logical") and "boolean" or "value"
-                tokenStream.Consume()
+                tokenStream:Consume()
                 local operator = token
                 local rhsNode
                 ok, rhsNode = ParseExpression(tokenStream, nodeList, annotation, precedence)
@@ -721,7 +721,7 @@ local ParseExpression = function(tokenStream, nodeList, annotation, minPrecedenc
     end
     while ok do
         local keepScanning = false
-        local tokenType, token = tokenStream.Peek()
+        local tokenType, token = tokenStream:Peek()
         if  not tokenType then
             break
         end
@@ -731,7 +731,7 @@ local ParseExpression = function(tokenStream, nodeList, annotation, minPrecedenc
             local asType = (opType == "logical") and "boolean" or "value"
             if precedence and precedence > minPrecedence then
                 keepScanning = true
-                tokenStream.Consume()
+                tokenStream:Consume()
                 local operator = token
                 local lhsNode = node
                 local rhsNode
@@ -768,12 +768,11 @@ local ParseExpression = function(tokenStream, nodeList, annotation, minPrecedenc
     end
     return ok, node
 end
-
 ParseFunction = function(tokenStream, nodeList, annotation)
     local ok = true
     local name
     do
-        local tokenType, token = tokenStream.Consume()
+        local tokenType, token = tokenStream:Consume()
         if tokenType == "keyword" and FUNCTION_KEYWORD[token] then
             name = token
         else
@@ -782,7 +781,7 @@ ParseFunction = function(tokenStream, nodeList, annotation)
         end
     end
     if ok then
-        local tokenType, token = tokenStream.Consume()
+        local tokenType, token = tokenStream:Consume()
         if tokenType ~= "(" then
             SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing FUNCTION; '(' expected.", token)
             ok = false
@@ -793,7 +792,7 @@ ParseFunction = function(tokenStream, nodeList, annotation)
         ok, argumentNode = ParseExpression(tokenStream, nodeList, annotation)
     end
     if ok then
-        local tokenType, token = tokenStream.Consume()
+        local tokenType, token = tokenStream:Consume()
         if tokenType ~= ")" then
             SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing FUNCTION; ')' expected.", token)
             ok = false
@@ -810,7 +809,7 @@ ParseFunction = function(tokenStream, nodeList, annotation)
 end
 
 local ParseIdentifier = function(tokenStream, nodeList, annotation)
-    local _, token = tokenStream.Consume()
+    local _, token = tokenStream:Consume()
     local node = NewNode(nodeList)
     node.type = "operand"
     node.name = token
@@ -823,7 +822,7 @@ ParseModifier = function(tokenStream, nodeList, annotation)
     local ok = true
     local name
     do
-        local tokenType, token = tokenStream.Consume()
+        local tokenType, token = tokenStream:Consume()
         if tokenType == "keyword" and MODIFIER_KEYWORD[token] then
             name = token
         else
@@ -832,7 +831,7 @@ ParseModifier = function(tokenStream, nodeList, annotation)
         end
     end
     if ok then
-        local tokenType, token = tokenStream.Consume()
+        local tokenType, token = tokenStream:Consume()
         if tokenType ~= "=" then
             SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing action line; '=' expected.", token)
             ok = false
@@ -856,7 +855,7 @@ ParseNumber = function(tokenStream, nodeList, annotation)
     local ok = true
     local value
     do
-        local tokenType, token = tokenStream.Consume()
+        local tokenType, token = tokenStream:Consume()
         if tokenType == "number" then
             value = _tonumber(token)
         else
@@ -877,7 +876,7 @@ ParseOperand = function(tokenStream, nodeList, annotation)
     local ok = true
     local name
     do
-        local tokenType, token = tokenStream.Consume()
+        local tokenType, token = tokenStream:Consume()
         if tokenType == "name" then
             name = token
         elseif tokenType == "keyword" and (token == "target" or token == "cooldown") then
@@ -907,7 +906,7 @@ ParseParentheses = function(tokenStream, nodeList, annotation)
     local ok = true
     local leftToken, rightToken
     do
-        local tokenType, token = tokenStream.Consume()
+        local tokenType, token = tokenStream:Consume()
         if tokenType == "(" then
             leftToken, rightToken = "(", ")"
         elseif tokenType == "{" then
@@ -922,7 +921,7 @@ ParseParentheses = function(tokenStream, nodeList, annotation)
         ok, node = ParseExpression(tokenStream, nodeList, annotation)
     end
     if ok then
-        local tokenType, token = tokenStream.Consume()
+        local tokenType, token = tokenStream:Consume()
         if tokenType ~= rightToken then
             SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing PARENTHESES; '%s' expected.", token, rightToken)
             ok = false
@@ -938,7 +937,7 @@ end
 ParseSimpleExpression = function(tokenStream, nodeList, annotation)
     local ok = true
     local node
-    local tokenType, token = tokenStream.Peek()
+    local tokenType, token = tokenStream:Peek()
     if tokenType == "number" then
         ok, node = ParseNumber(tokenStream, nodeList, annotation)
     elseif tokenType == "keyword" then
@@ -956,7 +955,7 @@ ParseSimpleExpression = function(tokenStream, nodeList, annotation)
         ok, node = ParseParentheses(tokenStream, nodeList, annotation)
     else
         SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing SIMPLE EXPRESSION", token)
-        tokenStream.Consume()
+        tokenStream:Consume()
         ok = false
     end
     return ok, node
@@ -2212,7 +2211,7 @@ EmitAction = function(parseNode, nodeList, annotation)
                     bodyCode = format("Spell(%s text=%s)", action, actionTarget)
                 end
             end
-            bodyCode = bodyCode or "Spell(" + action + ")"
+            bodyCode = bodyCode or "Spell(" .. action .. ")"
         end
         annotation.astAnnotation = annotation.astAnnotation or {}
         if  not bodyNode and bodyCode then
@@ -3318,7 +3317,7 @@ EmitOperandRace = function(operand, parseNode, nodeList, annotation, action)
             if (race == "blood_elf") then
                 raceId = "BloodElf"
             else
-                self.Print("Warning: Race '%s' not defined", race)
+                __exports.OvaleSimulationCraft:Print("Warning: Race '%s' not defined", race)
             end
             code = format("Race(%s)", raceId)
         else
@@ -3904,7 +3903,7 @@ local SweepComments = function(childNodes, index)
     return count
 end
 
-local isNode = function(n)
+local function isNode(n)
     return _type(n) == "table"
 end
 local Sweep = function(node)
@@ -5056,7 +5055,7 @@ local OvaleSimulationCraftClass = __class(__Debug.OvaleDebug:RegisterDebugging(O
 				Include(ovale_%s_spells)
 				%s
 			]]
-                local dictionaryCode = format(dictionaryFormat, strlower(annotation.class), __Ovale.Ovale.db.profile.overrideCode)
+                local dictionaryCode = format(dictionaryFormat, strlower(annotation.class), __Ovale.Ovale.db.profile.overrideCode or "")
                 dictionaryAST = __AST.OvaleAST:ParseCode("script", dictionaryCode, dictionaryAnnotation.nodeList, dictionaryAnnotation)
                 if dictionaryAST then
                     dictionaryAST.annotation = dictionaryAnnotation
@@ -5271,18 +5270,16 @@ local OvaleSimulationCraftClass = __class(__Debug.OvaleDebug:RegisterDebugging(O
                             width = "full",
                             get = function(info)
                                 return self_lastSimC
-                            end
-,
+                            end,
                             set = function(info, value)
                                 self_lastSimC = value
-                                local profile = self.ParseProfile(self_lastSimC)
+                                local profile = self:ParseProfile(self_lastSimC)
                                 local code = ""
                                 if profile then
-                                    code = self.Emit(profile)
+                                    code = self:Emit(profile)
                                 end
                                 self_lastScript = gsub(code, "	", "    ")
                             end
-
                         }
                     }
                 },

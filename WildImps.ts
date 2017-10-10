@@ -2,7 +2,7 @@ import { OvaleState, StateModule } from "./State";
 import { Ovale } from "./Ovale";
 let OvaleWildImpsBase = Ovale.NewModule("OvaleWildImps", "AceEvent-3.0");
 export let OvaleWildImps: OvaleWildImpsClass;
-let demonData = {
+let demonData: LuaArray<{duration: number}> = {
     [55659]: {
         duration: 12
     },
@@ -23,6 +23,7 @@ let self_demons = {
 }
 let self_serial = 1;
 let API_GetTime = GetTime;
+const sfind = string.find;
 class OvaleWildImpsClass extends OvaleWildImpsBase {
     constructor() {
         super();
@@ -43,7 +44,7 @@ class OvaleWildImpsClass extends OvaleWildImpsBase {
             return;
         }
         if (cleuEvent == "SPELL_SUMMON") {
-            let [,,,, , , , creatureId] = destGUID.find('(%S+)-(%d+)-(%d+)-(%d+)-(%d+)-(%d+)-(%S+)');
+            let [,,,, , , , creatureId] = sfind(destGUID, '(%S+)-(%d+)-(%d+)-(%d+)-(%d+)-(%d+)-(%S+)');
             creatureId = tonumber(creatureId);
             let now = API_GetTime();
             for (const [id, v] of pairs(demonData)) {

@@ -69,7 +69,7 @@ class OvaleDebugClass extends OvaleDebugBase {
             debug: {
                 name: L["Debug"],
                 type: "execute",
-                func: function () {
+                func: () => {
                     let appName = this.GetName();
                     AceConfigDialog.SetDefaultSize(appName, 800, 550);
                     AceConfigDialog.Open(appName);

@@ -248,7 +248,7 @@ local OvaleFrame = __class(AceGUI.WidgetContainerBase, {
     end,
     GetListValue = function(self, name)
         local widget = self.listWidget[name]
-        return widget and widget.GetValue()
+        return widget and widget:GetValue()
     end,
     SetCheckBox = function(self, name, on)
         local widget = self:GetCheckBox(name)
@@ -404,7 +404,7 @@ local OvaleFrame = __class(AceGUI.WidgetContainerBase, {
                 icon:EnableMouse( not profile.apparence.clickThru)
                 icon.cdShown = (l == 1)
                 if Masque then
-                    self.skinGroup.AddButton(icon)
+                    self.skinGroup:AddButton(icon.frame)
                 end
                 if l == 1 then
                     icon:Show()

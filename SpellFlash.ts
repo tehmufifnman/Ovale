@@ -7,6 +7,13 @@ import { OvaleSpellBook } from "./SpellBook";
 import { OvaleStance } from "./Stance";
 import { BaseState } from "./State";
 
+interface SpellFlashCoreClass {
+    FlashForm(spellId, color, size, brightness):void;   
+    FlashPet(spellId, color, size, brightness):void;
+    FlashAction(spellId, color, size, brightness):void;
+    FlashItem(spellId, color, size, brightness):void;
+}
+
 let OvaleSpellFlashBase = Ovale.NewModule("OvaleSpellFlash", "AceEvent-3.0");
 export let OvaleSpellFlash: OvaleSpellFlashClass;
 let _pairs = pairs;
@@ -15,7 +22,7 @@ let API_UnitHasVehicleUI = UnitHasVehicleUI;
 let API_UnitExists = UnitExists;
 let API_UnitIsDead = UnitIsDead;
 let API_UnitCanAttack = UnitCanAttack;
-let SpellFlashCore = undefined;
+let SpellFlashCore: SpellFlashCoreClass = undefined;
 let colorMain = { r: undefined, g: undefined, b: undefined }
 let colorShortCd = { r: undefined, g: undefined, b: undefined }
 let colorCd = {  r: undefined, g: undefined, b: undefined }

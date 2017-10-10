@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Power", { "./Localization", "./Debug", "./Profiler", "./Ovale", "./Aura", "./Future", "./Data", "./State", "./PaperDoll", "./Requirement", "./FutureState", "./LastSpell" }, function(__exports, __Localization, __Debug, __Profiler, __Ovale, __Aura, __Future, __Data, __State, __PaperDoll, __Requirement, __FutureState, __LastSpell)
+__addon.require(__addonName, __addon, "./Power", { "./Localization", "./Debug", "./Profiler", "./Ovale", "./Aura", "./Future", "./Data", "./State", "./PaperDoll", "./Requirement", "./FutureState", "./LastSpell", "./DataState" }, function(__exports, __Localization, __Debug, __Profiler, __Ovale, __Aura, __Future, __Data, __State, __PaperDoll, __Requirement, __FutureState, __LastSpell, __DataState)
 local OvalePowerBase = __Ovale.Ovale:NewModule("OvalePower", "AceEvent-3.0")
 local ceil = math.ceil
 local _pairs = pairs
@@ -12,6 +12,7 @@ local API_UnitPower = UnitPower
 local API_UnitPowerMax = UnitPowerMax
 local API_UnitPowerType = UnitPowerType
 local INFINITY = math.huge
+local _type = type
 local self_SpellcastInfoPowerTypes = {
     [1] = "chi",
     [2] = "holy"
@@ -38,6 +39,9 @@ do
     for k, v in _pairs(debugOptions) do
         __Debug.OvaleDebug.options.args[k] = v
     end
+end
+local function isString(s)
+    return _type(s) == "string"
 end
 local OvalePowerClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvalePowerBase)), {
     constructor = function(self)
@@ -156,6 +160,48 @@ local OvalePowerClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.
             ["MONK"] = "energy",
             ["ROGUE"] = "energy"
         }
+        self.CopySpellcastInfo = function(mod, spellcast, dest)
+            for _, powerType in _pairs(self_SpellcastInfoPowerTypes) do
+                if spellcast[powerType] then
+                    dest[powerType] = spellcast[powerType]
+                end
+            end
+        end
+        self.SaveSpellcastInfo = function(mod, spellcast, atTime, state)
+            local spellId = spellcast.spellId
+            if spellId then
+                local si = __Data.OvaleData.spellInfo[spellId]
+                if si then
+                    local dataModule = state or __DataState.dataState
+                    local powerModule
+                    if state then
+                        powerModule = __exports.powerState
+                    else
+                        powerModule = self
+                    end
+                    for _, powerType in _pairs(self_SpellcastInfoPowerTypes) do
+                        if si[powerType] == "finisher" then
+                            local maxCostParam = "max_" .. powerType
+                            local maxCost = si[maxCostParam] or 1
+                            local cost = dataModule:GetSpellInfoProperty(spellId, atTime, powerType, spellcast.target)
+                            if isString(cost) then
+                                if cost == "finisher" then
+                                    local power = powerModule:GetPower(powerType, atTime)
+                                    if power > maxCost then
+                                        spellcast[powerType] = maxCost
+                                    else
+                                        spellcast[powerType] = power
+                                    end
+                                end
+                            elseif cost == 0 then
+                                spellcast[powerType] = maxCost
+                            end
+                            spellcast[powerType] = cost
+                        end
+                    end
+                end
+            end
+        end
         __Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvalePowerBase)).constructor(self)
         for powerType, v in _pairs(self.POWER_INFO) do
             if  not v.id then
@@ -337,20 +383,24 @@ local OvalePowerClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.
         local si = __Data.OvaleData.spellInfo[spellId]
         if si and si[powerType] then
             local cost = __Data.OvaleData:GetSpellInfoProperty(spellId, atTime, powerType, targetGUID)
-            if cost == "finisher" then
-                cost = self:GetPower(powerType, atTime)
-                local minCostParam = "min_" .. powerType
-                local maxCostParam = "max_" .. powerType
-                local minCost = si[minCostParam] or 1
-                local maxCost = si[maxCostParam]
-                if cost < minCost then
-                    cost = minCost
+            local costNumber
+            if isString(cost) then
+                if cost == "finisher" then
+                    cost = self:GetPower(powerType, atTime)
+                    local minCostParam = "min_" .. powerType
+                    local maxCostParam = "max_" .. powerType
+                    local minCost = si[minCostParam] or 1
+                    local maxCost = si[maxCostParam]
+                    if cost < minCost then
+                        costNumber = minCost
+                    end
+                    if maxCost and cost > maxCost then
+                        costNumber = maxCost
+                    end
+                elseif cost == "refill" then
+                    costNumber = self:GetPower(powerType, atTime) - self.maxPower[powerType]
                 end
-                if maxCost and cost > maxCost then
-                    cost = maxCost
-                end
-            elseif cost == "refill" then
-                cost = self:GetPower(powerType, atTime) - self.maxPower[powerType]
+                costNumber = 0
             else
                 local buffExtraParam = buffParam
                 local buffAmountParam = buffParam .. "_amount"
@@ -379,27 +429,30 @@ local OvalePowerClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.
                         self:Log("Spell ID '%d' had %f %s added from aura ID '%d'.", spellId, buffAmount, powerType, aura.spellId)
                     end
                 end
+                costNumber = cost
             end
             local extraPowerParam = "extra_" .. powerType
             local extraPower = __Data.OvaleData:GetSpellInfoProperty(spellId, atTime, extraPowerParam, targetGUID)
-            if extraPower then
+            if extraPower and  not isString(extraPower) then
                 if  not maximumCost then
                     local power = math.floor(self:GetPower(powerType, atTime))
-                    power = power > cost and power - cost or 0
+                    power = power > cost and power - costNumber or 0
                     if extraPower >= power then
                         extraPower = power
                     end
                 end
-                cost = cost + extraPower
+                costNumber = costNumber + extraPower
             end
-            spellCost = ceil(cost)
+            spellCost = ceil(costNumber)
             local refundParam = "refund_" .. powerType
             local refund = __Data.OvaleData:GetSpellInfoProperty(spellId, atTime, refundParam, targetGUID)
-            if refund == "cost" then
-                refund = spellCost
+            if isString(refund) then
+                if refund == "cost" then
+                    spellRefund = ceil(spellCost)
+                end
+            else
+                spellRefund = ceil(refund or 0)
             end
-            refund = refund or 0
-            spellRefund = ceil(refund)
         else
             local cost = self:GetSpellCost(spellId, powerType)
             if cost then
@@ -444,41 +497,6 @@ local OvalePowerClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.
         end
         self:Print("Active regen: %f", self.activeRegen)
         self:Print("Inactive regen: %f", self.inactiveRegen)
-    end,
-    CopySpellcastInfo = function(self, spellcast, dest)
-        for _, powerType in _pairs(self_SpellcastInfoPowerTypes) do
-            if spellcast[powerType] then
-                dest[powerType] = spellcast[powerType]
-            end
-        end
-    end,
-    SaveSpellcastInfo = function(self, spellcast, atTime, state)
-        local spellId = spellcast.spellId
-        if spellId then
-            local si = __Data.OvaleData.spellInfo[spellId]
-            if si then
-                local dataModule = state or __Data.OvaleData
-                local powerModule = state or self
-                for _, powerType in _pairs(self_SpellcastInfoPowerTypes) do
-                    if si[powerType] == "finisher" then
-                        local maxCostParam = "max_" .. powerType
-                        local maxCost = si[maxCostParam] or 1
-                        local cost = dataModule.GetSpellInfoProperty(spellId, atTime, powerType, spellcast.target)
-                        if cost == "finisher" then
-                            local power = powerModule.GetPower(powerType, atTime)
-                            if power > maxCost then
-                                cost = maxCost
-                            else
-                                cost = power
-                            end
-                        elseif cost == 0 then
-                            cost = maxCost
-                        end
-                        spellcast[powerType] = cost
-                    end
-                end
-            end
-        end
     end,
 })
 local output = {}

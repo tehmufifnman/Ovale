@@ -445,7 +445,8 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
         }
         return value;
     }
-    GetSpellInfoProperty(spellId, atTime, property, targetGUID) {
+    //GetSpellInfoProperty(spellId, atTime, property:"gcd"|"duration"|"combo"|"inccounter"|"resetcounter", targetGUID):number;
+    GetSpellInfoProperty(spellId, atTime, property:string, targetGUID): string|number {
         targetGUID = targetGUID || OvaleGUID.UnitGUID(baseState.defaultTarget || "target");
         let si = this.spellInfo[spellId];
         let value = si && si[property];

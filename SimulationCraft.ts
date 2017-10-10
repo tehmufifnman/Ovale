@@ -622,7 +622,7 @@ const UnparseOperand = function(node) {
         ["operand"]: UnparseOperand
     }
 }
-const SyntaxError = function(tokenStream, ...__args) {
+const SyntaxError = function(tokenStream: OvaleLexer, ...__args) {
     OvaleSimulationCraft.Print(...__args);
     let context = {
         1: "Next tokens:"
@@ -762,14 +762,15 @@ const ParseActionList = function (name, actionList, nodeList, annotation) {
     }
     return [ok, node];
 }
-const ParseExpression = function (tokenStream, nodeList, annotation, minPrecedence?) {
+
+function  ParseExpression(tokenStream: OvaleLexer, nodeList, annotation, minPrecedence?) {
     minPrecedence = minPrecedence || 0;
     let ok = true;
-    let node;
+    let node: Node;
     {
         let [tokenType, token] = tokenStream.Peek();
         if (tokenType) {
-            let opInfo = UNARY_OPERATOR[token];
+            let opInfo: { 1: "logical" | "arithmetic", 2: number} = UNARY_OPERATOR[token];
             if (opInfo) {
                 let [opType, precedence] = [opInfo[1], opInfo[2]];
                 let asType = (opType == "logical") && "boolean" || "value";
@@ -785,7 +786,7 @@ const ParseExpression = function (tokenStream, nodeList, annotation, minPreceden
                         node = NewNode(nodeList, true);
                         node.type = opType;
                         node.expressionType = "unary";
-                        node.operator = operator;
+                        node.operator = <OperatorType> operator;
                         node.precedence = precedence;
                         node.child[1] = rhsNode;
                         rhsNode.asType = asType;
@@ -820,11 +821,11 @@ const ParseExpression = function (tokenStream, nodeList, annotation, minPreceden
                     node = NewNode(nodeList, true);
                     node.type = opType;
                     node.expressionType = "binary";
-                    node.operator = operator;
+                    node.operator = <OperatorType>operator;
                     node.precedence = precedence;
                     node.child[1] = lhsNode;
                     node.child[2] = rhsNode;
-                    lhsNode.asType = asType;
+                    lhsNode.asType = <"boolean"|"value"> asType;
                     if (!rhsNode) {
                         SyntaxError(tokenStream, "Internal error: no right operand in binary operator %s.", token);
                         return false;
@@ -848,7 +849,7 @@ const ParseExpression = function (tokenStream, nodeList, annotation, minPreceden
     }
     return [ok, node];
 }
-ParseFunction = function (tokenStream, nodeList, annotation) {
+ParseFunction = function (tokenStream: OvaleLexer, nodeList, annotation) {
     let ok = true;
     let name;
     {
@@ -887,7 +888,7 @@ ParseFunction = function (tokenStream, nodeList, annotation) {
     }
     return [ok, node];
 }
-const ParseIdentifier = function (tokenStream, nodeList, annotation): [boolean, Node] {
+const ParseIdentifier = function (tokenStream: OvaleLexer, nodeList, annotation): [boolean, Node] {
     let [, token] = tokenStream.Consume();
     let node = NewNode(nodeList);
     node.type = "operand";
@@ -897,7 +898,7 @@ const ParseIdentifier = function (tokenStream, nodeList, annotation): [boolean, 
     annotation.operand[lualength(annotation.operand) + 1] = node;
     return [true, node];
 }
-ParseModifier = function (tokenStream, nodeList, annotation) {
+ParseModifier = function (tokenStream: OvaleLexer, nodeList, annotation) {
     let ok = true;
     let name;
     {
@@ -929,7 +930,7 @@ ParseModifier = function (tokenStream, nodeList, annotation) {
     }
     return [ok, name, expressionNode];
 }
-ParseNumber = function (tokenStream, nodeList, annotation) {
+ParseNumber = function (tokenStream: OvaleLexer, nodeList, annotation) {
     let ok = true;
     let value;
     {
@@ -949,7 +950,7 @@ ParseNumber = function (tokenStream, nodeList, annotation) {
     }
     return [ok, node];
 }
-ParseOperand = function (tokenStream, nodeList, annotation) {
+ParseOperand = function (tokenStream: OvaleLexer, nodeList, annotation) {
     let ok = true;
     let name;
     {
@@ -979,7 +980,7 @@ ParseOperand = function (tokenStream, nodeList, annotation) {
     }
     return [ok, node];
 }
-ParseParentheses = function (tokenStream, nodeList, annotation) {
+ParseParentheses = function (tokenStream: OvaleLexer, nodeList, annotation) {
     let ok = true;
     let leftToken, rightToken;
     {
@@ -1010,7 +1011,7 @@ ParseParentheses = function (tokenStream, nodeList, annotation) {
     }
     return [ok, node];
 }
-ParseSimpleExpression = function (tokenStream, nodeList, annotation):[boolean, Node] {
+ParseSimpleExpression = function (tokenStream: OvaleLexer, nodeList, annotation):[boolean, Node] {
     let ok = true;
     let node;
     let [tokenType, token] = tokenStream.Peek();
@@ -2277,7 +2278,7 @@ EmitAction = function (parseNode, nodeList, annotation) {
                     bodyCode = format("Spell(%s text=%s)", action, actionTarget);
                 }
             }
-            bodyCode = bodyCode || "Spell(" + action + ")";
+            bodyCode = bodyCode || `Spell(${action})`;
         }
         annotation.astAnnotation = annotation.astAnnotation || {
         }
@@ -3381,7 +3382,7 @@ EmitOperandRace = function (operand, parseNode, nodeList, annotation, action) {
             if ((race == "blood_elf")) {
                 raceId = "BloodElf";
             } else {
-                this.Print("Warning: Race '%s' not defined", race);
+                OvaleSimulationCraft.Print("Warning: Race '%s' not defined", race);
             }
             code = format("Race(%s)", raceId);
         } else {
@@ -5126,7 +5127,7 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
 				Include(ovale_%s_spells)
 				%s
 			`;
-                let dictionaryCode = format(dictionaryFormat, strlower(annotation.class), Ovale.db.profile.overrideCode);
+                let dictionaryCode = format(dictionaryFormat, strlower(annotation.class), Ovale.db.profile.overrideCode || "");
                 dictionaryAST = OvaleAST.ParseCode("script", dictionaryCode, dictionaryAnnotation.nodeList, dictionaryAnnotation);
                 if (dictionaryAST) {
                     dictionaryAST.annotation = dictionaryAnnotation;
@@ -5339,10 +5340,10 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
                             type: "input",
                             multiline: 25,
                             width: "full",
-                            get: function (info) {
+                            get: (info) => {
                                 return self_lastSimC;
                             },
-                            set: function (info, value) {
+                            set: (info, value) => {
                                 self_lastSimC = value;
                                 let profile = this.ParseProfile(self_lastSimC);
                                 let code = "";

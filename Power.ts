@@ -10,6 +10,7 @@ import { paperDollState } from "./PaperDoll";
 import { RegisterRequirement, UnregisterRequirement } from "./Requirement";
 import { futureState } from "./FutureState";
 import { lastSpell } from "./LastSpell";
+import { DataState, dataState } from "./DataState";
 
 let OvalePowerBase = Ovale.NewModule("OvalePower", "AceEvent-3.0");
 export let OvalePower:OvalePowerClass;
@@ -25,6 +26,7 @@ let API_UnitPower = UnitPower;
 let API_UnitPowerMax = UnitPowerMax;
 let API_UnitPowerType = UnitPowerType;
 let INFINITY = math.huge;
+let _type = type;
 // let self_updateSpellcastInfo = {
 // }
 let self_SpellcastInfoPowerTypes = {
@@ -61,6 +63,18 @@ interface PowerInfo {
     mini: number;
     costString?: string;
     segments?: number;
+}
+
+interface DataModule {
+    GetSpellInfoProperty(spellId, atTime, powerType, target): string|number;
+}
+
+interface PowerModule {
+    GetPower(powerType, atTime): number;
+}
+
+function isString(s: any): s is string {
+    return _type(s) == "string";
 }
 
 class OvalePowerClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(OvalePowerBase)) {
@@ -364,20 +378,24 @@ class OvalePowerClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Registe
         let si = OvaleData.spellInfo[spellId];
         if (si && si[powerType]) {
             let cost = OvaleData.GetSpellInfoProperty(spellId, atTime, powerType, targetGUID);
-            if (cost == "finisher") {
-                cost = this.GetPower(powerType, atTime);
-                let minCostParam = `min_${powerType}`;
-                let maxCostParam = `max_${powerType}`;
-                let minCost = si[minCostParam] || 1;
-                let maxCost = si[maxCostParam];
-                if (cost < minCost) {
-                    cost = minCost;
-                }
-                if (maxCost && cost > maxCost) {
-                    cost = maxCost;
-                }
-            } else if (cost == "refill") {
-                cost = this.GetPower(powerType, atTime) - this.maxPower[powerType];
+            let costNumber: number;
+            if (isString(cost)) {
+                if (cost == "finisher") {
+                    cost = this.GetPower(powerType, atTime);
+                    let minCostParam = `min_${powerType}`;
+                    let maxCostParam = `max_${powerType}`;
+                    let minCost = si[minCostParam] || 1;
+                    let maxCost = si[maxCostParam];
+                    if (cost < minCost) {
+                        costNumber = minCost;
+                    }
+                    if (maxCost && cost > maxCost) {
+                        costNumber = maxCost;
+                    }
+                } else if (cost == "refill") {
+                    costNumber = this.GetPower(powerType, atTime) - this.maxPower[powerType];
+                }   
+                costNumber = 0; 
             } else {
                 let buffExtraParam = buffParam;
                 let buffAmountParam = `${buffParam}_amount`;
@@ -406,27 +424,31 @@ class OvalePowerClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Registe
                         this.Log("Spell ID '%d' had %f %s added from aura ID '%d'.", spellId, buffAmount, powerType, aura.spellId);
                     }
                 }
+                costNumber = cost;
             }
             let extraPowerParam = `extra_${powerType}`;
             let extraPower = OvaleData.GetSpellInfoProperty(spellId, atTime, extraPowerParam, targetGUID);
-            if (extraPower) {
+            if (extraPower && !isString(extraPower)) {
                 if (!maximumCost) {
                     let power = math.floor(this.GetPower(powerType, atTime));
-                    power = power > cost && power - cost || 0;
+                    power = power > cost && power - costNumber || 0;
                     if (extraPower >= power) {
                         extraPower = power;
                     }
                 }
-                cost = cost + extraPower;
+                costNumber = costNumber + extraPower;
             }
-            spellCost = ceil(cost);
+            spellCost = ceil(costNumber);
             let refundParam = `refund_${powerType}`;
             let refund = OvaleData.GetSpellInfoProperty(spellId, atTime, refundParam, targetGUID);
-            if (refund == "cost") {
-                refund = spellCost;
+            if (isString(refund)) {
+                if (refund == "cost") {
+                    spellRefund = ceil(spellCost);
+                }
             }
-            refund = refund || 0;
-            spellRefund = ceil(refund);
+            else {
+                spellRefund = ceil(refund || 0);
+            }
         } else {
             let [cost] = this.GetSpellCost(spellId, powerType);
             if (cost) {
@@ -472,34 +494,38 @@ class OvalePowerClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Registe
         this.Print("Active regen: %f", this.activeRegen);
         this.Print("Inactive regen: %f", this.inactiveRegen);
     }
-    CopySpellcastInfo(spellcast, dest) {
+    CopySpellcastInfo = (mod, spellcast, dest) => {
         for (const [, powerType] of _pairs(self_SpellcastInfoPowerTypes)) {
             if (spellcast[powerType]) {
                 dest[powerType] = spellcast[powerType];
             }
         }
     }
-    SaveSpellcastInfo(spellcast, atTime, state) {
+    SaveSpellcastInfo = (mod, spellcast, atTime, state: DataState) => {
         let spellId = spellcast.spellId;
         if (spellId) {
             let si = OvaleData.spellInfo[spellId];
             if (si) {
-                let dataModule = state || OvaleData;
-                let powerModule = state || this;
+                let dataModule:DataModule = state || dataState;
+                let powerModule: PowerModule;
+                if (state) powerModule = powerState;
+                else powerModule = this;
                 for (const [, powerType] of _pairs(self_SpellcastInfoPowerTypes)) {
                     if (si[powerType] == "finisher") {
                         let maxCostParam = `max_${powerType}`;
                         let maxCost = si[maxCostParam] || 1;
                         let cost = dataModule.GetSpellInfoProperty(spellId, atTime, powerType, spellcast.target);
-                        if (cost == "finisher") {
-                            let power = powerModule.GetPower(powerType, atTime);
-                            if (power > maxCost) {
-                                cost = maxCost;
-                            } else {
-                                cost = power;
+                        if (isString(cost)) {
+                            if (cost == "finisher") {
+                                let power = powerModule.GetPower(powerType, atTime);
+                                if (power > maxCost) {
+                                    spellcast[powerType] = maxCost;
+                                } else {
+                                    spellcast[powerType] = power;
+                                }
                             }
-                        } else if (cost == 0) {
-                            cost = maxCost;
+                        } else if (cost === 0) {
+                            spellcast[powerType] =  maxCost;
                         }
                         spellcast[powerType] = cost;
                     }

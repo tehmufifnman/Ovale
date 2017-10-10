@@ -92,13 +92,6 @@ function BinaryInsert<T>(t: LuaArray<T>, value:T, unique, compare?) {
     tinsert(t, low, value);
     return low;
 }
-function BinaryRemove<T>(t: LuaArray<T>, value:T, compare) {
-    let index = BinarySearch(t, value, compare);
-    if (index) {
-        tremove(t, index);
-    }
-    return index;
-}
 function BinarySearch<T>(t: LuaArray<T>, value:T, compare) {
     compare = compare || compareDefault;
     let [low, high] = [1, lualength(t)];
@@ -115,6 +108,13 @@ function BinarySearch<T>(t: LuaArray<T>, value:T, compare) {
     return undefined;
 }
 
+function BinaryRemove<T>(t: LuaArray<T>, value:T, compare) {
+    let index = BinarySearch(t, value, compare);
+    if (index) {
+        tremove(t, index);
+    }
+    return index;
+}
 const CompareUnit = function(a, b) {
     return UNIT_AURA_UNIT[a] < UNIT_AURA_UNIT[b];
 }

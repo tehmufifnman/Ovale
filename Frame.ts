@@ -44,7 +44,7 @@ interface Action {
 
 class OvaleFrame extends AceGUI.WidgetContainerBase {
     checkBoxWidget: LuaObj<AceGUIWidgetCheckBox> = {}
-    listWidget = {}
+    listWidget: LuaObj<AceGUIWidgetDropDown> = {}
         
     ToggleOptions() {
         if ((this.content.IsShown())) {
@@ -487,7 +487,7 @@ class OvaleFrame extends AceGUI.WidgetContainerBase {
                 icon.EnableMouse(!profile.apparence.clickThru);
                 icon.cdShown = (l == 1);
                 if (Masque) {
-                    this.skinGroup.AddButton(icon);
+                    this.skinGroup.AddButton(icon.frame);
                 }
                 if (l == 1) {
                     icon.Show();
@@ -525,7 +525,7 @@ class OvaleFrame extends AceGUI.WidgetContainerBase {
    // content: UIFrame;
     timeSinceLastUpdate: number;
     barre: UITexture;
-    skinGroup: any;
+    skinGroup: MasqueSkinGroup;
 
     constructor() {
         super();

@@ -42,7 +42,7 @@ class OvaleHonorAmongThievesClass extends OvaleHonorAmongThievesBase {
             if (spellId == HONOR_AMONG_THIEVES && powerType == 4) {
                 let now = API_GetTime();
                 this.start = now;
-                let duration = OvaleData.GetSpellInfoProperty(HONOR_AMONG_THIEVES, now, "duration", destGUID) || MEAN_TIME_TO_HAT;
+                let duration = <number>OvaleData.GetSpellInfoProperty(HONOR_AMONG_THIEVES, now, "duration", destGUID) || MEAN_TIME_TO_HAT;
                 this.duration = duration;
                 this.ending = this.start + duration;
                 this.stacks = 1;

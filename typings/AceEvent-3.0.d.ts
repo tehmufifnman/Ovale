@@ -5,6 +5,7 @@ declare class AceEvent {
     RegisterEvent(event: string, callback: string):void;
     RegisterEvent(event: string):void;
     RegisterMessage(event:string, callback: (event: string, ...parameters) => void):void;
+    RegisterMessage(module: AceModule, event:string, callback: (event: string, ...parameters) => void):void;
     RegisterMessage(event: string, callback: string):void;
     RegisterMessage(event:string):void;
     UnregisterEvent(event:string):void;

@@ -64,11 +64,10 @@ local OvaleDebugClass = __class(OvaleDebugBase, {
                 name = __Localization.L["Debug"],
                 type = "execute",
                 func = function()
-                    local appName = self.GetName()
+                    local appName = self:GetName()
                     AceConfigDialog:SetDefaultSize(appName, 800, 550)
                     AceConfigDialog:Open(appName)
                 end
-
             }
         }
         for k, v in _pairs(actions) do

@@ -178,7 +178,7 @@ local BINARY_OPERATOR = {
 }
 local indent = {}
 indent[0] = ""
-local INDENT = function(key)
+local function INDENT(key)
     local ret = indent[key]
     if ret == nil then
         ret = INDENT(key - 1) .. " "

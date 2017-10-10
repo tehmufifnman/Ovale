@@ -26,16 +26,13 @@ const IsActiveRune = function(rune: Rune, atTime) {
     return (rune.startCooldown == 0 || rune.endCooldown <= atTime);
 }
 class OvaleRunesClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(OvaleRunesBase)) {
-    rune = {}
+    rune:LuaArray<Rune> = {}
     
     constructor() {
         super();
         if (Ovale.playerClass == "DEATHKNIGHT") {
             for (let slot = 1; slot <= RUNE_SLOTS; slot += 1) {
-                this.rune[slot] = {
-                    slot: slot,
-                    IsActiveRune: IsActiveRune
-                }
+                this.rune[slot] = {}
             }
             this.RegisterEvent("PLAYER_ENTERING_WORLD", "UpdateAllRunes");
             this.RegisterEvent("RUNE_POWER_UPDATE");
@@ -96,7 +93,7 @@ class OvaleRunesClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Registe
         let now = API_GetTime();
         for (let slot = 1; slot <= RUNE_SLOTS; slot += 1) {
             let rune = this.rune[slot];
-            if (rune.IsActiveRune(now)) {
+            if (IsActiveRune(rune, now)) {
                 this.Print("rune[%d] is active.", slot);
             } else {
                 this.Print("rune[%d] comes off cooldown in %f seconds.", slot, rune.endCooldown - now);

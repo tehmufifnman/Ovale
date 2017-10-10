@@ -4,6 +4,12 @@ local OvaleProfilerBase = __Ovale.Ovale:NewModule("OvaleProfiler")
 local _debugprofilestop = debugprofilestop
 local format = string.format
 local _pairs = pairs
+local _next = next
+local _wipe = wipe
+local tinsert = table.insert
+local tsort = table.sort
+local API_GetTime = GetTime
+local tconcat = table.concat
 local self_timestamp = _debugprofilestop()
 local self_timeSpent = {}
 local self_timesInvoked = {}
@@ -18,11 +24,10 @@ local OvaleProfilerClass = __class(OvaleProfilerBase, {
                 name = __Localization.L["Profiling"],
                 type = "execute",
                 func = function()
-                    local appName = self.GetName()
+                    local appName = self:GetName()
                     AceConfigDialog:SetDefaultSize(appName, 800, 550)
                     AceConfigDialog:Open(appName)
                 end
-
             }
         }
         self.options = {
@@ -61,9 +66,8 @@ local OvaleProfilerClass = __class(OvaleProfilerBase, {
                             type = "execute",
                             order = 20,
                             func = function()
-                                self.ResetProfiling()
+                                self:ResetProfiling()
                             end
-
                         },
                         show = {
                             name = __Localization.L["Show"],
@@ -71,11 +75,11 @@ local OvaleProfilerClass = __class(OvaleProfilerBase, {
                             type = "execute",
                             order = 30,
                             func = function()
-                                self.self_profilingOutput.Clear()
+                                self.self_profilingOutput:Clear()
                                 local s = self:GetProfilingInfo()
                                 if s then
-                                    self.self_profilingOutput.AddLine(s)
-                                    self.self_profilingOutput.Display()
+                                    self.self_profilingOutput:AddLine(s)
+                                    self.self_profilingOutput:Display()
                                 end
                             end
                         }
@@ -102,7 +106,7 @@ local OvaleProfilerClass = __class(OvaleProfilerBase, {
         end
     end,
     OnDisable = function(self)
-        self.self_profilingOutput.Clear()
+        self.self_profilingOutput:Clear()
     end,
     RegisterProfiling = function(self, module, name)
         local profiler = self
@@ -156,19 +160,50 @@ local OvaleProfilerClass = __class(OvaleProfilerBase, {
                     end
                 end
             end,
-            ResetProfiling = function(self)
-                for tag in _pairs(self_timeSpent) do
-                    self_timeSpent[tag] = nil
-                end
-                for tag in _pairs(self_timesInvoked) do
-                    self_timesInvoked[tag] = nil
-                end
-            end,
         })
     end,
+    ResetProfiling = function(self)
+        for tag in _pairs(self_timeSpent) do
+            self_timeSpent[tag] = nil
+        end
+        for tag in _pairs(self_timesInvoked) do
+            self_timesInvoked[tag] = nil
+        end
+    end,
     GetProfilingInfo = function(self)
+        if _next(self_timeSpent) then
+            local width = 1
+            do
+                local tenPower = 10
+                for _, timesInvoked in _pairs(self_timesInvoked) do
+                    while timesInvoked > tenPower do
+                        width = width + 1
+                        tenPower = tenPower * 10
+                    end
+                end
+            end
+            _wipe(self.array)
+            local formatString = format("    %%08.3fms: %%0%dd (%%05f) x %%s", width)
+            for tag, timeSpent in _pairs(self_timeSpent) do
+                local timesInvoked = self_timesInvoked[tag]
+                tinsert(self.array, format(formatString, timeSpent, timesInvoked, timeSpent / timesInvoked, tag))
+            end
+            if _next(self.array) then
+                tsort(self.array)
+                local now = API_GetTime()
+                tinsert(self.array, 1, format("Profiling statistics at %f:", now))
+                return tconcat(self.array, "\n")
+            end
+        end
     end,
     DebuggingInfo = function(self)
+        __Ovale.Ovale:Print("Profiler stack size = %d", self_stackSize)
+        local index = self_stackSize
+        while index > 0 and self_stackSize - index < 10 do
+            local tag = self_stack[index]
+            __Ovale.Ovale:Print("    [%d] %s", index, tag)
+            index = index - 1
+        end
     end,
     EnableProfiling = function(self, name)
         self.profiles[name].enabled = true

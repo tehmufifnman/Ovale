@@ -10,22 +10,27 @@ let OvaleProfilerBase = Ovale.NewModule("OvaleProfiler");
 let _debugprofilestop = debugprofilestop;
 let format = string.format;
 let _pairs = pairs;
+const _next = next;
+const _wipe = wipe;
+const tinsert = table.insert;
+const tsort = table.sort;
+const API_GetTime = GetTime;
+const tconcat = table.concat;
 let self_timestamp = _debugprofilestop();
 let self_timeSpent = {}
 let self_timesInvoked = {}
 let self_stack = {}
 let self_stackSize = 0;
 
-
 class OvaleProfilerClass extends OvaleProfilerBase {
-    self_profilingOutput = undefined;
+    self_profilingOutput: TextDump = undefined;
     profiles: LuaObj<{ enabled: boolean }> = {};
 
     actions = {
         profiling: {
             name: L["Profiling"],
             type: "execute",
-            func: function () {
+            func: () => {
                 let appName = this.GetName();
                 AceConfigDialog.SetDefaultSize(appName, 800, 550);
                 AceConfigDialog.Open(appName);
@@ -69,7 +74,7 @@ class OvaleProfilerClass extends OvaleProfilerBase {
                         desc: L["Reset the profiling statistics."],
                         type: "execute",
                         order: 20,
-                        func: function () {
+                        func: () => {
                             this.ResetProfiling();
                         }
                     },
@@ -165,58 +170,57 @@ class OvaleProfilerClass extends OvaleProfilerBase {
                     }
                 }
             }
-            
-            ResetProfiling() {
-                for (const [tag] of _pairs(self_timeSpent)) {
-                    self_timeSpent[tag] = undefined;
-                }
-                for (const [tag] of _pairs(self_timesInvoked)) {
-                    self_timesInvoked[tag] = undefined;
-                }
-            }
         }
         
     }
 
     array = {}
+            
+    ResetProfiling() {
+        for (const [tag] of _pairs(self_timeSpent)) {
+            self_timeSpent[tag] = undefined;
+        }
+        for (const [tag] of _pairs(self_timesInvoked)) {
+            self_timesInvoked[tag] = undefined;
+        }
+    }
 
     GetProfilingInfo() {
-        // if (_next(this.self_timeSpent)) {
-        //     let width = 1;
-        //     {
-        //         let tenPower = 10;
-        //         for (const [_, timesInvoked] of _pairs(this.self_timesInvoked)) {
-        //             while (timesInvoked > tenPower) {
-        //                 width = width + 1;
-        //                 tenPower = tenPower * 10;
-        //             }
-        //         }
-        //     }
-        //     _wipe(this.array);
-        //     let formatString = format("    %%08.3fms: %%0%dd (%%05f) x %%s", width);
-        //     for (const [tag, timeSpent] of _pairs(this.self_timeSpent)) {
-        //         let timesInvoked = this.self_timesInvoked[tag];
-        //         tinsert(this.array, format(formatString, timeSpent, timesInvoked, timeSpent / timesInvoked, tag));
-        //     }
-        //     if (_next(this.array)) {
-        //         tsort(this.array);
-        //         let now = API_GetTime();
-        //         tinsert(this.array, 1, format("Profiling statistics at %f:", now));
-        //         return tconcat(this.array, "\n");
-        //     }
-        // }
+        if (_next(self_timeSpent)) {
+            let width = 1;
+            {
+                let tenPower = 10;
+                for (const [_, timesInvoked] of _pairs(self_timesInvoked)) {
+                    while (timesInvoked > tenPower) {
+                        width = width + 1;
+                        tenPower = tenPower * 10;
+                    }
+                }
+            }
+            _wipe(this.array);
+            let formatString = format("    %%08.3fms: %%0%dd (%%05f) x %%s", width);
+            for (const [tag, timeSpent] of _pairs(self_timeSpent)) {
+                let timesInvoked = self_timesInvoked[tag];
+                tinsert(this.array, format(formatString, timeSpent, timesInvoked, timeSpent / timesInvoked, tag));
+            }
+            if (_next(this.array)) {
+                tsort(this.array);
+                let now = API_GetTime();
+                tinsert(this.array, 1, format("Profiling statistics at %f:", now));
+                return tconcat(this.array, "\n");
+            }
+        }
     }
 
     DebuggingInfo() {
-        // Ovale.Print("Profiler stack size = %d", this.self_stackSize);
-        // let index = this.self_stackSize;
-        // while (index > 0 && this.self_stackSize - index < 10) {
-        //     let tag = this.self_stack[index];
-        //     Ovale.Print("    [%d] %s", index, tag);
-        //     index = index - 1;
-        // }
+        Ovale.Print("Profiler stack size = %d", self_stackSize);
+        let index = self_stackSize;
+        while (index > 0 && self_stackSize - index < 10) {
+            let tag = self_stack[index];
+            Ovale.Print("    [%d] %s", index, tag);
+            index = index - 1;
+        }
     }
-
     
     EnableProfiling(name: string) {
         this.profiles[name].enabled = true;

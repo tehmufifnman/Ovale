@@ -199,7 +199,7 @@ class OvaleCooldownClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regi
     SaveSpellcastInfo= (mod: OvaleCooldownClass, spellcast, atTime, state: DataState) => {
         let spellId = spellcast.spellId;
         if (spellId) {
-            let gcd:number;
+            let gcd:number| string;
             if (state) {
                 gcd = state.GetSpellInfoProperty(spellId, spellcast.start, "gcd", spellcast.target);
             } 

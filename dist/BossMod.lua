@@ -27,10 +27,10 @@ local OvaleBossModClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(__D
         end
         if _BigWigsLoader then
             self:Debug("BigWigs is loaded")
-            _BigWigsLoader.RegisterMessage(__exports.OvaleBossMod, "BigWigs_OnBossEngage", function(_, mod, diff)
+            _BigWigsLoader:RegisterMessage(__exports.OvaleBossMod, "BigWigs_OnBossEngage", function(_, mod, diff)
                 self.EngagedBigWigs = mod
             end)
-            _BigWigsLoader.RegisterMessage(__exports.OvaleBossMod, "BigWigs_OnBossDisable", function(_, mod)
+            _BigWigsLoader:RegisterMessage(__exports.OvaleBossMod, "BigWigs_OnBossDisable", function(_, mod)
                 self.EngagedBigWigs = nil
             end)
         end

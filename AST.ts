@@ -218,7 +218,8 @@ export type NodeType = "function" | "string" | "variable" | "value" | "number" |
      "item_require" | "spell_info" | "spell_require" | "score_spells" |
      "add_function" | "icon" | "script" | "checkbox" | "list_item" | "list" |
      "logical" | "group" | "unless" | "comment" | "if" | "simc_pool_resource" |
-     "simc_wait" | "custom_function" | "wait" | "action" | "operand";
+     "simc_wait" | "custom_function" | "wait" | "action" | "operand" |
+     "logical" | "arithmetic";
 
 export type OperatorType = "not" | "or" | "and" | "-";
 
@@ -256,6 +257,7 @@ export interface Node {
     description: string;
     csv?: LuaArray<Node>;
     item?: string;
+    precedence: number;
 
     // Not sure (used in EmitActionList)
     action: string;

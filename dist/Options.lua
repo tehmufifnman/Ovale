@@ -100,9 +100,8 @@ local OvaleOptionsClass = __class(OvaleOptionsBase, {
                                     width = "full",
                                     set = function(info, value)
                                         __Ovale.Ovale.db.profile.apparence.enableIcons = value
-                                        self.SendMessage("Ovale_OptionChanged", "visibility")
+                                        self:SendMessage("Ovale_OptionChanged", "visibility")
                                     end
-
                                 },
                                 verrouille = {
                                     order = 10,
@@ -111,7 +110,6 @@ local OvaleOptionsClass = __class(OvaleOptionsBase, {
                                     disabled = function()
                                         return  not __Ovale.Ovale.db.profile.apparence.enableIcons
                                     end
-
                                 },
                                 clickThru = {
                                     order = 20,
@@ -120,7 +118,6 @@ local OvaleOptionsClass = __class(OvaleOptionsBase, {
                                     disabled = function()
                                         return  not __Ovale.Ovale.db.profile.apparence.enableIcons
                                     end
-
                                 },
                                 visibility = {
                                     order = 20,
@@ -393,9 +390,8 @@ local OvaleOptionsClass = __class(OvaleOptionsBase, {
                             guiHidden = true,
                             func = function()
                                 __Ovale.Ovale.db.profile.apparence.enableIcons = true
-                                self.SendMessage("Ovale_OptionChanged", "visibility")
+                                self:SendMessage("Ovale_OptionChanged", "visibility")
                             end
-
                         },
                         hide = {
                             type = "execute",
@@ -403,24 +399,23 @@ local OvaleOptionsClass = __class(OvaleOptionsBase, {
                             guiHidden = true,
                             func = function()
                                 __Ovale.Ovale.db.profile.apparence.enableIcons = false
-                                self.SendMessage("Ovale_OptionChanged", "visibility")
+                                self:SendMessage("Ovale_OptionChanged", "visibility")
                             end
-
                         },
                         config = {
                             name = "Configuration",
                             type = "execute",
                             func = function()
-                                self.ToggleConfig()
+                                self:ToggleConfig()
                             end
-
                         },
                         refresh = {
                             name = __Localization.L["Display refresh statistics"],
                             type = "execute",
                             func = function()
+                                local avgRefresh, minRefresh, maxRefresh, count = __Ovale.Ovale:GetRefreshIntervalStatistics()
+                                __Ovale.Ovale:Print("Refresh intervals: count = %d, avg = %d, min = %d, max = %d (ms)", count, avgRefresh, minRefresh, maxRefresh)
                             end
-
                         }
                     }
                 },
