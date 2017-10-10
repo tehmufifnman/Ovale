@@ -358,7 +358,7 @@ class OvalePaperDollClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
         }
         let avgDamage = (minDamage + maxDamage) / 2 / damageMultiplier;
         let mainHandWeaponSpeed = mainHandAttackSpeed * this.GetMeleeHasteMultiplier();
-        let normalizedMainHandWeaponSpeed = OvaleEquipment.mainHandWeaponSpeed || 0;
+        let normalizedMainHandWeaponSpeed = OvaleEquipment.mainHandWeaponSpeed || 1.5;
         if (this.class == "DRUID") {
             if (OvaleStance.IsStance("druid_cat_form")) {
                 normalizedMainHandWeaponSpeed = 1;
@@ -371,7 +371,7 @@ class OvalePaperDollClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
             let avgOffHandDamage = (minOffHandDamage + maxOffHandDamage) / 2 / damageMultiplier;
             offHandAttackSpeed = offHandAttackSpeed || mainHandAttackSpeed;
             let offHandWeaponSpeed = offHandAttackSpeed * this.GetMeleeHasteMultiplier();
-            let normalizedOffHandWeaponSpeed = OvaleEquipment.offHandWeaponSpeed || 0;
+            let normalizedOffHandWeaponSpeed = OvaleEquipment.offHandWeaponSpeed || 1.5;
             if (this.class == "DRUID") {
                 if (OvaleStance.IsStance("druid_cat_form")) {
                     normalizedOffHandWeaponSpeed = 1;

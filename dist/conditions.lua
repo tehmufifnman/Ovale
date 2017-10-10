@@ -1361,7 +1361,7 @@ do
         local comparator, limit = positionalParams[1], positionalParams[2]
         local target = __Condition.ParseCondition(positionalParams, namedParams, state)
         if target == "player" then
-            local value, origin, rate = state[powerType], state.currentTime, __Power.powerState.powerRate[powerType]
+            local value, origin, rate = __Power.powerState[powerType], state.currentTime, __Power.powerState.powerRate[powerType]
             local start, ending = state.currentTime, INFINITY
             return __Condition.TestValue(start, ending, value, origin, rate, comparator, limit)
         else
@@ -1377,7 +1377,7 @@ do
         if target == "player" then
             local powerMax = __Power.OvalePower.maxPower[powerType] or 0
             if powerMax > 0 then
-                local value, origin, rate = powerMax - state[powerType], state.currentTime, -1 * __Power.powerState.powerRate[powerType]
+                local value, origin, rate = powerMax - __Power.powerState[powerType], state.currentTime, -1 * __Power.powerState.powerRate[powerType]
                 local start, ending = state.currentTime, INFINITY
                 return __Condition.TestValue(start, ending, value, origin, rate, comparator, limit)
             end
@@ -1400,7 +1400,7 @@ do
             local powerMax = __Power.OvalePower.maxPower[powerType] or 0
             if powerMax > 0 then
                 local conversion = 100 / powerMax
-                local value, origin, rate = state[powerType] * conversion, state.currentTime, __Power.powerState.powerRate[powerType] * conversion
+                local value, origin, rate = __Power.powerState[powerType] * conversion, state.currentTime, __Power.powerState.powerRate[powerType] * conversion
                 if rate > 0 and value >= 100 or rate < 0 and value == 0 then
                     rate = 0
                 end
@@ -1438,7 +1438,7 @@ do
             end
         end
         if primaryPowerType then
-            local value, origin, rate = state[primaryPowerType], state.currentTime, __Power.powerState.powerRate[primaryPowerType]
+            local value, origin, rate = __Power.powerState[primaryPowerType], state.currentTime, __Power.powerState.powerRate[primaryPowerType]
             local start, ending = state.currentTime, INFINITY
             return __Condition.TestValue(start, ending, value, origin, rate, comparator, limit)
         end
@@ -1846,13 +1846,13 @@ end
 do
     local Snapshot = function(statName, defaultValue, positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
-        local value = state[statName] or defaultValue
+        local value = __PaperDoll.paperDollState[statName] or defaultValue
         return __Condition.Compare(value, comparator, limit)
     end
 
     local SnapshotCritChance = function(statName, defaultValue, positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
-        local value = state[statName] or defaultValue
+        local value = __PaperDoll.paperDollState[statName] or defaultValue
         if namedParams.unlimited ~= 1 and value > 100 then
             value = 100
         end
@@ -2304,7 +2304,7 @@ end
 do
     local TimeToPower = function(powerType, level, comparator, limit, state, atTime)
         level = level or 0
-        local power = state[powerType] or 0
+        local power = __Power.powerState[powerType] or 0
         local powerRegen = __Power.powerState.powerRate[powerType] or 1
         if powerRegen == 0 then
             if power == level then

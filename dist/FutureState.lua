@@ -14,8 +14,8 @@ local FutureState = __class(nil, {
     ResetState = function(self)
         __Future.OvaleFuture:StartProfiling("OvaleFuture_ResetState")
         local now = API_GetTime()
-        self.currentTime = now
-        __Future.OvaleFuture:Log("Reset state with current time = %f", self.currentTime)
+        __State.baseState.currentTime = now
+        __Future.OvaleFuture:Log("Reset state with current time = %f", __State.baseState.currentTime)
         self.inCombat = __Future.OvaleFuture.inCombat
         self.combatStartTime = __Future.OvaleFuture.combatStartTime or 0
         self.nextCast = now
@@ -128,7 +128,7 @@ local FutureState = __class(nil, {
         return self.lastCast[spellId] or __Future.OvaleFuture.lastCastTime[spellId] or 0
     end,
     IsChanneling = function(self, atTime)
-        atTime = atTime or self.currentTime
+        atTime = atTime or __State.baseState.currentTime
         return self.channel and (atTime < self.endCast)
     end,
     PushGCDSpellId = function(self, spellId)
@@ -191,11 +191,11 @@ local FutureState = __class(nil, {
             end
             local now = API_GetTime()
             if startCast >= now then
-                self.currentTime = startCast + SIMULATOR_LAG
+                __State.baseState.currentTime = startCast + SIMULATOR_LAG
             else
-                self.currentTime = now
+                __State.baseState.currentTime = now
             end
-            __Future.OvaleFuture:Log("Apply spell %d at %f currentTime=%f nextCast=%f endCast=%f targetGUID=%s", spellId, startCast, self.currentTime, nextCast, endCast, targetGUID)
+            __Future.OvaleFuture:Log("Apply spell %d at %f currentTime=%f nextCast=%f endCast=%f targetGUID=%s", spellId, startCast, __State.baseState.currentTime, nextCast, endCast, targetGUID)
             if  not self.inCombat and __SpellBook.OvaleSpellBook:IsHarmfulSpell(spellId) then
                 self.inCombat = true
                 if channel then
@@ -292,7 +292,6 @@ local FutureState = __class(nil, {
     constructor = function(self)
         self.inCombat = nil
         self.combatStartTime = nil
-        self.currentTime = nil
         self.currentSpellId = nil
         self.startCast = nil
         self.endCast = nil

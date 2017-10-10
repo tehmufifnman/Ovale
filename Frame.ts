@@ -43,7 +43,7 @@ interface Action {
 
 
 class OvaleFrame extends AceGUI.WidgetContainerBase {
-    checkBoxWidget = {}
+    checkBoxWidget: LuaObj<AceGUIWidgetCheckBox> = {}
     listWidget = {}
         
     ToggleOptions() {
@@ -189,7 +189,7 @@ class OvaleFrame extends AceGUI.WidgetContainerBase {
                 if (profile.apparence.enableIcons) {
                     this.UpdateActionIcon(baseState, node, this.actions[k], element, start);
                 }
-                if (profile.apparence.spellFlash.enabled) {
+                if (profile.apparence.spellFlash.enabled && OvaleSpellFlash) {
                     OvaleSpellFlash.Flash(baseState, node, element, start);
                 }
             }
@@ -292,8 +292,8 @@ class OvaleFrame extends AceGUI.WidgetContainerBase {
 
     
     
-    GetCheckBox(name) {
-        let widget;
+    GetCheckBox(name: number|string) {
+        let widget: AceGUIWidgetCheckBox;
         if (_type(name) == "string") {
             widget = this.checkBoxWidget[name];
         } else if (_type(name) == "number") {

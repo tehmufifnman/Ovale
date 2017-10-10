@@ -61,7 +61,9 @@ class OvaleOptionsClass extends OvaleOptionsBase {
                 taggedEnemies: false,
                 auraLag: 400,
                 moving: false,
-                spellFlash: undefined,
+                spellFlash: {
+                    enabled: true,
+                },
                 minimap: { 
                     hide: false
                 }

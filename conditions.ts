@@ -1299,7 +1299,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
         let [comparator, limit] = [positionalParams[1], positionalParams[2]];
         let [target] = ParseCondition(positionalParams, namedParams, state);
         if (target == "player") {
-            let [value, origin, rate] = [state[powerType], state.currentTime, powerState.powerRate[powerType]];
+            let [value, origin, rate] = [powerState[powerType], state.currentTime, powerState.powerRate[powerType]];
             let [start, ending] = [state.currentTime, INFINITY];
             return TestValue(start, ending, value, origin, rate, comparator, limit);
         } else {
@@ -1314,7 +1314,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
         if (target == "player") {
             let powerMax = OvalePower.maxPower[powerType] || 0;
             if (powerMax > 0) {
-                let [value, origin, rate] = [powerMax - state[powerType], state.currentTime, -1 * powerState.powerRate[powerType]];
+                let [value, origin, rate] = [powerMax - powerState[powerType], state.currentTime, -1 * powerState.powerRate[powerType]];
                 let [start, ending] = [state.currentTime, INFINITY];
                 return TestValue(start, ending, value, origin, rate, comparator, limit);
             }
@@ -1336,7 +1336,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
             let powerMax = OvalePower.maxPower[powerType] || 0;
             if (powerMax > 0) {
                 let conversion = 100 / powerMax;
-                let [value, origin, rate] = [state[powerType] * conversion, state.currentTime, powerState.powerRate[powerType] * conversion];
+                let [value, origin, rate] = [powerState[powerType] * conversion, state.currentTime, powerState.powerRate[powerType] * conversion];
                 if (rate > 0 && value >= 100 || rate < 0 && value == 0) {
                     rate = 0;
                 }
@@ -1373,7 +1373,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
             }
         }
         if (primaryPowerType) {
-            let [value, origin, rate] = [state[primaryPowerType], state.currentTime, powerState.powerRate[primaryPowerType]];
+            let [value, origin, rate] = [powerState[primaryPowerType], state.currentTime, powerState.powerRate[primaryPowerType]];
             let [start, ending] = [state.currentTime, INFINITY];
             return TestValue(start, ending, value, origin, rate, comparator, limit);
         }
@@ -1718,12 +1718,12 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
 {
     const Snapshot = function(statName, defaultValue, positionalParams, namedParams, state: BaseState, atTime) {
         let [comparator, limit] = [positionalParams[1], positionalParams[2]];
-        let value = state[statName] || defaultValue;
+        let value = paperDollState[statName] || defaultValue;
         return Compare(value, comparator, limit);
     }
     const SnapshotCritChance = function(statName, defaultValue, positionalParams, namedParams, state: BaseState, atTime) {
         let [comparator, limit] = [positionalParams[1], positionalParams[2]];
-        let value = state[statName] || defaultValue;
+        let value = paperDollState[statName] || defaultValue;
         if (namedParams.unlimited != 1 && value > 100) {
             value = 100;
         }
@@ -2130,7 +2130,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
 {
     const TimeToPower = function(powerType, level, comparator, limit, state: BaseState, atTime) {
         level = level || 0;
-        let power = state[powerType] || 0;
+        let power = powerState[powerType] || 0;
         let powerRegen = powerState.powerRate[powerType] || 1;
         if (powerRegen == 0) {
             if (power == level) {

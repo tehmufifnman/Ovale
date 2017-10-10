@@ -31,7 +31,7 @@ export function CheckRequirements(spellId, atTime, tokens, index, targetGUID):[b
             let handler = self_requirement[name];
             if (handler) {
                 let method = handler[1];
-                let arg = this[method] && this || handler[2];
+                let arg = /*this[method] && this ||*/ handler[2]; //TODO
                 [verified, requirement, index] = arg[method](arg, spellId, atTime, name, tokens, index, targetGUID);
                 name = tokens[index];
                 index = index + 1;

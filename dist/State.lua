@@ -33,19 +33,25 @@ local OvaleStateClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleStateB
     ApplySpellStartCast = function(self, spellId, targetGUID, startCast, endCast, channel, spellcast)
         local iterator = self_stateAddons:Iterator()
         while iterator:Next() do
-            iterator.value:ApplySpellStartCast(spellId, targetGUID, startCast, endCast, channel, spellcast)
+            if iterator.value.ApplySpellStartCast then
+                iterator.value:ApplySpellStartCast(spellId, targetGUID, startCast, endCast, channel, spellcast)
+            end
         end
     end,
     ApplySpellAfterCast = function(self, spellId, targetGUID, startCast, endCast, channel, spellcast)
         local iterator = self_stateAddons:Iterator()
         while iterator:Next() do
-            iterator.value:ApplySpellAfterCast(spellId, targetGUID, startCast, endCast, channel, spellcast)
+            if iterator.value.ApplySpellAfterCast then
+                iterator.value:ApplySpellAfterCast(spellId, targetGUID, startCast, endCast, channel, spellcast)
+            end
         end
     end,
     ApplySpellOnHit = function(self, spellId, targetGUID, startCast, endCast, channel, spellcast)
         local iterator = self_stateAddons:Iterator()
         while iterator:Next() do
-            iterator.value:ApplySpellOnHit(spellId, targetGUID, startCast, endCast, channel, spellcast)
+            if iterator.value.ApplySpellOnHit then
+                iterator.value:ApplySpellOnHit(spellId, targetGUID, startCast, endCast, channel, spellcast)
+            end
         end
     end,
 })

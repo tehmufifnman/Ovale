@@ -127,7 +127,7 @@ local OvaleFrame = __class(AceGUI.WidgetContainerBase, {
                 if profile.apparence.enableIcons then
                     self:UpdateActionIcon(__State.baseState, node, self.actions[k], element, start)
                 end
-                if profile.apparence.spellFlash.enabled then
+                if profile.apparence.spellFlash.enabled and __SpellFlash.OvaleSpellFlash then
                     __SpellFlash.OvaleSpellFlash:Flash(__State.baseState, node, element, start)
                 end
             end
@@ -244,7 +244,7 @@ local OvaleFrame = __class(AceGUI.WidgetContainerBase, {
     end,
     IsChecked = function(self, name)
         local widget = self:GetCheckBox(name)
-        return widget and widget.GetValue()
+        return widget and widget:GetValue()
     end,
     GetListValue = function(self, name)
         local widget = self.listWidget[name]
@@ -253,9 +253,9 @@ local OvaleFrame = __class(AceGUI.WidgetContainerBase, {
     SetCheckBox = function(self, name, on)
         local widget = self:GetCheckBox(name)
         if widget then
-            local oldValue = widget.GetValue()
+            local oldValue = widget:GetValue()
             if oldValue ~= on then
-                widget.SetValue(on)
+                widget:SetValue(on)
                 self.OnCheckBoxValueChanged(widget)
             end
         end
@@ -263,8 +263,8 @@ local OvaleFrame = __class(AceGUI.WidgetContainerBase, {
     ToggleCheckBox = function(self, name)
         local widget = self:GetCheckBox(name)
         if widget then
-            local on =  not widget.GetValue()
-            widget.SetValue(on)
+            local on =  not widget:GetValue()
+            widget:SetValue(on)
             self.OnCheckBoxValueChanged(widget)
         end
     end,

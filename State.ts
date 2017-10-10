@@ -48,21 +48,27 @@ class OvaleStateClass extends OvaleDebug.RegisterDebugging(OvaleStateBase) {
     ApplySpellStartCast(spellId, targetGUID, startCast, endCast, channel, spellcast) {
         const iterator = self_stateAddons.Iterator();
         while (iterator.Next()) {
-            iterator.value.ApplySpellStartCast(spellId, targetGUID, startCast, endCast, channel, spellcast);
+            if (iterator.value.ApplySpellStartCast) {
+                iterator.value.ApplySpellStartCast(spellId, targetGUID, startCast, endCast, channel, spellcast);
+            }
         }
     }
 
     ApplySpellAfterCast(spellId, targetGUID, startCast, endCast, channel, spellcast) {
         const iterator = self_stateAddons.Iterator();
         while (iterator.Next()) {
-            iterator.value.ApplySpellAfterCast(spellId, targetGUID, startCast, endCast, channel, spellcast);
+            if (iterator.value.ApplySpellAfterCast){
+                iterator.value.ApplySpellAfterCast(spellId, targetGUID, startCast, endCast, channel, spellcast);
+            }
         }
     }
     
     ApplySpellOnHit(spellId, targetGUID, startCast, endCast, channel, spellcast) {
         const iterator = self_stateAddons.Iterator();
         while (iterator.Next()) {
-            iterator.value.ApplySpellOnHit(spellId, targetGUID, startCast, endCast, channel, spellcast);
+            if (iterator.value.ApplySpellOnHit) {
+                iterator.value.ApplySpellOnHit(spellId, targetGUID, startCast, endCast, channel, spellcast);
+            }
         }
     }
 }

@@ -50,7 +50,9 @@ local OvaleOptionsClass = __class(OvaleOptionsBase, {
                     taggedEnemies = false,
                     auraLag = 400,
                     moving = false,
-                    spellFlash = nil,
+                    spellFlash = {
+                        enabled = true
+                    },
                     minimap = {
                         hide = false
                     }

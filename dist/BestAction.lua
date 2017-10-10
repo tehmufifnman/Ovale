@@ -632,7 +632,7 @@ local OvaleBestActionClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Prof
             local currentTimeSpan, currentElement = self:Compute(node, state, atTime)
             currentTimeSpan:IntersectInterval(atTime, INFINITY, current)
             if current:Measure() > 0 then
-                local nodeString = (currentElement and currentElement.nodeId) and " [" + currentElement.nodeId + "]" or ""
+                local nodeString = (currentElement and currentElement.nodeId) and " [" .. currentElement.nodeId .. "]" or ""
                 state:Log("[%d]    group checking [%d]: %s%s", element.nodeId, node.nodeId, current, nodeString)
                 local currentCastTime
                 if currentElement then

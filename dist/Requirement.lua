@@ -21,7 +21,7 @@ __exports.CheckRequirements = function(spellId, atTime, tokens, index, targetGUI
             local handler = __exports.self_requirement[name]
             if handler then
                 local method = handler[1]
-                local arg = self[method] and self or handler[2]
+                local arg = handler[2]
                 verified, requirement, index = arg[method](arg, spellId, atTime, name, tokens, index, targetGUID)
                 name = tokens[index]
                 index = index + 1

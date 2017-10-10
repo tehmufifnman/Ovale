@@ -647,7 +647,7 @@ class OvaleBestActionClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Re
             let [currentTimeSpan, currentElement] = this.Compute(node, state, atTime);
             currentTimeSpan.IntersectInterval(atTime, INFINITY, current);
             if (current.Measure() > 0) {
-                let nodeString = (currentElement && currentElement.nodeId) && " [" + currentElement.nodeId + "]" || "";
+                let nodeString = (currentElement && currentElement.nodeId) && ` [${currentElement.nodeId}]` || "";
                 state.Log("[%d]    group checking [%d]: %s%s", element.nodeId, node.nodeId, current, nodeString);
                 let currentCastTime;
                 if (currentElement) {

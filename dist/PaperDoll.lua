@@ -348,7 +348,7 @@ local OvalePaperDollClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profi
         end
         local avgDamage = (minDamage + maxDamage) / 2 / damageMultiplier
         local mainHandWeaponSpeed = mainHandAttackSpeed * self:GetMeleeHasteMultiplier()
-        local normalizedMainHandWeaponSpeed = __Equipment.OvaleEquipment.mainHandWeaponSpeed or 0
+        local normalizedMainHandWeaponSpeed = __Equipment.OvaleEquipment.mainHandWeaponSpeed or 1.5
         if self.class == "DRUID" then
             if __Stance.OvaleStance:IsStance("druid_cat_form") then
                 normalizedMainHandWeaponSpeed = 1
@@ -361,7 +361,7 @@ local OvalePaperDollClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profi
             local avgOffHandDamage = (minOffHandDamage + maxOffHandDamage) / 2 / damageMultiplier
             offHandAttackSpeed = offHandAttackSpeed or mainHandAttackSpeed
             local offHandWeaponSpeed = offHandAttackSpeed * self:GetMeleeHasteMultiplier()
-            local normalizedOffHandWeaponSpeed = __Equipment.OvaleEquipment.offHandWeaponSpeed or 0
+            local normalizedOffHandWeaponSpeed = __Equipment.OvaleEquipment.offHandWeaponSpeed or 1.5
             if self.class == "DRUID" then
                 if __Stance.OvaleStance:IsStance("druid_cat_form") then
                     normalizedOffHandWeaponSpeed = 1

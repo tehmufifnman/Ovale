@@ -20,7 +20,6 @@ class FutureState {
 
     inCombat = undefined;
     combatStartTime = undefined;
-    currentTime = undefined;
     currentSpellId = undefined;
     startCast = undefined;
     endCast = undefined;
@@ -41,8 +40,8 @@ class FutureState {
     ResetState() {
         OvaleFuture.StartProfiling("OvaleFuture_ResetState");
         let now = API_GetTime();
-        this.currentTime = now;
-        OvaleFuture.Log("Reset state with current time = %f", this.currentTime);
+        baseState.currentTime = now;
+        OvaleFuture.Log("Reset state with current time = %f", baseState.currentTime);
         this.inCombat = OvaleFuture.inCombat;
         this.combatStartTime = OvaleFuture.combatStartTime || 0;
         this.nextCast = now;
@@ -157,7 +156,7 @@ class FutureState {
         return this.lastCast[spellId] || OvaleFuture.lastCastTime[spellId] || 0;
     }
     IsChanneling(atTime) {
-        atTime = atTime || this.currentTime;
+        atTime = atTime || baseState.currentTime;
         return this.channel && (atTime < this.endCast);
     }
     static staticSpellcast = {}
@@ -222,11 +221,11 @@ class FutureState {
             }
             let now = API_GetTime();
             if (startCast >= now) {
-                this.currentTime = startCast + SIMULATOR_LAG;
+                baseState.currentTime = startCast + SIMULATOR_LAG;
             } else {
-                this.currentTime = now;
+                baseState.currentTime = now;
             }
-            OvaleFuture.Log("Apply spell %d at %f currentTime=%f nextCast=%f endCast=%f targetGUID=%s", spellId, startCast, this.currentTime, nextCast, endCast, targetGUID);
+            OvaleFuture.Log("Apply spell %d at %f currentTime=%f nextCast=%f endCast=%f targetGUID=%s", spellId, startCast, baseState.currentTime, nextCast, endCast, targetGUID);
             if (!this.inCombat && OvaleSpellBook.IsHarmfulSpell(spellId)) {
                 this.inCombat = true;
                 if (channel) {
