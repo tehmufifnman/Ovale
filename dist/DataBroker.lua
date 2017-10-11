@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./DataBroker", { "./Localization", "LibDataBroker-1.1", "LibDBIcon-1.0", "./Debug", "./Options", "./Ovale", "./Scripts", "./Version", "./Frame" }, function(__exports, __Localization, LibDataBroker, LibDBIcon, __Debug, __Options, __Ovale, __Scripts, __Version, __Frame)
+            __addon.require("./DataBroker", { "./Localization", "LibDataBroker-1.1", "LibDBIcon-1.0", "./Debug", "./Options", "./Ovale", "./Scripts", "./Version", "./Frame" }, function(__exports, __Localization, LibDataBroker, LibDBIcon, __Debug, __Options, __Ovale, __Scripts, __Version, __Frame)
 local OvaleDataBrokerBase = __Ovale.Ovale:NewModule("OvaleDataBroker", "AceEvent-3.0")
 local _pairs = pairs
 local tinsert = table.insert
@@ -92,7 +92,7 @@ local OnTooltipShow = function(tooltip)
     tooltip:AddLine(__Localization.L["Shift-Right-Click for the current trace log."])
 end
 
-local OvaleDataBrokerClass = __class(OvaleDataBrokerBase, {
+local OvaleDataBrokerClass = __addon.__class(OvaleDataBrokerBase, {
     constructor = function(self)
         self.broker = nil
         OvaleDataBrokerBase.constructor(self)

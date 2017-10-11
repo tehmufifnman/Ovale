@@ -1,12 +1,12 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./FutureState", { "./Future", "./Cooldown", "./LastSpell", "./SpellBook", "./GUID", "./State", "./Ovale", "./PaperDoll", "./DataState", "./Stance" }, function(__exports, __Future, __Cooldown, __LastSpell, __SpellBook, __GUID, __State, __Ovale, __PaperDoll, __DataState, __Stance)
+            __addon.require("./FutureState", { "./Future", "./Cooldown", "./LastSpell", "./SpellBook", "./GUID", "./State", "./Ovale", "./PaperDoll", "./DataState", "./Stance" }, function(__exports, __Future, __Cooldown, __LastSpell, __SpellBook, __GUID, __State, __Ovale, __PaperDoll, __DataState, __Stance)
 local _wipe = wipe
 local API_GetTime = GetTime
 local _pairs = pairs
 local tinsert = table.insert
 local tremove = table.remove
 local SIMULATOR_LAG = 0.005
-local FutureState = __class(nil, {
+local FutureState = __addon.__class(nil, {
     InitializeState = function(self)
         self.lastCast = {}
         self.counter = {}

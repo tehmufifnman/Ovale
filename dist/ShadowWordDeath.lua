@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./ShadowWordDeath", { "./Ovale", "./Aura" }, function(__exports, __Ovale, __Aura)
+            __addon.require("./ShadowWordDeath", { "./Ovale", "./Aura" }, function(__exports, __Ovale, __Aura)
 local OvaleShadowWordDeathBase = __Ovale.Ovale:NewModule("OvaleShadowWordDeath", "AceEvent-3.0")
 local API_GetTime = GetTime
 local self_playerGUID = nil
@@ -7,7 +7,7 @@ local SHADOW_WORD_DEATH = {
     [32379] = true,
     [129176] = true
 }
-local OvaleShadowWordDeathClass = __class(OvaleShadowWordDeathBase, {
+local OvaleShadowWordDeathClass = __addon.__class(OvaleShadowWordDeathBase, {
     constructor = function(self)
         self.spellName = "Shadow Word: Death Reset Cooldown"
         self.spellId = 125927

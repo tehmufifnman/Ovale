@@ -1,12 +1,12 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Pool", { "./Profiler", "./Ovale" }, function(__exports, __Profiler, __Ovale)
+            __addon.require("./Pool", { "./Profiler", "./Ovale" }, function(__exports, __Profiler, __Ovale)
 local _assert = assert
 local _setmetatable = setmetatable
 local tinsert = table.insert
 local _tostring = tostring
 local tremove = table.remove
 local _wipe = wipe
-__exports.OvalePool = __class(nil, {
+__exports.OvalePool = __addon.__class(nil, {
     constructor = function(self, name)
         self.pool = nil
         self.size = 0

@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./BossMod", { "./Debug", "./Profiler", "./Ovale", "./State" }, function(__exports, __Debug, __Profiler, __Ovale, __State)
+            __addon.require("./BossMod", { "./Debug", "./Profiler", "./Ovale", "./State" }, function(__exports, __Debug, __Profiler, __Ovale, __State)
 local OvaleBossModBase = __Ovale.Ovale:NewModule("OvaleBossMod")
 local API_GetNumGroupMembers = GetNumGroupMembers
 local API_IsInGroup = IsInGroup
@@ -9,7 +9,7 @@ local API_UnitExists = UnitExists
 local API_UnitLevel = UnitLevel
 local _BigWigsLoader = BigWigsLoader
 local _DBM = DBM
-local OvaleBossModClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(__Debug.OvaleDebug:RegisterDebugging(OvaleBossModBase)), {
+local OvaleBossModClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfiling(__Debug.OvaleDebug:RegisterDebugging(OvaleBossModBase)), {
     constructor = function(self)
         self.EngagedDBM = nil
         self.EngagedBigWigs = nil

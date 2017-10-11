@@ -6,9 +6,6 @@ local ADDON_NAME, Addon = ...
 if _G[ADDON_NAME] == nil then
   _G[ADDON_NAME] = Addon
 end
--- if ADDON_NAME then
---   _G[ADDON_NAME] = Addon or {}
--- end
 
 local strsub = string.sub
 
@@ -47,7 +44,7 @@ end
 local addonlist = {}
 
 -- Used by the AMD-like module system
-Addon.require = function(addonName, addon, mod, dependencies, factory)
+Addon.require = function(mod, dependencies, factory)
     local exports
 
     -- print("Define " .. mod)
@@ -106,7 +103,8 @@ Addon.require = function(addonName, addon, mod, dependencies, factory)
     -- end    
 end
 
-local frame = CreateFrame("FRAME", "FooAddonFrame");
+-- Wait for ADDON_LOADED event to initialize the modules
+local frame = CreateFrame("FRAME", ADDON_NAME .. "AddonFrame");
 frame:RegisterEvent("ADDON_LOADED");
 local function eventHandler(self, event, addon)
   if addon ~= ADDON_NAME then return end
@@ -116,25 +114,7 @@ local function eventHandler(self, event, addon)
 end
 frame:SetScript("OnEvent", eventHandler);
 
-Addon.debug = function()
-print("debug")
-  for k, v in pairs(Addon) do 
-    if (type(v) == "table") then
-      if v.missing then
-        print(v.name)
-        for _,w in pairs(v.missing) do
-          print(v.name .. " is missing " .. w.name)
-        end
-      end
-
-      if not v.defined then
-        print(v.name .. " is not defined ")
-      end
-    end
-  end
-end
-
-__class = function(base, prototype) 
+Addon.__class = function(base, prototype) 
   local class = prototype
   if base then
     if not base.constructor then base.constructor = function() end end
@@ -153,37 +133,28 @@ __class = function(base, prototype)
   return class
 end
 
-__new = function(class, ...)
-	local new={}
-	setmetatable(new, class)
-	if new.constructor ~= nil then
-		new:constructor(...)
-	end
-	return new
-end;
-
 -- Emulate switch
-__switch_return_break = 1
-__switch_return_return = 2
-switch = function(t)
-	t.case = function (self,x)
-		local startfunid = self[x] or self.default
-		if startfunid == nil then
-			return
-		end		
-		local len = #self.__codesegments
-		for fid=startfunid, len do
-			local f = self.__codesegments[fid]
-			if f ~= 0 then
-				local rtflag, rt = f(x, self)
-				if rtflag ~= nil then
-					return rtflag, rt 
-				end
-			end
-		end
-	end;
-	return t
-end
+-- __switch_return_break = 1
+-- __switch_return_return = 2
+-- switch = function(t)
+-- 	t.case = function (self,x)
+-- 		local startfunid = self[x] or self.default
+-- 		if startfunid == nil then
+-- 			return
+-- 		end		
+-- 		local len = #self.__codesegments
+-- 		for fid=startfunid, len do
+-- 			local f = self.__codesegments[fid]
+-- 			if f ~= 0 then
+-- 				local rtflag, rt = f(x, self)
+-- 				if rtflag ~= nil then
+-- 					return rtflag, rt 
+-- 				end
+-- 			end
+-- 		end
+-- 	end;
+-- 	return t
+-- end
 
 function AceGUIRegisterAsContainer(widget)
 		widget.children = {}

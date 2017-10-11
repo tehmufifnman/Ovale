@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Condition", { "./State", "./Ovale", "./Debug" }, function(__exports, __State, __Ovale, __Debug)
+            __addon.require("./Condition", { "./State", "./Ovale", "./Debug" }, function(__exports, __State, __Ovale, __Debug)
 local OvaleConditionBase = __Ovale.Ovale:NewModule("OvaleCondition")
 local _next = next
 local INFINITY = math.huge
@@ -8,7 +8,7 @@ local self_spellBookCondition = {}
 do
     self_spellBookCondition["spell"] = true
 end
-local OvaleConditionClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleConditionBase), {
+local OvaleConditionClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(OvaleConditionBase), {
     RegisterCondition = function(self, name, isSpellBookCondition, func)
         self_condition[name] = func
         if isSpellBookCondition then

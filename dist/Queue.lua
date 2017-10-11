@@ -1,6 +1,6 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Queue", { "./Ovale" }, function(__exports, __Ovale)
-local BackToFrontIterator = __class(nil, {
+            __addon.require("./Queue", { "./Ovale" }, function(__exports, __Ovale)
+local BackToFrontIterator = __addon.__class(nil, {
     constructor = function(self, invariant, control)
         self.invariant = invariant
         self.control = control
@@ -11,7 +11,7 @@ local BackToFrontIterator = __class(nil, {
         return self.control >= self.invariant.first
     end,
 })
-local FrontToBackIterator = __class(nil, {
+local FrontToBackIterator = __addon.__class(nil, {
     constructor = function(self, invariant, control)
         self.invariant = invariant
         self.control = control
@@ -22,7 +22,7 @@ local FrontToBackIterator = __class(nil, {
         return self.control <= self.invariant.last
     end,
 })
-__exports.OvaleDequeue = __class(nil, {
+__exports.OvaleDequeue = __addon.__class(nil, {
     constructor = function(self, name)
         self.name = name
         self.first = 0
@@ -89,7 +89,7 @@ __exports.OvaleDequeue = __class(nil, {
         __Ovale.Ovale:Print("Queue %s has %d item(s), first=%d, last=%d.", self.name, self:Size(), self.first, self.last)
     end,
 })
-__exports.OvaleQueue = __class(__exports.OvaleDequeue, {
+__exports.OvaleQueue = __addon.__class(__exports.OvaleDequeue, {
     Insert = function(self, value)
         self:InsertBack(value)
     end,
@@ -100,7 +100,7 @@ __exports.OvaleQueue = __class(__exports.OvaleDequeue, {
         return self:FrontToBackIterator()
     end,
 })
-__exports.OvaleStack = __class(__exports.OvaleDequeue, {
+__exports.OvaleStack = __addon.__class(__exports.OvaleDequeue, {
     Push = function(self, value)
         self:InsertBack(value)
     end,

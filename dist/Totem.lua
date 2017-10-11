@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Totem", { "./Profiler", "./Ovale", "./Data", "./SpellBook", "./State", "./Aura", "./DataState" }, function(__exports, __Profiler, __Ovale, __Data, __SpellBook, __State, __Aura, __DataState)
+            __addon.require("./Totem", { "./Profiler", "./Ovale", "./Data", "./SpellBook", "./State", "./Aura", "./DataState" }, function(__exports, __Profiler, __Ovale, __Data, __SpellBook, __State, __Aura, __DataState)
 local OvaleTotemBase = __Ovale.Ovale:NewModule("OvaleTotem", "AceEvent-3.0")
 local _ipairs = ipairs
 local _pairs = pairs
@@ -25,7 +25,7 @@ local TOTEM_SLOT = {
     spirit_wolf = 1
 }
 local TOTEMIC_RECALL = 36936
-local OvaleTotemClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(OvaleTotemBase), {
+local OvaleTotemClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfiling(OvaleTotemBase), {
     constructor = function(self)
         self.totem = {}
         __Profiler.OvaleProfiler:RegisterProfiling(OvaleTotemBase).constructor(self)
@@ -49,7 +49,7 @@ local OvaleTotemClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(Ovale
         __Ovale.Ovale:needRefresh()
     end,
 })
-local TotemState = __class(nil, {
+local TotemState = __addon.__class(nil, {
     InitializeState = function(self)
         self.totem = {}
         for slot = 1, _MAX_TOTEMS, 1 do

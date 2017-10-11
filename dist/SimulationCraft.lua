@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./SimulationCraft", { "AceConfig-3.0", "AceConfigDialog-3.0", "./Localization", "./Debug", "./Options", "./Pool", "./Ovale", "./AST", "./Compile", "./Data", "./HonorAmongThieves", "./Lexer", "./Power", "./Controls" }, function(__exports, AceConfig, AceConfigDialog, __Localization, __Debug, __Options, __Pool, __Ovale, __AST, __Compile, __Data, __HonorAmongThieves, __Lexer, __Power, __Controls)
+            __addon.require("./SimulationCraft", { "AceConfig-3.0", "AceConfigDialog-3.0", "./Localization", "./Debug", "./Options", "./Pool", "./Ovale", "./AST", "./Compile", "./Data", "./HonorAmongThieves", "./Lexer", "./Power", "./Controls" }, function(__exports, AceConfig, AceConfigDialog, __Localization, __Debug, __Options, __Pool, __Ovale, __AST, __Compile, __Data, __HonorAmongThieves, __Lexer, __Power, __Controls)
 local OvaleSimulationCraftBase = __Ovale.Ovale:NewModule("OvaleSimulationCraft")
 local format = string.format
 local gmatch = string.gmatch
@@ -278,7 +278,7 @@ local self_functionDefined = {}
 local self_functionUsed = {}
 local self_outputPool = __Pool.OvalePool("OvaleSimulationCraft_outputPool")
 local self_childrenPool = __Pool.OvalePool("OvaleSimulationCraft_childrenPool")
-local SelfPool = __class(__Pool.OvalePool, {
+local SelfPool = __addon.__class(__Pool.OvalePool, {
     constructor = function(self)
         __Pool.OvalePool.constructor(self, "OvaleSimulationCraft_pool")
     end,
@@ -4871,7 +4871,7 @@ local GenerateIconBody = function(tag, profile)
     return code
 end
 
-local OvaleSimulationCraftClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleSimulationCraftBase), {
+local OvaleSimulationCraftClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(OvaleSimulationCraftBase), {
     constructor = function(self)
         __Debug.OvaleDebug:RegisterDebugging(OvaleSimulationCraftBase).constructor(self)
         InitializeDisambiguation()

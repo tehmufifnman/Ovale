@@ -1,10 +1,10 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Options", { "AceConfig-3.0", "AceConfigDialog-3.0", "./Localization", "AceDB-3.0", "AceDBOptions-3.0", "./Ovale" }, function(__exports, AceConfig, AceConfigDialog, __Localization, AceDB, AceDBOptions, __Ovale)
+            __addon.require("./Options", { "AceConfig-3.0", "AceConfigDialog-3.0", "./Localization", "AceDB-3.0", "AceDBOptions-3.0", "./Ovale" }, function(__exports, AceConfig, AceConfigDialog, __Localization, AceDB, AceDBOptions, __Ovale)
 local OvaleOptionsBase = __Ovale.Ovale:NewModule("OvaleOptions", "AceConsole-3.0", "AceEvent-3.0")
 local API_InterfaceOptionsFrame_OpenToCategory = InterfaceOptionsFrame_OpenToCategory
 local _ipairs = ipairs
 local self_register = {}
-local OvaleOptionsClass = __class(OvaleOptionsBase, {
+local OvaleOptionsClass = __addon.__class(OvaleOptionsBase, {
     constructor = function(self)
         self.defaultDB = {
             profile = {

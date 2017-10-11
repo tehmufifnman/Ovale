@@ -1,6 +1,6 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./DataState", { "./State", "./Requirement", "./Data" }, function(__exports, __State, __Requirement, __Data)
-__exports.DataState = __class(nil, {
+            __addon.require("./DataState", { "./State", "./Requirement", "./Data" }, function(__exports, __State, __Requirement, __Data)
+__exports.DataState = __addon.__class(nil, {
     CleanState = function(self)
     end,
     InitializeState = function(self)

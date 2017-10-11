@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Ovale", { "AceAddon-3.0", "./Localization" }, function(__exports, AceAddon, __Localization)
+            __addon.require("./Ovale", { "AceAddon-3.0", "./Localization" }, function(__exports, AceAddon, __Localization)
 local _assert = assert
 local format = string.format
 local _ipairs = ipairs
@@ -33,7 +33,7 @@ __exports.MakeString = function(s, ...)
     return s
 end
 __exports.RegisterPrinter = function(base)
-    return __class(base, {
+    return __addon.__class(base, {
         GetMethod = function(self, methodName, subModule)
             local func, arg = self[methodName], self
             if  not func then
@@ -45,7 +45,7 @@ __exports.RegisterPrinter = function(base)
     })
 end
 local OvaleBase = AceAddon:NewAddon("Ovale", "AceEvent-3.0")
-local OvaleClass = __class(OvaleBase, {
+local OvaleClass = __addon.__class(OvaleBase, {
     constructor = function(self)
         self.playerClass = _select(2, API_UnitClass("player"))
         self.playerGUID = nil

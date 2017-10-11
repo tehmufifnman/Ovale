@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Data", { "./Ovale", "./GUID", "./PaperDoll", "./State", "./Debug", "./Requirement" }, function(__exports, __Ovale, __GUID, __PaperDoll, __State, __Debug, __Requirement)
+            __addon.require("./Data", { "./Ovale", "./GUID", "./PaperDoll", "./State", "./Debug", "./Requirement" }, function(__exports, __Ovale, __GUID, __PaperDoll, __State, __Debug, __Requirement)
 local OvaleDataBase = __Ovale.Ovale:NewModule("OvaleData")
 local _type = type
 local _pairs = pairs
@@ -78,7 +78,7 @@ local STAT_USE_NAMES = {
     [4] = "trinket_stat",
     [5] = "trinket_stack_proc"
 }
-local OvaleDataClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleDataBase), {
+local OvaleDataClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(OvaleDataBase), {
     constructor = function(self)
         self.STAT_NAMES = STAT_NAMES
         self.STAT_SHORTNAME = STAT_SHORTNAME

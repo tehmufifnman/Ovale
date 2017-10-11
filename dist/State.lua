@@ -1,9 +1,9 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./State", { "./Debug", "./Queue", "./Ovale" }, function(__exports, __Debug, __Queue, __Ovale)
+            __addon.require("./State", { "./Debug", "./Queue", "./Ovale" }, function(__exports, __Debug, __Queue, __Ovale)
 local OvaleStateBase = __Ovale.Ovale:NewModule("OvaleState")
 local _pairs = pairs
 local self_stateAddons = __Queue.OvaleQueue("OvaleState_stateAddons")
-local OvaleStateClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleStateBase), {
+local OvaleStateClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(OvaleStateBase), {
     RegisterState = function(self, stateAddon)
         self_stateAddons:Insert(stateAddon)
     end,
@@ -56,7 +56,7 @@ local OvaleStateClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleStateB
     end,
 })
 __exports.OvaleState = OvaleStateClass()
-__exports.BaseState = __class(nil, {
+__exports.BaseState = __addon.__class(nil, {
     InitializeState = function(self)
         self.futureVariable = {}
         self.futureLastEnable = {}

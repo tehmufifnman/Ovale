@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./DemonHunterSigils", { "./Profiler", "./Ovale", "./PaperDoll", "./SpellBook", "./State" }, function(__exports, __Profiler, __Ovale, __PaperDoll, __SpellBook, __State)
+            __addon.require("./DemonHunterSigils", { "./Profiler", "./Ovale", "./PaperDoll", "./SpellBook", "./State" }, function(__exports, __Profiler, __Ovale, __PaperDoll, __SpellBook, __State)
 local OvaleSigilBase = __Ovale.Ovale:NewModule("OvaleSigil", "AceEvent-3.0")
 local _ipairs = ipairs
 local tinsert = table.insert
@@ -41,7 +41,7 @@ local sigil_end = {
     }
 }
 local QUICKENED_SIGILS_TALENT = 15
-local OvaleSigilClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(OvaleSigilBase), {
+local OvaleSigilClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfiling(OvaleSigilBase), {
     constructor = function(self)
         __Profiler.OvaleProfiler:RegisterProfiling(OvaleSigilBase).constructor(self)
         activated_sigils["flame"] = {}
@@ -80,7 +80,7 @@ local OvaleSigilClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(Ovale
         end
     end,
 })
-local SigilState = __class(nil, {
+local SigilState = __addon.__class(nil, {
     CleanState = function(self)
     end,
     InitializeState = function(self)

@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Scripts", { "AceConfig-3.0", "AceConfigDialog-3.0", "./Options", "./Localization", "./PaperDoll", "./Ovale" }, function(__exports, AceConfig, AceConfigDialog, __Options, __Localization, __PaperDoll, __Ovale)
+            __addon.require("./Scripts", { "AceConfig-3.0", "AceConfigDialog-3.0", "./Options", "./Localization", "./PaperDoll", "./Ovale" }, function(__exports, AceConfig, AceConfigDialog, __Options, __Localization, __PaperDoll, __Ovale)
 local OvaleScriptsBase = __Ovale.Ovale:NewModule("OvaleScripts", "AceEvent-3.0")
 local format = string.format
 local gsub = string.gsub
@@ -37,7 +37,7 @@ do
     end
     __Options.OvaleOptions:RegisterOptions(__exports.OvaleScripts)
 end
-local OvaleScriptsClass = __class(OvaleScriptsBase, {
+local OvaleScriptsClass = __addon.__class(OvaleScriptsBase, {
     constructor = function(self)
         self.script = {}
         OvaleScriptsBase.constructor(self)

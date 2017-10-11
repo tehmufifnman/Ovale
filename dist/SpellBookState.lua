@@ -1,8 +1,8 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./SpellBookState", { "./State", "./SpellBook", "./Data", "./DataState", "./Power", "./CooldownState", "./Runes" }, function(__exports, __State, __SpellBook, __Data, __DataState, __Power, __CooldownState, __Runes)
+            __addon.require("./SpellBookState", { "./State", "./SpellBook", "./Data", "./DataState", "./Power", "./CooldownState", "./Runes" }, function(__exports, __State, __SpellBook, __Data, __DataState, __Power, __CooldownState, __Runes)
 local _type = type
 local API_IsUsableItem = IsUsableItem
-local SpellBookState = __class(nil, {
+local SpellBookState = __addon.__class(nil, {
     CleanState = function(self)
     end,
     InitializeState = function(self)

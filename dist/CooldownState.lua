@@ -1,10 +1,10 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./CooldownState", { "./State", "./Cooldown", "./DataState", "./PaperDoll", "./Ovale", "./Data", "./Aura" }, function(__exports, __State, __Cooldown, __DataState, __PaperDoll, __Ovale, __Data, __Aura)
+            __addon.require("./CooldownState", { "./State", "./Cooldown", "./DataState", "./PaperDoll", "./Ovale", "./Data", "./Aura" }, function(__exports, __State, __Cooldown, __DataState, __PaperDoll, __Ovale, __Data, __Aura)
 local API_GetSpellCharges = GetSpellCharges
 local strsub = string.sub
 local _pairs = pairs
 local COOLDOWN_THRESHOLD = 0.1
-local CooldownState = __class(nil, {
+local CooldownState = __addon.__class(nil, {
     ApplySpellStartCast = function(self, spellId, targetGUID, startCast, endCast, isChanneled, spellcast)
         __Cooldown.OvaleCooldown:StartProfiling("OvaleCooldown_ApplySpellStartCast")
         if isChanneled then

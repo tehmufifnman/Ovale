@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Future", { "./Debug", "./Profiler", "./Ovale", "./Aura", "./Data", "./GUID", "./PaperDoll", "./SpellBook", "./LastSpell" }, function(__exports, __Debug, __Profiler, __Ovale, __Aura, __Data, __GUID, __PaperDoll, __SpellBook, __LastSpell)
+            __addon.require("./Future", { "./Debug", "./Profiler", "./Ovale", "./Aura", "./Data", "./GUID", "./PaperDoll", "./SpellBook", "./LastSpell" }, function(__exports, __Debug, __Profiler, __Ovale, __Aura, __Data, __GUID, __PaperDoll, __SpellBook, __LastSpell)
 local OvaleFutureBase = __Ovale.Ovale:NewModule("OvaleFuture", "AceEvent-3.0")
 local _ipairs = ipairs
 local _pairs = pairs
@@ -85,7 +85,7 @@ local IsSameSpellcast = function(a, b)
 end
 
 local eventDebug = false
-local OvaleFutureClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(__Debug.OvaleDebug:RegisterDebugging(OvaleFutureBase)), {
+local OvaleFutureClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfiling(__Debug.OvaleDebug:RegisterDebugging(OvaleFutureBase)), {
     constructor = function(self)
         self.inCombat = nil
         self.combatStartTime = nil

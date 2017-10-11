@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./PassiveAura", { "./Ovale", "./Aura", "./Equipment", "./PaperDoll" }, function(__exports, __Ovale, __Aura, __Equipment, __PaperDoll)
+            __addon.require("./PassiveAura", { "./Ovale", "./Aura", "./Equipment", "./PaperDoll" }, function(__exports, __Ovale, __Aura, __Equipment, __PaperDoll)
 local OvalePassiveAuraBase = __Ovale.Ovale:NewModule("OvalePassiveAura", "AceEvent-3.0")
 local exp = math.exp
 local _pairs = pairs
@@ -124,7 +124,7 @@ local READINESS_ROLE = {
         protection = READINESS_TANK
     }
 }
-local OvalePassiveAuraClass = __class(OvalePassiveAuraBase, {
+local OvalePassiveAuraClass = __addon.__class(OvalePassiveAuraBase, {
     constructor = function(self)
         OvalePassiveAuraBase.constructor(self)
         self_playerGUID = __Ovale.Ovale.playerGUID

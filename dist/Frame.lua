@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Frame", { "AceGUI-3.0", "Masque", "./BestAction", "./Compile", "./Debug", "./FutureState", "./GUID", "./SpellFlash", "./State", "./Ovale", "./Icon", "./Enemies", "./Controls" }, function(__exports, AceGUI, Masque, __BestAction, __Compile, __Debug, __FutureState, __GUID, __SpellFlash, __State, __Ovale, __Icon, __Enemies, __Controls)
+            __addon.require("./Frame", { "AceGUI-3.0", "Masque", "./BestAction", "./Compile", "./Debug", "./FutureState", "./GUID", "./SpellFlash", "./State", "./Ovale", "./Icon", "./Enemies", "./Controls" }, function(__exports, AceGUI, Masque, __BestAction, __Compile, __Debug, __FutureState, __GUID, __SpellFlash, __State, __Ovale, __Icon, __Enemies, __Controls)
 local _ipairs = ipairs
 local _next = next
 local _pairs = pairs
@@ -16,7 +16,7 @@ local API_UnitIsDead = UnitIsDead
 local API_UnitCanAttack = UnitCanAttack
 local INFINITY = math.huge
 local MIN_REFRESH_TIME = 0.05
-local OvaleFrame = __class(AceGUI.WidgetContainerBase, {
+local OvaleFrame = __addon.__class(AceGUI.WidgetContainerBase, {
     ToggleOptions = function(self)
         if (self.content:IsShown()) then
             self.content:Hide()
@@ -512,7 +512,7 @@ local OvaleFrame = __class(AceGUI.WidgetContainerBase, {
 })
 __exports.frame = OvaleFrame()
 local OvaleFrameBase = __Ovale.Ovale:NewModule("OvaleFrame", "AceEvent-3.0")
-local OvaleFrameModuleClass = __class(OvaleFrameBase, {
+local OvaleFrameModuleClass = __addon.__class(OvaleFrameBase, {
     Ovale_OptionChanged = function(self, event, eventType)
         if eventType == "visibility" then
             __exports.frame:UpdateVisibility()

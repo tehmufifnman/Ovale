@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./SpellBook", { "./Localization", "./Debug", "./Profiler", "./Ovale", "./Requirement" }, function(__exports, __Localization, __Debug, __Profiler, __Ovale, __Requirement)
+            __addon.require("./SpellBook", { "./Localization", "./Debug", "./Profiler", "./Ovale", "./Requirement" }, function(__exports, __Localization, __Debug, __Profiler, __Ovale, __Requirement)
 local _ipairs = ipairs
 local _pairs = pairs
 local strmatch = string.match
@@ -90,7 +90,7 @@ end
 
 local output = {}
 local OvaleSpellBookBase = __Profiler.OvaleProfiler:RegisterProfiling(__Debug.OvaleDebug:RegisterDebugging(__Ovale.Ovale:NewModule("OvaleSpellBook", "AceEvent-3.0")))
-local OvaleSpellBookClass = __class(OvaleSpellBookBase, {
+local OvaleSpellBookClass = __addon.__class(OvaleSpellBookBase, {
     constructor = function(self)
         self.ready = false
         self.spell = {}

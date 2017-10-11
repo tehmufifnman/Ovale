@@ -1,11 +1,11 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./HonorAmongThieves", { "./Ovale", "./Aura", "./Data" }, function(__exports, __Ovale, __Aura, __Data)
+            __addon.require("./HonorAmongThieves", { "./Ovale", "./Aura", "./Data" }, function(__exports, __Ovale, __Aura, __Data)
 local OvaleHonorAmongThievesBase = __Ovale.Ovale:NewModule("OvaleHonorAmongThieves", "AceEvent-3.0")
 local API_GetTime = GetTime
 local self_playerGUID = nil
 local HONOR_AMONG_THIEVES = 51699
 local MEAN_TIME_TO_HAT = 2.2
-local OvaleHonorAmongThievesClass = __class(OvaleHonorAmongThievesBase, {
+local OvaleHonorAmongThievesClass = __addon.__class(OvaleHonorAmongThievesBase, {
     constructor = function(self)
         self.spellName = "Honor Among Thieves Cooldown"
         self.spellId = HONOR_AMONG_THIEVES

@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Debug", { "AceConfig-3.0", "AceConfigDialog-3.0", "./Localization", "LibTextDump-1.0", "./Options", "./Ovale" }, function(__exports, AceConfig, AceConfigDialog, __Localization, LibTextDump, __Options, __Ovale)
+            __addon.require("./Debug", { "AceConfig-3.0", "AceConfigDialog-3.0", "./Localization", "LibTextDump-1.0", "./Options", "./Ovale" }, function(__exports, AceConfig, AceConfigDialog, __Localization, LibTextDump, __Options, __Ovale)
 local OvaleDebugBase = __Ovale.Ovale:NewModule("OvaleDebug", "AceTimer-3.0")
 local format = string.format
 local _pairs = pairs
@@ -8,7 +8,7 @@ local _DEFAULT_CHAT_FRAME = DEFAULT_CHAT_FRAME
 local self_traced = false
 local self_traceLog = nil
 local OVALE_TRACELOG_MAXLINES = 4096
-local OvaleDebugClass = __class(OvaleDebugBase, {
+local OvaleDebugClass = __addon.__class(OvaleDebugBase, {
     constructor = function(self)
         self.options = {
             name = __Ovale.Ovale:GetName() .. " " .. __Localization.L["Debug"],
@@ -108,7 +108,7 @@ local OvaleDebugClass = __class(OvaleDebugBase, {
     end,
     RegisterDebugging = function(self, addon)
         local debug = self
-        return __class(addon, {
+        return __addon.__class(addon, {
             constructor = function(self, args)
                 addon.constructor(self, args)
                 local name = self:GetName()

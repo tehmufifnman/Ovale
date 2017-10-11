@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Compile", { "./Debug", "./Profiler", "./Artifact", "./AST", "./Condition", "./Cooldown", "./Data", "./Equipment", "./PaperDoll", "./Power", "./Score", "./SpellBook", "./Stance", "./Ovale", "./Controls" }, function(__exports, __Debug, __Profiler, __Artifact, __AST, __Condition, __Cooldown, __Data, __Equipment, __PaperDoll, __Power, __Score, __SpellBook, __Stance, __Ovale, __Controls)
+            __addon.require("./Compile", { "./Debug", "./Profiler", "./Artifact", "./AST", "./Condition", "./Cooldown", "./Data", "./Equipment", "./PaperDoll", "./Power", "./Score", "./SpellBook", "./Stance", "./Ovale", "./Controls" }, function(__exports, __Debug, __Profiler, __Artifact, __AST, __Condition, __Cooldown, __Data, __Equipment, __PaperDoll, __Power, __Score, __SpellBook, __Stance, __Ovale, __Controls)
 local OvaleCompileBase = __Ovale.Ovale:NewModule("OvaleCompile", "AceEvent-3.0")
 local _ipairs = ipairs
 local _pairs = pairs
@@ -506,7 +506,7 @@ do
 
 end
 local OvaleCompileClassBase = __Ovale.RegisterPrinter(__Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleCompileBase)))
-local OvaleCompileClass = __class(OvaleCompileClassBase, {
+local OvaleCompileClass = __addon.__class(OvaleCompileClassBase, {
     constructor = function(self)
         self.serial = nil
         self.ast = nil

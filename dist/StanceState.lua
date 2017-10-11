@@ -1,7 +1,7 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./StanceState", { "./State", "./Stance", "./DataState" }, function(__exports, __State, __Stance, __DataState)
+            __addon.require("./StanceState", { "./State", "./Stance", "./DataState" }, function(__exports, __State, __Stance, __DataState)
 local _type = type
-local StanceState = __class(nil, {
+local StanceState = __addon.__class(nil, {
     InitializeState = function(self)
         self.stance = nil
     end,

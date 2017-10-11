@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./BestAction", { "./Debug", "./Pool", "./Profiler", "./TimeSpan", "./ActionBar", "./Compile", "./Condition", "./Data", "./Equipment", "./GUID", "./SpellBook", "./Ovale", "./State", "./PaperDoll", "./DataState", "./SpellBookState", "./FutureState", "./CooldownState" }, function(__exports, __Debug, __Pool, __Profiler, __TimeSpan, __ActionBar, __Compile, __Condition, __Data, __Equipment, __GUID, __SpellBook, __Ovale, __State, __PaperDoll, __DataState, __SpellBookState, __FutureState, __CooldownState)
+            __addon.require("./BestAction", { "./Debug", "./Pool", "./Profiler", "./TimeSpan", "./ActionBar", "./Compile", "./Condition", "./Data", "./Equipment", "./GUID", "./SpellBook", "./Ovale", "./State", "./PaperDoll", "./DataState", "./SpellBookState", "./FutureState", "./CooldownState" }, function(__exports, __Debug, __Pool, __Profiler, __TimeSpan, __ActionBar, __Compile, __Condition, __Data, __Equipment, __GUID, __SpellBook, __Ovale, __State, __PaperDoll, __DataState, __SpellBookState, __FutureState, __CooldownState)
 local OvaleBestActionBase = __Ovale.Ovale:NewModule("OvaleBestAction", "AceEvent-3.0")
 local abs = math.abs
 local _assert = assert
@@ -213,7 +213,7 @@ local GetActionTextureInfo = function(element, state, atTime, target)
     return actionTexture, actionInRange, actionCooldownStart, actionCooldownDuration, actionUsable, actionShortcut, actionIsCurrent, actionEnable, actionType, actionId, target
 end
 
-local OvaleBestActionClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleBestActionBase)), {
+local OvaleBestActionClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleBestActionBase)), {
     constructor = function(self)
         self.ComputeAction = function(element, state, atTime)
             self:StartProfiling("OvaleBestAction_ComputeAction")

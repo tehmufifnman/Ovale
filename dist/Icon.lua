@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Icon", { "./Localization", "./SpellBook", "./Ovale" }, function(__exports, __Localization, __SpellBook, __Ovale)
+            __addon.require("./Icon", { "./Localization", "./SpellBook", "./Ovale" }, function(__exports, __Localization, __SpellBook, __Ovale)
 local format = string.format
 local _next = next
 local _pairs = pairs
@@ -10,7 +10,7 @@ local API_GetTime = GetTime
 local API_PlaySoundFile = PlaySoundFile
 local INFINITY = math.huge
 local COOLDOWN_THRESHOLD = 0.1
-__exports.OvaleIcon = __class(nil, {
+__exports.OvaleIcon = __addon.__class(nil, {
     HasScriptControls = function(self)
         return (_next(self.parent.checkBoxWidget) ~= nil or _next(self.parent.listWidget) ~= nil)
     end,

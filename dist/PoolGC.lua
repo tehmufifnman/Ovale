@@ -1,8 +1,8 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./PoolGC", { "./Ovale" }, function(__exports, __Ovale)
+            __addon.require("./PoolGC", { "./Ovale" }, function(__exports, __Ovale)
 local _setmetatable = setmetatable
 local _tostring = tostring
-__exports.OvalePoolGC = __class(nil, {
+__exports.OvalePoolGC = __addon.__class(nil, {
     constructor = function(self, name)
         self.name = "OvalePoolGC"
         self.size = 0

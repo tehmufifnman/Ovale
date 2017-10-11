@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Aura", { "./Localization", "./Debug", "./Pool", "./Profiler", "./Data", "./GUID", "./PaperDoll", "./SpellBook", "./State", "./Ovale", "./LastSpell", "./Requirement", "./DataState" }, function(__exports, __Localization, __Debug, __Pool, __Profiler, __Data, __GUID, __PaperDoll, __SpellBook, __State, __Ovale, __LastSpell, __Requirement, __DataState)
+            __addon.require("./Aura", { "./Localization", "./Debug", "./Pool", "./Profiler", "./Data", "./GUID", "./PaperDoll", "./SpellBook", "./State", "./Ovale", "./LastSpell", "./Requirement", "./DataState" }, function(__exports, __Localization, __Debug, __Pool, __Profiler, __Data, __GUID, __PaperDoll, __SpellBook, __State, __Ovale, __LastSpell, __Requirement, __DataState)
 local OvaleAuraBase = __Ovale.Ovale:NewModule("OvaleAura", "AceEvent-3.0")
 local _next = next
 local _pairs = pairs
@@ -241,7 +241,7 @@ local IsWithinAuraLag = function(time1, time2, factor)
     return (time1 - time2 < tolerance) and (time2 - time1 < tolerance)
 end
 
-local OvaleAuraClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(__Debug.OvaleDebug:RegisterDebugging(OvaleAuraBase)), {
+local OvaleAuraClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfiling(__Debug.OvaleDebug:RegisterDebugging(OvaleAuraBase)), {
     constructor = function(self)
         self.aura = {}
         self.serial = {}
@@ -751,7 +751,7 @@ local OvaleAuraClass = __class(__Profiler.OvaleProfiler:RegisterProfiling(__Debu
 })
 __exports.OvaleAura = OvaleAuraClass()
 local array = {}
-local AuraState = __class(nil, {
+local AuraState = __addon.__class(nil, {
     InitializeState = function(self)
         self.aura = {}
         self.serial = 0

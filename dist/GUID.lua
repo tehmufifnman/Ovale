@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./GUID", { "./Debug", "./Ovale" }, function(__exports, __Debug, __Ovale)
+            __addon.require("./GUID", { "./Debug", "./Ovale" }, function(__exports, __Debug, __Ovale)
 local OvaleGUIDBase = __Ovale.Ovale:NewModule("OvaleGUID", "AceEvent-3.0")
 local floor = math.floor
 local _ipairs = ipairs
@@ -116,7 +116,7 @@ local CompareUnit = function(a, b)
     return UNIT_AURA_UNIT[a] < UNIT_AURA_UNIT[b]
 end
 
-local OvaleGUIDClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleGUIDBase), {
+local OvaleGUIDClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(OvaleGUIDBase), {
     constructor = function(self)
         self.unitGUID = {}
         self.guidUnit = {}

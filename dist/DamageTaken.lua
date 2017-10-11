@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./DamageTaken", { "./Debug", "./Pool", "./Profiler", "./Queue", "./Ovale" }, function(__exports, __Debug, __Pool, __Profiler, __Queue, __Ovale)
+            __addon.require("./DamageTaken", { "./Debug", "./Pool", "./Profiler", "./Queue", "./Ovale" }, function(__exports, __Debug, __Pool, __Profiler, __Queue, __Ovale)
 local OvaleDamageTakenBase = __Ovale.Ovale:NewModule("OvaleDamageTaken", "AceEvent-3.0")
 local bit_band = bit.band
 local bit_bor = bit.bor
@@ -14,7 +14,7 @@ local _SCHOOL_MASK_SHADOW = SCHOOL_MASK_SHADOW
 local self_pool = __Pool.OvalePool("OvaleDamageTaken_pool")
 local DAMAGE_TAKEN_WINDOW = 20
 local SCHOOL_MASK_MAGIC = bit_bor(_SCHOOL_MASK_ARCANE, _SCHOOL_MASK_FIRE, _SCHOOL_MASK_FROST, _SCHOOL_MASK_HOLY, _SCHOOL_MASK_NATURE, _SCHOOL_MASK_SHADOW)
-local OvaleDamageTakenClass = __class(__Ovale.RegisterPrinter(__Profiler.OvaleProfiler:RegisterProfiling(__Debug.OvaleDebug:RegisterDebugging(OvaleDamageTakenBase))), {
+local OvaleDamageTakenClass = __addon.__class(__Ovale.RegisterPrinter(__Profiler.OvaleProfiler:RegisterProfiling(__Debug.OvaleDebug:RegisterDebugging(OvaleDamageTakenBase))), {
     constructor = function(self)
         self.damageEvent = __Queue.OvaleQueue("OvaleDamageTaken_damageEvent")
         __Ovale.RegisterPrinter(__Profiler.OvaleProfiler:RegisterProfiling(__Debug.OvaleDebug:RegisterDebugging(OvaleDamageTakenBase))).constructor(self)

@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./WildImps", { "./State", "./Ovale" }, function(__exports, __State, __Ovale)
+            __addon.require("./WildImps", { "./State", "./Ovale" }, function(__exports, __State, __Ovale)
 local OvaleWildImpsBase = __Ovale.Ovale:NewModule("OvaleWildImps", "AceEvent-3.0")
 local demonData = {
     [55659] = {
@@ -22,7 +22,7 @@ local self_demons = {}
 local self_serial = 1
 local API_GetTime = GetTime
 local sfind = string.find
-local OvaleWildImpsClass = __class(OvaleWildImpsBase, {
+local OvaleWildImpsClass = __addon.__class(OvaleWildImpsBase, {
     constructor = function(self)
         OvaleWildImpsBase.constructor(self)
         if __Ovale.Ovale.playerClass == "WARLOCK" then
@@ -73,7 +73,7 @@ local OvaleWildImpsClass = __class(OvaleWildImpsBase, {
         end
     end,
 })
-local WildImpsState = __class(nil, {
+local WildImpsState = __addon.__class(nil, {
     CleanState = function(self)
     end,
     InitializeState = function(self)

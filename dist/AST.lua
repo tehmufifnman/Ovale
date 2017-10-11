@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./AST", { "./Localization", "./Pool", "./Profiler", "./Debug", "./Ovale", "./Lexer", "./Condition", "./Lexer", "./Scripts", "./SpellBook", "./Stance" }, function(__exports, __Localization, __Pool, __Profiler, __Debug, __Ovale, __Lexer, __Condition, __Lexer, __Scripts, __SpellBook, __Stance)
+            __addon.require("./AST", { "./Localization", "./Pool", "./Profiler", "./Debug", "./Ovale", "./Lexer", "./Condition", "./Lexer", "./Scripts", "./SpellBook", "./Stance" }, function(__exports, __Localization, __Pool, __Profiler, __Debug, __Ovale, __Lexer, __Condition, __Lexer, __Scripts, __SpellBook, __Stance)
 local OvaleASTBase = __Ovale.Ovale:NewModule("OvaleAST")
 local format = string.format
 local gsub = string.gsub
@@ -277,7 +277,7 @@ local FILTERS = {
     comments = TokenizeComment,
     space = TokenizeWhitespace
 }
-local SelfPool = __class(__Pool.OvalePool, {
+local SelfPool = __addon.__class(__Pool.OvalePool, {
     constructor = function(self, ovaleAst)
         self.ovaleAst = ovaleAst
         __Pool.OvalePool.constructor(self, "OvaleAST_pool")
@@ -293,7 +293,7 @@ local SelfPool = __class(__Pool.OvalePool, {
         end
     end,
 })
-local OvaleASTClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleASTBase)), {
+local OvaleASTClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleASTBase)), {
     constructor = function(self)
         self.self_indent = 0
         self.self_outputPool = __Pool.OvalePool("OvaleAST_outputPool")

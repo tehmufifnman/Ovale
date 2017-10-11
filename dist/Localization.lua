@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Localization", {}, function(__exports)
+            __addon.require("./Localization", {}, function(__exports)
 local _rawset = rawset
 local _setmetatable = setmetatable
 local _tostring = tostring

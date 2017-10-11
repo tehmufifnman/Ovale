@@ -1,10 +1,10 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Artifact", { "LibArtifactData-1.0", "./Debug", "./Localization", "./Ovale" }, function(__exports, LibArtifactData, __Debug, __Localization, __Ovale)
+            __addon.require("./Artifact", { "LibArtifactData-1.0", "./Debug", "./Localization", "./Ovale" }, function(__exports, LibArtifactData, __Debug, __Localization, __Ovale)
 local tsort = table.sort
 local tinsert = table.insert
 local tconcat = table.concat
 local OvaleArtifactBase = __Ovale.Ovale:NewModule("OvaleArtifact", "AceEvent-3.0")
-local OvaleArtifactClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleArtifactBase), {
+local OvaleArtifactClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(OvaleArtifactBase), {
     constructor = function(self)
         self.self_traits = {}
         self.debugOptions = {

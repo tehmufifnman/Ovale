@@ -11,4 +11,3 @@
 libs\libs.xml
 dist\define.lua
 dist\files.xml
-Bindings.xml

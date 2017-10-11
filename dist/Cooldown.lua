@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Cooldown", { "./Debug", "./Profiler", "./Data", "./SpellBook", "./Ovale", "./LastSpell", "./Requirement", "./DataState" }, function(__exports, __Debug, __Profiler, __Data, __SpellBook, __Ovale, __LastSpell, __Requirement, __DataState)
+            __addon.require("./Cooldown", { "./Debug", "./Profiler", "./Data", "./SpellBook", "./Ovale", "./LastSpell", "./Requirement", "./DataState" }, function(__exports, __Debug, __Profiler, __Data, __SpellBook, __Ovale, __LastSpell, __Requirement, __DataState)
 local OvaleCooldownBase = __Ovale.Ovale:NewModule("OvaleCooldown", "AceEvent-3.0")
 local _next = next
 local _pairs = pairs
@@ -57,7 +57,7 @@ local BASE_GCD = {
         [2] = "melee"
     }
 }
-local OvaleCooldownClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleCooldownBase)), {
+local OvaleCooldownClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleCooldownBase)), {
     constructor = function(self)
         self.serial = 0
         self.sharedCooldown = {}

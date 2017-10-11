@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Requirement", { "./GUID", "./Ovale", "./State" }, function(__exports, __GUID, __Ovale, __State)
+            __addon.require("./Requirement", { "./GUID", "./Ovale", "./State" }, function(__exports, __GUID, __Ovale, __State)
 __exports.self_requirement = {}
 __exports.RegisterRequirement = function(name, method, arg)
     __exports.self_requirement[name] = {

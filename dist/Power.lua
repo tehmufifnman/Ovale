@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Power", { "./Localization", "./Debug", "./Profiler", "./Ovale", "./Aura", "./Future", "./Data", "./State", "./PaperDoll", "./Requirement", "./FutureState", "./LastSpell", "./DataState" }, function(__exports, __Localization, __Debug, __Profiler, __Ovale, __Aura, __Future, __Data, __State, __PaperDoll, __Requirement, __FutureState, __LastSpell, __DataState)
+            __addon.require("./Power", { "./Localization", "./Debug", "./Profiler", "./Ovale", "./Aura", "./Future", "./Data", "./State", "./PaperDoll", "./Requirement", "./FutureState", "./LastSpell", "./DataState" }, function(__exports, __Localization, __Debug, __Profiler, __Ovale, __Aura, __Future, __Data, __State, __PaperDoll, __Requirement, __FutureState, __LastSpell, __DataState)
 local OvalePowerBase = __Ovale.Ovale:NewModule("OvalePower", "AceEvent-3.0")
 local ceil = math.ceil
 local _pairs = pairs
@@ -43,7 +43,7 @@ end
 local function isString(s)
     return _type(s) == "string"
 end
-local OvalePowerClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvalePowerBase)), {
+local OvalePowerClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvalePowerBase)), {
     constructor = function(self)
         self.powerType = nil
         self.powerRate = nil
@@ -500,7 +500,7 @@ local OvalePowerClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.
     end,
 })
 local output = {}
-local PowerState = __class(nil, {
+local PowerState = __addon.__class(nil, {
     InitializeState = function(self)
         for powerType in _pairs(__exports.OvalePower.POWER_INFO) do
             self[powerType] = 0

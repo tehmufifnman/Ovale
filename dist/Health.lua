@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Health", { "./Debug", "./Profiler", "./Ovale", "./GUID", "./State", "./Requirement" }, function(__exports, __Debug, __Profiler, __Ovale, __GUID, __State, __Requirement)
+            __addon.require("./Health", { "./Debug", "./Profiler", "./Ovale", "./GUID", "./State", "./Requirement" }, function(__exports, __Debug, __Profiler, __Ovale, __GUID, __State, __Requirement)
 local OvaleHealthBase = __Ovale.Ovale:NewModule("OvaleHealth", "AceEvent-3.0")
 local strsub = string.sub
 local _tonumber = tonumber
@@ -21,7 +21,7 @@ local CLEU_HEAL_EVENT = {
     SPELL_HEAL = true,
     SPELL_PERIODIC_HEAL = true
 }
-local OvaleHealthClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleHealthBase)), {
+local OvaleHealthClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleHealthBase)), {
     constructor = function(self)
         self.health = {}
         self.maxHealth = {}
@@ -233,7 +233,7 @@ local OvaleHealthClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler
         return verified, requirement, index
     end,
 })
-local HealthState = __class(nil, {
+local HealthState = __addon.__class(nil, {
     CleanState = function(self)
     end,
     InitializeState = function(self)

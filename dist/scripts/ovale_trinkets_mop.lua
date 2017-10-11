@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./scripts/ovale_trinkets_mop", { "./Scripts" }, function(__exports, __Scripts)
+            __addon.require("./scripts/ovale_trinkets_mop", { "./Scripts" }, function(__exports, __Scripts)
 do
     local name = "ovale_trinkets_mop"
     local desc = "[6.0.3] Ovale: Trinkets (Mists of Pandaria)"

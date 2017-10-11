@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./TimeSpan", {}, function(__exports)
+            __addon.require("./TimeSpan", {}, function(__exports)
 local _select = select
 local format = string.format
 local tconcat = table.concat
@@ -61,7 +61,7 @@ end
 __exports.GetPoolInfo = function()
     return self_poolSize, self_poolUnused
 end
-__exports.OvaleTimeSpan = __class(nil, {
+__exports.OvaleTimeSpan = __addon.__class(nil, {
     Release = function(self)
         _wipe(self)
         tinsert(self_pool, self)

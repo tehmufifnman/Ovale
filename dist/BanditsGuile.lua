@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./BanditsGuile", { "./Debug", "./Ovale", "./Aura" }, function(__exports, __Debug, __Ovale, __Aura)
+            __addon.require("./BanditsGuile", { "./Debug", "./Ovale", "./Aura" }, function(__exports, __Debug, __Ovale, __Aura)
 local OvaleBanditsGuileBase = __Ovale.Ovale:NewModule("OvaleBanditsGuile", "AceEvent-3.0")
 local API_GetSpellInfo = GetSpellInfo
 local API_GetTime = GetTime
@@ -16,7 +16,7 @@ local BANDITS_GUILE = 84654
 local BANDITS_GUILE_ATTACK = {
     [1752] = API_GetSpellInfo(1752)
 }
-local OvaleBanditsGuile = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleBanditsGuileBase), {
+local OvaleBanditsGuile = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(OvaleBanditsGuileBase), {
     constructor = function(self)
         self.spellName = "Bandit's Guile"
         self.spellId = BANDITS_GUILE

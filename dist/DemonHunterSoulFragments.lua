@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./DemonHunterSoulFragments", { "./Ovale", "./Debug", "./State" }, function(__exports, __Ovale, __Debug, __State)
+            __addon.require("./DemonHunterSoulFragments", { "./Ovale", "./Debug", "./State" }, function(__exports, __Ovale, __Debug, __State)
 local OvaleDemonHunterSoulFragmentsBase = __Ovale.Ovale:NewModule("OvaleDemonHunterSoulFragments", "AceEvent-3.0")
 local tinsert = table.insert
 local API_GetTime = GetTime
@@ -12,7 +12,7 @@ local SOUL_FRAGMENT_FINISHERS = {
     [247454] = true,
     [227225] = true
 }
-local OvaleDemonHunterSoulFragmentsClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleDemonHunterSoulFragmentsBase), {
+local OvaleDemonHunterSoulFragmentsClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(OvaleDemonHunterSoulFragmentsBase), {
     constructor = function(self)
         __Debug.OvaleDebug:RegisterDebugging(OvaleDemonHunterSoulFragmentsBase).constructor(self)
         self:SetCurrentSoulFragments(0)
@@ -78,7 +78,7 @@ local OvaleDemonHunterSoulFragmentsClass = __class(__Debug.OvaleDebug:RegisterDe
     DebugSoulFragments = function(self)
     end,
 })
-local DemonHunterSoulFragmentsState = __class(nil, {
+local DemonHunterSoulFragmentsState = __addon.__class(nil, {
     CleanState = function(self)
     end,
     InitializeState = function(self)

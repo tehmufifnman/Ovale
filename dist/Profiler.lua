@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Profiler", { "AceConfig-3.0", "AceConfigDialog-3.0", "./Localization", "LibTextDump-1.0", "./Options", "./Ovale" }, function(__exports, AceConfig, AceConfigDialog, __Localization, LibTextDump, __Options, __Ovale)
+            __addon.require("./Profiler", { "AceConfig-3.0", "AceConfigDialog-3.0", "./Localization", "LibTextDump-1.0", "./Options", "./Ovale" }, function(__exports, AceConfig, AceConfigDialog, __Localization, LibTextDump, __Options, __Ovale)
 local OvaleProfilerBase = __Ovale.Ovale:NewModule("OvaleProfiler")
 local _debugprofilestop = debugprofilestop
 local format = string.format
@@ -15,7 +15,7 @@ local self_timeSpent = {}
 local self_timesInvoked = {}
 local self_stack = {}
 local self_stackSize = 0
-local OvaleProfilerClass = __class(OvaleProfilerBase, {
+local OvaleProfilerClass = __addon.__class(OvaleProfilerBase, {
     constructor = function(self)
         self.self_profilingOutput = nil
         self.profiles = {}
@@ -110,7 +110,7 @@ local OvaleProfilerClass = __class(OvaleProfilerBase, {
     end,
     RegisterProfiling = function(self, module, name)
         local profiler = self
-        return __class(module, {
+        return __addon.__class(module, {
             constructor = function(self, ...)
                 self.enabled = false
                 module.constructor(self, ...)

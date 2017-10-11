@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Enemies", { "./Debug", "./Profiler", "./Ovale", "./GUID", "./State" }, function(__exports, __Debug, __Profiler, __Ovale, __GUID, __State)
+            __addon.require("./Enemies", { "./Debug", "./Profiler", "./Ovale", "./GUID", "./State" }, function(__exports, __Debug, __Profiler, __Ovale, __GUID, __State)
 local OvaleEnemiesBase = __Ovale.Ovale:NewModule("OvaleEnemies", "AceEvent-3.0", "AceTimer-3.0")
 local bit_band = bit.band
 local bit_bor = bit.bor
@@ -62,7 +62,7 @@ local IsFriendly = function(unitFlags, isGroupMember)
     return bit_band(unitFlags, _COMBATLOG_OBJECT_REACTION_FRIENDLY) > 0 and ( not isGroupMember or bit_band(unitFlags, GROUP_MEMBER) > 0)
 end
 
-local OvaleEnemiesClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleEnemiesBase)), {
+local OvaleEnemiesClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleEnemiesBase)), {
     constructor = function(self)
         self.activeEnemies = 0
         self.taggedEnemies = 0
@@ -203,7 +203,7 @@ local OvaleEnemiesClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profile
         self:Print("Total tagged enemies: %d", self.taggedEnemies)
     end,
 })
-local EnemiesStateClass = __class(nil, {
+local EnemiesStateClass = __addon.__class(nil, {
     InitializeState = function(self)
         self.enemies = nil
     end,

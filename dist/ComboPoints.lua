@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./ComboPoints", { "./Debug", "./Profiler", "./Aura", "./Data", "./Equipment", "./PaperDoll", "./Power", "./SpellBook", "./Ovale", "./State", "./Requirement", "./LastSpell", "./DataState" }, function(__exports, __Debug, __Profiler, __Aura, __Data, __Equipment, __PaperDoll, __Power, __SpellBook, __Ovale, __State, __Requirement, __LastSpell, __DataState)
+            __addon.require("./ComboPoints", { "./Debug", "./Profiler", "./Aura", "./Data", "./Equipment", "./PaperDoll", "./Power", "./SpellBook", "./Ovale", "./State", "./Requirement", "./LastSpell", "./DataState" }, function(__exports, __Debug, __Profiler, __Aura, __Data, __Equipment, __PaperDoll, __Power, __SpellBook, __Ovale, __State, __Requirement, __LastSpell, __DataState)
 local OvaleComboPointsBase = __Ovale.Ovale:NewModule("OvaleComboPoints", "AceEvent-3.0")
 local tinsert = table.insert
 local tremove = table.remove
@@ -47,7 +47,7 @@ local RemovePendingComboEvents = function(atTime, spellId, guid, reason, combo)
     return count
 end
 
-local OvaleComboPointsClass = __class(__Ovale.RegisterPrinter(__Profiler.OvaleProfiler:RegisterProfiling(__Debug.OvaleDebug:RegisterDebugging(OvaleComboPointsBase))), {
+local OvaleComboPointsClass = __addon.__class(__Ovale.RegisterPrinter(__Profiler.OvaleProfiler:RegisterProfiling(__Debug.OvaleDebug:RegisterDebugging(OvaleComboPointsBase))), {
     constructor = function(self)
         self.combo = 0
         self.SaveSpellcastInfo = function(module, spellcast, atTime, state)
@@ -272,7 +272,7 @@ local OvaleComboPointsClass = __class(__Ovale.RegisterPrinter(__Profiler.OvalePr
     end,
 })
 __exports.OvaleComboPoints = OvaleComboPointsClass()
-__exports.ComboPointsState = __class(nil, {
+__exports.ComboPointsState = __addon.__class(nil, {
     ApplySpellAfterCast = function(self, spellId, targetGUID, startCast, endCast, isChanneled, spellcast)
         __exports.OvaleComboPoints:StartProfiling("OvaleComboPoints_ApplySpellAfterCast")
         local si = __Data.OvaleData.spellInfo[spellId]

@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./WarriorCharge", { "./Debug", "./Aura", "./Ovale" }, function(__exports, __Debug, __Aura, __Ovale)
+            __addon.require("./WarriorCharge", { "./Debug", "./Aura", "./Ovale" }, function(__exports, __Debug, __Aura, __Ovale)
 local OvaleWarriorChargeBase = __Ovale.Ovale:NewModule("OvaleWarriorCharge", "AceEvent-3.0")
 local API_GetSpellInfo = GetSpellInfo
 local API_GetTime = GetTime
@@ -11,7 +11,7 @@ local CHARGED_DURATION = INFINITY
 local CHARGED_ATTACKS = {
     [100] = API_GetSpellInfo(100)
 }
-local OvaleWarriorChargeClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleWarriorChargeBase), {
+local OvaleWarriorChargeClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(OvaleWarriorChargeBase), {
     constructor = function(self)
         self.targetGUID = nil
         __Debug.OvaleDebug:RegisterDebugging(OvaleWarriorChargeBase).constructor(self)

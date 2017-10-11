@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./SteadyFocus", { "./Debug", "./Profiler", "./Ovale", "./Aura", "./SpellBook", "./State" }, function(__exports, __Debug, __Profiler, __Ovale, __Aura, __SpellBook, __State)
+            __addon.require("./SteadyFocus", { "./Debug", "./Profiler", "./Ovale", "./Aura", "./SpellBook", "./State" }, function(__exports, __Debug, __Profiler, __Ovale, __Aura, __SpellBook, __State)
 local OvaleSteadyFocusBase = __Ovale.Ovale:NewModule("OvaleSteadyFocus", "AceEvent-3.0")
 local API_GetTime = GetTime
 local INFINITY = math.huge
@@ -27,7 +27,7 @@ local RANGED_ATTACKS = {
     [120761] = "Glaive Toss",
     [121414] = "Glaive Toss"
 }
-local OvaleSteadyFocusClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleSteadyFocusBase)), {
+local OvaleSteadyFocusClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleSteadyFocusBase)), {
     constructor = function(self)
         self.hasSteadyFocus = nil
         self.spellName = "Pre-Steady Focus"
@@ -110,7 +110,7 @@ local OvaleSteadyFocusClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Pro
         end
     end,
 })
-local SteadyFocusState = __class(nil, {
+local SteadyFocusState = __addon.__class(nil, {
     CleanState = function(self)
     end,
     InitializeState = function(self)

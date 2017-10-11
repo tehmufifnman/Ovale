@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Runes", { "./Debug", "./Profiler", "./Ovale", "./Data", "./Power", "./State", "./PaperDoll" }, function(__exports, __Debug, __Profiler, __Ovale, __Data, __Power, __State, __PaperDoll)
+            __addon.require("./Runes", { "./Debug", "./Profiler", "./Ovale", "./Data", "./Power", "./State", "./PaperDoll" }, function(__exports, __Debug, __Profiler, __Ovale, __Data, __Power, __State, __PaperDoll)
 local OvaleRunesBase = __Ovale.Ovale:NewModule("OvaleRunes", "AceEvent-3.0")
 local _ipairs = ipairs
 local _pairs = pairs
@@ -13,7 +13,7 @@ local IsActiveRune = function(rune, atTime)
     return (rune.startCooldown == 0 or rune.endCooldown <= atTime)
 end
 
-local OvaleRunesClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleRunesBase)), {
+local OvaleRunesClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleRunesBase)), {
     constructor = function(self)
         self.rune = {}
         __Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleRunesBase)).constructor(self)
@@ -91,7 +91,7 @@ local OvaleRunesClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.
     end,
 })
 local usedRune = {}
-local RunesState = __class(nil, {
+local RunesState = __addon.__class(nil, {
     InitializeState = function(self)
         self.rune = {}
         for slot in _ipairs(self.rune) do

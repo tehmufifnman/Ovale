@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Recount", { "./Ovale", "./Score", "AceLocale-3.0", "Recount" }, function(__exports, __Ovale, __Score, AceLocale, Recount)
+            __addon.require("./Recount", { "./Ovale", "./Score", "AceLocale-3.0", "Recount" }, function(__exports, __Ovale, __Score, AceLocale, Recount)
 local OvaleRecountBase = __Ovale.Ovale:NewModule("OvaleRecount")
 local _setmetatable = setmetatable
 local DataModes = function(self, data, num)
@@ -24,7 +24,7 @@ local TooltipFuncs = function(self, name, data)
     GameTooltip:AddLine(name)
 end
 
-local OvaleRecountClass = __class(OvaleRecountBase, {
+local OvaleRecountClass = __addon.__class(OvaleRecountBase, {
     constructor = function(self)
         OvaleRecountBase.constructor(self)
         if Recount then

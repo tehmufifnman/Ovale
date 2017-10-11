@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Lexer", { "./Queue" }, function(__exports, __Queue)
+            __addon.require("./Lexer", { "./Queue" }, function(__exports, __Queue)
 local _pairs = pairs
 local _setmetatable = setmetatable
 local _error = error
@@ -16,7 +16,7 @@ local assert_arg = function(idx, val, tp)
     end
 end
 
-__exports.OvaleLexer = __class(nil, {
+__exports.OvaleLexer = __addon.__class(nil, {
     constructor = function(self, name, stream, matches, filter)
         self.name = name
         self.typeQueue = __Queue.OvaleQueue("typeQueue")

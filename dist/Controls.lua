@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Controls", {}, function(__exports)
+            __addon.require("./Controls", {}, function(__exports)
 local _wipe = wipe
 __exports.checkBoxes = {}
 __exports.lists = {}

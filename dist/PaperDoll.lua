@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./PaperDoll", { "./Debug", "./Profiler", "./Ovale", "./Equipment", "./Stance", "./State", "./LastSpell" }, function(__exports, __Debug, __Profiler, __Ovale, __Equipment, __Stance, __State, __LastSpell)
+            __addon.require("./PaperDoll", { "./Debug", "./Profiler", "./Ovale", "./Equipment", "./Stance", "./State", "./LastSpell" }, function(__exports, __Debug, __Profiler, __Ovale, __Equipment, __Stance, __State, __LastSpell)
 local OvalePaperDollBase = __Ovale.Ovale:NewModule("OvalePaperDoll", "AceEvent-3.0")
 local _pairs = pairs
 local _tonumber = tonumber
@@ -103,7 +103,7 @@ local OVALE_SPECIALIZATION_NAME = {
         [3] = "protection"
     }
 }
-local OvalePaperDollClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvalePaperDollBase)), {
+local OvalePaperDollClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvalePaperDollBase)), {
     constructor = function(self)
         self.class = __Ovale.Ovale.playerClass
         self.level = API_UnitLevel("player")
@@ -451,7 +451,7 @@ local OvalePaperDollClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profi
         end
     end,
 })
-local PaperDollState = __class(nil, {
+local PaperDollState = __addon.__class(nil, {
     InitializeState = function(self)
         self.class = nil
         self.level = nil

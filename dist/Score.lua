@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Score", { "./Ovale", "./Debug", "./Future" }, function(__exports, __Ovale, __Debug, __Future)
+            __addon.require("./Score", { "./Ovale", "./Debug", "./Future" }, function(__exports, __Ovale, __Debug, __Future)
 local OvaleScoreBase = __Ovale.Ovale:NewModule("OvaleScore", "AceEvent-3.0", "AceSerializer-3.0")
 local _pairs = pairs
 local _type = type
@@ -13,7 +13,7 @@ local self_name = nil
 local API_GetTime = GetTime
 local API_UnitCastingInfo = UnitCastingInfo
 local API_UnitChannelInfo = UnitChannelInfo
-local OvaleScoreClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleScoreBase), {
+local OvaleScoreClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(OvaleScoreBase), {
     constructor = function(self)
         self.damageMeter = {}
         self.damageMeterMethod = {}

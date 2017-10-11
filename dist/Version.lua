@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-__addon.require(__addonName, __addon, "./Version", { "./Localization", "./Debug", "./Options", "./Ovale" }, function(__exports, __Localization, __Debug, __Options, __Ovale)
+            __addon.require("./Version", { "./Localization", "./Debug", "./Options", "./Ovale" }, function(__exports, __Localization, __Debug, __Options, __Ovale)
 local OvaleVersionBase = __Ovale.Ovale:NewModule("OvaleVersion", "AceComm-3.0", "AceSerializer-3.0", "AceTimer-3.0")
 local format = string.format
 local _ipairs = ipairs
@@ -42,7 +42,7 @@ do
     end
     __Options.OvaleOptions:RegisterOptions(__exports.OvaleVersion)
 end
-local OvaleVersionClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleVersionBase), {
+local OvaleVersionClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(OvaleVersionBase), {
     constructor = function(self)
         self.version = (OVALE_VERSION == REPOSITORY_KEYWORD) and "development version" or OVALE_VERSION
         self.warned = false
