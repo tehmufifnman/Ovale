@@ -1,6 +1,7 @@
 local __addonName, __addon = ...
 __addon.require(__addonName, __addon, "./Condition", { "./State", "./Ovale", "./Debug" }, function(__exports, __State, __Ovale, __Debug)
 local OvaleConditionBase = __Ovale.Ovale:NewModule("OvaleCondition")
+local _next = next
 local INFINITY = math.huge
 local self_condition = {}
 local self_spellBookCondition = {}
@@ -25,6 +26,9 @@ local OvaleConditionClass = __class(__Debug.OvaleDebug:RegisterDebugging(OvaleCo
     end,
     EvaluateCondition = function(self, name, positionalParams, namedParams, state, atTime)
         return self_condition[name](positionalParams, namedParams, state, atTime)
+    end,
+    HasAny = function(self)
+        return _next(self_condition) ~= nil
     end,
     constructor = function(self)
         self.COMPARATOR = {

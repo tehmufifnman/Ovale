@@ -567,7 +567,9 @@ local OvaleCompileClass = __class(OvaleCompileClassBase, {
             __AST.OvaleAST:Release(self.ast)
             self.ast = nil
         end
-        self.ast = __AST.OvaleAST:ParseScript(name)
+        if __Condition.OvaleCondition:HasAny() then
+            self.ast = __AST.OvaleAST:ParseScript(name)
+        end
         __Controls.ResetControls()
     end,
     EvaluateScript = function(self, ast, forceEvaluation)

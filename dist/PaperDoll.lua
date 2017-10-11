@@ -337,8 +337,8 @@ local OvalePaperDollClass = __class(__Debug.OvaleDebug:RegisterDebugging(__Profi
         self:StartProfiling("OvalePaperDoll_UpdateDamage")
         local minDamage, maxDamage, minOffHandDamage, maxOffHandDamage, _, _, damageMultiplier = API_UnitDamage("player")
         local mainHandAttackSpeed, offHandAttackSpeed = API_UnitAttackSpeed("player")
-        if damageMultiplier == 0 then
-            damageMultiplier = 1
+        if damageMultiplier == 0 or mainHandAttackSpeed == 0 then
+            return 
         end
         self.baseDamageMultiplier = damageMultiplier
         if self.class == "DRUID" and __Stance.OvaleStance:IsStance("druid_cat_form") then

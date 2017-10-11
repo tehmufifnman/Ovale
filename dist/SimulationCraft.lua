@@ -2889,6 +2889,7 @@ do
         ["maelstrom"] = "Maelstrom()",
         ["nonexecute_actors_pct"] = "0",
         ["pain"] = "Pain()",
+        ["pain.deficit"] = "PainDeficit()",
         ["rage"] = "Rage()",
         ["rage.deficit"] = "RageDeficit()",
         ["rage.max"] = "MaxRage()",
@@ -3869,7 +3870,7 @@ do
         ["operand"] = EmitOperand
     }
 end
-local PreOrderTraversalMark = function(node)
+local function PreOrderTraversalMark(node)
     if node.type == "custom_function" then
         self_functionUsed[node.name] = true
     else
@@ -3883,14 +3884,12 @@ local PreOrderTraversalMark = function(node)
         end
     end
 end
-
-local Mark = function(node)
+local function Mark(node)
     _wipe(self_functionDefined)
     _wipe(self_functionUsed)
     PreOrderTraversalMark(node)
 end
-
-local SweepComments = function(childNodes, index)
+local function SweepComments(childNodes, index)
     local count = 0
     for k = index - 1, 1, -1 do
         if childNodes[k].type == "comment" then
@@ -3902,11 +3901,10 @@ local SweepComments = function(childNodes, index)
     end
     return count
 end
-
 local function isNode(n)
     return _type(n) == "table"
 end
-local Sweep = function(node)
+local function Sweep(node)
     local isChanged
     local isSwept
     isChanged, isSwept = false, false
@@ -4000,7 +3998,6 @@ local Sweep = function(node)
     end
     return isChanged, isSwept
 end
-
 local InsertInterruptFunction = function(child, annotation, interrupts)
     local nodeList = annotation.astAnnotation.nodeList
     local className = annotation.class
@@ -5093,7 +5090,7 @@ local OvaleSimulationCraftClass = __class(__Debug.OvaleDebug:RegisterDebugging(O
             annotation.supportingControlCount = InsertSupportingControls(child, annotation)
             annotation.supportingDefineCount = InsertSupportingDefines(child, annotation)
             InsertVariables(child, annotation)
-            local className, specialization = annotation.className, annotation.specialization
+            local className, specialization = annotation.class, annotation.specialization
             local lowerclass = strlower(className)
             local aoeToggle = "opt_" .. lowerclass .. "_" .. specialization .. "_aoe"
             do

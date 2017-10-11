@@ -399,6 +399,6 @@ __exports.OvaleTimeSpan = __class(nil, {
         return result
     end,
 })
-__exports.UNIVERSE = __exports.newFromArgs(0, 2)
+__exports.UNIVERSE = __exports.newFromArgs(0, INFINITY)
 __exports.EMPTY_SET = __exports.newTimeSpan()
 end)

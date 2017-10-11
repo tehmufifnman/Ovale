@@ -222,6 +222,7 @@ local OvaleFrame = __class(AceGUI.WidgetContainerBase, {
         local profile = __Ovale.Ovale.db.profile
         self.frame:SetPoint("CENTER", self.hider, "CENTER", profile.apparence.offsetX, profile.apparence.offsetY)
         self.frame:EnableMouse( not profile.apparence.clickThru)
+        self:ReleaseChildren()
         self:UpdateIcons()
         self:UpdateControls()
         self:UpdateVisibility()
@@ -465,7 +466,6 @@ local OvaleFrame = __class(AceGUI.WidgetContainerBase, {
         self.timeSinceLastUpdate = INFINITY
         frame:SetWidth(100)
         frame:SetHeight(100)
-        self:UpdateFrame()
         frame:SetMovable(true)
         frame:SetFrameStrata("MEDIUM")
         frame:SetScript("OnMouseDown", function()
@@ -507,6 +507,7 @@ local OvaleFrame = __class(AceGUI.WidgetContainerBase, {
         content:Hide()
         content:SetAlpha(profile.apparence.optionsAlpha)
         AceGUIRegisterAsContainer(self)
+        self:UpdateFrame()
     end,
 })
 __exports.frame = OvaleFrame()

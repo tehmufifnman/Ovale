@@ -117,8 +117,8 @@ __exports.BaseState = __class(nil, {
             end
         end
     end,
-    Log = function(self, parameters)
-        __exports.OvaleState:Log(parameters)
+    Log = function(self, ...)
+        __exports.OvaleState:Log(...)
     end,
     constructor = function(self)
         self.isState = true

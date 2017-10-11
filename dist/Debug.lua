@@ -110,7 +110,6 @@ local OvaleDebugClass = __class(OvaleDebugBase, {
         local debug = self
         return __class(addon, {
             constructor = function(self, args)
-                self.trace = false
                 addon.constructor(self, args)
                 local name = self:GetName()
                 debug.options.args.toggles.args[name] = {
@@ -134,7 +133,7 @@ local OvaleDebugClass = __class(OvaleDebugBase, {
                 end
             end,
             Log = function(self, ...)
-                if self.trace then
+                if debug.trace then
                     local N = self_traceLog:Lines()
                     if N < OVALE_TRACELOG_MAXLINES - 1 then
                         self_traceLog:AddLine(__Ovale.MakeString(...))
