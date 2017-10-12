@@ -1,5 +1,6 @@
-import AceAddon from "AceAddon-3.0";
 import { L } from "./Localization";
+import { NewAddon, AceModule } from "./TsAddon";
+import aceEvent from "AceEvent-3.0";
 let _assert = assert;
 let format = string.format;
 let _ipairs = ipairs;
@@ -123,7 +124,7 @@ export interface OvaleDb {
     global: any;
 }
 
-const OvaleBase = AceAddon.NewAddon("Ovale", "AceEvent-3.0");
+const OvaleBase = NewAddon("Ovale", aceEvent);
 class OvaleClass extends OvaleBase {
     playerClass = _select(2, API_UnitClass("player"));
     playerGUID: string = undefined;

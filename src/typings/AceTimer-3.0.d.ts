@@ -5,5 +5,6 @@ declare class AceTimerModule {
 }
 
 declare module "AceTimer-3.0"{
-    export default AceTimerModule;
+    const lib: Library<AceTimerModule>;
+    export default lib;
 }

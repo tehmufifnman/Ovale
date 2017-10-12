@@ -1,6 +1,8 @@
 import { OvaleState, StateModule } from "./State";
 import { Ovale } from "./Ovale";
-let OvaleWildImpsBase = Ovale.NewModule("OvaleWildImps", "AceEvent-3.0");
+import aceEvent from "AceEvent-3.0";
+
+let OvaleWildImpsBase = Ovale.NewModule("OvaleWildImps", aceEvent);
 export let OvaleWildImps: OvaleWildImpsClass;
 let demonData: LuaArray<{duration: number}> = {
     [55659]: {

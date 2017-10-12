@@ -3,8 +3,10 @@ import { OvaleProfiler } from "./Profiler";
 import { Ovale } from "./Ovale";
 import { OvaleGUID } from "./GUID";
 import { OvaleState, StateModule } from "./State";
+import aceEvent from "AceEvent-3.0";
+import AceTimer from "AceTimer-3.0";
 
-let OvaleEnemiesBase = Ovale.NewModule("OvaleEnemies", "AceEvent-3.0", "AceTimer-3.0");
+let OvaleEnemiesBase = Ovale.NewModule("OvaleEnemies", aceEvent, AceTimer);
 export let OvaleEnemies: OvaleEnemiesClass;
 let bit_band = bit.band;
 let bit_bor = bit.bor;

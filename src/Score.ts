@@ -1,8 +1,10 @@
 import { Ovale } from "./Ovale";
 import { OvaleDebug } from "./Debug";
 import { OvaleFuture } from "./Future";
+import aceEvent from "AceEvent-3.0";
+import AceSerializer from "AceSerializer-3.0";
 
-let OvaleScoreBase = Ovale.NewModule("OvaleScore", "AceEvent-3.0", "AceSerializer-3.0");
+let OvaleScoreBase = Ovale.NewModule("OvaleScore", aceEvent, AceSerializer);
 export let OvaleScore: OvaleScoreClass;
 let _pairs = pairs;
 let _type = type;

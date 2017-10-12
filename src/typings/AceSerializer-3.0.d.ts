@@ -3,5 +3,6 @@ declare class AceSerializer {
     Deserialize(messsage:string):any[];
 }
 declare module "AceSerializer-3.0" {
-    export default AceSerializer;
+    const lib: Library<AceSerializer>;
+    export default lib;
 }

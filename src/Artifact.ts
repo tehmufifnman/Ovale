@@ -2,12 +2,14 @@ import LibArtifactData from "LibArtifactData-1.0";
 import { OvaleDebug } from "./Debug";
 import { L } from "./Localization";
 import { Ovale } from "./Ovale";
+import aceEvent from "AceEvent-3.0";
+
 let tsort = table.sort;
 let tinsert = table.insert;
 let tconcat = table.concat;
 
 
-let OvaleArtifactBase = Ovale.NewModule("OvaleArtifact", "AceEvent-3.0");
+let OvaleArtifactBase = Ovale.NewModule("OvaleArtifact", aceEvent);
 class OvaleArtifactClass extends OvaleDebug.RegisterDebugging(OvaleArtifactBase) {
     self_traits = {}
 

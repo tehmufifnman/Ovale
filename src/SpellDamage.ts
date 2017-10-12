@@ -1,12 +1,13 @@
 import { OvaleProfiler } from "./Profiler";
 import { Ovale } from "./Ovale";
+import aceEvent from "AceEvent-3.0";
 
 let CLEU_DAMAGE_EVENT = {
     SPELL_DAMAGE: true,
     SPELL_PERIODIC_AURA: true
 }
 
-const OvaleSpellDamageBase = OvaleProfiler.RegisterProfiling(Ovale.NewModule("OvaleSpellDamage", "AceEvent-3.0"));
+const OvaleSpellDamageBase = OvaleProfiler.RegisterProfiling(Ovale.NewModule("OvaleSpellDamage", aceEvent));
 class OvaleSpellDamageClass extends OvaleSpellDamageBase {
     value = {}
     constructor() {

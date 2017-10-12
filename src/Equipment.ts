@@ -1,7 +1,9 @@
 import { OvaleProfiler } from "./Profiler";
 import { Ovale } from "./Ovale";
 import { OvaleDebug } from "./Debug";
-let OvaleEquipmentBase = Ovale.NewModule("OvaleEquipment", "AceEvent-3.0");
+import aceEvent from "AceEvent-3.0";
+
+let OvaleEquipmentBase = Ovale.NewModule("OvaleEquipment", aceEvent);
 export let OvaleEquipment: OvaleEquipmentClass;
 let _pairs = pairs;
 let _select = select;

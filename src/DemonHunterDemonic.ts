@@ -1,8 +1,9 @@
 import { Ovale } from "./Ovale";
 import { OvaleDebug } from "./Debug";
 import { OvaleAura } from "./Aura";
+import aceEvent from "AceEvent-3.0";
 
-let OvaleDemonHunterDemonicBase = Ovale.NewModule("OvaleDemonHunterDemonic", "AceEvent-3.0");
+let OvaleDemonHunterDemonicBase = Ovale.NewModule("OvaleDemonHunterDemonic", aceEvent);
 export let OvaleDemonHunterDemonic: OvaleDemonHunterDemonicClass;
 let API_GetSpecialization = GetSpecialization;
 let API_GetSpecializationInfo = GetSpecializationInfo;

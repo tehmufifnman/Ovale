@@ -7,7 +7,9 @@ import { Ovale } from "./Ovale";
 import { OvaleScripts } from "./Scripts";
 import { OvaleVersion } from "./Version";
 import { frame } from "./Frame";
-let OvaleDataBrokerBase = Ovale.NewModule("OvaleDataBroker", "AceEvent-3.0");
+import aceEvent from "AceEvent-3.0";
+
+let OvaleDataBrokerBase = Ovale.NewModule("OvaleDataBroker", aceEvent);
 export let OvaleDataBroker: OvaleDataBrokerClass;
 
 let _pairs = pairs;

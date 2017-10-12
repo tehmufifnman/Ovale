@@ -3,7 +3,9 @@ import { OvalePool } from "./Pool";
 import { OvaleProfiler } from "./Profiler";
 import { OvaleQueue } from "./Queue";
 import { Ovale, RegisterPrinter } from "./Ovale";
-let OvaleDamageTakenBase = Ovale.NewModule("OvaleDamageTaken", "AceEvent-3.0");
+import aceEvent from "AceEvent-3.0";
+
+let OvaleDamageTakenBase = Ovale.NewModule("OvaleDamageTaken", aceEvent);
 export let OvaleDamageTaken: OvaleDamageTakenClass;
 let bit_band = bit.band;
 let bit_bor = bit.bor;

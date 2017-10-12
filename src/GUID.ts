@@ -1,6 +1,8 @@
 import { OvaleDebug } from "./Debug";
 import { Ovale } from "./Ovale";
-let OvaleGUIDBase = Ovale.NewModule("OvaleGUID", "AceEvent-3.0");
+import aceEvent from "AceEvent-3.0";
+
+let OvaleGUIDBase = Ovale.NewModule("OvaleGUID", aceEvent);
 let floor = math.floor;
 let _ipairs = ipairs;
 let _setmetatable = setmetatable;

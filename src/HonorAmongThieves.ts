@@ -1,8 +1,9 @@
 import { Ovale } from "./Ovale";
 import { OvaleAura } from "./Aura";
 import {  OvaleData } from "./Data";
+import aceEvent from "AceEvent-3.0";
 
-let OvaleHonorAmongThievesBase = Ovale.NewModule("OvaleHonorAmongThieves", "AceEvent-3.0");
+let OvaleHonorAmongThievesBase = Ovale.NewModule("OvaleHonorAmongThieves", aceEvent);
 export let OvaleHonorAmongThieves: OvaleHonorAmongThievesClass;
 let API_GetTime = GetTime;
 let self_playerGUID = undefined;

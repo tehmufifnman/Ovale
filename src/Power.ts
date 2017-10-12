@@ -11,8 +11,9 @@ import { RegisterRequirement, UnregisterRequirement } from "./Requirement";
 import { futureState } from "./FutureState";
 import { lastSpell } from "./LastSpell";
 import { DataState, dataState } from "./DataState";
+import aceEvent from "AceEvent-3.0";
 
-let OvalePowerBase = Ovale.NewModule("OvalePower", "AceEvent-3.0");
+let OvalePowerBase = Ovale.NewModule("OvalePower", aceEvent);
 export let OvalePower:OvalePowerClass;
 
 let ceil = math.ceil;

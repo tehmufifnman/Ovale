@@ -1,7 +1,9 @@
 import { OvaleDebug } from "./Debug";
 import { OvaleAura } from "./Aura";
 import { Ovale } from "./Ovale";
-let OvaleWarriorChargeBase = Ovale.NewModule("OvaleWarriorCharge", "AceEvent-3.0");
+import aceEvent from "AceEvent-3.0";
+
+let OvaleWarriorChargeBase = Ovale.NewModule("OvaleWarriorCharge", aceEvent);
 export let OvaleWarriorCharge: OvaleWarriorChargeClass;
 let API_GetSpellInfo = GetSpellInfo;
 let API_GetTime = GetTime;

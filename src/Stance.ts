@@ -3,8 +3,9 @@ import { OvaleDebug } from "./Debug";
 import { OvaleProfiler } from "./Profiler";
 import { Ovale } from "./Ovale";
 import { RegisterRequirement, UnregisterRequirement } from "./Requirement";
+import aceEvent from "AceEvent-3.0";
 
-let OvaleStanceBase = Ovale.NewModule("OvaleStance", "AceEvent-3.0");
+let OvaleStanceBase = Ovale.NewModule("OvaleStance", aceEvent);
 export let OvaleStance: OvaleStanceClass;
 let _pairs = pairs;
 let substr = string.sub;

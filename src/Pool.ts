@@ -1,7 +1,5 @@
-import { OvaleProfiler } from "./Profiler";
 import { Ovale } from "./Ovale";
 let _assert = assert;
-let _setmetatable = setmetatable;
 let tinsert = table.insert;
 let _tostring = tostring;
 let tremove = table.remove;

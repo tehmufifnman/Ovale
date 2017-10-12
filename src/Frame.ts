@@ -11,6 +11,8 @@ import { Ovale } from "./Ovale";
 import { OvaleIcon } from "./Icon";
 import { EnemiesState } from "./Enemies";
 import { lists, checkBoxes } from "./Controls";
+import aceEvent from "AceEvent-3.0";
+
 let _ipairs = ipairs;
 let _next = next;
 let _pairs = pairs;
@@ -589,7 +591,7 @@ class OvaleFrame extends AceGUI.WidgetContainerBase {
 
 export const frame = new OvaleFrame();
 
-const OvaleFrameBase = Ovale.NewModule("OvaleFrame", "AceEvent-3.0");
+const OvaleFrameBase = Ovale.NewModule("OvaleFrame", aceEvent);
 class OvaleFrameModuleClass extends OvaleFrameBase {
     
     Ovale_OptionChanged(event, eventType) {

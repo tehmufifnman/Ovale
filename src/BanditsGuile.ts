@@ -1,7 +1,9 @@
 import { OvaleDebug } from "./Debug";
 import { Ovale } from "./Ovale";
 import { OvaleAura } from "./Aura";
-let OvaleBanditsGuileBase = Ovale.NewModule("OvaleBanditsGuile", "AceEvent-3.0");
+import aceEvent from "AceEvent-3.0";
+
+let OvaleBanditsGuileBase = Ovale.NewModule("OvaleBanditsGuile", aceEvent);
 let API_GetSpellInfo = GetSpellInfo;
 let API_GetTime = GetTime;
 let self_playerGUID = undefined;

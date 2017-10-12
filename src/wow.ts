@@ -557,7 +557,7 @@ function GetShapeshiftForm(){}
 function GetShapeshiftFormInfo(index:number){return []}
 function GetTotemInfo(slot) {return[]}
 
-var BigWigsLoader: AceModule & AceEvent;
+var BigWigsLoader: { RegisterMessage(...a:any[]):void; };
 var UIParent: UIFrame;
 var Bartender4;
 

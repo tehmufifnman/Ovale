@@ -6,7 +6,9 @@ import { Ovale } from "./Ovale";
 import { lastSpell } from "./LastSpell";
 import { RegisterRequirement, UnregisterRequirement } from "./Requirement";
 import { DataState } from "./DataState";
-let OvaleCooldownBase = Ovale.NewModule("OvaleCooldown", "AceEvent-3.0");
+import aceEvent from "AceEvent-3.0";
+
+let OvaleCooldownBase = Ovale.NewModule("OvaleCooldown", aceEvent);
 export let OvaleCooldown: OvaleCooldownClass;
 let _next = next;
 let _pairs = pairs;

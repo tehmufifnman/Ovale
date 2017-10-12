@@ -13,7 +13,9 @@ import { OvaleSpellBook } from "./SpellBook";
 import { OvaleStance } from "./Stance";
 import { RegisterPrinter, Ovale } from "./Ovale";
 import { checkBoxes, lists, ResetControls } from "./Controls";
-let OvaleCompileBase = Ovale.NewModule("OvaleCompile", "AceEvent-3.0");
+import aceEvent from "AceEvent-3.0";
+
+let OvaleCompileBase = Ovale.NewModule("OvaleCompile", aceEvent);
 export let OvaleCompile: OvaleCompileClass;
 let _ipairs = ipairs;
 let _pairs = pairs;

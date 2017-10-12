@@ -16,7 +16,9 @@ import { dataState } from "./DataState";
 import { spellBookState } from "./SpellBookState";
 import { futureState } from "./FutureState";
 import { cooldownState } from "./CooldownState";
-let OvaleBestActionBase = Ovale.NewModule("OvaleBestAction", "AceEvent-3.0");
+import aceEvent from "AceEvent-3.0";
+
+let OvaleBestActionBase = Ovale.NewModule("OvaleBestAction", aceEvent);
 let abs = math.abs;
 let _assert = assert;
 let floor = math.floor;

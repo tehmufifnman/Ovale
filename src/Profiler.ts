@@ -4,6 +4,7 @@ import { L } from "./Localization";
 import LibTextDump from "LibTextDump-1.0";
 import { OvaleOptions } from "./Options";
 import { Constructor, Ovale } from "./Ovale";
+import { AceModule } from "./TsAddon";
 
 let OvaleProfilerBase = Ovale.NewModule("OvaleProfiler");
 

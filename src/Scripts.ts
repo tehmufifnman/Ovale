@@ -4,8 +4,9 @@ import { OvaleOptions } from "./Options";
 import { L } from "./Localization";
 import { OvalePaperDoll } from "./PaperDoll";
 import { Ovale } from "./Ovale";
+import aceEvent from "AceEvent-3.0";
 
-let OvaleScriptsBase = Ovale.NewModule("OvaleScripts", "AceEvent-3.0");
+let OvaleScriptsBase = Ovale.NewModule("OvaleScripts", aceEvent);
 export let OvaleScripts: OvaleScriptsClass;
 let format = string.format;
 let gsub = string.gsub;

@@ -5,8 +5,9 @@ import { OvaleSpellBook }from "./SpellBook";
 import { OvaleState, baseState, StateModule } from "./State";
 import { auraState } from "./Aura";
 import { dataState } from "./DataState";
+import aceEvent from "AceEvent-3.0";
 
-let OvaleTotemBase = Ovale.NewModule("OvaleTotem", "AceEvent-3.0");
+let OvaleTotemBase = Ovale.NewModule("OvaleTotem", aceEvent);
 export let OvaleTotem: OvaleTotemClass;
 
 let _ipairs = ipairs;

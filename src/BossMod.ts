@@ -2,7 +2,7 @@ import { OvaleDebug } from "./Debug";
 import { OvaleProfiler } from "./Profiler";
 import { Ovale } from "./Ovale";
 import { BaseState } from "./State";
-let OvaleBossModBase = Ovale.NewModule("OvaleBossMod");
+let OvaleBossModBase = OvaleProfiler.RegisterProfiling(OvaleDebug.RegisterDebugging(Ovale.NewModule("OvaleBossMod")));
 let API_GetNumGroupMembers = GetNumGroupMembers;
 let API_IsInGroup = IsInGroup;
 let API_IsInInstance = IsInInstance;
@@ -11,7 +11,7 @@ let API_UnitExists = UnitExists;
 let API_UnitLevel = UnitLevel;
 let _BigWigsLoader = BigWigsLoader;
 let _DBM = DBM;
-class OvaleBossModClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.RegisterDebugging(OvaleBossModBase)) {
+class OvaleBossModClass extends OvaleBossModBase {
     EngagedDBM = undefined;
     EngagedBigWigs = undefined;
 

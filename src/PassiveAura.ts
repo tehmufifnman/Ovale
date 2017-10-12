@@ -2,8 +2,9 @@ import { Ovale } from "./Ovale";
 import { OvaleAura } from "./Aura";
 import { OvaleEquipment } from "./Equipment";
 import { OvalePaperDoll } from "./PaperDoll";
+import aceEvent from "AceEvent-3.0";
 
-let OvalePassiveAuraBase = Ovale.NewModule("OvalePassiveAura", "AceEvent-3.0");
+let OvalePassiveAuraBase = Ovale.NewModule("OvalePassiveAura", aceEvent);
 export let OvalePassiveAura: OvalePassiveAuraClass;
 let exp = math.exp;
 let _pairs = pairs;

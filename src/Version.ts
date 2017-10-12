@@ -2,8 +2,11 @@ import { L } from "./Localization";
 import { OvaleDebug } from "./Debug";
 import { OvaleOptions } from "./Options";
 import { Ovale } from "./Ovale";
+import AceComm from "AceComm-3.0";
+import AceSerializer from "AceSerializer-3.0";
+import AceTimer from "AceTimer-3.0";
 
-let OvaleVersionBase = Ovale.NewModule("OvaleVersion", "AceComm-3.0", "AceSerializer-3.0", "AceTimer-3.0");
+let OvaleVersionBase = Ovale.NewModule("OvaleVersion", AceComm, AceSerializer, AceTimer);
 export let OvaleVersion: OvaleVersionClass;
 let format = string.format;
 let _ipairs = ipairs;

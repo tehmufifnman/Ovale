@@ -1,7 +1,8 @@
 import { Ovale } from "./Ovale";
 import { OvaleAura } from "./Aura";
+import aceEvent from "AceEvent-3.0";
 
-let OvaleShadowWordDeathBase = Ovale.NewModule("OvaleShadowWordDeath", "AceEvent-3.0");
+let OvaleShadowWordDeathBase = Ovale.NewModule("OvaleShadowWordDeath", aceEvent);
 export let OvaleShadowWordDeath: OvaleShadowWordDeathClass;
 let API_GetTime = GetTime;
 let self_playerGUID = undefined;

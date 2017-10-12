@@ -5,8 +5,9 @@ import { OvaleEquipment } from "./Equipment";
 import { OvaleStance } from "./Stance";
 import { OvaleState, StateModule } from "./State";
 import { lastSpell, SpellCast, PaperDollSnapshot } from "./LastSpell";
+import aceEvent from "AceEvent-3.0";
 
-let OvalePaperDollBase = Ovale.NewModule("OvalePaperDoll", "AceEvent-3.0");
+let OvalePaperDollBase = Ovale.NewModule("OvalePaperDoll", aceEvent);
 export let OvalePaperDoll: OvalePaperDollClass;
 let _pairs = pairs;
 let _tonumber = tonumber;

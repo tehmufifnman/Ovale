@@ -1,19 +1,10 @@
 import { OvaleQueue } from "./Queue";
+
 let _pairs = pairs;
-let _setmetatable = setmetatable;
-let _error = error;
 let _ipairs = ipairs;
-let _tonumber = tonumber;
-let _type = type;
 let wrap = coroutine.wrap;
 let strfind = string.find;
 let strsub = string.sub;
-let append = table.insert;
-const assert_arg = function(idx, val, tp) {
-    if (_type(val) != tp) {
-        _error(`argument ${idx} must be ${tp}`, 2);
-    }
-}
 
 export type Tokenizer = (tok:string) => [string, string];
 
@@ -47,7 +38,7 @@ export class OvaleLexer {
             let sz = lualength(s);
             let idx = 1;
             while (true) {
-                for (const [_, m] of _ipairs(matches)) {
+                for (const [, m] of _ipairs(matches)) {
                     const pat = m[1];
                     const fun = m[2];
                     const [i1, i2] = strfind(s, pat, idx)

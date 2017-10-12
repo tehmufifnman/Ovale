@@ -4,8 +4,9 @@ import { Ovale } from "./Ovale";
 import { OvaleAura, auraState } from "./Aura";
 import { OvaleSpellBook } from "./SpellBook";
 import { OvaleState, StateModule } from "./State";
+import aceEvent from "AceEvent-3.0";
 
-let OvaleSteadyFocusBase = Ovale.NewModule("OvaleSteadyFocus", "AceEvent-3.0");
+let OvaleSteadyFocusBase = Ovale.NewModule("OvaleSteadyFocus", aceEvent);
 export let OvaleSteadyFocus: OvaleSteadyFocusClass;
 
 let API_GetTime = GetTime;

@@ -7,8 +7,9 @@ import { OvaleGUID } from "./GUID";
 import { OvalePaperDoll } from "./PaperDoll";
 import { OvaleSpellBook } from "./SpellBook";
 import { lastSpell, SpellCast, self_pool } from "./LastSpell";
+import aceEvent from "AceEvent-3.0";
 
-let OvaleFutureBase = Ovale.NewModule("OvaleFuture", "AceEvent-3.0");
+let OvaleFutureBase = Ovale.NewModule("OvaleFuture", aceEvent);
 let _ipairs = ipairs;
 let _pairs = pairs;
 let strsub = string.sub;

@@ -1,8 +1,10 @@
 import { Ovale } from "./Ovale";
 import { OvaleDebug } from "./Debug";
 import { OvaleState, StateModule } from "./State";
+import aceEvent from "AceEvent-3.0";
 
-let OvaleDemonHunterSoulFragmentsBase = Ovale.NewModule("OvaleDemonHunterSoulFragments", "AceEvent-3.0");
+
+let OvaleDemonHunterSoulFragmentsBase = Ovale.NewModule("OvaleDemonHunterSoulFragments", aceEvent);
 export let OvaleDemonHunterSoulFragments: OvaleDemonHunterSoulFragmentsClass;
 let tinsert = table.insert;
 let API_GetTime = GetTime;

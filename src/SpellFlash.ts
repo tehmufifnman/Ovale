@@ -6,6 +6,7 @@ import { OvaleFuture } from "./Future";
 import { OvaleSpellBook } from "./SpellBook";
 import { OvaleStance } from "./Stance";
 import { BaseState } from "./State";
+import aceEvent from "AceEvent-3.0";
 
 interface SpellFlashCoreClass {
     FlashForm(spellId, color, size, brightness):void;   
@@ -14,7 +15,7 @@ interface SpellFlashCoreClass {
     FlashItem(spellId, color, size, brightness):void;
 }
 
-let OvaleSpellFlashBase = Ovale.NewModule("OvaleSpellFlash", "AceEvent-3.0");
+let OvaleSpellFlashBase = Ovale.NewModule("OvaleSpellFlash", aceEvent);
 export let OvaleSpellFlash: OvaleSpellFlashClass;
 let _pairs = pairs;
 let API_GetTime = GetTime;

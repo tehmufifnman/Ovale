@@ -4,8 +4,9 @@ import { Ovale } from "./Ovale";
 import { OvaleGUID } from "./GUID";
 import { OvaleState, baseState, StateModule } from "./State";
 import { RegisterRequirement, UnregisterRequirement } from "./Requirement";
+import aceEvent from "AceEvent-3.0";
 
-let OvaleHealthBase = Ovale.NewModule("OvaleHealth", "AceEvent-3.0");
+let OvaleHealthBase = Ovale.NewModule("OvaleHealth", aceEvent);
 export let OvaleHealth: OvaleHealthClass;
 
 let strsub = string.sub;

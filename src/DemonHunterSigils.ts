@@ -3,7 +3,9 @@ import { Ovale } from "./Ovale";
 import { OvalePaperDoll } from "./PaperDoll";
 import { OvaleSpellBook } from "./SpellBook";
 import { OvaleState, StateModule, baseState } from "./State";
-let OvaleSigilBase = Ovale.NewModule("OvaleSigil", "AceEvent-3.0");
+import aceEvent from "AceEvent-3.0";
+
+let OvaleSigilBase = Ovale.NewModule("OvaleSigil", aceEvent);
 export let OvaleSigil: OvaleSigilClass;
 let _ipairs = ipairs;
 let tinsert = table.insert;

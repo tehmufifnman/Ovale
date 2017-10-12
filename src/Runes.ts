@@ -5,8 +5,9 @@ import { OvaleData } from "./Data";
 import { OvalePower } from "./Power";
 import { OvaleState, baseState, StateModule } from "./State";
 import { paperDollState } from "./PaperDoll";
+import aceEvent from "AceEvent-3.0";
 
-let OvaleRunesBase = Ovale.NewModule("OvaleRunes", "AceEvent-3.0");
+let OvaleRunesBase = Ovale.NewModule("OvaleRunes", aceEvent);
 export let OvaleRunes: OvaleRunesClass;
 let _ipairs = ipairs;
 let _pairs = pairs;

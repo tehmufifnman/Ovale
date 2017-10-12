@@ -5,5 +5,6 @@ declare class AceComm{
 
  
 declare module "AceComm-3.0" {
-    export default AceComm;
+    const lib: Library<AceComm>;
+    export default lib;
 }

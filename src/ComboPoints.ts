@@ -11,8 +11,9 @@ import { OvaleState, StateModule } from "./State";
 import { RegisterRequirement, UnregisterRequirement } from "./Requirement";
 import { lastSpell } from "./LastSpell";
 import { dataState } from "./DataState";
+import aceEvent from "AceEvent-3.0";
 
-let OvaleComboPointsBase = Ovale.NewModule("OvaleComboPoints", "AceEvent-3.0");
+let OvaleComboPointsBase = Ovale.NewModule("OvaleComboPoints", aceEvent);
 export let OvaleComboPoints: OvaleComboPointsClass;
 let tinsert = table.insert;
 let tremove = table.remove;

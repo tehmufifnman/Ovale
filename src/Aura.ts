@@ -11,7 +11,9 @@ import { Ovale } from "./Ovale";
 import { lastSpell, SpellCast } from "./LastSpell";
 import { RegisterRequirement, UnregisterRequirement, CheckRequirements } from "./Requirement";
 import { dataState } from "./DataState";
-let OvaleAuraBase = Ovale.NewModule("OvaleAura", "AceEvent-3.0");
+import aceEvent from "AceEvent-3.0";
+
+let OvaleAuraBase = Ovale.NewModule("OvaleAura", aceEvent);
 export let OvaleAura: OvaleAuraClass;
 let _next = next;
 let _pairs = pairs;

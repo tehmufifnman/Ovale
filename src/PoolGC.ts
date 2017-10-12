@@ -1,6 +1,5 @@
 import { Ovale } from "./Ovale";
 
-let _setmetatable = setmetatable;
 let _tostring = tostring;
 export class OvalePoolGC {
     name = "OvalePoolGC";

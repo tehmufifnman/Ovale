@@ -3,6 +3,9 @@ import { OvaleDebug } from "./Debug";
 import { OvaleProfiler } from "./Profiler";
 import { OvaleSpellBook } from "./SpellBook";
 import { Ovale } from "./Ovale";
+import aceEvent from "AceEvent-3.0";
+import aceTimer from "AceTimer-3.0";
+
 let gsub = string.gsub;
 let strlen = string.len;
 let strmatch = string.match;
@@ -19,7 +22,7 @@ let API_GetBonusBarIndex = GetBonusBarIndex;
 let API_GetMacroItem = GetMacroItem;
 let API_GetMacroSpell = GetMacroSpell;
 
-const OvaleActionBarBase = OvaleProfiler.RegisterProfiling(OvaleDebug.RegisterDebugging(Ovale.NewModule("OvaleActionBar", "AceEvent-3.0", "AceTimer-3.0")));
+const OvaleActionBarBase = OvaleProfiler.RegisterProfiling(OvaleDebug.RegisterDebugging(Ovale.NewModule("OvaleActionBar", aceEvent, aceTimer)));
 class OvaleActionBarClass extends OvaleActionBarBase {
     debugOptions = {
         actionbar: {

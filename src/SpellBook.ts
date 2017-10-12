@@ -3,6 +3,7 @@ import { OvaleDebug } from "./Debug";
 import { OvaleProfiler } from "./Profiler";
 import { Ovale } from "./Ovale";
 import { RegisterRequirement, UnregisterRequirement } from "./Requirement";
+import aceEvent from "AceEvent-3.0";
 
 export let OvaleSpellBook:OvaleSpellBookClass;
 
@@ -94,7 +95,7 @@ const OutputTableValues = function(output, tbl) {
 
 let output = {}
 
-const OvaleSpellBookBase = OvaleProfiler.RegisterProfiling(OvaleDebug.RegisterDebugging(Ovale.NewModule("OvaleSpellBook", "AceEvent-3.0")))
+const OvaleSpellBookBase = OvaleProfiler.RegisterProfiling(OvaleDebug.RegisterDebugging(Ovale.NewModule("OvaleSpellBook", aceEvent)))
 class OvaleSpellBookClass extends OvaleSpellBookBase {
     ready = false;
     spell = {    }
