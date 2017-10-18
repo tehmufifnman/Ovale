@@ -52,6 +52,9 @@ class OvaleScriptsClass  extends OvaleScriptsBase {
 
     constructor() {
         super();
+    }
+
+    OnInitialize() {
         this.CreateOptions();
         this.RegisterScript(undefined, undefined, DEFAULT_NAME, DEFAULT_DESCRIPTION, undefined, "script");
         this.RegisterScript(Ovale.playerClass, undefined, CUSTOM_NAME, CUSTOM_DESCRIPTION, Ovale.db.profile.code, "script");

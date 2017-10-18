@@ -453,7 +453,7 @@ const Tokenize:Tokenizer = function(token) {
     return [token, token];
 }
 const NoToken:Tokenizer = function() {
-    return undefined;
+    return [undefined, undefined];
 }
 const MATCHES:LuaArray<TokenizerDefinition> = {
     1: {
@@ -4962,7 +4962,7 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
     }
     ParseProfile(simc) {
         let profile:Profile = {}
-        for (const [_line] of gmatch(simc, "[^\r\n]+")) {
+        for (const _line of gmatch(simc, "[^\r\n]+")) {
             let [line] = match(_line, "^%s*(.-)%s*$");
             if (!(match(line, "^#.*") || match(line, "^$"))) {
                 let [key, operator, value] = match(line, "([^%+=]+)(%+?=)(.*)");

@@ -21,8 +21,8 @@
     "@wowts/tslib" "^1.0.0"
 
 "@wowts/ace_config_dialog-3.0@^1.0.1":
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/@wowts/ace_config_dialog-3.0/-/ace_config_dialog-3.0-1.0.1.tgz#6e6e61f0c62393b5deafca1581b63a6cdc2289c4"
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/@wowts/ace_config_dialog-3.0/-/ace_config_dialog-3.0-1.0.2.tgz#db1d37b8e82fc773bfc231ab542f1e45b7413b79"
   dependencies:
     "@wowts/lua" "^1.0.3"
     "@wowts/tslib" "^1.0.0"
@@ -153,11 +153,7 @@
     "@wowts/tsaddon" "^1.0.0"
     "@wowts/tslib" "^1.0.0"
 
-"@wowts/lua@^1.0.2", "@wowts/lua@^1.0.3":
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/@wowts/lua/-/lua-1.0.3.tgz#3e75d1ad1dac3095021d24e4a3a319dc27a7bbc8"
-
-"@wowts/lua@^1.0.4":
+"@wowts/lua@^1.0.2", "@wowts/lua@^1.0.3", "@wowts/lua@^1.0.4":
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/@wowts/lua/-/lua-1.0.4.tgz#8fd6e82c0ca3a62a5f3076a7cc4071043f6ff476"
 
@@ -183,9 +179,9 @@
     "@wowts/tslib" "^1.0.0"
     "@wowts/wow-mock" "^1.0.1"
 
-"@wowts/string@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@wowts/string/-/string-1.0.0.tgz#4994965fa11b2c73c2b9f832bdba704c0423655f"
+"@wowts/string@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@wowts/string/-/string-1.0.1.tgz#8ea51c2f69619019c726f5bf2df4fbb56cee6cb0"
   dependencies:
     "@wowts/coroutine" "^1.0.0"
 
@@ -211,15 +207,15 @@
     "@wowts/lua" "^1.0.3"
 
 "@wowts/tstolua@^1.0.6":
-  version "1.0.6"
-  resolved "https://registry.yarnpkg.com/@wowts/tstolua/-/tstolua-1.0.6.tgz#16ebf6dd88addfbad4039627d291112bab85bb2d"
+  version "1.0.9"
+  resolved "https://registry.yarnpkg.com/@wowts/tstolua/-/tstolua-1.0.9.tgz#374b24a3a0544a00e713dae7a588477833d8c91a"
   dependencies:
     commander "^2.11.0"
     typescript "^2.5.3"
 
-"@wowts/wow-mock@^1.0.1":
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/@wowts/wow-mock/-/wow-mock-1.0.1.tgz#05006a65383554784265f95ebd2cc9c8e1a47b72"
+"@wowts/wow-mock@^1.0.1", "@wowts/wow-mock@^1.0.4":
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/@wowts/wow-mock/-/wow-mock-1.0.4.tgz#13da37f4a387703d6a2acfd6b4bb1efa6e688e52"
   dependencies:
     "@wowts/lua" "^1.0.2"
 
@@ -273,8 +269,8 @@ concat-map@0.0.1:
   resolved "https://registry.yarnpkg.com/concat-map/-/concat-map-0.0.1.tgz#d8a96bd77fd68df7793a73036a3ba0d5405d477b"
 
 diff@^3.2.0:
-  version "3.3.1"
-  resolved "https://registry.yarnpkg.com/diff/-/diff-3.3.1.tgz#aa8567a6eed03c531fc89d3f711cd0e5259dec75"
+  version "3.4.0"
+  resolved "https://registry.yarnpkg.com/diff/-/diff-3.4.0.tgz#b1d85507daf3964828de54b37d0d73ba67dda56c"
 
 escape-string-regexp@^1.0.2:
   version "1.0.5"
@@ -352,7 +348,7 @@ semver@^5.3.0:
 
 simulationcraft@simulationcraft/simc:
   version "0.0.0"
-  resolved "https://codeload.github.com/simulationcraft/simc/tar.gz/e0300cfdc892d003ded13da7d12779c07b7bc64d"
+  resolved "https://codeload.github.com/simulationcraft/simc/tar.gz/2f893f6f62eb3dd8306c45bb6156cc0e81f9ae37"
 
 strip-ansi@^3.0.0:
   version "3.0.1"
@@ -365,8 +361,8 @@ supports-color@^2.0.0:
   resolved "https://registry.yarnpkg.com/supports-color/-/supports-color-2.0.0.tgz#535d045ce6b6363fa40117084629995e9df324c7"
 
 tslib@^1.7.1:
-  version "1.7.1"
-  resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.7.1.tgz#bc8004164691923a79fe8378bbeb3da2017538ec"
+  version "1.8.0"
+  resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.8.0.tgz#dc604ebad64bcbf696d613da6c954aa0e7ea1eb6"
 
 tslint@^5.7.0:
   version "5.7.0"
@@ -384,8 +380,8 @@ tslint@^5.7.0:
     tsutils "^2.8.1"
 
 tsutils@^2.8.1:
-  version "2.12.0"
-  resolved "https://registry.yarnpkg.com/tsutils/-/tsutils-2.12.0.tgz#c892a84c8f2f8de13f8ef32c2c5c38b457cceac6"
+  version "2.12.1"
+  resolved "https://registry.yarnpkg.com/tsutils/-/tsutils-2.12.1.tgz#f4d95ce3391c8971e46e54c4cf0edb0a21dd5b24"
   dependencies:
     tslib "^1.7.1"
 

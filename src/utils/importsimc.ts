@@ -12,7 +12,7 @@ import { OvaleCompile } from "../Compile";
 import { OvaleSimulationCraft } from "../SimulationCraft";
 
 let outputDirectory = "src/scripts";
-let profilesDirectory = "node_modules/simulationcraft/profiles/TierT19P";
+let profilesDirectory = "node_modules/simulationcraft/profiles/Tier19P";
 let root = "../";
 let SIMC_CLASS = [
     "deathknight",
@@ -41,11 +41,12 @@ function Canonicalize(s: string) {
     return s;
 }
 
-fs.mkdirSync(outputDirectory.replace("/", "\\"));
+if (!fs.existsSync(outputDirectory)) fs.mkdirSync(outputDirectory);
+
 {
-    let output: string[] = []
     for (const simcClass of SIMC_CLASS) {
-        let fileName = outputDirectory + "/ovale_" + simcClass + ".lua";
+        let output: string[] = []
+        let fileName = outputDirectory + "/ovale_" + simcClass + ".ts";
         const file = fs.readFileSync(fileName, { encoding: "utf8" });
         const lines = file.split("\n");
         let passthrough = true;
