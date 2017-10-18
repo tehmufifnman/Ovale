@@ -1,6 +1,6 @@
 local __addonName, __addon = ...
-            __addon.require("./Cooldown", { "./Debug", "./Profiler", "./Data", "./SpellBook", "./Ovale", "./LastSpell", "./Requirement", "./DataState" }, function(__exports, __Debug, __Profiler, __Data, __SpellBook, __Ovale, __LastSpell, __Requirement, __DataState)
-local OvaleCooldownBase = __Ovale.Ovale:NewModule("OvaleCooldown", "AceEvent-3.0")
+            __addon.require("./Cooldown", { "./Debug", "./Profiler", "./Data", "./SpellBook", "./Ovale", "./LastSpell", "./Requirement", "./DataState", "AceEvent-3.0" }, function(__exports, __Debug, __Profiler, __Data, __SpellBook, __Ovale, __LastSpell, __Requirement, __DataState, aceEvent)
+local OvaleCooldownBase = __Ovale.Ovale:NewModule("OvaleCooldown", aceEvent)
 local _next = next
 local _pairs = pairs
 local API_GetSpellCooldown = GetSpellCooldown

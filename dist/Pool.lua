@@ -1,7 +1,6 @@
 local __addonName, __addon = ...
-            __addon.require("./Pool", { "./Profiler", "./Ovale" }, function(__exports, __Profiler, __Ovale)
+            __addon.require("./Pool", { "./Ovale" }, function(__exports, __Ovale)
 local _assert = assert
-local _setmetatable = setmetatable
 local tinsert = table.insert
 local _tostring = tostring
 local tremove = table.remove

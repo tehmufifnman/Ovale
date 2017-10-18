@@ -4,15 +4,11 @@ import { OvalePaperDoll } from "./PaperDoll";
 import { baseState } from "./State";
 import { OvaleDebug } from "./Debug";
 import { self_requirement, CheckRequirements } from "./Requirement";
+import { type, pairs, tonumber, wipe } from "@wowts/lua";
+import { find } from "@wowts/string";
+import { huge, floor, ceil } from "@wowts/math";
 let OvaleDataBase = Ovale.NewModule("OvaleData");
-let _type = type;
-let _pairs = pairs;
-let strfind = string.find;
-let _tonumber = tonumber;
-let _wipe = wipe;
-let INFINITY = math.huge;
-let floor = math.floor;
-let ceil = math.ceil;
+let INFINITY = huge;
 
 let BLOODELF_CLASSES = {
     ["DEATHKNIGHT"]: true,
@@ -261,9 +257,9 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
     }
     constructor() {
         super();
-        for (const [, useName] of _pairs(STAT_USE_NAMES)) {
+        for (const [, useName] of pairs(STAT_USE_NAMES)) {
             let name;
-            for (const [, statName] of _pairs(STAT_NAMES)) {
+            for (const [, statName] of pairs(STAT_NAMES)) {
                 name = `${useName}_${statName}_buff`;
                 this.buffSpellList[name] = {
                 }
@@ -279,7 +275,7 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
         }
 
         {
-            for (const [name] of _pairs(this.buffSpellList)) {
+            for (const [name] of pairs(this.buffSpellList)) {
                 this.DEFAULT_SPELL_LIST[name] = true;
             }
         }        
@@ -288,14 +284,14 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
     DEFAULT_SPELL_LIST = {}
     
     Reset() {
-        _wipe(this.itemInfo);
-        _wipe(this.spellInfo);
-        for (const [k, v] of _pairs(this.buffSpellList)) {
+        wipe(this.itemInfo);
+        wipe(this.spellInfo);
+        for (const [k, v] of pairs(this.buffSpellList)) {
             if (!this.DEFAULT_SPELL_LIST[k]) {
-                _wipe(v);
+                wipe(v);
                 this.buffSpellList[k] = undefined;
-            } else if (strfind(k, "^trinket_")) {
-                _wipe(v);
+            } else if (find(k, "^trinket_")) {
+                wipe(v);
             }
         }
     }
@@ -321,10 +317,10 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
         return si;
     }
     GetSpellInfo(spellId) {
-        if (_type(spellId) == "number") {
+        if (type(spellId) == "number") {
             return this.spellInfo[spellId];
         } else if (this.buffSpellList[spellId]) {
-            for (const [auraId] of _pairs(this.buffSpellList[spellId])) {
+            for (const [auraId] of pairs(this.buffSpellList[spellId])) {
                 if (this.spellInfo[auraId]) {
                     return this.spellInfo[auraId];
                 }
@@ -373,7 +369,7 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
     CheckSpellAuraData(auraId, spellData, atTime, guid) {
         guid = guid || OvaleGUID.UnitGUID("player");
         let index, value, data;
-        if (_type(spellData) == "table") {
+        if (type(spellData) == "table") {
             value = spellData[1];
             index = 2;
         } else {
@@ -386,7 +382,7 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
                 index = index + 1;
             }
             if (N) {
-                data = _tonumber(N);
+                data = tonumber(N);
             } else {
                 Ovale.OneTimeMessage("Warning: '%d' has '%s' missing final stack count.", auraId, value);
             }
@@ -397,12 +393,12 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
                 index = index + 1;
             }
             if (seconds) {
-                data = _tonumber(seconds);
+                data = tonumber(seconds);
             } else {
                 Ovale.OneTimeMessage("Warning: '%d' has '%s' missing duration.", auraId, value);
             }
         } else {
-            let asNumber = _tonumber(value);
+            let asNumber = tonumber(value);
             value = asNumber || value;
         }
         let verified = true;
@@ -415,12 +411,12 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
         targetGUID = targetGUID || OvaleGUID.UnitGUID(baseState.defaultTarget || "target");
         let verified = true;
         let requirement;
-        for (const [name, handler] of _pairs(self_requirement)) {
+        for (const [name, handler] of pairs(self_requirement)) {
             let value = this.GetSpellInfoProperty(spellId, atTime, name, targetGUID);
             if (value) {
                 let [method, arg] = [handler[1], handler[2]];
                 arg = this[method] && this || arg;
-                let index = (_type(value) == "table") && 1 || undefined;
+                let index = (type(value) == "table") && 1 || undefined;
                 [verified, requirement] = arg[method](arg, spellId, atTime, name, value, index, targetGUID);
                 if (!verified) {
                     break;
@@ -435,10 +431,10 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
         let value = ii && ii[property];
         let requirements = ii && ii.require[property];
         if (requirements) {
-            for (const [v, requirement] of _pairs(requirements)) {
+            for (const [v, requirement] of pairs(requirements)) {
                 let verified = CheckRequirements(itemId, atTime, requirement, 1, targetGUID);
                 if (verified) {
-                    value = _tonumber(v) || v;
+                    value = tonumber(v) || v;
                     break;
                 }
             }
@@ -452,15 +448,15 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
         let value = si && si[property];
         let requirements = si && si.require[property];
         if (requirements) {
-            for (const [v, requirement] of _pairs(requirements)) {
+            for (const [v, requirement] of pairs(requirements)) {
                 let verified = CheckRequirements(spellId, atTime, requirement, 1, targetGUID);
                 if (verified) {
-                    value = _tonumber(v) || v;
+                    value = tonumber(v) || v;
                     break;
                 }
             }
         }
-        if (!value || !_tonumber(value)) {
+        if (!value || !tonumber(value)) {
             return value;
         }
         let addpower = si && si[`add${property}`];
@@ -475,10 +471,10 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
         }
         let multipliers = si && si.require[`${property}_percent`];
         if (multipliers) {
-            for (const [v, requirement] of _pairs(multipliers)) {
+            for (const [v, requirement] of pairs(multipliers)) {
                 let verified = CheckRequirements(spellId, atTime, requirement, 1, targetGUID);
                 if (verified) {
-                    ratio = ratio * (_tonumber(v) || 0) / 100;
+                    ratio = ratio * (tonumber(v) || 0) / 100;
                 }
             }
         }

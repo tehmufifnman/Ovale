@@ -1,21 +1,10 @@
 local __addonName, __addon = ...
             __addon.require("./Lexer", { "./Queue" }, function(__exports, __Queue)
 local _pairs = pairs
-local _setmetatable = setmetatable
-local _error = error
 local _ipairs = ipairs
-local _tonumber = tonumber
-local _type = type
 local wrap = coroutine.wrap
 local strfind = string.find
 local strsub = string.sub
-local append = table.insert
-local assert_arg = function(idx, val, tp)
-    if _type(val) ~= tp then
-        _error("argument " .. idx .. " must be " .. tp, 2)
-    end
-end
-
 __exports.OvaleLexer = __addon.__class(nil, {
     constructor = function(self, name, stream, matches, filter)
         self.name = name

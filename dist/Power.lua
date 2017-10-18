@@ -1,6 +1,6 @@
 local __addonName, __addon = ...
-            __addon.require("./Power", { "./Localization", "./Debug", "./Profiler", "./Ovale", "./Aura", "./Future", "./Data", "./State", "./PaperDoll", "./Requirement", "./FutureState", "./LastSpell", "./DataState" }, function(__exports, __Localization, __Debug, __Profiler, __Ovale, __Aura, __Future, __Data, __State, __PaperDoll, __Requirement, __FutureState, __LastSpell, __DataState)
-local OvalePowerBase = __Ovale.Ovale:NewModule("OvalePower", "AceEvent-3.0")
+            __addon.require("./Power", { "./Localization", "./Debug", "./Profiler", "./Ovale", "./Aura", "./Future", "./Data", "./State", "./PaperDoll", "./Requirement", "./FutureState", "./LastSpell", "./DataState", "AceEvent-3.0" }, function(__exports, __Localization, __Debug, __Profiler, __Ovale, __Aura, __Future, __Data, __State, __PaperDoll, __Requirement, __FutureState, __LastSpell, __DataState, aceEvent)
+local OvalePowerBase = __Ovale.Ovale:NewModule("OvalePower", aceEvent)
 local ceil = math.ceil
 local _pairs = pairs
 local tconcat = table.concat

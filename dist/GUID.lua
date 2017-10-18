@@ -1,6 +1,6 @@
 local __addonName, __addon = ...
-            __addon.require("./GUID", { "./Debug", "./Ovale" }, function(__exports, __Debug, __Ovale)
-local OvaleGUIDBase = __Ovale.Ovale:NewModule("OvaleGUID", "AceEvent-3.0")
+            __addon.require("./GUID", { "./Debug", "./Ovale", "AceEvent-3.0" }, function(__exports, __Debug, __Ovale, aceEvent)
+local OvaleGUIDBase = __Ovale.Ovale:NewModule("OvaleGUID", aceEvent)
 local floor = math.floor
 local _ipairs = ipairs
 local _setmetatable = setmetatable

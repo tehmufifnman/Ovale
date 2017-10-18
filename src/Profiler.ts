@@ -1,23 +1,18 @@
-import AceConfig from "AceConfig-3.0";
-import AceConfigDialog from "AceConfigDialog-3.0";
+import AceConfig from "@wowts/ace_config-3.0";
+import AceConfigDialog from "@wowts/ace_config_dialog-3.0";
 import { L } from "./Localization";
-import LibTextDump from "LibTextDump-1.0";
+import LibTextDump, { TextDump } from "@wowts/lib_text_dump-1.0";
 import { OvaleOptions } from "./Options";
 import { Constructor, Ovale } from "./Ovale";
-import { AceModule } from "./TsAddon";
+import { debugprofilestop, GetTime } from "@wowts/wow-mock";
+import { format } from "@wowts/string";
+import { pairs, next, wipe, LuaObj, lualength } from "@wowts/lua";
+import { insert, sort, concat } from "@wowts/table";
+import { AceModule } from "@wowts/tsaddon";
 
 let OvaleProfilerBase = Ovale.NewModule("OvaleProfiler");
 
-let _debugprofilestop = debugprofilestop;
-let format = string.format;
-let _pairs = pairs;
-const _next = next;
-const _wipe = wipe;
-const tinsert = table.insert;
-const tsort = table.sort;
-const API_GetTime = GetTime;
-const tconcat = table.concat;
-let self_timestamp = _debugprofilestop();
+let self_timestamp = debugprofilestop();
 let self_timeSpent = {}
 let self_timesInvoked = {}
 let self_stack = {}
@@ -103,7 +98,7 @@ class OvaleProfilerClass extends OvaleProfilerBase {
     
     constructor() {
         super();
-        for (const [k, v] of _pairs(this.actions)) {
+        for (const [k, v] of pairs(this.actions)) {
             OvaleOptions.options.args.actions.args[k] = v;
         }
         OvaleOptions.defaultDB.global = OvaleOptions.defaultDB.global || {}
@@ -138,7 +133,7 @@ class OvaleProfilerClass extends OvaleProfilerBase {
             
             StartProfiling(tag) {
                 if (!this.enabled) return;
-                let newTimestamp = _debugprofilestop();
+                let newTimestamp = debugprofilestop();
                 if (self_stackSize > 0) {
                     let delta = newTimestamp - self_timestamp;
                     let previous = self_stack[self_stackSize];
@@ -161,7 +156,7 @@ class OvaleProfilerClass extends OvaleProfilerBase {
                 if (self_stackSize > 0) {
                     let currentTag = self_stack[self_stackSize];
                     if (currentTag == tag) {
-                        let newTimestamp = _debugprofilestop();
+                        let newTimestamp = debugprofilestop();
                         let delta = newTimestamp - self_timestamp;
                         let timeSpent = self_timeSpent[currentTag] || 0;
                         timeSpent = timeSpent + delta;
@@ -178,37 +173,37 @@ class OvaleProfilerClass extends OvaleProfilerBase {
     array = {}
             
     ResetProfiling() {
-        for (const [tag] of _pairs(self_timeSpent)) {
+        for (const [tag] of pairs(self_timeSpent)) {
             self_timeSpent[tag] = undefined;
         }
-        for (const [tag] of _pairs(self_timesInvoked)) {
+        for (const [tag] of pairs(self_timesInvoked)) {
             self_timesInvoked[tag] = undefined;
         }
     }
 
     GetProfilingInfo() {
-        if (_next(self_timeSpent)) {
+        if (next(self_timeSpent)) {
             let width = 1;
             {
                 let tenPower = 10;
-                for (const [_, timesInvoked] of _pairs(self_timesInvoked)) {
+                for (const [_, timesInvoked] of pairs(self_timesInvoked)) {
                     while (timesInvoked > tenPower) {
                         width = width + 1;
                         tenPower = tenPower * 10;
                     }
                 }
             }
-            _wipe(this.array);
+            wipe(this.array);
             let formatString = format("    %%08.3fms: %%0%dd (%%05f) x %%s", width);
-            for (const [tag, timeSpent] of _pairs(self_timeSpent)) {
+            for (const [tag, timeSpent] of pairs(self_timeSpent)) {
                 let timesInvoked = self_timesInvoked[tag];
-                tinsert(this.array, format(formatString, timeSpent, timesInvoked, timeSpent / timesInvoked, tag));
+                insert(this.array, format(formatString, timeSpent, timesInvoked, timeSpent / timesInvoked, tag));
             }
-            if (_next(this.array)) {
-                tsort(this.array);
-                let now = API_GetTime();
-                tinsert(this.array, 1, format("Profiling statistics at %f:", now));
-                return tconcat(this.array, "\n");
+            if (next(this.array)) {
+                sort(this.array);
+                let now = GetTime();
+                insert(this.array, 1, format("Profiling statistics at %f:", now));
+                return concat(this.array, "\n");
             }
         }
     }

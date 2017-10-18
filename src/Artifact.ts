@@ -1,12 +1,14 @@
-import LibArtifactData from "LibArtifactData-1.0";
+import { GetArtifactTraits, RegisterCallback, UnregisterCallback } from "@wowts/lib_artifact_data-1.0";
 import { OvaleDebug } from "./Debug";
 import { L } from "./Localization";
 import { Ovale } from "./Ovale";
-import aceEvent from "AceEvent-3.0";
+import aceEvent from "@wowts/ace_event-3.0";
+import { sort, insert, concat } from "@wowts/table";
+import { pairs, ipairs, wipe, tostring, lualength } from "@wowts/lua";
 
-let tsort = table.sort;
-let tinsert = table.insert;
-let tconcat = table.concat;
+let tsort = sort;
+let tinsert = insert;
+let tconcat = concat;
 
 
 let OvaleArtifactBase = Ovale.NewModule("OvaleArtifact", aceEvent);
@@ -38,20 +40,20 @@ class OvaleArtifactClass extends OvaleDebug.RegisterDebugging(OvaleArtifactBase)
         }
     
         this.RegisterEvent("SPELLS_CHANGED", (message) => this.UpdateTraits(message));
-        LibArtifactData.RegisterCallback(this, "ARTIFACT_ADDED", message => this.UpdateTraits(message));
-        LibArtifactData.RegisterCallback(this, "ARTIFACT_EQUIPPED_CHANGED", m => this.UpdateTraits(m));
-        LibArtifactData.RegisterCallback(this, "ARTIFACT_ACTIVE_CHANGED", m => this.UpdateTraits(m));
-        LibArtifactData.RegisterCallback(this, "ARTIFACT_TRAITS_CHANGED", m => this.UpdateTraits(m));
+        RegisterCallback(this, "ARTIFACT_ADDED", message => this.UpdateTraits(message));
+        RegisterCallback(this, "ARTIFACT_EQUIPPED_CHANGED", m => this.UpdateTraits(m));
+        RegisterCallback(this, "ARTIFACT_ACTIVE_CHANGED", m => this.UpdateTraits(m));
+        RegisterCallback(this, "ARTIFACT_TRAITS_CHANGED", m => this.UpdateTraits(m));
     }
     OnDisable() {
-        LibArtifactData.UnregisterCallback(this, "ARTIFACT_ADDED");
-        LibArtifactData.UnregisterCallback(this, "ARTIFACT_EQUIPPED_CHANGED");
-        LibArtifactData.UnregisterCallback(this, "ARTIFACT_ACTIVE_CHANGED");
-        LibArtifactData.UnregisterCallback(this, "ARTIFACT_TRAITS_CHANGED");
+        UnregisterCallback(this, "ARTIFACT_ADDED");
+        UnregisterCallback(this, "ARTIFACT_EQUIPPED_CHANGED");
+        UnregisterCallback(this, "ARTIFACT_ACTIVE_CHANGED");
+        UnregisterCallback(this, "ARTIFACT_TRAITS_CHANGED");
         this.UnregisterEvent("SPELLS_CHANGED");
     }
     UpdateTraits(message) {
-        let [, traits] = LibArtifactData.GetArtifactTraits();
+        let [, traits] = GetArtifactTraits();
         this.self_traits = {}
         if (!traits) {
             return;

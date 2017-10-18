@@ -1,11 +1,12 @@
 import { Ovale } from "./Ovale";
 import { OvaleScore } from "./Score";
-import AceLocale from "AceLocale-3.0";
-import Recount from "Recount";
+import AceLocale from "@wowts/ace_locale-3.0";
+import Recount from "@wowts/recount";
+import { setmetatable, LuaObj } from "@wowts/lua";
+import { GameTooltip } from "@wowts/wow-mock";
 
 let OvaleRecountBase = Ovale.NewModule("OvaleRecount");
 export let OvaleRecount: OvaleRecountClass;
-let _setmetatable = setmetatable;
 const DataModes = function(self, data, num) {
     if (!data) {
         return [0, 0];
@@ -32,7 +33,7 @@ class OvaleRecountClass extends OvaleRecountBase {
         if (Recount) {
             let aceLocale = AceLocale && AceLocale.GetLocale("Recount", true);
             if (!aceLocale) {
-                aceLocale = _setmetatable<LuaObj<string>>({}, {
+                aceLocale = setmetatable<LuaObj<string>>({}, {
                     __index: function (t, k) {
                         t[k] = k;
                         return k;

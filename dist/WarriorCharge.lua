@@ -1,6 +1,6 @@
 local __addonName, __addon = ...
-            __addon.require("./WarriorCharge", { "./Debug", "./Aura", "./Ovale" }, function(__exports, __Debug, __Aura, __Ovale)
-local OvaleWarriorChargeBase = __Ovale.Ovale:NewModule("OvaleWarriorCharge", "AceEvent-3.0")
+            __addon.require("./WarriorCharge", { "./Debug", "./Aura", "./Ovale", "AceEvent-3.0" }, function(__exports, __Debug, __Aura, __Ovale, aceEvent)
+local OvaleWarriorChargeBase = __Ovale.Ovale:NewModule("OvaleWarriorCharge", aceEvent)
 local API_GetSpellInfo = GetSpellInfo
 local API_GetTime = GetTime
 local INFINITY = math.huge

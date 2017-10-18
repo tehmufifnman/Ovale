@@ -1,15 +1,14 @@
 import { Ovale } from "./Ovale";
 import { OvaleDebug } from "./Debug";
 import { OvaleAura } from "./Aura";
-import aceEvent from "AceEvent-3.0";
+import aceEvent from "@wowts/ace_event-3.0";
+import { GetSpecialization, GetSpecializationInfo, GetTime, GetTalentInfoByID } from "@wowts/wow-mock";
+import { huge } from "@wowts/math";
+import { select } from "@wowts/lua";
 
 let OvaleDemonHunterDemonicBase = Ovale.NewModule("OvaleDemonHunterDemonic", aceEvent);
 export let OvaleDemonHunterDemonic: OvaleDemonHunterDemonicClass;
-let API_GetSpecialization = GetSpecialization;
-let API_GetSpecializationInfo = GetSpecializationInfo;
-let API_GetTime = GetTime;
-let API_GetTalentInfoByID = GetTalentInfoByID;
-let INFINITY = math.huge;
+let INFINITY = huge;
 let HAVOC_DEMONIC_TALENT_ID = 22547;
 let HAVOC_SPEC_ID = 577;
 let HAVOC_EYE_BEAM_SPELL_ID = 198013;
@@ -39,8 +38,8 @@ class OvaleDemonHunterDemonicClass extends OvaleDebug.RegisterDebugging(OvaleDem
         this.UnregisterMessage("COMBAT_LOG_EVENT_UNFILTERED");
     }
     Ovale_TalentsChanged(event) {
-        this.isHavoc = this.isDemonHunter && API_GetSpecializationInfo(API_GetSpecialization()) == HAVOC_SPEC_ID && true || false;
-        this.hasDemonic = this.isHavoc && select(10, API_GetTalentInfoByID(HAVOC_DEMONIC_TALENT_ID, HAVOC_SPEC_ID)) && true || false;
+        this.isHavoc = this.isDemonHunter && GetSpecializationInfo(GetSpecialization()) == HAVOC_SPEC_ID && true || false;
+        this.hasDemonic = this.isHavoc && select(10, GetTalentInfoByID(HAVOC_DEMONIC_TALENT_ID, HAVOC_SPEC_ID)) && true || false;
         if (this.isHavoc && this.hasDemonic) {
             this.Debug("We are a havoc DH with Demonic.");
             this.RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
@@ -72,7 +71,7 @@ class OvaleDemonHunterDemonicClass extends OvaleDebug.RegisterDebugging(OvaleDem
         }
     }
     GainAura() {
-        let now = API_GetTime();
+        let now = GetTime();
         let aura_meta = OvaleAura.GetAura("player", HAVOC_META_BUFF_ID, "HELPFUL", true);
         if (OvaleAura.IsActiveAura(aura_meta, now)) {
             this.Debug("Adding '%s' (%d) buff to player %s.", HIDDEN_BUFF_EXTENDED_BY_DEMONIC, HIDDEN_BUFF_ID, this.playerGUID);
@@ -84,7 +83,7 @@ class OvaleDemonHunterDemonicClass extends OvaleDebug.RegisterDebugging(OvaleDem
         }
     }
     DropAura() {
-        let now = API_GetTime();
+        let now = GetTime();
         this.Debug("Removing '%s' (%d) buff on player %s.", HIDDEN_BUFF_EXTENDED_BY_DEMONIC, HIDDEN_BUFF_ID, this.playerGUID);
         OvaleAura.LostAuraOnGUID(this.playerGUID, now, HIDDEN_BUFF_ID, this.playerGUID);
     }

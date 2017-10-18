@@ -1,15 +1,14 @@
-import AceConfig from "AceConfig-3.0";
-import AceConfigDialog from "AceConfigDialog-3.0";
+import AceConfig from "@wowts/ace_config-3.0";
+import AceConfigDialog from "@wowts/ace_config_dialog-3.0";
 import { L } from "./Localization";
-import AceDB from "AceDB-3.0";
-import AceDBOptions from "AceDBOptions-3.0";
+import AceDB from "@wowts/ace_db-3.0";
+import AceDBOptions from "@wowts/ace_db_options-3.0";
 import { OvaleDb, Ovale } from "./Ovale";
-import aceConsole from "AceConsole-3.0";
-import aceEvent from "AceEvent-3.0";
-let OvaleOptionsBase = Ovale.NewModule<AceConsole, AceEvent>("OvaleOptions", aceConsole, aceEvent);
-// let tinsert = table.insert;
-let API_InterfaceOptionsFrame_OpenToCategory = InterfaceOptionsFrame_OpenToCategory;
-let _ipairs = ipairs;
+import aceConsole from "@wowts/ace_console-3.0";
+import aceEvent from "@wowts/ace_event-3.0";
+import { InterfaceOptionsFrame_OpenToCategory } from "@wowts/wow-mock";
+import { ipairs, LuaObj, lualength } from "@wowts/lua";
+let OvaleOptionsBase = Ovale.NewModule("OvaleOptions", aceConsole, aceEvent);
 interface OptionModule {
     UpgradeSavedVariables():void;
 }
@@ -431,8 +430,7 @@ class OvaleOptionsClass extends OvaleOptionsBase {
         }
     }
 
-    constructor() {
-        super();
+    OnInitialize() {
         const ovale = Ovale.GetName();
         const db = AceDB.New("OvaleDB", this.defaultDB);
         this.options.args.profile = AceDBOptions.GetOptionsTable(db);
@@ -468,7 +466,7 @@ class OvaleOptionsClass extends OvaleOptionsBase {
         //     profile.top = undefined;
         //     Ovale.OneTimeMessage("The Ovale icon frames position has been reset.");
         // }
-        for (const [, addon] of _ipairs(self_register)) {
+        for (const [, addon] of ipairs(self_register)) {
             if (addon.UpgradeSavedVariables) {
                 addon.UpgradeSavedVariables();
             }
@@ -490,8 +488,8 @@ class OvaleOptionsClass extends OvaleOptionsBase {
                 AceConfigDialog.Open(appName);
             }
         } else {
-            API_InterfaceOptionsFrame_OpenToCategory(appName);
-            API_InterfaceOptionsFrame_OpenToCategory(appName);
+            InterfaceOptionsFrame_OpenToCategory(appName);
+            InterfaceOptionsFrame_OpenToCategory(appName);
         }
     }
 }

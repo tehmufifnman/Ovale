@@ -1,10 +1,10 @@
 local __addonName, __addon = ...
-            __addon.require("./SpellDamage", { "./Profiler", "./Ovale" }, function(__exports, __Profiler, __Ovale)
+            __addon.require("./SpellDamage", { "./Profiler", "./Ovale", "AceEvent-3.0" }, function(__exports, __Profiler, __Ovale, aceEvent)
 local CLEU_DAMAGE_EVENT = {
     SPELL_DAMAGE = true,
     SPELL_PERIODIC_AURA = true
 }
-local OvaleSpellDamageBase = __Profiler.OvaleProfiler:RegisterProfiling(__Ovale.Ovale:NewModule("OvaleSpellDamage", "AceEvent-3.0"))
+local OvaleSpellDamageBase = __Profiler.OvaleProfiler:RegisterProfiling(__Ovale.Ovale:NewModule("OvaleSpellDamage", aceEvent))
 local OvaleSpellDamageClass = __addon.__class(OvaleSpellDamageBase, {
     constructor = function(self)
         self.value = {}

@@ -6,14 +6,12 @@ import { Ovale } from "./Ovale";
 import { lastSpell } from "./LastSpell";
 import { RegisterRequirement, UnregisterRequirement } from "./Requirement";
 import { DataState } from "./DataState";
-import aceEvent from "AceEvent-3.0";
+import aceEvent from "@wowts/ace_event-3.0";
+import { next, pairs } from "@wowts/lua";
+import { GetSpellCooldown, GetTime } from "@wowts/wow-mock";
 
 let OvaleCooldownBase = Ovale.NewModule("OvaleCooldown", aceEvent);
 export let OvaleCooldown: OvaleCooldownClass;
-let _next = next;
-let _pairs = pairs;
-let API_GetSpellCooldown = GetSpellCooldown;
-let API_GetTime = GetTime;
 let GLOBAL_COOLDOWN = 61304;
 let COOLDOWN_THRESHOLD = 0.10;
 let BASE_GCD = {
@@ -125,15 +123,15 @@ class OvaleCooldownClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regi
         }
     }
     ResetSharedCooldowns() {
-        for (const [, spellTable] of _pairs(this.sharedCooldown)) {
-            for (const [spellId] of _pairs(spellTable)) {
+        for (const [, spellTable] of pairs(this.sharedCooldown)) {
+            for (const [spellId] of pairs(spellTable)) {
                 spellTable[spellId] = undefined;
             }
         }
     }
     IsSharedCooldown(name) {
         let spellTable = this.sharedCooldown[name];
-        return (spellTable && _next(spellTable) != undefined);
+        return (spellTable && next(spellTable) != undefined);
     }
     AddSharedCooldown(name, spellId) {
         this.sharedCooldown[name] = this.sharedCooldown[name] || {
@@ -143,9 +141,9 @@ class OvaleCooldownClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regi
     GetGlobalCooldown(now?) {
         let cd = this.gcd;
         if (!cd.start || !cd.serial || cd.serial < this.serial) {
-            now = now || API_GetTime();
+            now = now || GetTime();
             if (now >= cd.start + cd.duration) {
-                [cd.start, cd.duration] = API_GetSpellCooldown(GLOBAL_COOLDOWN);
+                [cd.start, cd.duration] = GetSpellCooldown(GLOBAL_COOLDOWN);
             }
         }
         return [cd.start, cd.duration];
@@ -153,7 +151,7 @@ class OvaleCooldownClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regi
     GetSpellCooldown(spellId):[number, number, number] {
         let [cdStart, cdDuration, cdEnable] = [0, 0, 1];
         if (this.sharedCooldown[spellId]) {
-            for (const [id] of _pairs(this.sharedCooldown[spellId])) {
+            for (const [id] of pairs(this.sharedCooldown[spellId])) {
                 let [start, duration, enable] = this.GetSpellCooldown(id);
                 if (start) {
                     [cdStart, cdDuration, cdEnable] = [start, duration, enable];
@@ -164,9 +162,9 @@ class OvaleCooldownClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regi
             let start, duration, enable;
             let [index, bookType] = OvaleSpellBook.GetSpellBookIndex(spellId);
             if (index && bookType) {
-                [start, duration, enable] = API_GetSpellCooldown(index, bookType);
+                [start, duration, enable] = GetSpellCooldown(index, bookType);
             } else {
-                [start, duration, enable] = API_GetSpellCooldown(spellId);
+                [start, duration, enable] = GetSpellCooldown(spellId);
             }
             if (start && start > 0) {
                 let [gcdStart, gcdDuration] = this.GetGlobalCooldown();

@@ -1,6 +1,6 @@
 local __addonName, __addon = ...
-            __addon.require("./Version", { "./Localization", "./Debug", "./Options", "./Ovale" }, function(__exports, __Localization, __Debug, __Options, __Ovale)
-local OvaleVersionBase = __Ovale.Ovale:NewModule("OvaleVersion", "AceComm-3.0", "AceSerializer-3.0", "AceTimer-3.0")
+            __addon.require("./Version", { "./Localization", "./Debug", "./Options", "./Ovale", "AceComm-3.0", "AceSerializer-3.0", "AceTimer-3.0" }, function(__exports, __Localization, __Debug, __Options, __Ovale, AceComm, AceSerializer, AceTimer)
+local OvaleVersionBase = __Ovale.Ovale:NewModule("OvaleVersion", AceComm, AceSerializer, AceTimer)
 local format = string.format
 local _ipairs = ipairs
 local _next = next

@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-            __addon.require("./Ovale", { "AceAddon-3.0", "./Localization" }, function(__exports, AceAddon, __Localization)
+            __addon.require("./Ovale", { "./Localization", "./TsAddon", "AceEvent-3.0" }, function(__exports, __Localization, __TsAddon, aceEvent)
 local _assert = assert
 local format = string.format
 local _ipairs = ipairs
@@ -44,7 +44,7 @@ __exports.RegisterPrinter = function(base)
         end,
     })
 end
-local OvaleBase = AceAddon:NewAddon("Ovale", "AceEvent-3.0")
+local OvaleBase = __TsAddon.NewAddon("Ovale", aceEvent)
 local OvaleClass = __addon.__class(OvaleBase, {
     constructor = function(self)
         self.playerClass = _select(2, API_UnitClass("player"))

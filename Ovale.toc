@@ -9,5 +9,4 @@
 
 # Libraries.
 libs\libs.xml
-dist\define.lua
 dist\files.xml

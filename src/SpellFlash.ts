@@ -6,7 +6,9 @@ import { OvaleFuture } from "./Future";
 import { OvaleSpellBook } from "./SpellBook";
 import { OvaleStance } from "./Stance";
 import { BaseState } from "./State";
-import aceEvent from "AceEvent-3.0";
+import aceEvent from "@wowts/ace_event-3.0";
+import { pairs, lualength, _G } from "@wowts/lua";
+import { GetTime, UnitHasVehicleUI, UnitExists, UnitIsDead, UnitCanAttack } from "@wowts/wow-mock";
 
 interface SpellFlashCoreClass {
     FlashForm(spellId, color, size, brightness):void;   
@@ -17,12 +19,6 @@ interface SpellFlashCoreClass {
 
 let OvaleSpellFlashBase = Ovale.NewModule("OvaleSpellFlash", aceEvent);
 export let OvaleSpellFlash: OvaleSpellFlashClass;
-let _pairs = pairs;
-let API_GetTime = GetTime;
-let API_UnitHasVehicleUI = UnitHasVehicleUI;
-let API_UnitExists = UnitExists;
-let API_UnitIsDead = UnitIsDead;
-let API_UnitCanAttack = UnitCanAttack;
 let SpellFlashCore: SpellFlashCoreClass = undefined;
 let colorMain = { r: undefined, g: undefined, b: undefined }
 let colorShortCd = { r: undefined, g: undefined, b: undefined }
@@ -258,10 +254,10 @@ let COLORTABLE = {
             }
         }
     }
-    for (const [k, v] of _pairs(defaultDB)) {
+    for (const [k, v] of pairs(defaultDB)) {
         OvaleOptions.defaultDB.profile.apparence[k] = v;
     }
-    for (const [k, v] of _pairs(options)) {
+    for (const [k, v] of pairs(options)) {
         OvaleOptions.options.args.apparence.args[k] = v;
     }
     OvaleOptions.RegisterOptions(OvaleSpellFlash);
@@ -301,20 +297,20 @@ class OvaleSpellFlashClass extends OvaleSpellFlashBase {
         if (enabled && db.inCombat && !OvaleFuture.inCombat) {
             enabled = false;
         }
-        if (enabled && db.hideInVehicle && API_UnitHasVehicleUI("player")) {
+        if (enabled && db.hideInVehicle && UnitHasVehicleUI("player")) {
             enabled = false;
         }
-        if (enabled && db.hasTarget && !API_UnitExists("target")) {
+        if (enabled && db.hasTarget && !UnitExists("target")) {
             enabled = false;
         }
-        if (enabled && db.hasHostileTarget && (API_UnitIsDead("target") || !API_UnitCanAttack("player", "target"))) {
+        if (enabled && db.hasHostileTarget && (UnitIsDead("target") || !UnitCanAttack("player", "target"))) {
             enabled = false;
         }
         return enabled;
     }
     Flash(state: BaseState, node, element, start, now?:number) {
         const db = Ovale.db.profile.apparence.spellFlash
-        now = now || API_GetTime();
+        now = now || GetTime();
         if (this.IsSpellFlashEnabled() && start && start - now <= db.threshold / 1000) {
             if (element && element.type == "action") {
                 let spellId, spellInfo;

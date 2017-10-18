@@ -1,6 +1,6 @@
 import { Ovale } from "./Ovale";
+import { tostring } from "@wowts/lua";
 
-let _tostring = tostring;
 export class OvalePoolGC {
     name = "OvalePoolGC";
     size = 0;
@@ -23,6 +23,6 @@ export class OvalePoolGC {
         this.size = 0;
     }
     DebuggingInfo() {
-        Ovale.Print("Pool %s has size %d.", _tostring(this.name), this.size);
+        Ovale.Print("Pool %s has size %d.", tostring(this.name), this.size);
     }
 }

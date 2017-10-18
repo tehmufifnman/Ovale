@@ -1,23 +1,16 @@
 import { Ovale } from "./Ovale";
 import { OvaleDebug } from "./Debug";
 import { OvaleFuture } from "./Future";
-import aceEvent from "AceEvent-3.0";
-import AceSerializer from "AceSerializer-3.0";
+import aceEvent from "@wowts/ace_event-3.0";
+import AceSerializer from "@wowts/ace_serializer-3.0";
+import { pairs, type } from "@wowts/lua";
+import { IsInGroup, SendAddonMessage, UnitName, LE_PARTY_CATEGORY_INSTANCE, GetTime, UnitCastingInfo, UnitChannelInfo } from "@wowts/wow-mock";
 
 let OvaleScoreBase = Ovale.NewModule("OvaleScore", aceEvent, AceSerializer);
 export let OvaleScore: OvaleScoreClass;
-let _pairs = pairs;
-let _type = type;
-let API_IsInGroup = IsInGroup;
-let API_SendAddonMessage = SendAddonMessage;
-let API_UnitName = UnitName;
-let _LE_PARTY_CATEGORY_INSTANCE = LE_PARTY_CATEGORY_INSTANCE;
 let MSG_PREFIX = Ovale.MSG_PREFIX;
 let self_playerGUID = undefined;
 let self_name = undefined;
-let API_GetTime = GetTime;
-let API_UnitCastingInfo = UnitCastingInfo;
-let API_UnitChannelInfo = UnitChannelInfo;
 
 class OvaleScoreClass extends OvaleDebug.RegisterDebugging(OvaleScoreBase) {
     damageMeter = {
@@ -31,7 +24,7 @@ class OvaleScoreClass extends OvaleDebug.RegisterDebugging(OvaleScoreBase) {
     constructor() {
         super();
         self_playerGUID = Ovale.playerGUID;
-        self_name = API_UnitName("player");
+        self_name = UnitName("player");
         this.RegisterEvent("CHAT_MSG_ADDON");
         this.RegisterEvent("PLAYER_REGEN_ENABLED");
         this.RegisterEvent("PLAYER_REGEN_DISABLED");
@@ -54,10 +47,10 @@ class OvaleScoreClass extends OvaleDebug.RegisterDebugging(OvaleScoreBase) {
         }
     }
     PLAYER_REGEN_ENABLED() {
-        if (this.maxScore > 0 && API_IsInGroup()) {
+        if (this.maxScore > 0 && IsInGroup()) {
             let message = this.Serialize("score", this.score, this.maxScore, self_playerGUID);
-            let channel = API_IsInGroup(_LE_PARTY_CATEGORY_INSTANCE) && "INSTANCE_CHAT" || "RAID";
-            API_SendAddonMessage(MSG_PREFIX, message, channel);
+            let channel = IsInGroup(LE_PARTY_CATEGORY_INSTANCE) && "INSTANCE_CHAT" || "RAID";
+            SendAddonMessage(MSG_PREFIX, message, channel);
         }
     }
     PLAYER_REGEN_DISABLED() {
@@ -92,11 +85,11 @@ class OvaleScoreClass extends OvaleDebug.RegisterDebugging(OvaleScoreBase) {
         // }
     }
     SendScore(name, guid, scored, scoreMax) {
-        for (const [moduleName, method] of _pairs(this.damageMeterMethod)) {
+        for (const [moduleName, method] of pairs(this.damageMeterMethod)) {
             let addon = this.damageMeter[moduleName];
             if (addon) {
                 addon[method](addon, name, guid, scored, scoreMax);
-            } else if (_type(method) == "function") {
+            } else if (type(method) == "function") {
                 method(name, guid, scored, scoreMax);
             }
         }
@@ -104,10 +97,10 @@ class OvaleScoreClass extends OvaleDebug.RegisterDebugging(OvaleScoreBase) {
 
     UNIT_SPELLCAST_CHANNEL_START(event, unitId, spell, rank, lineId, spellId) {
         if (unitId == "player" || unitId == "pet") {
-            let now = API_GetTime();
+            let now = GetTime();
             let [spellcast] = OvaleFuture.GetSpellcast(spell, spellId, undefined, now);
             if (spellcast) {
-                let [name] = API_UnitChannelInfo(unitId);
+                let [name] = UnitChannelInfo(unitId);
                 if (name == spell) {
                     this.ScoreSpell(spellId);
                 }
@@ -117,10 +110,10 @@ class OvaleScoreClass extends OvaleDebug.RegisterDebugging(OvaleScoreBase) {
 
     UNIT_SPELLCAST_START(event, unitId, spell, rank, lineId, spellId) {
         if (unitId == "player" || unitId == "pet") {
-            let now = API_GetTime();
+            let now = GetTime();
             let [spellcast] = OvaleFuture.GetSpellcast(spell, spellId, lineId, now);
             if (spellcast) {
-                let [name, ,, ,,, , castId] = API_UnitCastingInfo(unitId);
+                let [name, ,, ,,, , castId] = UnitCastingInfo(unitId);
                 if (lineId == castId && name == spell) {
                     this.ScoreSpell(spellId);
                 } 
@@ -130,11 +123,11 @@ class OvaleScoreClass extends OvaleDebug.RegisterDebugging(OvaleScoreBase) {
 
     UNIT_SPELLCAST_SUCCEEDED(event, unitId, spell, rank, lineId, spellId) {
         if (unitId == "player" || unitId == "pet") {
-            let now = API_GetTime();
+            let now = GetTime();
             let [spellcast] = OvaleFuture.GetSpellcast(spell, spellId, lineId, now);
             if (spellcast) {
                 if (spellcast.success || (!spellcast.start) || (!spellcast.stop) || spellcast.channel) {
-                    let name = API_UnitChannelInfo(unitId);
+                    let name = UnitChannelInfo(unitId);
                     if (!name) {
                         OvaleScore.ScoreSpell(spellId);
                     }

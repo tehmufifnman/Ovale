@@ -1,11 +1,11 @@
 import { Ovale } from "./Ovale";
 import { OvaleAura } from "./Aura";
 import {  OvaleData } from "./Data";
-import aceEvent from "AceEvent-3.0";
+import aceEvent from "@wowts/ace_event-3.0";
+import { GetTime } from "@wowts/wow-mock";
 
 let OvaleHonorAmongThievesBase = Ovale.NewModule("OvaleHonorAmongThieves", aceEvent);
 export let OvaleHonorAmongThieves: OvaleHonorAmongThievesClass;
-let API_GetTime = GetTime;
 let self_playerGUID = undefined;
 let HONOR_AMONG_THIEVES = 51699;
 let MEAN_TIME_TO_HAT = 2.2;
@@ -41,7 +41,7 @@ class OvaleHonorAmongThievesClass extends OvaleHonorAmongThievesBase {
         if (sourceGUID == self_playerGUID && destGUID == self_playerGUID && cleuEvent == "SPELL_ENERGIZE") {
             let [spellId, powerType] = [arg12, arg16];
             if (spellId == HONOR_AMONG_THIEVES && powerType == 4) {
-                let now = API_GetTime();
+                let now = GetTime();
                 this.start = now;
                 let duration = <number>OvaleData.GetSpellInfoProperty(HONOR_AMONG_THIEVES, now, "duration", destGUID) || MEAN_TIME_TO_HAT;
                 this.duration = duration;

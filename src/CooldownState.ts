@@ -5,10 +5,10 @@ import { paperDollState } from "./PaperDoll";
 import { Ovale } from "./Ovale";
 import { OvaleData } from "./Data";
 import { auraState } from "./Aura";
+import { GetSpellCharges } from "@wowts/wow-mock";
+import { sub } from "@wowts/string";
+import { pairs, LuaObj } from "@wowts/lua";
 
-let API_GetSpellCharges = GetSpellCharges;
-let strsub = string.sub;
-let _pairs = pairs;
 let COOLDOWN_THRESHOLD = 0.10;
 
 interface Cooldown {
@@ -50,9 +50,9 @@ class CooldownState implements StateModule {
         }
         if (cdSpellId) {
             let isBang = false;
-            if (strsub(cdSpellId, 1, 1) == "!") {
+            if (sub(cdSpellId, 1, 1) == "!") {
                 isBang = true;
-                cdSpellId = strsub(cdSpellId, 2);
+                cdSpellId = sub(cdSpellId, 2);
             }
             let cd = this.GetCD(cdSpellId);
             verified = !isBang && cd.duration > 0 || isBang && cd.duration <= 0;
@@ -69,13 +69,13 @@ class CooldownState implements StateModule {
         }
     }
     ResetState() {
-        for (const [, cd] of _pairs(this.cd)) {
+        for (const [, cd] of pairs(this.cd)) {
             cd.serial = undefined;
         }
     }
     CleanState() {
-        for (const [spellId, cd] of _pairs(this.cd)) {
-            for (const [k] of _pairs(cd)) {
+        for (const [spellId, cd] of pairs(this.cd)) {
+            for (const [k] of pairs(cd)) {
                 cd[k] = undefined;
             }
             this.cd[spellId] = undefined;
@@ -106,7 +106,7 @@ class CooldownState implements StateModule {
         OvaleCooldown.StopProfiling("OvaleCooldown_state_ApplyCooldown");
     }
     DebugCooldown() {
-        for (const [spellId, cd] of _pairs(this.cd)) {
+        for (const [spellId, cd] of pairs(this.cd)) {
             if (cd.start) {
                 if (cd.charges) {
                     OvaleCooldown.Print("Spell %s cooldown: start=%f, duration=%f, charges=%d, maxCharges=%d, chargeStart=%f, chargeDuration=%f", spellId, cd.start, cd.duration, cd.charges, cd.maxCharges, cd.chargeStart, cd.chargeDuration);
@@ -137,7 +137,7 @@ class CooldownState implements StateModule {
             cd.start = start - COOLDOWN_THRESHOLD;
             cd.duration = duration;
             cd.enable = enable;
-            let [charges, maxCharges, chargeStart, chargeDuration] = API_GetSpellCharges(spellId);
+            let [charges, maxCharges, chargeStart, chargeDuration] = GetSpellCharges(spellId);
             if (charges) {
                 cd.charges = charges;
                 cd.maxCharges = maxCharges;

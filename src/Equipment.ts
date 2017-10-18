@@ -1,74 +1,44 @@
 import { OvaleProfiler } from "./Profiler";
 import { Ovale } from "./Ovale";
 import { OvaleDebug } from "./Debug";
-import aceEvent from "AceEvent-3.0";
+import aceEvent from "@wowts/ace_event-3.0";
+import { pairs, select, tonumber, type, unpack, wipe, _G, lualength } from "@wowts/lua";
+import { gsub, match } from "@wowts/string";
+import { CreateFrame, GetAuctionItemSubClasses, GetInventoryItemID, GetItemInfo, INVSLOT_AMMO, INVSLOT_BACK, INVSLOT_BODY, INVSLOT_CHEST, INVSLOT_FEET, INVSLOT_FINGER1, INVSLOT_FINGER2, INVSLOT_FIRST_EQUIPPED, INVSLOT_HAND, INVSLOT_HEAD, INVSLOT_LAST_EQUIPPED, INVSLOT_LEGS, INVSLOT_MAINHAND, INVSLOT_NECK, INVSLOT_OFFHAND, INVSLOT_SHOULDER, INVSLOT_TABARD, INVSLOT_TRINKET1, INVSLOT_TRINKET2, INVSLOT_WAIST, INVSLOT_WRIST, UIGameTooltip, ITEM_LEVEL, UIParent } from "@wowts/wow-mock";
 
 let OvaleEquipmentBase = Ovale.NewModule("OvaleEquipment", aceEvent);
 export let OvaleEquipment: OvaleEquipmentClass;
-let _pairs = pairs;
-let _select = select;
-let strgsub = string.gsub;
-let strmatch = string.match;
-let _tonumber = tonumber;
-let _type = type;
-let _unpack = unpack;
-let _wipe = wipe;
-let API_CreateFrame = CreateFrame;
-let API_GetAuctionItemSubClasses = GetAuctionItemSubClasses;
-let API_GetInventoryItemID = GetInventoryItemID;
-let API_GetItemInfo = GetItemInfo;
-let _INVSLOT_AMMO = INVSLOT_AMMO;
-let _INVSLOT_BACK = INVSLOT_BACK;
-let _INVSLOT_BODY = INVSLOT_BODY;
-let _INVSLOT_CHEST = INVSLOT_CHEST;
-let _INVSLOT_FEET = INVSLOT_FEET;
-let _INVSLOT_FINGER1 = INVSLOT_FINGER1;
-let _INVSLOT_FINGER2 = INVSLOT_FINGER2;
-let _INVSLOT_FIRST_EQUIPPED = INVSLOT_FIRST_EQUIPPED;
-let _INVSLOT_HAND = INVSLOT_HAND;
-let _INVSLOT_HEAD = INVSLOT_HEAD;
-let _INVSLOT_LAST_EQUIPPED = INVSLOT_LAST_EQUIPPED;
-let _INVSLOT_LEGS = INVSLOT_LEGS;
-let _INVSLOT_MAINHAND = INVSLOT_MAINHAND;
-let _INVSLOT_NECK = INVSLOT_NECK;
-let _INVSLOT_OFFHAND = INVSLOT_OFFHAND;
-let _INVSLOT_SHOULDER = INVSLOT_SHOULDER;
-let _INVSLOT_TABARD = INVSLOT_TABARD;
-let _INVSLOT_TRINKET1 = INVSLOT_TRINKET1;
-let _INVSLOT_TRINKET2 = INVSLOT_TRINKET2;
-let _INVSLOT_WAIST = INVSLOT_WAIST;
-let _INVSLOT_WRIST = INVSLOT_WRIST;
 
 let self_tooltip: UIGameTooltip = undefined;
-let OVALE_ITEM_LEVEL_PATTERN = `^${strgsub(ITEM_LEVEL, "%%d", "(%%d+)")}`;
+let OVALE_ITEM_LEVEL_PATTERN = `^${gsub(ITEM_LEVEL, "%%d", "(%%d+)")}`;
 let OVALE_SLOTNAME = {
-    AmmoSlot: _INVSLOT_AMMO,
-    BackSlot: _INVSLOT_BACK,
-    ChestSlot: _INVSLOT_CHEST,
-    FeetSlot: _INVSLOT_FEET,
-    Finger0Slot: _INVSLOT_FINGER1,
-    Finger1Slot: _INVSLOT_FINGER2,
-    HandsSlot: _INVSLOT_HAND,
-    HeadSlot: _INVSLOT_HEAD,
-    LegsSlot: _INVSLOT_LEGS,
-    MainHandSlot: _INVSLOT_MAINHAND,
-    NeckSlot: _INVSLOT_NECK,
-    SecondaryHandSlot: _INVSLOT_OFFHAND,
-    ShirtSlot: _INVSLOT_BODY,
-    ShoulderSlot: _INVSLOT_SHOULDER,
-    TabardSlot: _INVSLOT_TABARD,
-    Trinket0Slot: _INVSLOT_TRINKET1,
-    Trinket1Slot: _INVSLOT_TRINKET2,
-    WaistSlot: _INVSLOT_WAIST,
-    WristSlot: _INVSLOT_WRIST
+    AmmoSlot: INVSLOT_AMMO,
+    BackSlot: INVSLOT_BACK,
+    ChestSlot: INVSLOT_CHEST,
+    FeetSlot: INVSLOT_FEET,
+    Finger0Slot: INVSLOT_FINGER1,
+    Finger1Slot: INVSLOT_FINGER2,
+    HandsSlot: INVSLOT_HAND,
+    HeadSlot: INVSLOT_HEAD,
+    LegsSlot: INVSLOT_LEGS,
+    MainHandSlot: INVSLOT_MAINHAND,
+    NeckSlot: INVSLOT_NECK,
+    SecondaryHandSlot: INVSLOT_OFFHAND,
+    ShirtSlot: INVSLOT_BODY,
+    ShoulderSlot: INVSLOT_SHOULDER,
+    TabardSlot: INVSLOT_TABARD,
+    Trinket0Slot: INVSLOT_TRINKET1,
+    Trinket1Slot: INVSLOT_TRINKET2,
+    WaistSlot: INVSLOT_WAIST,
+    WristSlot: INVSLOT_WRIST
 }
 let OVALE_ARMORSET_SLOT_IDS = {
-    1: _INVSLOT_CHEST,
-    2: _INVSLOT_HAND,
-    3: _INVSLOT_HEAD,
-    4: _INVSLOT_LEGS,
-    5: _INVSLOT_SHOULDER,
-    6: _INVSLOT_BACK
+    1: INVSLOT_CHEST,
+    2: INVSLOT_HAND,
+    3: INVSLOT_HEAD,
+    4: INVSLOT_LEGS,
+    5: INVSLOT_SHOULDER,
+    6: INVSLOT_BACK
 }
 let OVALE_ARMORSET = {
     [85314]: "T14_tank",
@@ -1284,11 +1254,11 @@ let OVALE_ARMORSET = {
 let OVALE_WEAPON_CLASS = {
 }
 {
-    [OVALE_WEAPON_CLASS[1], OVALE_WEAPON_CLASS[2], OVALE_WEAPON_CLASS[3], OVALE_WEAPON_CLASS[4], OVALE_WEAPON_CLASS[5], OVALE_WEAPON_CLASS[6], OVALE_WEAPON_CLASS[7], OVALE_WEAPON_CLASS[8], OVALE_WEAPON_CLASS[9], OVALE_WEAPON_CLASS[10], OVALE_WEAPON_CLASS[11], OVALE_WEAPON_CLASS[12], OVALE_WEAPON_CLASS[13], OVALE_WEAPON_CLASS[14], OVALE_WEAPON_CLASS[15], OVALE_WEAPON_CLASS[16], OVALE_WEAPON_CLASS[17]] = API_GetAuctionItemSubClasses(1);
+    [OVALE_WEAPON_CLASS[1], OVALE_WEAPON_CLASS[2], OVALE_WEAPON_CLASS[3], OVALE_WEAPON_CLASS[4], OVALE_WEAPON_CLASS[5], OVALE_WEAPON_CLASS[6], OVALE_WEAPON_CLASS[7], OVALE_WEAPON_CLASS[8], OVALE_WEAPON_CLASS[9], OVALE_WEAPON_CLASS[10], OVALE_WEAPON_CLASS[11], OVALE_WEAPON_CLASS[12], OVALE_WEAPON_CLASS[13], OVALE_WEAPON_CLASS[14], OVALE_WEAPON_CLASS[15], OVALE_WEAPON_CLASS[16], OVALE_WEAPON_CLASS[17]] = GetAuctionItemSubClasses(1);
 }
 let OVALE_META_GEM = undefined;
 {
-    let [,,,,,, name] = API_GetAuctionItemSubClasses(8);
+    let [,,,,,, name] = GetAuctionItemSubClasses(8);
     OVALE_META_GEM = name;
 }
 
@@ -1297,7 +1267,7 @@ const GetEquippedItemType = function(slotId) {
     let [itemId] = OvaleEquipment.GetEquippedItem(slotId);
     let itemType;
     if (itemId) {
-        let [, , , , ,,, , inventoryType] = API_GetItemInfo(itemId);
+        let [, , , , ,,, , inventoryType] = GetItemInfo(itemId);
         itemType = inventoryType;
     }
     OvaleEquipment.StopProfiling("OvaleEquipment_GetEquippedItemType");
@@ -1310,9 +1280,9 @@ const GetItemLevel = function(slotId) {
     for (let i = 2; i <= self_tooltip.NumLines(); i += 1) {
         let text = (<UIGameTooltip>_G[`OvaleEquipment_ScanningTooltipTextLeft${i}`]).GetText();
         if (text) {
-            itemLevel = strmatch(text, OVALE_ITEM_LEVEL_PATTERN);
+            itemLevel = match(text, OVALE_ITEM_LEVEL_PATTERN);
             if (itemLevel) {
-                itemLevel = _tonumber(itemLevel);
+                itemLevel = tonumber(itemLevel);
                 break;
             }
         }
@@ -1323,7 +1293,7 @@ const GetItemLevel = function(slotId) {
 const GetNormalizedWeaponSpeed = function(slotId) {
     OvaleEquipment.StartProfiling("OvaleEquipment_GetNormalizedWeaponSpeed");
     let weaponSpeed;
-    if (slotId == _INVSLOT_MAINHAND || slotId == _INVSLOT_OFFHAND) {
+    if (slotId == INVSLOT_MAINHAND || slotId == INVSLOT_OFFHAND) {
         let [itemId] = OvaleEquipment.GetEquippedItem(slotId);
         if (itemId) {
             // let [_1, _2, _3, _4, _5, _6, weaponClass] = API_GetItemInfo(itemId);
@@ -1373,7 +1343,7 @@ class OvaleEquipmentClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
     
     constructor() {
         super();
-        self_tooltip = API_CreateFrame("GameTooltip", "OvaleEquipment_ScanningTooltip", undefined, "GameTooltipTemplate");
+        self_tooltip = CreateFrame("GameTooltip", "OvaleEquipment_ScanningTooltip", undefined, "GameTooltipTemplate");
         self_tooltip.SetOwner(UIParent, "ANCHOR_NONE");
         this.RegisterEvent("GET_ITEM_INFO_RECEIVED");
         this.RegisterEvent("PLAYER_ENTERING_WORLD", "UpdateEquippedItems");
@@ -1388,10 +1358,10 @@ class OvaleEquipmentClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
     }
     GET_ITEM_INFO_RECEIVED(event) {
         this.StartProfiling("OvaleEquipment_GET_ITEM_INFO_RECEIVED");
-        this.mainHandItemType = GetEquippedItemType(_INVSLOT_MAINHAND);
-        this.offHandItemType = GetEquippedItemType(_INVSLOT_OFFHAND);
-        this.mainHandWeaponSpeed = this.HasMainHandWeapon() && GetNormalizedWeaponSpeed(_INVSLOT_MAINHAND);
-        this.offHandWeaponSpeed = this.HasOffHandWeapon() && GetNormalizedWeaponSpeed(_INVSLOT_OFFHAND);
+        this.mainHandItemType = GetEquippedItemType(INVSLOT_MAINHAND);
+        this.offHandItemType = GetEquippedItemType(INVSLOT_OFFHAND);
+        this.mainHandWeaponSpeed = this.HasMainHandWeapon() && GetNormalizedWeaponSpeed(INVSLOT_MAINHAND);
+        this.offHandWeaponSpeed = this.HasOffHandWeapon() && GetNormalizedWeaponSpeed(INVSLOT_OFFHAND);
         let changed = false;
         if (changed) {
             Ovale.needRefresh();
@@ -1402,21 +1372,21 @@ class OvaleEquipmentClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
     PLAYER_EQUIPMENT_CHANGED(event, slotId, hasItem) {
         this.StartProfiling("OvaleEquipment_PLAYER_EQUIPMENT_CHANGED");
         if (hasItem) {
-            this.equippedItems[slotId] = API_GetInventoryItemID("player", slotId);
+            this.equippedItems[slotId] = GetInventoryItemID("player", slotId);
             this.equippedItemLevels[slotId] = GetItemLevel(slotId);
-            if (slotId == _INVSLOT_MAINHAND) {
+            if (slotId == INVSLOT_MAINHAND) {
                 this.mainHandItemType = GetEquippedItemType(slotId);
-                this.mainHandWeaponSpeed = this.HasMainHandWeapon() && GetNormalizedWeaponSpeed(_INVSLOT_MAINHAND);
-            } else if (slotId == _INVSLOT_OFFHAND) {
+                this.mainHandWeaponSpeed = this.HasMainHandWeapon() && GetNormalizedWeaponSpeed(INVSLOT_MAINHAND);
+            } else if (slotId == INVSLOT_OFFHAND) {
                 this.offHandItemType = GetEquippedItemType(slotId);
-                this.offHandWeaponSpeed = this.HasOffHandWeapon() && GetNormalizedWeaponSpeed(_INVSLOT_OFFHAND);
+                this.offHandWeaponSpeed = this.HasOffHandWeapon() && GetNormalizedWeaponSpeed(INVSLOT_OFFHAND);
             }
         } else {
             this.equippedItems[slotId] = undefined;
             this.equippedItemLevels[slotId] = undefined;
-            if (slotId == _INVSLOT_MAINHAND) {
+            if (slotId == INVSLOT_MAINHAND) {
                 this.mainHandItemType = undefined;
-            } else if (slotId == _INVSLOT_OFFHAND) {
+            } else if (slotId == INVSLOT_OFFHAND) {
                 this.offHandItemType = undefined;
             }
         }
@@ -1439,10 +1409,10 @@ class OvaleEquipmentClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
     }
 
     GetEquippedItem(...__args):number[] {
-        count = _select("#", __args);
+        count = select("#", __args);
         for (let n = 1; n <= count; n += 1) {
-            let slotId = _select(n, __args);
-            if (slotId && _type(slotId) != "number") {
+            let slotId = select(n, __args);
+            if (slotId && type(slotId) != "number") {
                 slotId = OVALE_SLOTNAME[slotId];
             }
             if (slotId) {
@@ -1452,17 +1422,17 @@ class OvaleEquipmentClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
             }
         }
         if (count > 0) {
-            return _unpack(result, 1, count);
+            return unpack(result, 1, count);
         } else {
             return undefined;
         }
     }
 
     GetEquippedItemLevel(...__args):number[] {
-        count = _select("#", __args);
+        count = select("#", __args);
         for (let n = 1; n <= count; n += 1) {
-            let slotId = _select(n, __args);
-            if (slotId && _type(slotId) != "number") {
+            let slotId = select(n, __args);
+            if (slotId && type(slotId) != "number") {
                 slotId = OVALE_SLOTNAME[slotId];
             }
             if (slotId) {
@@ -1472,29 +1442,29 @@ class OvaleEquipmentClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
             }
         }
         if (count > 0) {
-            return _unpack(result, 1, count);
+            return unpack(result, 1, count);
         } else {
             return undefined;
         }
     }
 
     GetEquippedTrinkets() {
-        return [this.equippedItems[_INVSLOT_TRINKET1], this.equippedItems[_INVSLOT_TRINKET2]];
+        return [this.equippedItems[INVSLOT_TRINKET1], this.equippedItems[INVSLOT_TRINKET2]];
     }
     HasEquippedItem(itemId, slot?, ...__args) {
         if ((slot != undefined)) {
             let slotId = slot;
-            if (_type(slotId) != "number") {
+            if (type(slotId) != "number") {
                 slotId = OVALE_SLOTNAME[slotId];
             }
             if (slotId && this.equippedItems[slotId] == itemId) {
                 return slotId;
             }
-            let additionalSlotsCount = _select("#", __args);
+            let additionalSlotsCount = select("#", __args);
             if (additionalSlotsCount > 0) {
                 for (let n = 1; n <= additionalSlotsCount; n += 1) {
-                    slotId = _select(n, __args);
-                    if (slotId && _type(slotId) != "number") {
+                    slotId = select(n, __args);
+                    if (slotId && type(slotId) != "number") {
                         slotId = OVALE_SLOTNAME[slotId];
                     }
                     if (slotId && this.equippedItems[slotId] == itemId) {
@@ -1503,7 +1473,7 @@ class OvaleEquipmentClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
                 }
             }
         } else {
-            for (const [slotId, equippedItemId] of _pairs(this.equippedItems)) {
+            for (const [slotId, equippedItemId] of pairs(this.equippedItems)) {
                 if (equippedItemId == itemId) {
                     return slotId;
                 }
@@ -1539,16 +1509,16 @@ class OvaleEquipmentClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
         return this.offHandItemType == "INVTYPE_SHIELD";
     }
     HasTrinket(itemId) {
-        return this.HasEquippedItem(itemId, _INVSLOT_TRINKET1) || this.HasEquippedItem(itemId, _INVSLOT_TRINKET2);
+        return this.HasEquippedItem(itemId, INVSLOT_TRINKET1) || this.HasEquippedItem(itemId, INVSLOT_TRINKET2);
     }
     HasTwoHandedWeapon(slotId) {
-        if (slotId && _type(slotId) != "number") {
+        if (slotId && type(slotId) != "number") {
             slotId = OVALE_SLOTNAME[slotId];
         }
         if (slotId) {
-            if (slotId == _INVSLOT_MAINHAND) {
+            if (slotId == INVSLOT_MAINHAND) {
                 return this.mainHandItemType == "INVTYPE_2HWEAPON";
-            } else if (slotId == _INVSLOT_OFFHAND) {
+            } else if (slotId == INVSLOT_OFFHAND) {
                 return this.offHandItemType == "INVTYPE_2HWEAPON";
             }
         } else {
@@ -1557,13 +1527,13 @@ class OvaleEquipmentClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
         return false;
     }
     HasOneHandedWeapon(slotId?) {
-        if (slotId && _type(slotId) != "number") {
+        if (slotId && type(slotId) != "number") {
             slotId = OVALE_SLOTNAME[slotId];
         }
         if (slotId) {
-            if (slotId == _INVSLOT_MAINHAND) {
+            if (slotId == INVSLOT_MAINHAND) {
                 return this.mainHandItemType == "INVTYPE_WEAPON" || this.mainHandItemType == "INVTYPE_WEAPONMAINHAND";
-            } else if (slotId == _INVSLOT_OFFHAND) {
+            } else if (slotId == INVSLOT_OFFHAND) {
                 return this.offHandItemType == "INVTYPE_WEAPON" || this.offHandItemType == "INVTYPE_WEAPONMAINHAND";
             }
         } else {
@@ -1573,7 +1543,7 @@ class OvaleEquipmentClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
     }
     UpdateArmorSetCount() {
         this.StartProfiling("OvaleEquipment_UpdateArmorSetCount");
-        _wipe(this.armorSetCount);
+        wipe(this.armorSetCount);
         for (let i = 1; i <= lualength(OVALE_ARMORSET_SLOT_IDS); i += 1) {
             let [itemId] = this.GetEquippedItem(OVALE_ARMORSET_SLOT_IDS[i]);
             if (itemId) {
@@ -1593,8 +1563,8 @@ class OvaleEquipmentClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
         this.StartProfiling("OvaleEquipment_UpdateEquippedItems");
         let changed = false;
         let item;
-        for (let slotId = _INVSLOT_FIRST_EQUIPPED; slotId <= _INVSLOT_LAST_EQUIPPED; slotId += 1) {
-            item = API_GetInventoryItemID("player", slotId);
+        for (let slotId = INVSLOT_FIRST_EQUIPPED; slotId <= INVSLOT_LAST_EQUIPPED; slotId += 1) {
+            item = GetInventoryItemID("player", slotId);
             if (item != this.equippedItems[slotId]) {
                 this.equippedItems[slotId] = item;
                 changed = true;
@@ -1602,10 +1572,10 @@ class OvaleEquipmentClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
         }
         let changedItemLevels = this.UpdateEquippedItemLevels();
         changed = changed || changedItemLevels;
-        this.mainHandItemType = GetEquippedItemType(_INVSLOT_MAINHAND);
-        this.offHandItemType = GetEquippedItemType(_INVSLOT_OFFHAND);
-        this.mainHandWeaponSpeed = this.HasMainHandWeapon() && GetNormalizedWeaponSpeed(_INVSLOT_MAINHAND);
-        this.offHandWeaponSpeed = this.HasOffHandWeapon() && GetNormalizedWeaponSpeed(_INVSLOT_OFFHAND);
+        this.mainHandItemType = GetEquippedItemType(INVSLOT_MAINHAND);
+        this.offHandItemType = GetEquippedItemType(INVSLOT_OFFHAND);
+        this.mainHandWeaponSpeed = this.HasMainHandWeapon() && GetNormalizedWeaponSpeed(INVSLOT_MAINHAND);
+        this.offHandWeaponSpeed = this.HasOffHandWeapon() && GetNormalizedWeaponSpeed(INVSLOT_OFFHAND);
         if (changed) {
             this.UpdateArmorSetCount();
             Ovale.needRefresh();
@@ -1618,7 +1588,7 @@ class OvaleEquipmentClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
         this.StartProfiling("OvaleEquipment_UpdateEquippedItemLevels");
         let changed = false;
         let itemLevel;
-        for (let slotId = _INVSLOT_FIRST_EQUIPPED; slotId <= _INVSLOT_LAST_EQUIPPED; slotId += 1) {
+        for (let slotId = INVSLOT_FIRST_EQUIPPED; slotId <= INVSLOT_LAST_EQUIPPED; slotId += 1) {
             itemLevel = GetItemLevel(slotId);
             if (itemLevel != this.equippedItemLevels[slotId]) {
                 this.equippedItemLevels[slotId] = itemLevel;
@@ -1633,12 +1603,12 @@ class OvaleEquipmentClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Reg
         return changed;
     }
     DebugEquipment() {
-        for (let slotId = _INVSLOT_FIRST_EQUIPPED; slotId <= _INVSLOT_LAST_EQUIPPED; slotId += 1) {
+        for (let slotId = INVSLOT_FIRST_EQUIPPED; slotId <= INVSLOT_LAST_EQUIPPED; slotId += 1) {
             this.Print("Slot %d = %s (%d)", slotId, this.GetEquippedItem(slotId), this.GetEquippedItemLevel(slotId));
         }
         this.Print("Main-hand item type: %s", this.mainHandItemType);
         this.Print("Off-hand item type: %s", this.offHandItemType);
-        for (const [k, v] of _pairs(this.armorSetCount)) {
+        for (const [k, v] of pairs(this.armorSetCount)) {
             this.Print("Player has %d piece(s) of %s armor set.", v, k);
         }
     }

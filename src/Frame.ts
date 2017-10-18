@@ -1,5 +1,5 @@
-import AceGUI from "AceGUI-3.0";
-import Masque from "Masque";
+import AceGUI, { AceGUIWidgetCheckBox, AceGUIWidgetDropDown } from "@wowts/ace_gui-3.0";
+import Masque, { MasqueSkinGroup } from "@wowts/masque";
 import { OvaleBestAction } from "./BestAction";
 import { OvaleCompile } from "./Compile";
 import { OvaleDebug } from "./Debug";
@@ -11,23 +11,15 @@ import { Ovale } from "./Ovale";
 import { OvaleIcon } from "./Icon";
 import { EnemiesState } from "./Enemies";
 import { lists, checkBoxes } from "./Controls";
-import aceEvent from "AceEvent-3.0";
+import aceEvent from "@wowts/ace_event-3.0";
+import { lualength, LuaArray, ipairs, next, pairs, wipe, type, LuaObj } from "@wowts/lua";
+import { match } from "@wowts/string";
+import { CreateFrame, GetItemInfo, GetTime, RegisterStateDriver, UnitHasVehicleUI, UnitExists, UnitIsDead, UnitCanAttack, UIParent, UIFrame, UITexture } from "@wowts/wow-mock";
+import { huge } from "@wowts/math";
+import { AceGUIRegisterAsContainer } from "./acegui-helpers";
 
-let _ipairs = ipairs;
-let _next = next;
-let _pairs = pairs;
-let _wipe = wipe;
-let _type = type;
-let strmatch = string.match;
-let API_CreateFrame = CreateFrame;
-let API_GetItemInfo = GetItemInfo;
-let API_GetTime = GetTime;
-let API_RegisterStateDriver = RegisterStateDriver;
-let API_UnitHasVehicleUI = UnitHasVehicleUI;
-let API_UnitExists = UnitExists;
-let API_UnitIsDead = UnitIsDead;
-let API_UnitCanAttack = UnitCanAttack;
-let INFINITY = math.huge;
+let strmatch = match;
+let INFINITY = huge;
 let MIN_REFRESH_TIME = 0.05;
 
 interface Action {
@@ -129,16 +121,16 @@ class OvaleFrame extends AceGUI.WidgetContainerBase {
         } else if (!this.hider.IsVisible()) {
             visible = false;
         } else {
-            if (profile.apparence.hideVehicule && API_UnitHasVehicleUI("player")) {
+            if (profile.apparence.hideVehicule && UnitHasVehicleUI("player")) {
                 visible = false;
             }
-            if (profile.apparence.avecCible && !API_UnitExists("target")) {
+            if (profile.apparence.avecCible && !UnitExists("target")) {
                 visible = false;
             }
             if (profile.apparence.enCombat && !Ovale.inCombat) {
                 visible = false;
             }
-            if (profile.apparence.targetHostileOnly && (API_UnitIsDead("target") || !API_UnitCanAttack("player", "target"))) {
+            if (profile.apparence.targetHostileOnly && (UnitIsDead("target") || !UnitCanAttack("player", "target"))) {
                 visible = false;
             }
         }
@@ -155,7 +147,7 @@ class OvaleFrame extends AceGUI.WidgetContainerBase {
             Ovale.refreshNeeded[guid] = true;
         }
         this.timeSinceLastUpdate = this.timeSinceLastUpdate + elapsed;
-        let refresh = OvaleDebug.trace || this.timeSinceLastUpdate > MIN_REFRESH_TIME && _next(Ovale.refreshNeeded);
+        let refresh = OvaleDebug.trace || this.timeSinceLastUpdate > MIN_REFRESH_TIME && next(Ovale.refreshNeeded);
         if (refresh) {
             Ovale.AddRefreshInterval(this.timeSinceLastUpdate * 1000);
             OvaleState.InitializeState();
@@ -164,7 +156,7 @@ class OvaleFrame extends AceGUI.WidgetContainerBase {
             }
             const profile = Ovale.db.profile;
             let iconNodes = OvaleCompile.GetIconNodes();
-            for (const [k, node] of _ipairs(iconNodes)) {
+            for (const [k, node] of ipairs(iconNodes)) {
                 if (node.namedParams && node.namedParams.target) {
                     baseState.defaultTarget = node.namedParams.target;
                 } else {
@@ -195,7 +187,7 @@ class OvaleFrame extends AceGUI.WidgetContainerBase {
                     OvaleSpellFlash.Flash(baseState, node, element, start);
                 }
             }
-            _wipe(Ovale.refreshNeeded);
+            wipe(Ovale.refreshNeeded);
             OvaleDebug.UpdateTrace();
             Ovale.PrintOneTimeMessages();
             this.timeSinceLastUpdate = 0;
@@ -204,7 +196,7 @@ class OvaleFrame extends AceGUI.WidgetContainerBase {
     UpdateActionIcon(state: BaseState, node, action: Action, element, start, now?) {
         const profile = Ovale.db.profile;
         let icons = action.secure && action.secureIcons || action.icons;
-        now = now || API_GetTime();
+        now = now || GetTime();
         if (element && element.type == "value") {
             let value;
             if (element.value && element.origin && element.rate) {
@@ -296,11 +288,11 @@ class OvaleFrame extends AceGUI.WidgetContainerBase {
     
     GetCheckBox(name: number|string) {
         let widget: AceGUIWidgetCheckBox;
-        if (_type(name) == "string") {
+        if (type(name) == "string") {
             widget = this.checkBoxWidget[name];
-        } else if (_type(name) == "number") {
+        } else if (type(name) == "number") {
             let k = 0;
-            for (const [, frame] of _pairs(this.checkBoxWidget)) {
+            for (const [, frame] of pairs(this.checkBoxWidget)) {
                 if (k == name) {
                     widget = frame;
                     break;
@@ -351,15 +343,15 @@ class OvaleFrame extends AceGUI.WidgetContainerBase {
     FinalizeString(s) {
         let [item, id] = strmatch(s, "^(item:)(.+)");
         if (item) {
-            s = API_GetItemInfo(id);
+            s = GetItemInfo(id);
         }
         return s;
     }
 
     UpdateControls() {
         let profile = Ovale.db.profile;
-        _wipe(this.checkBoxWidget);
-        for (const [name, checkBox] of _pairs(checkBoxes)) {
+        wipe(this.checkBoxWidget);
+        for (const [name, checkBox] of pairs(checkBoxes)) {
             if (checkBox.text) {
                 let widget = AceGUI.Create("CheckBox");
                 let text = this.FinalizeString(checkBox.text);
@@ -378,9 +370,9 @@ class OvaleFrame extends AceGUI.WidgetContainerBase {
                 Ovale.OneTimeMessage("Warning: checkbox '%s' is used but not defined.", name);
             }
         }
-        _wipe(this.listWidget);
-        for (const [name, list] of _pairs(lists)) {
-            if (_next(list.items)) {
+        wipe(this.listWidget);
+        for (const [name, list] of pairs(lists)) {
+            if (next(list.items)) {
                 let widget = AceGUI.Create("Dropdown");
                 widget.SetList(list.items);
                 if (!profile.list[name]) {
@@ -400,11 +392,11 @@ class OvaleFrame extends AceGUI.WidgetContainerBase {
     }
     
     UpdateIcons() {
-        for (const [, action] of _pairs(this.actions)) {
-            for (const [, icon] of _pairs(action.icons)) {
+        for (const [, action] of pairs(this.actions)) {
+            for (const [, icon] of pairs(action.icons)) {
                 icon.Hide();
             }
-            for (const [, icon] of _pairs(action.secureIcons)) {
+            for (const [, icon] of pairs(action.secureIcons)) {
                 icon.Hide();
             }
         }
@@ -417,7 +409,7 @@ class OvaleFrame extends AceGUI.WidgetContainerBase {
         let BARRE = 8;
         let margin = profile.apparence.margin;
         let iconNodes = OvaleCompile.GetIconNodes();
-        for (const [k, node] of _ipairs(iconNodes)) {
+        for (const [k, node] of ipairs(iconNodes)) {
             if (!this.actions[k]) {
                 this.actions[k] = {
                     icons: {
@@ -530,18 +522,18 @@ class OvaleFrame extends AceGUI.WidgetContainerBase {
 
     constructor() {
         super();
-        let hider = API_CreateFrame("Frame", `${Ovale.GetName()}PetBattleFrameHider`, UIParent, "SecureHandlerStateTemplate");
-        let frame = API_CreateFrame("Frame", undefined, hider);
+        let hider = CreateFrame("Frame", `${Ovale.GetName()}PetBattleFrameHider`, UIParent, "SecureHandlerStateTemplate");
+        let frame = CreateFrame("Frame", undefined, hider);
         hider.SetAllPoints(UIParent);
-        API_RegisterStateDriver(hider, "visibility", "[petbattle] hide; show");
+        RegisterStateDriver(hider, "visibility", "[petbattle] hide; show");
         
         const profile = Ovale.db.profile;
         
         this.frame = frame;
         this.hider = hider;
-        this.updateFrame = API_CreateFrame("Frame", `${Ovale.GetName()}UpdateFrame`);
+        this.updateFrame = CreateFrame("Frame", `${Ovale.GetName()}UpdateFrame`);
         this.barre = this.frame.CreateTexture();
-        this.content = API_CreateFrame("Frame", undefined, this.updateFrame);
+        this.content = CreateFrame("Frame", undefined, this.updateFrame);
         if (Masque) {
             this.skinGroup = Masque.Group(Ovale.GetName());
         }

@@ -1,6 +1,6 @@
 local __addonName, __addon = ...
-            __addon.require("./BestAction", { "./Debug", "./Pool", "./Profiler", "./TimeSpan", "./ActionBar", "./Compile", "./Condition", "./Data", "./Equipment", "./GUID", "./SpellBook", "./Ovale", "./State", "./PaperDoll", "./DataState", "./SpellBookState", "./FutureState", "./CooldownState" }, function(__exports, __Debug, __Pool, __Profiler, __TimeSpan, __ActionBar, __Compile, __Condition, __Data, __Equipment, __GUID, __SpellBook, __Ovale, __State, __PaperDoll, __DataState, __SpellBookState, __FutureState, __CooldownState)
-local OvaleBestActionBase = __Ovale.Ovale:NewModule("OvaleBestAction", "AceEvent-3.0")
+            __addon.require("./BestAction", { "./Debug", "./Pool", "./Profiler", "./TimeSpan", "./ActionBar", "./Compile", "./Condition", "./Data", "./Equipment", "./GUID", "./SpellBook", "./Ovale", "./State", "./PaperDoll", "./DataState", "./SpellBookState", "./FutureState", "./CooldownState", "AceEvent-3.0" }, function(__exports, __Debug, __Pool, __Profiler, __TimeSpan, __ActionBar, __Compile, __Condition, __Data, __Equipment, __GUID, __SpellBook, __Ovale, __State, __PaperDoll, __DataState, __SpellBookState, __FutureState, __CooldownState, aceEvent)
+local OvaleBestActionBase = __Ovale.Ovale:NewModule("OvaleBestAction", aceEvent)
 local abs = math.abs
 local _assert = assert
 local floor = math.floor

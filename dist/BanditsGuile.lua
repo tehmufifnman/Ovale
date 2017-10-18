@@ -1,6 +1,6 @@
 local __addonName, __addon = ...
-            __addon.require("./BanditsGuile", { "./Debug", "./Ovale", "./Aura" }, function(__exports, __Debug, __Ovale, __Aura)
-local OvaleBanditsGuileBase = __Ovale.Ovale:NewModule("OvaleBanditsGuile", "AceEvent-3.0")
+            __addon.require("./BanditsGuile", { "./Debug", "./Ovale", "./Aura", "AceEvent-3.0" }, function(__exports, __Debug, __Ovale, __Aura, aceEvent)
+local OvaleBanditsGuileBase = __Ovale.Ovale:NewModule("OvaleBanditsGuile", aceEvent)
 local API_GetSpellInfo = GetSpellInfo
 local API_GetTime = GetTime
 local self_playerGUID = nil

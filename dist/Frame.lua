@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-            __addon.require("./Frame", { "AceGUI-3.0", "Masque", "./BestAction", "./Compile", "./Debug", "./FutureState", "./GUID", "./SpellFlash", "./State", "./Ovale", "./Icon", "./Enemies", "./Controls" }, function(__exports, AceGUI, Masque, __BestAction, __Compile, __Debug, __FutureState, __GUID, __SpellFlash, __State, __Ovale, __Icon, __Enemies, __Controls)
+            __addon.require("./Frame", { "AceGUI-3.0", "Masque", "./BestAction", "./Compile", "./Debug", "./FutureState", "./GUID", "./SpellFlash", "./State", "./Ovale", "./Icon", "./Enemies", "./Controls", "AceEvent-3.0" }, function(__exports, AceGUI, Masque, __BestAction, __Compile, __Debug, __FutureState, __GUID, __SpellFlash, __State, __Ovale, __Icon, __Enemies, __Controls, aceEvent)
 local _ipairs = ipairs
 local _next = next
 local _pairs = pairs
@@ -511,7 +511,7 @@ local OvaleFrame = __addon.__class(AceGUI.WidgetContainerBase, {
     end,
 })
 __exports.frame = OvaleFrame()
-local OvaleFrameBase = __Ovale.Ovale:NewModule("OvaleFrame", "AceEvent-3.0")
+local OvaleFrameBase = __Ovale.Ovale:NewModule("OvaleFrame", aceEvent)
 local OvaleFrameModuleClass = __addon.__class(OvaleFrameBase, {
     Ovale_OptionChanged = function(self, event, eventType)
         if eventType == "visibility" then

@@ -2,15 +2,11 @@ import { OvaleDebug } from "./Debug";
 import { OvaleProfiler } from "./Profiler";
 import { Ovale } from "./Ovale";
 import { BaseState } from "./State";
+import { GetNumGroupMembers, IsInGroup, IsInInstance, IsInRaid, UnitExists, UnitLevel, LE_PARTY_CATEGORY_INSTANCE, LE_PARTY_CATEGORY_HOME, UnitName } from "@wowts/wow-mock";
+import { _G, hooksecurefunc } from "@wowts/lua";
 let OvaleBossModBase = OvaleProfiler.RegisterProfiling(OvaleDebug.RegisterDebugging(Ovale.NewModule("OvaleBossMod")));
-let API_GetNumGroupMembers = GetNumGroupMembers;
-let API_IsInGroup = IsInGroup;
-let API_IsInInstance = IsInInstance;
-let API_IsInRaid = IsInRaid;
-let API_UnitExists = UnitExists;
-let API_UnitLevel = UnitLevel;
-let _BigWigsLoader = BigWigsLoader;
-let _DBM = DBM;
+let _BigWigsLoader: { RegisterMessage: any } = _G["BigWigsLoader"];
+let _DBM = _G["DBM"];
 class OvaleBossModClass extends OvaleBossModBase {
     EngagedDBM = undefined;
     EngagedBigWigs = undefined;
@@ -60,33 +56,33 @@ class OvaleBossModClass extends OvaleBossModBase {
         const RecursiveScanTargets = (target, depth?) => {
             let isWorldBoss = false;
             let dep = depth || 1;
-            isWorldBoss = target != undefined && API_UnitExists(target) && API_UnitLevel(target) < 0;
+            isWorldBoss = target != undefined && UnitExists(target) && UnitLevel(target) < 0;
             if (isWorldBoss) {
                 this.Debug("%s is worldboss (%s)", target, UnitName(target));
             }
             return isWorldBoss || (dep <= 3 && RecursiveScanTargets(`${target}target`, dep + 1));
         }
         let bossEngaged = false;
-        bossEngaged = bossEngaged || API_UnitExists("boss1") || API_UnitExists("boss2") || API_UnitExists("boss3") || API_UnitExists("boss4");
+        bossEngaged = bossEngaged || UnitExists("boss1") || UnitExists("boss2") || UnitExists("boss3") || UnitExists("boss4");
         bossEngaged = bossEngaged || RecursiveScanTargets("target") || RecursiveScanTargets("pet") || RecursiveScanTargets("focus") || RecursiveScanTargets("focuspet") || RecursiveScanTargets("mouseover") || RecursiveScanTargets("mouseoverpet");
         if (!bossEngaged) {
-            if ((API_IsInInstance() && API_IsInGroup(LE_PARTY_CATEGORY_INSTANCE) && API_GetNumGroupMembers(LE_PARTY_CATEGORY_INSTANCE) > 1)) {
-                for (let i = 1; i <= API_GetNumGroupMembers(LE_PARTY_CATEGORY_INSTANCE); i += 1) {
+            if ((IsInInstance() && IsInGroup(LE_PARTY_CATEGORY_INSTANCE) && GetNumGroupMembers(LE_PARTY_CATEGORY_INSTANCE) > 1)) {
+                for (let i = 1; i <= GetNumGroupMembers(LE_PARTY_CATEGORY_INSTANCE); i += 1) {
                     bossEngaged = bossEngaged || RecursiveScanTargets(`party${i}`) || RecursiveScanTargets(`party${i}pet`);
                 }
             }
-            if ((!API_IsInInstance() && API_IsInGroup(LE_PARTY_CATEGORY_HOME) && API_GetNumGroupMembers(LE_PARTY_CATEGORY_HOME) > 1)) {
-                for (let i = 1; i <= API_GetNumGroupMembers(LE_PARTY_CATEGORY_HOME); i += 1) {
+            if ((!IsInInstance() && IsInGroup(LE_PARTY_CATEGORY_HOME) && GetNumGroupMembers(LE_PARTY_CATEGORY_HOME) > 1)) {
+                for (let i = 1; i <= GetNumGroupMembers(LE_PARTY_CATEGORY_HOME); i += 1) {
                     bossEngaged = bossEngaged || RecursiveScanTargets(`party${i}`) || RecursiveScanTargets(`party${i}pet`);
                 }
             }
-            if ((API_IsInInstance() && API_IsInRaid(LE_PARTY_CATEGORY_INSTANCE) && API_GetNumGroupMembers(LE_PARTY_CATEGORY_INSTANCE) > 1)) {
-                for (let i = 1; i <= API_GetNumGroupMembers(LE_PARTY_CATEGORY_INSTANCE); i += 1) {
+            if ((IsInInstance() && IsInRaid(LE_PARTY_CATEGORY_INSTANCE) && GetNumGroupMembers(LE_PARTY_CATEGORY_INSTANCE) > 1)) {
+                for (let i = 1; i <= GetNumGroupMembers(LE_PARTY_CATEGORY_INSTANCE); i += 1) {
                     bossEngaged = bossEngaged || RecursiveScanTargets(`raid${i}`) || RecursiveScanTargets(`raid${i}pet`);
                 }
             }
-            if ((!API_IsInInstance() && API_IsInRaid(LE_PARTY_CATEGORY_HOME) && API_GetNumGroupMembers(LE_PARTY_CATEGORY_HOME) > 1)) {
-                for (let i = 1; i <= API_GetNumGroupMembers(LE_PARTY_CATEGORY_HOME); i += 1) {
+            if ((!IsInInstance() && IsInRaid(LE_PARTY_CATEGORY_HOME) && GetNumGroupMembers(LE_PARTY_CATEGORY_HOME) > 1)) {
+                for (let i = 1; i <= GetNumGroupMembers(LE_PARTY_CATEGORY_HOME); i += 1) {
                     bossEngaged = bossEngaged || RecursiveScanTargets(`raid${i}`) || RecursiveScanTargets(`raid${i}pet`);
                 }
             }

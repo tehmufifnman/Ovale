@@ -1,6 +1,6 @@
 local __addonName, __addon = ...
-            __addon.require("./Equipment", { "./Profiler", "./Ovale", "./Debug" }, function(__exports, __Profiler, __Ovale, __Debug)
-local OvaleEquipmentBase = __Ovale.Ovale:NewModule("OvaleEquipment", "AceEvent-3.0")
+            __addon.require("./Equipment", { "./Profiler", "./Ovale", "./Debug", "AceEvent-3.0" }, function(__exports, __Profiler, __Ovale, __Debug, aceEvent)
+local OvaleEquipmentBase = __Ovale.Ovale:NewModule("OvaleEquipment", aceEvent)
 local _pairs = pairs
 local _select = select
 local strgsub = string.gsub

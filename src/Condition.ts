@@ -1,10 +1,11 @@
 import { BaseState } from "./State";
 import { Ovale } from "./Ovale";
 import { OvaleDebug } from "./Debug";
+import { next, LuaObj, LuaArray } from "@wowts/lua";
+import { huge } from "@wowts/math";
 let OvaleConditionBase = Ovale.NewModule("OvaleCondition");
 export let OvaleCondition: OvaleConditionClass;
-const _next = next;
-let INFINITY = math.huge;
+let INFINITY = huge;
 let self_condition: LuaObj<ConditionFunction> = {
 }
 let self_spellBookCondition = {
@@ -53,7 +54,7 @@ class OvaleConditionClass extends OvaleDebug.RegisterDebugging(OvaleConditionBas
         return self_condition[name](positionalParams, namedParams, state, atTime);
     }
     HasAny(){
-        return _next(self_condition) !== undefined;
+        return next(self_condition) !== undefined;
     }
 }
 

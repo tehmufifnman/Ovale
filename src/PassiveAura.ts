@@ -2,20 +2,17 @@ import { Ovale } from "./Ovale";
 import { OvaleAura } from "./Aura";
 import { OvaleEquipment } from "./Equipment";
 import { OvalePaperDoll } from "./PaperDoll";
-import aceEvent from "AceEvent-3.0";
+import aceEvent from "@wowts/ace_event-3.0";
+import { exp, huge as INFINITY } from "@wowts/math";
+import { pairs } from "@wowts/lua";
+import { GetTime, INVSLOT_TRINKET1, INVSLOT_TRINKET2 } from "@wowts/wow-mock";
 
 let OvalePassiveAuraBase = Ovale.NewModule("OvalePassiveAura", aceEvent);
 export let OvalePassiveAura: OvalePassiveAuraClass;
-let exp = math.exp;
-let _pairs = pairs;
-let API_GetTime = GetTime;
-let INFINITY = math.huge;
-let _INVSLOT_TRINKET1 = INVSLOT_TRINKET1;
-let _INVSLOT_TRINKET2 = INVSLOT_TRINKET2;
 let self_playerGUID = undefined;
 let TRINKET_SLOTS = {
-    1: _INVSLOT_TRINKET1,
-    2: _INVSLOT_TRINKET2
+    1: INVSLOT_TRINKET1,
+    2: INVSLOT_TRINKET2
 }
 let AURA_NAME = {
 }
@@ -152,7 +149,7 @@ class OvalePassiveAuraClass extends OvalePassiveAuraBase {
     UpdateIncreasedCritEffectMetaGem() {
         let metaGem = OvaleEquipment.metaGem;
         let spellId = metaGem && INCREASED_CRIT_META_GEM[metaGem];
-        let now = API_GetTime();
+        let now = GetTime();
         if (spellId) {
             let name = AURA_NAME[spellId];
             let start = now;
@@ -169,7 +166,7 @@ class OvalePassiveAuraClass extends OvalePassiveAuraBase {
         let hasAmplification = false;
         let critDamageIncrease = 0;
         let statMultiplier = 1;
-        for (const [, slot] of _pairs(TRINKET_SLOTS)) {
+        for (const [, slot] of pairs(TRINKET_SLOTS)) {
             let [trinket] = OvaleEquipment.GetEquippedItem(slot);
             if (trinket && AMPLIFICATION_TRINKET[trinket]) {
                 hasAmplification = true;
@@ -185,7 +182,7 @@ class OvalePassiveAuraClass extends OvalePassiveAuraBase {
                 statMultiplier = statMultiplier * (1 + amplificationEffect / 100);
             }
         }
-        let now = API_GetTime();
+        let now = GetTime();
         let spellId = AMPLIFICATION;
         if (hasAmplification) {
             let name = AURA_NAME[spellId];
@@ -206,7 +203,7 @@ class OvalePassiveAuraClass extends OvalePassiveAuraBase {
         if (spellId) {
             let hasReadiness = false;
             let cdMultiplier;
-            for (const [, slot] of _pairs(TRINKET_SLOTS)) {
+            for (const [, slot] of pairs(TRINKET_SLOTS)) {
                 let [trinket] = OvaleEquipment.GetEquippedItem(slot);
                 let readinessId = trinket && READINESS_TRINKET[trinket];
                 if (readinessId) {
@@ -225,7 +222,7 @@ class OvalePassiveAuraClass extends OvalePassiveAuraBase {
                     break;
                 }
             }
-            let now = API_GetTime();
+            let now = GetTime();
             if (hasReadiness) {
                 let name = AURA_NAME[spellId];
                 let start = now;

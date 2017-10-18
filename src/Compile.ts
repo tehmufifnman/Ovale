@@ -13,19 +13,16 @@ import { OvaleSpellBook } from "./SpellBook";
 import { OvaleStance } from "./Stance";
 import { RegisterPrinter, Ovale } from "./Ovale";
 import { checkBoxes, lists, ResetControls } from "./Controls";
-import aceEvent from "AceEvent-3.0";
+import aceEvent from "@wowts/ace_event-3.0";
+import { ipairs, pairs, tonumber, tostring, type, wipe, LuaArray, lualength } from "@wowts/lua";
+import { find, match, sub } from "@wowts/string";
+import { GetSpellInfo } from "@wowts/wow-mock";
 
 let OvaleCompileBase = Ovale.NewModule("OvaleCompile", aceEvent);
 export let OvaleCompile: OvaleCompileClass;
-let _ipairs = ipairs;
-let _pairs = pairs;
-let _tonumber = tonumber;
-let _tostring = tostring;
-let _type = type;
-let strfind = string.find;
-let strmatch = string.match;
-let strsub = string.sub;
-let _wipe = wipe;
+let strfind = find;
+let strmatch = match;
+let strsub = sub;
 let API_GetSpellInfo = GetSpellInfo;
 let self_compileOnStances = false;
 let self_canEvaluate = false;
@@ -44,11 +41,11 @@ const HasTalent = function(talentId) {
     }
 }
 const RequireValue = function(value) {
-    let required = (strsub(_tostring(value), 1, 1) != "!");
+    let required = (strsub(tostring(value), 1, 1) != "!");
     if (!required) {
         value = strsub(value, 2);
         if (strmatch(value, NUMBER_PATTERN)) {
-            value = _tonumber(value);
+            value = tonumber(value);
         }
     }
     return [value, required];
@@ -104,10 +101,10 @@ let TEST_CONDITION_DISPATCH = {
 const TestConditions = function(positionalParams, namedParams) {
     OvaleCompile.StartProfiling("OvaleCompile_TestConditions");
     let boolean = true;
-    for (const [param, dispatch] of _pairs(TEST_CONDITION_DISPATCH)) {
+    for (const [param, dispatch] of pairs(TEST_CONDITION_DISPATCH)) {
         let value = namedParams[param];
-        if (_type(value) == "table") {
-            for (const [, v] of _ipairs(value)) {
+        if (type(value) == "table") {
+            for (const [, v] of ipairs(value)) {
                 boolean = dispatch(v);
                 if (!boolean) {
                     break;
@@ -126,7 +123,7 @@ const TestConditions = function(positionalParams, namedParams) {
     }
     if (boolean && namedParams.checkbox) {
         const profile = Ovale.db.profile;
-        for (const [,checkbox] of _ipairs(namedParams.checkbox)) {
+        for (const [,checkbox] of ipairs(namedParams.checkbox)) {
             let [name, required] = RequireValue(checkbox);
             const control = checkBoxes[name] || {}
             control.triggerEvaluation = true;
@@ -140,7 +137,7 @@ const TestConditions = function(positionalParams, namedParams) {
     }
     if (boolean && namedParams.listitem) {
         const profile = Ovale.db.profile;
-        for (const [name, listitem] of _pairs(namedParams.listitem)) {
+        for (const [name, listitem] of pairs(namedParams.listitem)) {
             let [item, required] = RequireValue(listitem);
             const control = lists[name] || { items: {}, default: undefined };
             control.triggerEvaluation = true;
@@ -167,7 +164,7 @@ const EvaluateAddCheckBox = function(node) {
         checkBox = checkBox || {
         }
         checkBox.text = node.description.value;
-        for (const [, v] of _ipairs(positionalParams)) {
+        for (const [, v] of ipairs(positionalParams)) {
             if (v == "default") {
                 checkBox.checked = true;
                 break;
@@ -200,7 +197,7 @@ const EvaluateAddListItem = function(node) {
             default: undefined
         }
         list.items[item] = node.description.value;
-        for (const [, v] of _ipairs(positionalParams)) {
+        for (const [, v] of ipairs(positionalParams)) {
             if (v == "default") {
                 list.default = item;
                 break;
@@ -215,9 +212,9 @@ const EvaluateItemInfo = function(node) {
     let [itemId, positionalParams, namedParams] = [node.itemId, node.positionalParams, node.namedParams];
     if (itemId && TestConditions(positionalParams, namedParams)) {
         let ii = OvaleData.ItemInfo(itemId);
-        for (const [k, v] of _pairs(namedParams)) {
+        for (const [k, v] of pairs(namedParams)) {
             if (k == "proc") {
-                let buff = _tonumber(namedParams.buff);
+                let buff = tonumber(namedParams.buff);
                 if (buff) {
                     let name = "item_proc_" + namedParams.proc;
                     let list = OvaleData.buffSpellList[name] || {
@@ -245,7 +242,7 @@ const EvaluateItemRequire = function(node) {
         let ii = OvaleData.ItemInfo(itemId);
         let tbl = ii.require[property] || {
         }
-        for (const [k, v] of _pairs(namedParams)) {
+        for (const [k, v] of pairs(namedParams)) {
             if (!OvaleAST.PARAMETER_KEYWORD[k]) {
                 tbl[k] = v;
                 count = count + 1;
@@ -268,8 +265,8 @@ const EvaluateList = function(node) {
     }
     let list = OvaleData[listDB][name] || {
     }
-    for (const [, _id] of _pairs(positionalParams)) {
-        let id = _tonumber(_id);
+    for (const [, _id] of pairs(positionalParams)) {
+        let id = tonumber(_id);
         if (id) {
             list[id] = true;
         } else {
@@ -283,10 +280,10 @@ const EvaluateList = function(node) {
 const EvaluateScoreSpells = function(node) {
     let ok = true;
     let [positionalParams,] = [node.positionalParams, node.namedParams];
-    for (const [, _spellId] of _ipairs(positionalParams)) {
-        let spellId = _tonumber(_spellId);
+    for (const [, _spellId] of ipairs(positionalParams)) {
+        let spellId = tonumber(_spellId);
         if (spellId) {
-            OvaleScore.AddSpell(_tonumber(spellId));
+            OvaleScore.AddSpell(tonumber(spellId));
         } else {
             ok = false;
             break;
@@ -318,7 +315,7 @@ const EvaluateSpellAuraList = function(node) {
         let tbl = auraTable[filter] || {
         }
         let count = 0;
-        for (const [k, v] of _pairs(namedParams)) {
+        for (const [k, v] of pairs(namedParams)) {
             if (!OvaleAST.PARAMETER_KEYWORD[k]) {
                 tbl[k] = v;
                 count = count + 1;
@@ -333,7 +330,7 @@ const EvaluateSpellAuraList = function(node) {
 const EvaluateSpellInfo = function(node) {
     let addpower = {
     }
-    for (const [powertype,] of _pairs(OvalePower.POWER_INFO)) {
+    for (const [powertype,] of pairs(OvalePower.POWER_INFO)) {
         let key = `add${powertype}`;
         addpower[key] = powertype;
     }
@@ -341,9 +338,9 @@ const EvaluateSpellInfo = function(node) {
     let [spellId, positionalParams, namedParams] = [node.spellId, node.positionalParams, node.namedParams];
     if (spellId && TestConditions(positionalParams, namedParams)) {
         let si = OvaleData.SpellInfo(spellId);
-        for (const [k, v] of _pairs(namedParams)) {
+        for (const [k, v] of pairs(namedParams)) {
             if (k == "addduration") {
-                let value = _tonumber(v);
+                let value = tonumber(v);
                 if (value) {
                     let realValue = value;
                     if (namedParams.pertrait != undefined) {
@@ -356,7 +353,7 @@ const EvaluateSpellInfo = function(node) {
                     break;
                 }
             } else if (k == "addcd") {
-                let value = _tonumber(v);
+                let value = tonumber(v);
                 if (value) {
                     let addCd = si.addcd || 0;
                     si.addcd = addCd + value;
@@ -379,7 +376,7 @@ const EvaluateSpellInfo = function(node) {
                 si[k] = v;
                 OvaleCooldown.AddSharedCooldown(v, spellId);
             } else if (addpower[k] != undefined) {
-                let value = _tonumber(v);
+                let value = tonumber(v);
                 if (value) {
                     let realValue = value;
                     if (namedParams.pertrait != undefined) {
@@ -407,7 +404,7 @@ const EvaluateSpellRequire = function(node) {
         let si = OvaleData.SpellInfo(spellId);
         let tbl = si.require[property] || {
         }
-        for (const [k, v] of _pairs(namedParams)) {
+        for (const [k, v] of pairs(namedParams)) {
             if (!OvaleAST.PARAMETER_KEYWORD[k]) {
                 tbl[k] = v;
                 count = count + 1;
@@ -421,13 +418,13 @@ const EvaluateSpellRequire = function(node) {
 }
 const AddMissingVariantSpells = function(annotation) {
     if (annotation.functionReference) {
-        for (const [, node] of _ipairs<Node>(annotation.functionReference)) {
+        for (const [, node] of ipairs<Node>(annotation.functionReference)) {
             let [positionalParams,] = [node.positionalParams, node.namedParams];
             let spellId = positionalParams[1];
             if (spellId && OvaleCondition.IsSpellBookCondition(node.func)) {
                 if (!OvaleSpellBook.IsKnownSpell(spellId) && !OvaleCooldown.IsSharedCooldown(spellId)) {
                     let spellName;
-                    if (_type(spellId) == "number") {
+                    if (type(spellId) == "number") {
                         spellName = OvaleSpellBook.GetSpellName(spellId);
                     }
                     if (spellName) {
@@ -450,7 +447,7 @@ const AddMissingVariantSpells = function(annotation) {
 }
 const AddToBuffList = function(buffId, statName?, isStacking?) {
     if (statName) {
-        for (const [, useName] of _pairs(OvaleData.STAT_USE_NAMES)) {
+        for (const [, useName] of pairs(OvaleData.STAT_USE_NAMES)) {
             if (isStacking || !strfind(useName, "_stacking_")) {
                 let name = `${useName}_${statName}_buff`;
                 let list = OvaleData.buffSpellList[name] || {
@@ -477,8 +474,8 @@ const AddToBuffList = function(buffId, statName?, isStacking?) {
         isStacking = si && (si.stacking == 1 || si.max_stacks);
         if (si && si.stat) {
             let stat = si.stat;
-            if (_type(stat) == "table") {
-                for (const [, name] of _ipairs(stat)) {
+            if (type(stat) == "table") {
+                for (const [, name] of ipairs(stat)) {
                     AddToBuffList(buffId, name, isStacking);
                 }
             } else {
@@ -498,8 +495,8 @@ let UpdateTrinketInfo = undefined;
             let ii = itemId && OvaleData.ItemInfo(itemId);
             let buffId = ii && ii.buff;
             if (buffId) {
-                if (_type(buffId) == "table") {
-                    for (const [, id] of _ipairs(buffId)) {
+                if (type(buffId) == "table") {
+                    for (const [, id] of ipairs(buffId)) {
                         AddToBuffList(id);
                     }
                 } else {
@@ -525,6 +522,9 @@ class OvaleCompileClass extends OvaleCompileClassBase {
         this.RegisterMessage("Ovale_SpellsChanged", "EventHandler");
         this.RegisterMessage("Ovale_StanceChanged");
         this.RegisterMessage("Ovale_TalentsChanged", "EventHandler");
+    }
+
+    OnInitialize() {
         this.SendMessage("Ovale_ScriptChanged");
     }
     OnDisable() {
@@ -580,7 +580,7 @@ class OvaleCompileClass extends OvaleCompileClassBase {
     }
     EvaluateScript(ast?, forceEvaluation?) {
         this.StartProfiling("OvaleCompile_EvaluateScript");
-        if (_type(ast) != "table") {
+        if (type(ast) != "table") {
             forceEvaluation = ast;
             ast = this.ast;
         }
@@ -590,12 +590,12 @@ class OvaleCompileClass extends OvaleCompileClassBase {
             changed = true;
             let ok = true;
             self_compileOnStances = false;
-            _wipe(self_icon);
+            wipe(self_icon);
             OvaleData.Reset();
             OvaleCooldown.ResetSharedCooldowns();
             self_timesEvaluated = self_timesEvaluated + 1;
             this.serial = self_serial;
-            for (const [, node] of _ipairs<Node>(ast.child)) {
+            for (const [, node] of ipairs<Node>(ast.child)) {
                 let nodeType = node.type;
                 if (nodeType == "checkbox") {
                     ok = EvaluateAddCheckBox(node);

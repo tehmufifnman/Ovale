@@ -8,12 +8,10 @@ import { Ovale } from "./Ovale";
 import { paperDollState, OvalePaperDoll } from "./PaperDoll";
 import { dataState } from "./DataState";
 import { OvaleStance } from "./Stance";
+import { wipe, pairs, lualength } from "@wowts/lua";
+import { GetTime } from "@wowts/wow-mock";
+import { insert, remove } from "@wowts/table";
 
-let _wipe = wipe;
-let API_GetTime = GetTime;
-let _pairs = pairs;
-let tinsert = table.insert;
-let tremove = table.remove;
 let SIMULATOR_LAG = 0.005;
 
 class FutureState {
@@ -39,7 +37,7 @@ class FutureState {
     }
     ResetState() {
         OvaleFuture.StartProfiling("OvaleFuture_ResetState");
-        let now = API_GetTime();
+        let now = GetTime();
         baseState.currentTime = now;
         OvaleFuture.Log("Reset state with current time = %f", baseState.currentTime);
         this.inCombat = OvaleFuture.inCombat;
@@ -116,17 +114,17 @@ class FutureState {
         }
         OvaleFuture.Log("    lastSpellId = %s, lastGCDSpellId = %s, lastOffGCDSpellId = %s", this.lastSpellId, this.lastGCDSpellId, this.lastOffGCDSpellId);
         OvaleFuture.Log("    nextCast = %f%s", this.nextCast, reason);
-        _wipe(this.lastCast);
-        for (const [k, v] of _pairs(OvaleFuture.counter)) {
+        wipe(this.lastCast);
+        for (const [k, v] of pairs(OvaleFuture.counter)) {
             this.counter[k] = v;
         }
         OvaleFuture.StopProfiling("OvaleFuture_ResetState");
     }
     CleanState() {
-        for (const [k] of _pairs(this.lastCast)) {
+        for (const [k] of pairs(this.lastCast)) {
             this.lastCast[k] = undefined;
         }
-        for (const [k] of _pairs(this.counter)) {
+        for (const [k] of pairs(this.counter)) {
             this.counter[k] = undefined;
         }
     }
@@ -163,9 +161,9 @@ class FutureState {
 
     PushGCDSpellId(spellId) {
         if (this.lastGCDSpellId) {
-            tinsert(this.lastGCDSpellIds, this.lastGCDSpellId);
+            insert(this.lastGCDSpellIds, this.lastGCDSpellId);
             if (lualength(this.lastGCDSpellIds) > 5) {
-                tremove(this.lastGCDSpellIds, 1);
+                remove(this.lastGCDSpellIds, 1);
             }
         }
         this.lastGCDSpellId = spellId;
@@ -186,7 +184,7 @@ class FutureState {
             }
             if (!spellcast) {
                 spellcast = FutureState.staticSpellcast;
-                _wipe(spellcast);
+                wipe(spellcast);
                 spellcast.caster = Ovale.playerGUID;
                 spellcast.spellId = spellId;
                 spellcast.spellName = OvaleSpellBook.GetSpellName(spellId);
@@ -197,7 +195,7 @@ class FutureState {
                 spellcast.channel = channel;
                 paperDollState.UpdateSnapshot(spellcast);
                 let atTime = channel && startCast || endCast;
-                for (const [, mod] of _pairs(lastSpell.modules)) {
+                for (const [, mod] of pairs(lastSpell.modules)) {
                     let func = mod.SaveSpellcastInfo;
                     if (func) {
                         func(mod, spellcast, atTime, this);
@@ -219,7 +217,7 @@ class FutureState {
             } else {
                 this.lastOffGCDSpellId = spellId;
             }
-            let now = API_GetTime();
+            let now = GetTime();
             if (startCast >= now) {
                 baseState.currentTime = startCast + SIMULATOR_LAG;
             } else {
@@ -254,7 +252,7 @@ class FutureState {
     
     ApplyInFlightSpells() {
         // this.StartProfiling("OvaleFuture_ApplyInFlightSpells");
-        let now = API_GetTime();
+        let now = GetTime();
         let index = 1;
         while (index <= lualength(lastSpell.queue)) {
             let spellcast = lastSpell.queue[index];
@@ -281,7 +279,7 @@ class FutureState {
                     // } else {
                     //     this.Debug("Warning: removing active spell %s (%d) that should have finished.", spellcast.spellName, spellcast.spellId);
                     // }
-                    tremove(lastSpell.queue, index);
+                    remove(lastSpell.queue, index);
                     self_pool.Release(spellcast);
                     index = index - 1;
                 }

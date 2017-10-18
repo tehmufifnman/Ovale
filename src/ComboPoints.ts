@@ -11,12 +11,15 @@ import { OvaleState, StateModule } from "./State";
 import { RegisterRequirement, UnregisterRequirement } from "./Requirement";
 import { lastSpell } from "./LastSpell";
 import { dataState } from "./DataState";
-import aceEvent from "AceEvent-3.0";
+import aceEvent from "@wowts/ace_event-3.0";
+import { insert, remove } from "@wowts/table";
+import { GetTime, UnitPower, MAX_COMBO_POINTS, UNKNOWN } from "@wowts/wow-mock";
+import { lualength } from "@wowts/lua";
 
 let OvaleComboPointsBase = Ovale.NewModule("OvaleComboPoints", aceEvent);
 export let OvaleComboPoints: OvaleComboPointsClass;
-let tinsert = table.insert;
-let tremove = table.remove;
+let tinsert = insert;
+let tremove = remove;
 let API_GetTime = GetTime;
 let API_UnitPower = UnitPower;
 let _MAX_COMBO_POINTS = MAX_COMBO_POINTS;

@@ -1,10 +1,9 @@
-let _select = select;
-let format = string.format;
-let tconcat = table.concat;
-let tinsert = table.insert;
-let tremove = table.remove;
-let _wipe = wipe;
-let INFINITY = math.huge;
+import { select, wipe, LuaArray, lualength } from "@wowts/lua";
+import { format } from "@wowts/string";
+import { concat, insert, remove } from "@wowts/table";
+import { huge } from "@wowts/math";
+
+let INFINITY = huge;
 let self_pool: LuaArray<OvaleTimeSpan> = {
 }
 let self_poolSize = 0;
@@ -32,7 +31,7 @@ const CompareIntervals = function(startA: number, endA: number, startB: number, 
 }
 
 export function newTimeSpan() {
-    let obj = tremove(self_pool);
+    let obj = remove(self_pool);
     if (obj) {
         self_poolUnused = self_poolUnused - 1;
     } else {
@@ -56,11 +55,11 @@ export function newTimeSpanFromArray(a?: LuaArray<number>) {
 }
 
 export function releaseTimeSpans(...__args:OvaleTimeSpan[]) {
-    let argc = _select("#", __args);
+    let argc = select("#", __args);
     for (let i = 1; i <= argc; i += 1) {
-        const a = _select(i, __args);
-        _wipe(a);
-        tinsert(self_pool, a);
+        const a = select(i, __args);
+        wipe(a);
+        insert(self_pool, a);
     }
     self_poolUnused = self_poolUnused + argc;
 }
@@ -73,8 +72,8 @@ export class OvaleTimeSpan implements LuaArray<number> {
     [key:number]: number;
 
     Release(){
-        _wipe(this);
-        tinsert(self_pool, this);
+        wipe(this);
+        insert(self_pool, this);
         self_poolUnused = self_poolUnused + 1;
     }
     
@@ -82,7 +81,7 @@ export class OvaleTimeSpan implements LuaArray<number> {
         if (lualength(this) == 0) {
             return "empty set";
         } else {
-            return format("(%s)", tconcat(this, ", "));
+            return format("(%s)", concat(this, ", "));
         }
     }
 
@@ -98,9 +97,9 @@ export class OvaleTimeSpan implements LuaArray<number> {
     }
 
     Copy(...__args:number[]) {
-        let count = _select("#", __args);
+        let count = select("#", __args);
         for (let i = 1; i <= count; i += 1) {
-            this[i] = _select(i, __args);
+            this[i] = select(i, __args);
         }
         for (let i = count + 1; i <= lualength(this); i += 1) {
             this[i] = undefined;

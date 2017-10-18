@@ -1,6 +1,7 @@
 import { OvaleGUID } from "./GUID";
 import { Ovale } from "./Ovale";
 import { baseState } from "./State";
+import { LuaObj } from "@wowts/lua";
 
 interface Requirement {
     1: any;

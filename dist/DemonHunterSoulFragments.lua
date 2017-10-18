@@ -1,6 +1,6 @@
 local __addonName, __addon = ...
-            __addon.require("./DemonHunterSoulFragments", { "./Ovale", "./Debug", "./State" }, function(__exports, __Ovale, __Debug, __State)
-local OvaleDemonHunterSoulFragmentsBase = __Ovale.Ovale:NewModule("OvaleDemonHunterSoulFragments", "AceEvent-3.0")
+            __addon.require("./DemonHunterSoulFragments", { "./Ovale", "./Debug", "./State", "AceEvent-3.0" }, function(__exports, __Ovale, __Debug, __State, aceEvent)
+local OvaleDemonHunterSoulFragmentsBase = __Ovale.Ovale:NewModule("OvaleDemonHunterSoulFragments", aceEvent)
 local tinsert = table.insert
 local API_GetTime = GetTime
 local API_GetSpellCount = GetSpellCount

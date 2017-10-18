@@ -1,19 +1,19 @@
 import { OvaleDebug } from "./Debug";
 import { OvaleAura } from "./Aura";
 import { Ovale } from "./Ovale";
-import aceEvent from "AceEvent-3.0";
+import aceEvent from "@wowts/ace_event-3.0";
+import { GetSpellInfo, GetTime } from "@wowts/wow-mock";
+import { huge } from "@wowts/math";
 
 let OvaleWarriorChargeBase = Ovale.NewModule("OvaleWarriorCharge", aceEvent);
 export let OvaleWarriorCharge: OvaleWarriorChargeClass;
-let API_GetSpellInfo = GetSpellInfo;
-let API_GetTime = GetTime;
-let INFINITY = math.huge;
+let INFINITY = huge;
 let self_playerGUID = undefined;
 let CHARGED = 100;
 let CHARGED_NAME = "Charged";
 let CHARGED_DURATION = INFINITY;
 let CHARGED_ATTACKS = {
-    [100]: API_GetSpellInfo(100)
+    [100]: GetSpellInfo(100)
 }
 class OvaleWarriorChargeClass extends OvaleDebug.RegisterDebugging(OvaleWarriorChargeBase) {
     targetGUID = undefined;
@@ -35,7 +35,7 @@ class OvaleWarriorChargeClass extends OvaleDebug.RegisterDebugging(OvaleWarriorC
             let [spellId, spellName] = [arg12, arg13];
             if (CHARGED_ATTACKS[spellId] && destGUID != this.targetGUID) {
                 this.Debug("Spell %d (%s) on new target %s.", spellId, spellName, destGUID);
-                let now = API_GetTime();
+                let now = GetTime();
                 if (this.targetGUID) {
                     this.Debug("Removing Charged debuff on previous target %s.", this.targetGUID);
                     OvaleAura.LostAuraOnGUID(this.targetGUID, now, CHARGED, self_playerGUID);

@@ -1,6 +1,6 @@
 local __addonName, __addon = ...
-            __addon.require("./Health", { "./Debug", "./Profiler", "./Ovale", "./GUID", "./State", "./Requirement" }, function(__exports, __Debug, __Profiler, __Ovale, __GUID, __State, __Requirement)
-local OvaleHealthBase = __Ovale.Ovale:NewModule("OvaleHealth", "AceEvent-3.0")
+            __addon.require("./Health", { "./Debug", "./Profiler", "./Ovale", "./GUID", "./State", "./Requirement", "AceEvent-3.0" }, function(__exports, __Debug, __Profiler, __Ovale, __GUID, __State, __Requirement, aceEvent)
+local OvaleHealthBase = __Ovale.Ovale:NewModule("OvaleHealth", aceEvent)
 local strsub = string.sub
 local _tonumber = tonumber
 local _wipe = wipe

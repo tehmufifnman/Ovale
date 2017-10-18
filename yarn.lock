@@ -2,9 +2,226 @@
 # yarn lockfile v1
 
 
-"@types/node@^8.0.28":
-  version "8.0.32"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.0.32.tgz#869a716538b6eec65ab3893f183d557be3cda206"
+"@types/node@^8.0.44":
+  version "8.0.44"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.0.44.tgz#5c39800fda4b76dab39a5f28fda676fc500015ac"
+
+"@wowts/ace_comm-3.0@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@wowts/ace_comm-3.0/-/ace_comm-3.0-1.0.0.tgz#2992e71aea80ef657493601587bbbc93414854c3"
+  dependencies:
+    "@wowts/lua" "^1.0.3"
+    "@wowts/tslib" "^1.0.0"
+
+"@wowts/ace_config-3.0@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@wowts/ace_config-3.0/-/ace_config-3.0-1.0.1.tgz#45bef9138ef11846e730b923f7f9654dd2f59dfc"
+  dependencies:
+    "@wowts/lua" "^1.0.3"
+    "@wowts/tslib" "^1.0.0"
+
+"@wowts/ace_config_dialog-3.0@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@wowts/ace_config_dialog-3.0/-/ace_config_dialog-3.0-1.0.1.tgz#6e6e61f0c62393b5deafca1581b63a6cdc2289c4"
+  dependencies:
+    "@wowts/lua" "^1.0.3"
+    "@wowts/tslib" "^1.0.0"
+
+"@wowts/ace_console-3.0@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@wowts/ace_console-3.0/-/ace_console-3.0-1.0.0.tgz#d74f1a3450ab456de25d8d0d25bbae2c11be3a76"
+  dependencies:
+    "@wowts/lua" "^1.0.3"
+    "@wowts/tslib" "^1.0.0"
+
+"@wowts/ace_db-3.0@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@wowts/ace_db-3.0/-/ace_db-3.0-1.0.0.tgz#e251bbf35e474a29a9d6e1b15d2bebdaff632a25"
+  dependencies:
+    "@wowts/lua" "^1.0.3"
+    "@wowts/tslib" "^1.0.0"
+
+"@wowts/ace_db_options-3.0@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@wowts/ace_db_options-3.0/-/ace_db_options-3.0-1.0.0.tgz#20fc01ecb6c1b115089703118e333f2f92aaa5af"
+  dependencies:
+    "@wowts/ace_db-3.0" "^1.0.0"
+    "@wowts/lua" "^1.0.3"
+    "@wowts/tslib" "^1.0.0"
+
+"@wowts/ace_event-3.0@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@wowts/ace_event-3.0/-/ace_event-3.0-1.0.0.tgz#e15bd7d965066ca24098d431ae254b72897e6a01"
+  dependencies:
+    "@wowts/lua" "^1.0.3"
+    "@wowts/tsaddon" "^1.0.0"
+    "@wowts/tslib" "^1.0.0"
+
+"@wowts/ace_gui-3.0@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@wowts/ace_gui-3.0/-/ace_gui-3.0-1.0.0.tgz#ab129e718613d74a296e63de5fca398bd7f7cc56"
+  dependencies:
+    "@wowts/lua" "^1.0.3"
+    "@wowts/tsaddon" "^1.0.0"
+    "@wowts/tslib" "^1.0.0"
+
+"@wowts/ace_locale-3.0@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@wowts/ace_locale-3.0/-/ace_locale-3.0-1.0.0.tgz#a2342a58152979b10fbd1464e1e32ec0ff27eb2d"
+  dependencies:
+    "@wowts/lua" "^1.0.3"
+    "@wowts/tsaddon" "^1.0.0"
+    "@wowts/tslib" "^1.0.0"
+
+"@wowts/ace_serializer-3.0@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@wowts/ace_serializer-3.0/-/ace_serializer-3.0-1.0.0.tgz#aa64cd53cf5564e8ca0cabe48d44729756e67a0b"
+  dependencies:
+    "@wowts/lua" "^1.0.3"
+    "@wowts/tsaddon" "^1.0.0"
+    "@wowts/tslib" "^1.0.0"
+
+"@wowts/ace_timer-3.0@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@wowts/ace_timer-3.0/-/ace_timer-3.0-1.0.0.tgz#9b85dbfcda39b6b11aa054b3f81e45485b71771e"
+  dependencies:
+    "@wowts/lua" "^1.0.3"
+    "@wowts/tsaddon" "^1.0.0"
+    "@wowts/tslib" "^1.0.0"
+
+"@wowts/bit@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@wowts/bit/-/bit-1.0.0.tgz#3e5587292589d2b2a10cfd948e0fc754f58fe5f3"
+
+"@wowts/coroutine@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@wowts/coroutine/-/coroutine-1.0.0.tgz#8b797f2cf2e89123b0a568ea329f6d83dee39e77"
+
+"@wowts/lib_artifact_data-1.0@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@wowts/lib_artifact_data-1.0/-/lib_artifact_data-1.0-1.0.0.tgz#72e71f25d876d15461ff6e97e83065d9d86db11b"
+  dependencies:
+    "@wowts/lua" "^1.0.3"
+    "@wowts/tsaddon" "^1.0.0"
+    "@wowts/tslib" "^1.0.0"
+
+"@wowts/lib_babble-creature_type-3.0@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@wowts/lib_babble-creature_type-3.0/-/lib_babble-creature_type-3.0-1.0.0.tgz#e69d4ae3811bb50fc2498217941a5f1a2e783c70"
+  dependencies:
+    "@wowts/lua" "^1.0.3"
+    "@wowts/tsaddon" "^1.0.0"
+    "@wowts/tslib" "^1.0.0"
+
+"@wowts/lib_d_b_icon-1.0@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@wowts/lib_d_b_icon-1.0/-/lib_d_b_icon-1.0-1.0.0.tgz#fa07143cb6846ea3c0603c98c5e59d4fd25a92af"
+  dependencies:
+    "@wowts/lua" "^1.0.3"
+    "@wowts/tsaddon" "^1.0.0"
+    "@wowts/tslib" "^1.0.0"
+
+"@wowts/lib_data_broker-1.1@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@wowts/lib_data_broker-1.1/-/lib_data_broker-1.1-1.0.0.tgz#497cc92bcc2fc5f140007d90f62f50a512db7bc6"
+  dependencies:
+    "@wowts/lua" "^1.0.3"
+    "@wowts/tsaddon" "^1.0.0"
+    "@wowts/tslib" "^1.0.0"
+
+"@wowts/lib_dual_spec-1.0@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@wowts/lib_dual_spec-1.0/-/lib_dual_spec-1.0-1.0.0.tgz#dd5758f611409c0325294b4cfc7292f431b238d7"
+  dependencies:
+    "@wowts/lua" "^1.0.3"
+    "@wowts/tsaddon" "^1.0.0"
+    "@wowts/tslib" "^1.0.0"
+
+"@wowts/lib_range_check-2.0@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@wowts/lib_range_check-2.0/-/lib_range_check-2.0-1.0.0.tgz#86e96afc771f23099985216e87d2ca23aca70656"
+  dependencies:
+    "@wowts/lua" "^1.0.3"
+    "@wowts/tsaddon" "^1.0.0"
+    "@wowts/tslib" "^1.0.0"
+
+"@wowts/lib_text_dump-1.0@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@wowts/lib_text_dump-1.0/-/lib_text_dump-1.0-1.0.0.tgz#c84da04ac55bfea256c9a4cd93fa25d62067908e"
+  dependencies:
+    "@wowts/lua" "^1.0.3"
+    "@wowts/tsaddon" "^1.0.0"
+    "@wowts/tslib" "^1.0.0"
+
+"@wowts/lua@^1.0.2", "@wowts/lua@^1.0.3":
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@wowts/lua/-/lua-1.0.3.tgz#3e75d1ad1dac3095021d24e4a3a319dc27a7bbc8"
+
+"@wowts/lua@^1.0.4":
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/@wowts/lua/-/lua-1.0.4.tgz#8fd6e82c0ca3a62a5f3076a7cc4071043f6ff476"
+
+"@wowts/masque@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@wowts/masque/-/masque-1.0.0.tgz#5f66b1cbefb09c81424bbfb9e3e0a3234dd91c76"
+  dependencies:
+    "@wowts/lua" "^1.0.3"
+    "@wowts/tsaddon" "^1.0.0"
+    "@wowts/tslib" "^1.0.0"
+    "@wowts/wow-mock" "^1.0.1"
+
+"@wowts/math@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@wowts/math/-/math-1.0.0.tgz#7c81bb86d025732603d1bdd2ed03bb2bd82cb0e9"
+
+"@wowts/recount@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@wowts/recount/-/recount-1.0.0.tgz#77cadaef64fc56c8d80fed98b9d387e4857b175e"
+  dependencies:
+    "@wowts/lua" "^1.0.3"
+    "@wowts/tsaddon" "^1.0.0"
+    "@wowts/tslib" "^1.0.0"
+    "@wowts/wow-mock" "^1.0.1"
+
+"@wowts/string@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@wowts/string/-/string-1.0.0.tgz#4994965fa11b2c73c2b9f832bdba704c0423655f"
+  dependencies:
+    "@wowts/coroutine" "^1.0.0"
+
+"@wowts/table@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@wowts/table/-/table-1.0.0.tgz#745ac84dc12dfbec7fd9c9ef1574576ded569fed"
+  dependencies:
+    "@wowts/lua" "^1.0.2"
+
+"@wowts/tsaddon@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@wowts/tsaddon/-/tsaddon-1.0.0.tgz#4994e22c93be50b069bdd51bc49941ac84ce9266"
+  dependencies:
+    "@wowts/lua" "^1.0.3"
+    "@wowts/table" "^1.0.0"
+    "@wowts/tslib" "^1.0.0"
+    "@wowts/wow-mock" "^1.0.1"
+
+"@wowts/tslib@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@wowts/tslib/-/tslib-1.0.0.tgz#278bf29a3fbb955e19f612fcf10908183f82fea0"
+  dependencies:
+    "@wowts/lua" "^1.0.3"
+
+"@wowts/tstolua@^1.0.6":
+  version "1.0.6"
+  resolved "https://registry.yarnpkg.com/@wowts/tstolua/-/tstolua-1.0.6.tgz#16ebf6dd88addfbad4039627d291112bab85bb2d"
+  dependencies:
+    commander "^2.11.0"
+    typescript "^2.5.3"
+
+"@wowts/wow-mock@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@wowts/wow-mock/-/wow-mock-1.0.1.tgz#05006a65383554784265f95ebd2cc9c8e1a47b72"
+  dependencies:
+    "@wowts/lua" "^1.0.2"
 
 ansi-regex@^2.0.0:
   version "2.1.1"
@@ -47,7 +264,7 @@ colors@^1.1.2:
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/colors/-/colors-1.1.2.tgz#168a4701756b6a7f51a12ce0c97bfa28c084ed63"
 
-commander@^2.9.0:
+commander@^2.11.0, commander@^2.9.0:
   version "2.11.0"
   resolved "https://registry.yarnpkg.com/commander/-/commander-2.11.0.tgz#157152fd1e7a6c8d98a5b715cf376df928004563"
 
@@ -133,6 +350,10 @@ semver@^5.3.0:
   version "5.4.1"
   resolved "https://registry.yarnpkg.com/semver/-/semver-5.4.1.tgz#e059c09d8571f0540823733433505d3a2f00b18e"
 
+simulationcraft@simulationcraft/simc:
+  version "0.0.0"
+  resolved "https://codeload.github.com/simulationcraft/simc/tar.gz/e0300cfdc892d003ded13da7d12779c07b7bc64d"
+
 strip-ansi@^3.0.0:
   version "3.0.1"
   resolved "https://registry.yarnpkg.com/strip-ansi/-/strip-ansi-3.0.1.tgz#6a385fb8853d952d5ff05d0e8aaf94278dc63dcf"
@@ -146,14 +367,6 @@ supports-color@^2.0.0:
 tslib@^1.7.1:
   version "1.7.1"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.7.1.tgz#bc8004164691923a79fe8378bbeb3da2017538ec"
-
-tslint-no-circular-imports@^0.2.0:
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/tslint-no-circular-imports/-/tslint-no-circular-imports-0.2.0.tgz#608f80bd7574773561e2a7ad2886f5d0652116c8"
-  dependencies:
-    "@types/node" "^8.0.28"
-    tslint "^5.7.0"
-    typescript "^2.5.2"
 
 tslint@^5.7.0:
   version "5.7.0"
@@ -176,9 +389,9 @@ tsutils@^2.8.1:
   dependencies:
     tslib "^1.7.1"
 
-typescript@^2.5.2:
-  version "2.5.2"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-2.5.2.tgz#038a95f7d9bbb420b1bf35ba31d4c5c1dd3ffe34"
+typescript@^2.5.3:
+  version "2.5.3"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-2.5.3.tgz#df3dcdc38f3beb800d4bc322646b04a3f6ca7f0d"
 
 wrappy@1:
   version "1.0.2"

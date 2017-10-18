@@ -1,22 +1,20 @@
 import { L } from "./Localization";
-import LibDataBroker from "LibDataBroker-1.1";
-import LibDBIcon from "LibDBIcon-1.0";
+import LibDataBroker from "@wowts/lib_data_broker-1.1";
+import LibDBIcon from "@wowts/lib_d_b_icon-1.0";
 import { OvaleDebug } from "./Debug";
 import { OvaleOptions } from "./Options";
 import { Ovale } from "./Ovale";
 import { OvaleScripts } from "./Scripts";
 import { OvaleVersion } from "./Version";
 import { frame } from "./Frame";
-import aceEvent from "AceEvent-3.0";
+import aceEvent from "@wowts/ace_event-3.0";
+import { pairs, LuaArray } from "@wowts/lua";
+import { insert } from "@wowts/table";
+import { CreateFrame, EasyMenu, IsShiftKeyDown, UIParent, UIGameTooltip } from "@wowts/wow-mock";
 
 let OvaleDataBrokerBase = Ovale.NewModule("OvaleDataBroker", aceEvent);
 export let OvaleDataBroker: OvaleDataBrokerClass;
 
-let _pairs = pairs;
-let tinsert = table.insert;
-let API_CreateFrame = CreateFrame;
-let API_EasyMenu = EasyMenu;
-let API_IsShiftKeyDown = IsShiftKeyDown;
 let CLASS_ICONS = {
     ["DEATHKNIGHT"]: "Interface\\Icons\\ClassIcon_DeathKnight",
     ["DEMONHUNTER"]: "Interface\\Icons\\ClassIcon_DemonHunter",
@@ -52,10 +50,10 @@ let self_tooltipTitle = undefined;
             }
         }
     }
-    for (const [k, v] of _pairs(defaultDB)) {
+    for (const [k, v] of pairs(defaultDB)) {
         OvaleOptions.defaultDB.profile.apparence[k] = v;
     }
-    for (const [k, v] of _pairs(options)) {
+    for (const [k, v] of pairs(options)) {
         OvaleOptions.options.args.apparence.args[k] = v;
     }
     OvaleOptions.RegisterOptions(OvaleDataBroker);
@@ -77,21 +75,21 @@ const OnClick = function(fr, button) {
         }
         let scriptType = !Ovale.db.profile.showHiddenScripts && "script";
         let descriptions = OvaleScripts.GetDescriptions(scriptType);
-        for (const [name, description] of _pairs(descriptions)) {
+        for (const [name, description] of pairs(descriptions)) {
             let menuItem = {
                 text: description,
                 func: function () {
                     OvaleScripts.SetScript(name);
                 }
             }
-            tinsert(menu, menuItem);
+            insert(menu, menuItem);
         }
-        self_menuFrame = self_menuFrame || API_CreateFrame("Frame", "OvaleDataBroker_MenuFrame", UIParent, "UIDropDownMenuTemplate");
-        API_EasyMenu(menu, self_menuFrame, "cursor", 0, 0, "MENU");
+        self_menuFrame = self_menuFrame || CreateFrame("Frame", "OvaleDataBroker_MenuFrame", UIParent, "UIDropDownMenuTemplate");
+        EasyMenu(menu, self_menuFrame, "cursor", 0, 0, "MENU");
     } else if (button == "MiddleButton") {
         frame.ToggleOptions();
     } else if (button == "RightButton") {
-        if (API_IsShiftKeyDown()) {
+        if (IsShiftKeyDown()) {
             OvaleDebug.DoTrace(true);
         } else {
             OvaleOptions.ToggleConfig();

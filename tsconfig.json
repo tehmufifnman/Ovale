@@ -4,9 +4,11 @@
     "module": "commonjs",
     "noImplicitAny": false,
     "outDir": "dist",
-    "rootDir": "src"
+    "rootDir": "src",
+    "sourceMap": true
   },
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "libs"
   ]
 }

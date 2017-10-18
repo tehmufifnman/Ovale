@@ -3,16 +3,16 @@ import { Ovale } from "./Ovale";
 import { OvalePaperDoll } from "./PaperDoll";
 import { OvaleSpellBook } from "./SpellBook";
 import { OvaleState, StateModule, baseState } from "./State";
-import aceEvent from "AceEvent-3.0";
+import aceEvent from "@wowts/ace_event-3.0";
+import { ipairs, LuaObj, LuaArray, tonumber, lualength } from "@wowts/lua";
+import { insert, remove } from "@wowts/table";
+import { GetTime } from "@wowts/wow-mock";
+import { huge } from "@wowts/math";
 
 let OvaleSigilBase = Ovale.NewModule("OvaleSigil", aceEvent);
 export let OvaleSigil: OvaleSigilClass;
-let _ipairs = ipairs;
-let tinsert = table.insert;
-let tremove = table.remove;
-let API_GetTime = GetTime;
 let UPDATE_DELAY = 0.5;
-let SIGIL_ACTIVATION_TIME = math.huge;
+let SIGIL_ACTIVATION_TIME = huge;
 let activated_sigils: LuaObj<LuaArray<number>> = {
 }
 let sigil_start = {
@@ -83,13 +83,13 @@ class OvaleSigilClass extends OvaleProfiler.RegisterProfiling(OvaleSigilBase) {
             let t = s.type;
             let tal = s.talent || undefined;
             if ((tal == undefined || OvaleSpellBook.GetTalentPoints(tal) > 0)) {
-                tinsert(activated_sigils[t], API_GetTime());
+                insert(activated_sigils[t], GetTime());
             }
         }
         if ((sigil_end[id] != undefined)) {
             let s = sigil_end[id];
             let t = s.type;
-            tremove(activated_sigils[t], 1);
+            remove(activated_sigils[t], 1);
         }
     }
 }
@@ -107,7 +107,7 @@ class SigilState implements StateModule {
             return false;
         }
         let charging = false;
-        for (const [, v] of _ipairs(activated_sigils[type])) {
+        for (const [, v] of ipairs(activated_sigils[type])) {
             let activation_time = SIGIL_ACTIVATION_TIME + UPDATE_DELAY;
             if ((OvaleSpellBook.GetTalentPoints(QUICKENED_SIGILS_TALENT) > 0)) {
                 activation_time = activation_time - 1;

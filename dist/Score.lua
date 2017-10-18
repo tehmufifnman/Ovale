@@ -1,6 +1,6 @@
 local __addonName, __addon = ...
-            __addon.require("./Score", { "./Ovale", "./Debug", "./Future" }, function(__exports, __Ovale, __Debug, __Future)
-local OvaleScoreBase = __Ovale.Ovale:NewModule("OvaleScore", "AceEvent-3.0", "AceSerializer-3.0")
+            __addon.require("./Score", { "./Ovale", "./Debug", "./Future", "AceEvent-3.0", "AceSerializer-3.0" }, function(__exports, __Ovale, __Debug, __Future, aceEvent, AceSerializer)
+local OvaleScoreBase = __Ovale.Ovale:NewModule("OvaleScore", aceEvent, AceSerializer)
 local _pairs = pairs
 local _type = type
 local API_IsInGroup = IsInGroup

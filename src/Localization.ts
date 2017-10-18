@@ -1,16 +1,16 @@
-let _rawset = rawset;
-let _setmetatable = setmetatable;
-let _tostring = tostring;
+import { setmetatable, rawset, tostring } from "@wowts/lua";
+import { GetLocale } from "@wowts/wow-mock";
+
 export let L = undefined;
 {
     let MT = {
         __index: function (self, key) {
-            let value = _tostring(key);
-            _rawset(this, key, value);
+            let value = tostring(key);
+            rawset(this, key, value);
             return value;
         }
     }
-    L = _setmetatable({
+    L = setmetatable({
     }, MT);
 }
 let locale = GetLocale();

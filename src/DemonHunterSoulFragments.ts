@@ -1,14 +1,14 @@
 import { Ovale } from "./Ovale";
 import { OvaleDebug } from "./Debug";
 import { OvaleState, StateModule } from "./State";
-import aceEvent from "AceEvent-3.0";
+import aceEvent from "@wowts/ace_event-3.0";
+import { insert } from "@wowts/table";
+import { GetTime, GetSpellCount } from "@wowts/wow-mock";
+import { LuaArray, type, pairs } from "@wowts/lua";
 
 
 let OvaleDemonHunterSoulFragmentsBase = Ovale.NewModule("OvaleDemonHunterSoulFragments", aceEvent);
 export let OvaleDemonHunterSoulFragments: OvaleDemonHunterSoulFragmentsClass;
-let tinsert = table.insert;
-let API_GetTime = GetTime;
-let API_GetSpellCount = GetSpellCount;
 
 let SOUL_FRAGMENTS_BUFF_ID = 228477;
 let SOUL_FRAGMENTS_SPELL_HEAL_ID = 203794;
@@ -69,19 +69,19 @@ class OvaleDemonHunterSoulFragmentsClass extends OvaleDebug.RegisterDebugging(Ov
             if (subtype == "SPELL_CAST_SUCCESS" && SOUL_FRAGMENT_FINISHERS[spellID]) {
                 this.SetCurrentSoulFragments(0);
             }
-            let now = API_GetTime();
+            let now = GetTime();
             if (this.last_checked == undefined || now - this.last_checked >= 1.5) {
                 this.SetCurrentSoulFragments();
             }
         }
     }
     SetCurrentSoulFragments(count?) {
-        let now = API_GetTime();
+        let now = GetTime();
         this.last_checked = now;
         this.soul_fragments = this.soul_fragments || {
         }
         if (type(count) != "number") {
-            count = API_GetSpellCount(SOUL_FRAGMENTS_BUFF_ID) || 0;
+            count = GetSpellCount(SOUL_FRAGMENTS_BUFF_ID) || 0;
         }
         if (count < 0) {
             count = 0;
@@ -93,7 +93,7 @@ class OvaleDemonHunterSoulFragmentsClass extends OvaleDebug.RegisterDebugging(Ov
             }
             this.Debug("Setting current soul fragment count to '%d' (at: %s)", entry.fragments, entry.timestamp);
             this.last_soul_fragment_count = entry;
-            tinsert(this.soul_fragments, entry);
+            insert(this.soul_fragments, entry);
         }
     }
     DebugSoulFragments() {

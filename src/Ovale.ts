@@ -1,20 +1,12 @@
 import { L } from "./Localization";
-import { NewAddon, AceModule } from "./TsAddon";
-import aceEvent from "AceEvent-3.0";
-let _assert = assert;
-let format = string.format;
-let _ipairs = ipairs;
-let _pairs = pairs;
-let _select = select;
-let strfind = string.find;
-let _strjoin = strjoin;
-let strlen = string.len;
-let _tostring = tostring;
-let _tostringall = tostringall;
-let _wipe = wipe;
-let API_UnitClass = UnitClass;
-let API_UnitGUID = UnitGUID;
-let INFINITY = math.huge;
+import { NewAddon, AceModule } from "@wowts/tsaddon";
+import aceEvent from "@wowts/ace_event-3.0";
+import { assert, ipairs, pairs, select, strjoin, tostring, tostringall, wipe, LuaArray, LuaObj, _G } from "@wowts/lua";
+import { format, find, len } from "@wowts/string";
+import { UnitClass, UnitGUID, DEFAULT_CHAT_FRAME } from "@wowts/wow-mock";
+import { huge } from "@wowts/math";
+import { AceDatabase } from "@wowts/ace_db-3.0";
+
 let self_oneTimeMessage = {
 }
 let MAX_REFRESH_INTERVALS = 500;
@@ -25,16 +17,16 @@ let self_refreshIndex = 1;
 export type Constructor<T> = new(...args: any[]) => T;
 
 export function MakeString(s?, ...__args) {
-    if (s && strlen(s) > 0) {
+    if (s && len(s) > 0) {
         if (__args) {
-            if (strfind(s, "%%%.%d") || strfind(s, "%%[%w]")) {
-                s = format(s, ..._tostringall(...__args));
+            if (find(s, "%%%.%d") || find(s, "%%[%w]")) {
+                s = format(s, ...tostringall(...__args));
             } else {
-                s = _strjoin(" ", s, ..._tostringall(...__args));
+                s = strjoin(" ", s, ...tostringall(...__args));
             }
         }
     } else {
-        s = _tostring(undefined);
+        s = tostring(undefined);
     }
     return s;
 }
@@ -46,7 +38,7 @@ export function RegisterPrinter<T extends Constructor<AceModule>>(base: T) {
             if (!func) {
                 [func, arg] = [subModule[methodName], subModule];
             }
-            _assert(func != undefined);
+            assert(func != undefined);
             return [func, arg];
         }    
     }    
@@ -126,9 +118,9 @@ export interface OvaleDb {
 
 const OvaleBase = NewAddon("Ovale", aceEvent);
 class OvaleClass extends OvaleBase {
-    playerClass = _select(2, API_UnitClass("player"));
+    playerClass = select(2, UnitClass("player"));
     playerGUID: string = undefined;
-    db: Database & OvaleDb = undefined;
+    db: AceDatabase & OvaleDb = undefined;
     refreshNeeded:LuaObj<boolean> = {}
     inCombat = false;
     MSG_PREFIX = "Ovale";
@@ -155,8 +147,8 @@ class OvaleClass extends OvaleBase {
     //     this.frame.Hide();
     // }
     PLAYER_ENTERING_WORLD() {
-        this.playerGUID = API_UnitGUID("player");
-        _wipe(self_refreshIntervals);
+        this.playerGUID = UnitGUID("player");
+        wipe(self_refreshIntervals);
         self_refreshIndex = 1;
         this.ClearOneTimeMessages();
     }
@@ -168,14 +160,14 @@ class OvaleClass extends OvaleBase {
     }
     
     AddRefreshInterval(milliseconds) {
-        if (milliseconds < INFINITY) {
+        if (milliseconds < huge) {
             self_refreshIntervals[self_refreshIndex] = milliseconds;
             self_refreshIndex = (self_refreshIndex < MAX_REFRESH_INTERVALS) && (self_refreshIndex + 1) || 1;
         }
     }
     GetRefreshIntervalStatistics() {
-        let [sumRefresh, minRefresh, maxRefresh, count] = [0, INFINITY, 0, 0];
-        for (const [, v] of _ipairs(self_refreshIntervals)) {
+        let [sumRefresh, minRefresh, maxRefresh, count] = [0, huge, 0, 0];
+        for (const [, v] of ipairs(self_refreshIntervals)) {
             if (v > 0) {
                 if (minRefresh > v) {
                     minRefresh = v;
@@ -199,15 +191,20 @@ class OvaleClass extends OvaleBase {
         }
     }
     ClearOneTimeMessages() {
-        _wipe(self_oneTimeMessage);
+        wipe(self_oneTimeMessage);
     }
     PrintOneTimeMessages() {
-        for (const [s] of _pairs(self_oneTimeMessage)) {
+        for (const [s] of pairs(self_oneTimeMessage)) {
             if (self_oneTimeMessage[s] != "printed") {
                 this.Print(s);
                 self_oneTimeMessage[s] = "printed";
             }
         }
+    }
+
+    Print(...__args) {
+        let s = MakeString(...__args);
+        DEFAULT_CHAT_FRAME.AddMessage(format("|cff33ff99%s|r: %s", this.GetName(), s));
     }
 }
 

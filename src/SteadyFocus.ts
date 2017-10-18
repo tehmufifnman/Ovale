@@ -4,13 +4,14 @@ import { Ovale } from "./Ovale";
 import { OvaleAura, auraState } from "./Aura";
 import { OvaleSpellBook } from "./SpellBook";
 import { OvaleState, StateModule } from "./State";
-import aceEvent from "AceEvent-3.0";
+import aceEvent from "@wowts/ace_event-3.0";
+import { GetTime } from "@wowts/wow-mock";
+import { huge } from "@wowts/math";
 
 let OvaleSteadyFocusBase = Ovale.NewModule("OvaleSteadyFocus", aceEvent);
 export let OvaleSteadyFocus: OvaleSteadyFocusClass;
 
-let API_GetTime = GetTime;
-let INFINITY = math.huge;
+let INFINITY = huge;
 let self_playerGUID = undefined;
 let PRE_STEADY_FOCUS = 177667;
 let STEADY_FOCUS_TALENT = 10;
@@ -63,11 +64,11 @@ class OvaleSteadyFocusClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.R
             if (STEADY_SHOT[spellId]) {
                 this.DebugTimestamp("Spell %s (%d) successfully cast.", spell, spellId);
                 if (this.stacks == 0) {
-                    let now = API_GetTime();
+                    let now = GetTime();
                     this.GainedAura(now);
                 }
             } else if (RANGED_ATTACKS[spellId] && this.stacks > 0) {
-                let now = API_GetTime();
+                let now = GetTime();
                 this.DebugTimestamp("Spell %s (%d) successfully cast.", spell, spellId);
                 this.LostAura(now);
             }

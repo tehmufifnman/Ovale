@@ -5,21 +5,16 @@ import { OvaleSpellBook }from "./SpellBook";
 import { OvaleState, baseState, StateModule } from "./State";
 import { auraState } from "./Aura";
 import { dataState } from "./DataState";
-import aceEvent from "AceEvent-3.0";
+import aceEvent from "@wowts/ace_event-3.0";
+import { ipairs, pairs } from "@wowts/lua";
+import { GetTotemInfo, AIR_TOTEM_SLOT, EARTH_TOTEM_SLOT, FIRE_TOTEM_SLOT, MAX_TOTEMS, WATER_TOTEM_SLOT } from "@wowts/wow-mock";
+import { huge } from "@wowts/math";
 
 let OvaleTotemBase = Ovale.NewModule("OvaleTotem", aceEvent);
 export let OvaleTotem: OvaleTotemClass;
 
-let _ipairs = ipairs;
-let _pairs = pairs;
 
-let API_GetTotemInfo = GetTotemInfo;
-let _AIR_TOTEM_SLOT = AIR_TOTEM_SLOT;
-let _EARTH_TOTEM_SLOT = EARTH_TOTEM_SLOT;
-let _FIRE_TOTEM_SLOT = FIRE_TOTEM_SLOT;
-let INFINITY = math.huge;
-let _MAX_TOTEMS = MAX_TOTEMS;
-let _WATER_TOTEM_SLOT = WATER_TOTEM_SLOT;
+const INFINITY = huge;
 
 let self_serial = 0;
 let TOTEM_CLASS = {
@@ -29,10 +24,10 @@ let TOTEM_CLASS = {
     SHAMAN: true
 }
 let TOTEM_SLOT = {
-    air: _AIR_TOTEM_SLOT,
-    earth: _EARTH_TOTEM_SLOT,
-    fire: _FIRE_TOTEM_SLOT,
-    water: _WATER_TOTEM_SLOT,
+    air: AIR_TOTEM_SLOT,
+    earth: EARTH_TOTEM_SLOT,
+    fire: FIRE_TOTEM_SLOT,
+    water: WATER_TOTEM_SLOT,
     spirit_wolf: 1
 }
 let TOTEMIC_RECALL = 36936;
@@ -65,15 +60,15 @@ class TotemState implements StateModule {
     totem = undefined;
     InitializeState() {
         this.totem = {}
-        for (let slot = 1; slot <= _MAX_TOTEMS; slot += 1) {
+        for (let slot = 1; slot <= MAX_TOTEMS; slot += 1) {
             this.totem[slot] = {}
         }
     }
     ResetState(){        
     }
     CleanState() {
-        for (const [slot, totem] of _pairs(this.totem)) {
-            for (const [k] of _pairs(totem)) {
+        for (const [slot, totem] of pairs(this.totem)) {
+            for (const [k] of pairs(totem)) {
                 totem[k] = undefined;
             }
             this.totem[slot] = undefined;
@@ -82,7 +77,7 @@ class TotemState implements StateModule {
     ApplySpellAfterCast(spellId, targetGUID, startCast, endCast, isChanneled, spellcast) {
         OvaleTotem.StartProfiling("OvaleTotem_ApplySpellAfterCast");
         if (Ovale.playerClass == "SHAMAN" && spellId == TOTEMIC_RECALL) {
-            for (const [slot] of _ipairs(this.totem)) {
+            for (const [slot] of ipairs(this.totem)) {
                 this.DestroyTotem(slot, endCast);
             }
         } else {
@@ -108,7 +103,7 @@ class TotemState implements StateModule {
         slot = TOTEM_SLOT[slot] || slot;
         let totem = this.totem[slot];
         if (totem && (!totem.serial || totem.serial < self_serial)) {
-            let [haveTotem, name, startTime, duration, icon] = API_GetTotemInfo(slot);
+            let [haveTotem, name, startTime, duration, icon] = GetTotemInfo(slot);
             if (haveTotem) {
                 totem.name = name;
                 totem.start = startTime;
@@ -152,7 +147,7 @@ class TotemState implements StateModule {
             if (buffPresent) {
                 let texture = OvaleSpellBook.GetSpellTexture(spellId);
                 let maxTotems = si.max_totems || 1;
-                for (const [slot] of _ipairs(this.totem)) {
+                for (const [slot] of ipairs(this.totem)) {
                     let totem = this.GetTotem(slot);
                     if (this.IsActiveTotem(totem, atTime) && totem.icon == texture) {
                         count = count + 1;
@@ -180,7 +175,7 @@ class TotemState implements StateModule {
             totemSlot = TOTEM_SLOT[si.totem];
             if (!totemSlot) {
                 let availableSlot;
-                for (const [slot] of _ipairs(this.totem)) {
+                for (const [slot] of ipairs(this.totem)) {
                     let totem = this.GetTotem(slot);
                     if (!this.IsActiveTotem(totem, atTime)) {
                         availableSlot = slot;
@@ -191,7 +186,7 @@ class TotemState implements StateModule {
                 let maxTotems = si.max_totems || 1;
                 let count = 0;
                 let start = INFINITY;
-                for (const [slot] of _ipairs(this.totem)) {
+                for (const [slot] of ipairs(this.totem)) {
                     let totem = this.GetTotem(slot);
                     if (this.IsActiveTotem(totem, atTime) && totem.icon == texture) {
                         count = count + 1;

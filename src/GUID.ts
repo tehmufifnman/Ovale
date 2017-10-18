@@ -1,18 +1,12 @@
 import { OvaleDebug } from "./Debug";
 import { Ovale } from "./Ovale";
-import aceEvent from "AceEvent-3.0";
+import aceEvent from "@wowts/ace_event-3.0";
+import { floor } from "@wowts/math";
+import { ipairs, setmetatable, type, unpack, LuaArray, lualength, LuaObj } from "@wowts/lua";
+import { insert, remove } from "@wowts/table";
+import { GetTime, UnitGUID, UnitName } from "@wowts/wow-mock";
 
 let OvaleGUIDBase = Ovale.NewModule("OvaleGUID", aceEvent);
-let floor = math.floor;
-let _ipairs = ipairs;
-let _setmetatable = setmetatable;
-let tinsert = table.insert;
-let tremove = table.remove;
-let _type = type;
-let _unpack = unpack;
-let API_GetTime = GetTime;
-let API_UnitGUID = UnitGUID;
-let API_UnitName = UnitName;
 let PET_UNIT = {
 }
 {
@@ -26,7 +20,7 @@ let PET_UNIT = {
     for (let i = 1; i <= 40; i += 1) {
         PET_UNIT[`raid${i}`] = `raidpet${i}`;
     }
-    _setmetatable(PET_UNIT, {
+    setmetatable(PET_UNIT, {
         __index: function (t, unitId) {
             return `${unitId}pet`;
         }
@@ -35,38 +29,38 @@ let PET_UNIT = {
 let UNIT_AURA_UNITS: LuaArray<string> = {
 }
 {
-    tinsert(UNIT_AURA_UNITS, "player");
-    tinsert(UNIT_AURA_UNITS, "pet");
-    tinsert(UNIT_AURA_UNITS, "vehicle");
-    tinsert(UNIT_AURA_UNITS, "target");
-    tinsert(UNIT_AURA_UNITS, "focus");
+    insert(UNIT_AURA_UNITS, "player");
+    insert(UNIT_AURA_UNITS, "pet");
+    insert(UNIT_AURA_UNITS, "vehicle");
+    insert(UNIT_AURA_UNITS, "target");
+    insert(UNIT_AURA_UNITS, "focus");
     for (let i = 1; i <= 40; i += 1) {
         let unitId = `raid${i}`;
-        tinsert(UNIT_AURA_UNITS, unitId);
-        tinsert(UNIT_AURA_UNITS, PET_UNIT[unitId]);
+        insert(UNIT_AURA_UNITS, unitId);
+        insert(UNIT_AURA_UNITS, PET_UNIT[unitId]);
     }
     for (let i = 1; i <= 4; i += 1) {
         let unitId = `party${i}`;
-        tinsert(UNIT_AURA_UNITS, unitId);
-        tinsert(UNIT_AURA_UNITS, PET_UNIT[unitId]);
+        insert(UNIT_AURA_UNITS, unitId);
+        insert(UNIT_AURA_UNITS, PET_UNIT[unitId]);
     }
     for (let i = 1; i <= 4; i += 1) {
-        tinsert(UNIT_AURA_UNITS, `boss${i}`);
+        insert(UNIT_AURA_UNITS, `boss${i}`);
     }
     for (let i = 1; i <= 5; i += 1) {
         let unitId = `arena${i}`;
-        tinsert(UNIT_AURA_UNITS, unitId);
-        tinsert(UNIT_AURA_UNITS, PET_UNIT[unitId]);
+        insert(UNIT_AURA_UNITS, unitId);
+        insert(UNIT_AURA_UNITS, PET_UNIT[unitId]);
     }
-    tinsert(UNIT_AURA_UNITS, "npc");
+    insert(UNIT_AURA_UNITS, "npc");
 }
 
 let UNIT_AURA_UNIT = {}
 
-for (const [i, unitId] of _ipairs(UNIT_AURA_UNITS)) {
+for (const [i, unitId] of ipairs(UNIT_AURA_UNITS)) {
     UNIT_AURA_UNIT[unitId] = i;
 }
-_setmetatable(UNIT_AURA_UNIT, {
+setmetatable(UNIT_AURA_UNIT, {
     __index: function (t, unitId) {
         return lualength(UNIT_AURA_UNITS) + 1;
     }
@@ -76,7 +70,7 @@ const compareDefault = function(a, b) {
     return a < b;
 }
 function BinaryInsert<T>(t: LuaArray<T>, value:T, unique, compare?) {
-    if (_type(unique) == "function") {
+    if (type(unique) == "function") {
         [unique, compare] = [undefined, unique];
     }
     compare = compare || compareDefault;
@@ -91,7 +85,7 @@ function BinaryInsert<T>(t: LuaArray<T>, value:T, unique, compare?) {
             return mid;
         }
     }
-    tinsert(t, low, value);
+    insert(t, low, value);
     return low;
 }
 function BinarySearch<T>(t: LuaArray<T>, value:T, compare) {
@@ -113,7 +107,7 @@ function BinarySearch<T>(t: LuaArray<T>, value:T, compare) {
 function BinaryRemove<T>(t: LuaArray<T>, value:T, compare) {
     let index = BinarySearch(t, value, compare);
     if (index) {
-        tremove(t, index);
+        remove(t, index);
     }
     return index;
 }
@@ -190,7 +184,7 @@ class OvaleGUIDClass extends OvaleDebug.RegisterDebugging(OvaleGUIDBase) {
         if (unitId == "player") {
             let guid = this.UnitGUID("pet");
             if (guid) {
-                this.petGUID[guid] = API_GetTime();
+                this.petGUID[guid] = GetTime();
             }
             this.SendMessage("Ovale_PetChanged", guid);
         }
@@ -204,13 +198,13 @@ class OvaleGUIDClass extends OvaleDebug.RegisterDebugging(OvaleGUIDBase) {
         }
     }
     UpdateAllUnits() {
-        for (const [, unitId] of _ipairs(UNIT_AURA_UNITS)) {
+        for (const [, unitId] of ipairs(UNIT_AURA_UNITS)) {
             this.UpdateUnitWithTarget(unitId);
         }
     }
     UpdateUnit(unitId) {
-        let guid = API_UnitGUID(unitId);
-        let name = API_UnitName(unitId);
+        let guid = UnitGUID(unitId);
+        let name = UnitName(unitId);
         let previousGUID = this.unitGUID[unitId];
         let previousName = this.unitName[unitId];
         if (!guid || guid != previousGUID) {
@@ -281,25 +275,25 @@ class OvaleGUIDClass extends OvaleDebug.RegisterDebugging(OvaleGUIDBase) {
     }
     UnitGUID(unitId) {
         if (unitId) {
-            return this.unitGUID[unitId] || API_UnitGUID(unitId);
+            return this.unitGUID[unitId] || UnitGUID(unitId);
         }
         return undefined;
     }
     GUIDUnit(guid) {
         if (guid && this.guidUnit[guid]) {
-            return _unpack(this.guidUnit[guid]);
+            return unpack(this.guidUnit[guid]);
         }
         return undefined;
     }
     UnitName(unitId) {
         if (unitId) {
-            return this.unitName[unitId] || API_UnitName(unitId);
+            return this.unitName[unitId] || UnitName(unitId);
         }
         return undefined;
     }
     NameUnit(name) {
         if (name && this.nameUnit[name]) {
-            return _unpack(this.nameUnit[name]);
+            return unpack(this.nameUnit[name]);
         }
         return undefined;
     }
@@ -311,7 +305,7 @@ class OvaleGUIDClass extends OvaleDebug.RegisterDebugging(OvaleGUIDBase) {
     }
     NameGUID(name) {
         if (name && this.nameGUID[name]) {
-            return _unpack(this.nameGUID[name]);
+            return unpack(this.nameGUID[name]);
         }
         return undefined;
     }

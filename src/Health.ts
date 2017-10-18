@@ -4,17 +4,16 @@ import { Ovale } from "./Ovale";
 import { OvaleGUID } from "./GUID";
 import { OvaleState, baseState, StateModule } from "./State";
 import { RegisterRequirement, UnregisterRequirement } from "./Requirement";
-import aceEvent from "AceEvent-3.0";
+import aceEvent from "@wowts/ace_event-3.0";
+import { sub } from "@wowts/string";
+import { tonumber, wipe } from "@wowts/lua";
+import { UnitHealth, UnitHealthMax } from "@wowts/wow-mock";
+import { huge } from "@wowts/math";
 
 let OvaleHealthBase = Ovale.NewModule("OvaleHealth", aceEvent);
 export let OvaleHealth: OvaleHealthClass;
 
-let strsub = string.sub;
-let _tonumber = tonumber;
-let _wipe = wipe;
-let API_UnitHealth = UnitHealth;
-let API_UnitHealthMax = UnitHealthMax;
-let INFINITY = math.huge;
+let INFINITY = huge;
 let CLEU_DAMAGE_EVENT = {
     DAMAGE_SHIELD: true,
     DAMAGE_SPLIT: true,
@@ -96,10 +95,10 @@ class OvaleHealthClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regist
     }
     PLAYER_REGEN_ENABLED(event) {
         this.UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
-        _wipe(this.totalDamage);
-        _wipe(this.totalHealing);
-        _wipe(this.firstSeen);
-        _wipe(this.lastUpdated);
+        wipe(this.totalDamage);
+        wipe(this.totalHealing);
+        wipe(this.firstSeen);
+        wipe(this.lastUpdated);
     }
     Ovale_UnitChanged(event, unitId, guid) {
         this.StartProfiling("Ovale_UnitChanged");
@@ -115,10 +114,10 @@ class OvaleHealthClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regist
             return;
         }
         this.StartProfiling("OvaleHealth_UpdateHealth");
-        let func = API_UnitHealth;
+        let func = UnitHealth;
         let db = this.health;
         if (event == "UNIT_MAXHEALTH") {
-            func = API_UnitHealthMax;
+            func = UnitHealthMax;
             db = this.maxHealth;
         }
         let amount = func(unitId);
@@ -146,7 +145,7 @@ class OvaleHealthClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regist
                 if (unitId == "target" || unitId == "focus") {
                     amount = this.health[guid] || 0;
                 } else {
-                    amount = API_UnitHealth(unitId);
+                    amount = UnitHealth(unitId);
                     this.health[guid] = amount;
                 }
             } else {
@@ -163,7 +162,7 @@ class OvaleHealthClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regist
                 if (unitId == "target" || unitId == "focus") {
                     amount = this.maxHealth[guid] || 0;
                 } else {
-                    amount = API_UnitHealthMax(unitId);
+                    amount = UnitHealthMax(unitId);
                     this.maxHealth[guid] = amount;
                 }
             } else {
@@ -206,20 +205,20 @@ class OvaleHealthClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regist
         }
         if (threshold) {
             let isBang = false;
-            if (strsub(threshold, 1, 1) == "!") {
+            if (sub(threshold, 1, 1) == "!") {
                 isBang = true;
-                threshold = strsub(threshold, 2);
+                threshold = sub(threshold, 2);
             }
-            threshold = _tonumber(threshold) || 0;
+            threshold = tonumber(threshold) || 0;
             let guid, unitId;
-            if (strsub(requirement, 1, 7) == "target_") {
+            if (sub(requirement, 1, 7) == "target_") {
                 if (targetGUID) {
                     guid = targetGUID;
                     unitId = OvaleGUID.GUIDUnit(guid);
                 } else {
                     unitId = baseState.defaultTarget || "target";
                 }
-            } else if (strsub(requirement, 1, 4) == "pet_") {
+            } else if (sub(requirement, 1, 4) == "pet_") {
                 unitId = "pet";
             } else {
                 unitId = "player";

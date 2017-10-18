@@ -1,16 +1,15 @@
-import AceConfig from "AceConfig-3.0";
-import AceConfigDialog from "AceConfigDialog-3.0";
+import AceConfig from "@wowts/ace_config-3.0";
+import AceConfigDialog from "@wowts/ace_config_dialog-3.0";
 import { L } from "./Localization";
-import LibTextDump from "LibTextDump-1.0";
+import LibTextDump, { TextDump } from "@wowts/lib_text_dump-1.0";
 import { OvaleOptions } from "./Options";
 import { Constructor, MakeString, Ovale } from "./Ovale";
-import aceTimer from "AceTimer-3.0";
-import { AceModule } from "./TsAddon";
+import aceTimer from "@wowts/ace_timer-3.0";
+import { format } from "@wowts/string";
+import { pairs, lualength } from "@wowts/lua";
+import { GetTime, DEFAULT_CHAT_FRAME } from "@wowts/wow-mock";
+import { AceModule } from "@wowts/tsaddon";
 let OvaleDebugBase = Ovale.NewModule("OvaleDebug", aceTimer);
-let format = string.format;
-let _pairs = pairs;
-let API_GetTime = GetTime;
-let _DEFAULT_CHAT_FRAME = DEFAULT_CHAT_FRAME;
 let self_traced = false;
 let self_traceLog: TextDump = undefined;
 let OVALE_TRACELOG_MAXLINES = 4096;
@@ -78,7 +77,7 @@ class OvaleDebugClass extends OvaleDebugBase {
                 }
             }
         }
-        for (const [k, v] of _pairs(actions)) {
+        for (const [k, v] of pairs(actions)) {
             OvaleOptions.options.args.actions.args[k] = v;
         }
         OvaleOptions.defaultDB.global = OvaleOptions.defaultDB.global || {}
@@ -94,7 +93,7 @@ class OvaleDebugClass extends OvaleDebugBase {
     DoTrace(displayLog) {
         self_traceLog.Clear();
         this.trace = true;
-        _DEFAULT_CHAT_FRAME.AddMessage(string.format("=== Trace @%f", API_GetTime()));
+        DEFAULT_CHAT_FRAME.AddMessage(format("=== Trace @%f", GetTime()));
         if (displayLog) {
             this.ScheduleTimer("DisplayTraceLog", 0.5);
         }
@@ -133,15 +132,15 @@ class OvaleDebugClass extends OvaleDebugBase {
             Debug(...__args) {
                 let name = this.GetName();
                 if (Ovale.db.global.debug[name]) {
-                    _DEFAULT_CHAT_FRAME.AddMessage(format("|cff33ff99%s|r: %s", name, MakeString(...__args)));
+                    DEFAULT_CHAT_FRAME.AddMessage(format("|cff33ff99%s|r: %s", name, MakeString(...__args)));
                 }
             }
             DebugTimestamp(...__args) {
                 let name = this.GetName();
                 if (Ovale.db.global.debug[name]) {
-                    let now = API_GetTime();
+                    let now = GetTime();
                     let s = format("|cffffff00%f|r %s", now, MakeString(...__args));
-                    _DEFAULT_CHAT_FRAME.AddMessage(format("|cff33ff99%s|r: %s", name, s));
+                    DEFAULT_CHAT_FRAME.AddMessage(format("|cff33ff99%s|r: %s", name, s));
                 }
             }
             Log(...__args) {
@@ -162,7 +161,7 @@ class OvaleDebugClass extends OvaleDebugBase {
             Print(...__args) {
                 let name = this.GetName();
                 let s = MakeString(...__args);
-                _DEFAULT_CHAT_FRAME.AddMessage(format("|cff33ff99%s|r: %s", name, s));
+                DEFAULT_CHAT_FRAME.AddMessage(format("|cff33ff99%s|r: %s", name, s));
             }            
         }
     }

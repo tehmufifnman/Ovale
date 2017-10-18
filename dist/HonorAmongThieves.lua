@@ -1,6 +1,6 @@
 local __addonName, __addon = ...
-            __addon.require("./HonorAmongThieves", { "./Ovale", "./Aura", "./Data" }, function(__exports, __Ovale, __Aura, __Data)
-local OvaleHonorAmongThievesBase = __Ovale.Ovale:NewModule("OvaleHonorAmongThieves", "AceEvent-3.0")
+            __addon.require("./HonorAmongThieves", { "./Ovale", "./Aura", "./Data", "AceEvent-3.0" }, function(__exports, __Ovale, __Aura, __Data, aceEvent)
+local OvaleHonorAmongThievesBase = __Ovale.Ovale:NewModule("OvaleHonorAmongThieves", aceEvent)
 local API_GetTime = GetTime
 local self_playerGUID = nil
 local HONOR_AMONG_THIEVES = 51699

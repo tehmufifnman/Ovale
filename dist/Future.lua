@@ -1,6 +1,6 @@
 local __addonName, __addon = ...
-            __addon.require("./Future", { "./Debug", "./Profiler", "./Ovale", "./Aura", "./Data", "./GUID", "./PaperDoll", "./SpellBook", "./LastSpell" }, function(__exports, __Debug, __Profiler, __Ovale, __Aura, __Data, __GUID, __PaperDoll, __SpellBook, __LastSpell)
-local OvaleFutureBase = __Ovale.Ovale:NewModule("OvaleFuture", "AceEvent-3.0")
+            __addon.require("./Future", { "./Debug", "./Profiler", "./Ovale", "./Aura", "./Data", "./GUID", "./PaperDoll", "./SpellBook", "./LastSpell", "AceEvent-3.0" }, function(__exports, __Debug, __Profiler, __Ovale, __Aura, __Data, __GUID, __PaperDoll, __SpellBook, __LastSpell, aceEvent)
+local OvaleFutureBase = __Ovale.Ovale:NewModule("OvaleFuture", aceEvent)
 local _ipairs = ipairs
 local _pairs = pairs
 local strsub = string.sub

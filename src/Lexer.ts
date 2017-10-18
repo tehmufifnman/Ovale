@@ -1,10 +1,7 @@
 import { OvaleQueue } from "./Queue";
-
-let _pairs = pairs;
-let _ipairs = ipairs;
-let wrap = coroutine.wrap;
-let strfind = string.find;
-let strsub = string.sub;
+import { pairs, ipairs, LuaArray, lualength } from "@wowts/lua";
+import { wrap, LuaIterable } from "@wowts/coroutine";
+import { find, sub } from "@wowts/string";
 
 export type Tokenizer = (tok:string) => [string, string];
 
@@ -38,12 +35,12 @@ export class OvaleLexer {
             let sz = lualength(s);
             let idx = 1;
             while (true) {
-                for (const [, m] of _ipairs(matches)) {
+                for (const [, m] of ipairs(matches)) {
                     const pat = m[1];
                     const fun = m[2];
-                    const [i1, i2] = strfind(s, pat, idx)
+                    const [i1, i2] = find(s, pat, idx)
                     if (i1) {
-                        const tok = strsub(s, i1, i2);
+                        const tok = sub(s, i1, i2);
                         idx = i2 + 1;
                         if (!filter || (fun !== filter.comments && fun !== filter.space)) {
                             me.finished = idx > sz;
@@ -59,7 +56,7 @@ export class OvaleLexer {
     }
 
     Release() {
-        for (const [key] of _pairs(this)) {
+        for (const [key] of pairs(this)) {
             this[key] = undefined;
         }
     }

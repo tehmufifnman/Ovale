@@ -1,11 +1,11 @@
 import { OvaleDebug } from "./Debug";
 import { OvaleQueue } from "./Queue";
 import { Ovale } from "./Ovale";
+import { pairs, LuaObj } from "@wowts/lua";
 
 let OvaleStateBase = Ovale.NewModule("OvaleState");
 export let OvaleState: OvaleStateClass;
 
-let _pairs = pairs;
 let self_stateAddons = new OvaleQueue<StateModule>("OvaleState_stateAddons");
 
 export interface StateModule {
@@ -95,12 +95,12 @@ export class BaseState implements StateModule {
         this.defaultTarget = "target";
     }
     ResetState() {
-        for (const [k] of _pairs(this.futureVariable)) {
+        for (const [k] of pairs(this.futureVariable)) {
             this.futureVariable[k] = undefined;
             this.futureLastEnable[k] = undefined;
         }
         if (!this.inCombat) {
-            for (const [k] of _pairs(this.variable)) {
+            for (const [k] of pairs(this.variable)) {
                 this.Log("Resetting state variable '%s'.", k);
                 this.variable[k] = undefined;
                 this.lastEnable[k] = undefined;
@@ -108,16 +108,16 @@ export class BaseState implements StateModule {
         }
     }
     CleanState() {
-        for (const [k] of _pairs(this.futureVariable)) {
+        for (const [k] of pairs(this.futureVariable)) {
             this.futureVariable[k] = undefined;
         }
-        for (const [k] of _pairs(this.futureLastEnable)) {
+        for (const [k] of pairs(this.futureLastEnable)) {
             this.futureLastEnable[k] = undefined;
         }
-        for (const [k] of _pairs(this.variable)) {
+        for (const [k] of pairs(this.variable)) {
             this.variable[k] = undefined;
         }
-        for (const [k] of _pairs(this.lastEnable)) {
+        for (const [k] of pairs(this.lastEnable)) {
             this.lastEnable[k] = undefined;
         }
         this.defaultTarget = undefined;        

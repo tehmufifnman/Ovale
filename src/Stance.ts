@@ -3,31 +3,23 @@ import { OvaleDebug } from "./Debug";
 import { OvaleProfiler } from "./Profiler";
 import { Ovale } from "./Ovale";
 import { RegisterRequirement, UnregisterRequirement } from "./Requirement";
-import aceEvent from "AceEvent-3.0";
+import aceEvent from "@wowts/ace_event-3.0";
+import { pairs, tonumber, type, wipe } from "@wowts/lua";
+import { sub } from "@wowts/string";
+import { concat, insert, sort } from "@wowts/table";
+import { GetNumShapeshiftForms, GetShapeshiftForm, GetShapeshiftFormInfo, GetSpellInfo } from "@wowts/wow-mock";
 
 let OvaleStanceBase = Ovale.NewModule("OvaleStance", aceEvent);
 export let OvaleStance: OvaleStanceClass;
-let _pairs = pairs;
-let substr = string.sub;
-let tconcat = table.concat;
-let tinsert = table.insert;
-let _tonumber = tonumber;
-let tsort = table.sort;
-let _type = type;
-let _wipe = wipe;
-let API_GetNumShapeshiftForms = GetNumShapeshiftForms;
-let API_GetShapeshiftForm = GetShapeshiftForm;
-let API_GetShapeshiftFormInfo = GetShapeshiftFormInfo;
-let API_GetSpellInfo = GetSpellInfo;
 
-const [druidCatForm] = API_GetSpellInfo(768);
-const [druidTravelForm] = API_GetSpellInfo(783);
-const [druidAquaticForm] = API_GetSpellInfo(1066);
-const [druidBearForm] = API_GetSpellInfo(5487);
-const [druidMoonkinForm] =API_GetSpellInfo(24858);
-const [druid_flight_form] = API_GetSpellInfo(33943);
-const [druid_swift_flight_form] = API_GetSpellInfo(40120);
-const [rogue_stealth] = API_GetSpellInfo(1784);
+const [druidCatForm] = GetSpellInfo(768);
+const [druidTravelForm] = GetSpellInfo(783);
+const [druidAquaticForm] = GetSpellInfo(1066);
+const [druidBearForm] = GetSpellInfo(5487);
+const [druidMoonkinForm] =GetSpellInfo(24858);
+const [druid_flight_form] = GetSpellInfo(33943);
+const [druid_swift_flight_form] = GetSpellInfo(40120);
+const [rogue_stealth] = GetSpellInfo(1784);
 
 let SPELL_NAME_TO_STANCE = {
     [druidCatForm]: "druid_cat_form",
@@ -42,7 +34,7 @@ let SPELL_NAME_TO_STANCE = {
 let STANCE_NAME = {
 }
 {
-    for (const [, name] of _pairs(SPELL_NAME_TO_STANCE)) {
+    for (const [, name] of pairs(SPELL_NAME_TO_STANCE)) {
         STANCE_NAME[name] = true;
     }
 }
@@ -64,7 +56,7 @@ let STANCE_NAME = {
             }
         }
     }
-    for (const [k, v] of _pairs(debugOptions)) {
+    for (const [k, v] of pairs(debugOptions)) {
         OvaleDebug.options.args[k] = v;
     }
 }
@@ -111,11 +103,11 @@ class OvaleStanceClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regist
     }
     CreateStanceList() {
         this.StartProfiling("OvaleStance_CreateStanceList");
-        _wipe(this.stanceList);
-        _wipe(this.stanceId);
+        wipe(this.stanceList);
+        wipe(this.stanceId);
         let _, name, stanceName;
-        for (let i = 1; i <= API_GetNumShapeshiftForms(); i += 1) {
-            [_, name] = API_GetShapeshiftFormInfo(i);
+        for (let i = 1; i <= GetNumShapeshiftForms(); i += 1) {
+            [_, name] = GetShapeshiftFormInfo(i);
             stanceName = SPELL_NAME_TO_STANCE[name];
             if (stanceName) {
                 this.stanceList[i] = stanceName;
@@ -125,16 +117,16 @@ class OvaleStanceClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regist
         this.StopProfiling("OvaleStance_CreateStanceList");
     }
     DebugStances() {
-        _wipe(array);
-        for (const [k, v] of _pairs(this.stanceList)) {
+        wipe(array);
+        for (const [k, v] of pairs(this.stanceList)) {
             if (this.stance == k) {
-                tinsert(array, `${v} (active)`);
+                insert(array, `${v} (active)`);
             } else {
-                tinsert(array, v);
+                insert(array, v);
             }
         }
-        tsort(array);
-        return tconcat(array, "\n");
+        sort(array);
+        return concat(array, "\n");
     }
 
     GetStance(stanceId) {
@@ -143,7 +135,7 @@ class OvaleStanceClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regist
     }
     IsStance(name) {
         if (name && this.stance) {
-            if (_type(name) == "number") {
+            if (type(name) == "number") {
                 return name == this.stance;
             } else {
                 return name == OvaleStance.GetStance(this.stance);
@@ -152,13 +144,13 @@ class OvaleStanceClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regist
         return false;
     }
     IsStanceSpell(spellId) {
-        let [name] = API_GetSpellInfo(spellId);
+        let [name] = GetSpellInfo(spellId);
         return !!(name && SPELL_NAME_TO_STANCE[name]);
     }
     ShapeshiftEventHandler() {
         this.StartProfiling("OvaleStance_ShapeshiftEventHandler");
         let oldStance = this.stance;
-        let newStance = API_GetShapeshiftForm();
+        let newStance = GetShapeshiftForm();
         if (oldStance != newStance) {
             this.stance = newStance;
             Ovale.needRefresh();
@@ -180,11 +172,11 @@ class OvaleStanceClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regist
         }
         if (stance) {
             let isBang = false;
-            if (substr(stance, 1, 1) == "!") {
+            if (sub(stance, 1, 1) == "!") {
                 isBang = true;
-                stance = substr(stance, 2);
+                stance = sub(stance, 2);
             }
-            stance = _tonumber(stance) || stance;
+            stance = tonumber(stance) || stance;
             let isStance = this.IsStance(stance);
             if (!isBang && isStance || isBang && !isStance) {
                 verified = true;

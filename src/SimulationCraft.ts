@@ -1,5 +1,5 @@
-import AceConfig from "AceConfig-3.0";
-import AceConfigDialog from "AceConfigDialog-3.0";
+import AceConfig from "@wowts/ace_config-3.0";
+import AceConfigDialog from "@wowts/ace_config_dialog-3.0";
 import { L } from "./Localization";
 import { OvaleDebug } from "./Debug";
 import { OvaleOptions } from "./Options";
@@ -12,32 +12,14 @@ import { OvaleHonorAmongThieves } from "./HonorAmongThieves";
 import { OvaleLexer, TokenizerDefinition, Tokenizer } from "./Lexer";
 import { OvalePower } from "./Power";
 import { ResetControls } from "./Controls";
+import { format, gmatch, gsub, find, len, lower, match, sub, upper } from "@wowts/string";
+import { ipairs, next, pairs, rawset, tonumber, tostring, type, wipe, LuaObj, LuaArray, setmetatable, lualength } from "@wowts/lua";
+import { concat, insert, remove, sort } from "@wowts/table";
+import { RAID_CLASS_COLORS } from "@wowts/wow-mock";
+import { nan } from "@wowts/math";
 
 let OvaleSimulationCraftBase = Ovale.NewModule("OvaleSimulationCraft");
 export let OvaleSimulationCraft: OvaleSimulationCraftClass;
-
-let format = string.format;
-let gmatch = string.gmatch;
-let gsub = string.gsub;
-let _ipairs = ipairs;
-let _next = next;
-let _pairs = pairs;
-let _rawset = rawset;
-let strfind = string.find;
-let strlen = string.len;
-let strlower = string.lower;
-let strmatch = string.match;
-let strsub = string.sub;
-let strupper = string.upper;
-let tconcat = table.concat;
-let tinsert = table.insert;
-let _tonumber = tonumber;
-let _tostring = tostring;
-let tremove = table.remove;
-let tsort = table.sort;
-let _type = type;
-let _wipe = wipe;
-let _RAID_CLASS_COLORS = RAID_CLASS_COLORS;
 
 interface Action {
     name: string;
@@ -179,13 +161,13 @@ let CONSUMABLE_ITEMS = {
     ["augmentation"]: true
 }
 {
-    for (const [keyword, value] of _pairs(MODIFIER_KEYWORD)) {
+    for (const [keyword, value] of pairs(MODIFIER_KEYWORD)) {
         KEYWORD[keyword] = value;
     }
-    for (const [keyword, value] of _pairs(FUNCTION_KEYWORD)) {
+    for (const [keyword, value] of pairs(FUNCTION_KEYWORD)) {
         KEYWORD[keyword] = value;
     }
-    for (const [keyword, value] of _pairs(SPECIAL_ACTION)) {
+    for (const [keyword, value] of pairs(SPECIAL_ACTION)) {
         KEYWORD[keyword] = value;
     }
 }
@@ -280,10 +262,10 @@ let INDENT = {
     INDENT[0] = "";
     let metatable = {
         __index: function (tbl, key) {
-            key = _tonumber(key);
+            key = tonumber(key);
             if (key > 0) {
                 let s = `${tbl[key - 1]}\t`;
-                _rawset(tbl, key, s);
+                rawset(tbl, key, s);
                 return s;
             }
             return INDENT[0];
@@ -389,7 +371,7 @@ let self_lastScript = undefined;
             }
         }
     }
-    for (const [k, v] of _pairs(actions)) {
+    for (const [k, v] of pairs(actions)) {
         OvaleOptions.options.args.actions.args[k] = v;
     }
     // OvaleOptions.RegisterOptions(OvaleSimulationCraft);
@@ -402,7 +384,7 @@ let OVALE_TAGS:LuaArray<string> = {
 let OVALE_TAG_PRIORITY = {
 }
 {
-    for (const [i, tag] of _ipairs(OVALE_TAGS)) {
+    for (const [i, tag] of ipairs(OVALE_TAGS)) {
         OVALE_TAG_PRIORITY[tag] = i * 10;
     }
 }
@@ -410,7 +392,7 @@ let OVALE_TAG_PRIORITY = {
     let defaultDB = {
         overrideCode: ""
     }
-    for (const [k, v] of _pairs(defaultDB)) {
+    for (const [k, v] of pairs(defaultDB)) {
         OvaleOptions.defaultDB.profile[k] = v;
     }
     OvaleOptions.RegisterOptions(OvaleSimulationCraft);
@@ -420,22 +402,22 @@ const print_r = function(node, indent?, done?, output?) {
     output = output || {}
     indent = indent || '';
     if (node == undefined) {
-        tinsert(output, `${indent}nil`);
-    } else if (_type(node) != "table") {
-        tinsert(output, `${indent}${node}`);
+        insert(output, `${indent}nil`);
+    } else if (type(node) != "table") {
+        insert(output, `${indent}${node}`);
     } else {
-        for (const [key, value] of _pairs(node)) {
-            if (_type(value) == "table") {
+        for (const [key, value] of pairs(node)) {
+            if (type(value) == "table") {
                 if (done[value]) {
-                    tinsert(output, `${indent}[${_tostring(key)}] => (self_reference)`);
+                    insert(output, `${indent}[${tostring(key)}] => (self_reference)`);
                 } else {
                     done[value] = true;
-                    tinsert(output, `${indent}[${_tostring(key)}] => {`);
+                    insert(output, `${indent}[${tostring(key)}] => {`);
                     print_r(value, `${indent}    `, done, output);
-                    tinsert(output, `${indent}}`);
+                    insert(output, `${indent}}`);
                 }
             } else {
-                tinsert(output, `${indent}[${_tostring(key)}] => ${_tostring(value)}`);
+                insert(output, `${indent}[${tostring(key)}] => ${tostring(value)}`);
             }
         }
     }
@@ -538,10 +520,10 @@ const Unparse = function(node) {
 const UnparseAction = function(node) {
     let output = self_outputPool.Get();
     output[lualength(output) + 1] = node.name;
-    for (const [modifier, expressionNode] of _pairs(node.child)) {
+    for (const [modifier, expressionNode] of pairs(node.child)) {
         output[lualength(output) + 1] = `${modifier}=${Unparse(expressionNode)}`;
     }
-    let s = tconcat(output, ",");
+    let s = concat(output, ",");
     self_outputPool.Release(output);
     return s;
 }
@@ -554,11 +536,11 @@ const UnparseActionList = function(node: Node) {
         listName = `action.${node.name}`;
     }
     output[lualength(output) + 1] = "";
-    for (const [i, actionNode] of _pairs(node.child)) {
+    for (const [i, actionNode] of pairs(node.child)) {
         let operator = (i == 1) && "=" || "+=/";
         output[lualength(output) + 1] = `${listName}${operator}${Unparse(actionNode)}`;
     }
-    let s = tconcat(output, "\n");
+    let s = concat(output, "\n");
     self_outputPool.Release(output);
     return s;
 }
@@ -605,7 +587,7 @@ const UnparseFunction = function(node) {
     return `${node.name}(${Unparse(node.child[1])})`;
 }
 const UnparseNumber = function(node) {
-    return _tostring(node.value);
+    return tostring(node.value);
 }
 const UnparseOperand = function(node) {
     return node.name;
@@ -636,7 +618,7 @@ const SyntaxError = function(tokenStream: OvaleLexer, ...__args) {
             break;
         }
     }
-    OvaleSimulationCraft.Print(tconcat(context, " "));
+    OvaleSimulationCraft.Print(concat(context, " "));
 }
 
 type ParseFunction = (action, nodeList: LuaArray<Node>, annotation: Annotation) => [boolean, Node];
@@ -651,9 +633,9 @@ let ParseSimpleExpression: ParseFunction = undefined;
 
 const TicksRemainTranslationHelper = function(p1: string, p2: string, p3: string, p4: string) {
     if (p4) {
-        return `${p1}${p2} < ${_tostring(_tonumber(p4) + 1)}`;
+        return `${p1}${p2} < ${tostring(tonumber(p4) + 1)}`;
     } else {
-        return `${p1}<${_tostring(_tonumber(p3) + 1)}`;
+        return `${p1}<${tostring(tonumber(p3) + 1)}`;
     }
 }
 const ParseAction = function (action: string, nodeList, annotation) {
@@ -936,7 +918,7 @@ ParseNumber = function (tokenStream: OvaleLexer, nodeList, annotation) {
     {
         let [tokenType, token] = tokenStream.Consume();
         if (tokenType == "number") {
-            value = _tonumber(token);
+            value = tonumber(token);
         } else {
             SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing NUMBER; number expected.", token);
             ok = false;
@@ -971,7 +953,7 @@ ParseOperand = function (tokenStream: OvaleLexer, nodeList, annotation) {
         node.name = name;
         node.rune = RUNE_OPERAND[name];
         if (node.rune) {
-            let firstCharacter = strsub(name, 1, 1);
+            let firstCharacter = sub(name, 1, 1);
             node.includeDeath = (firstCharacter == "B" || firstCharacter == "F" || firstCharacter == "U");
         }
         annotation.operand = annotation.operand || {
@@ -1040,7 +1022,7 @@ ParseSimpleExpression = function (tokenStream: OvaleLexer, nodeList, annotation)
 let CamelCase = undefined;
 {
     const CamelCaseHelper = function(first, rest) {
-        return `${strupper(first)}${strlower(rest)}`;
+        return `${upper(first)}${lower(rest)}`;
     }
     CamelCase = function (s) {
         let tc = gsub(s, "(%a)(%w*)", CamelCaseHelper);
@@ -1053,22 +1035,22 @@ const CamelSpecialization = function(annotation) {
     if (specialization) {
         output[lualength(output) + 1] = specialization;
     }
-    if (strmatch(profileName, "_1[hH]_")) {
+    if (match(profileName, "_1[hH]_")) {
         if (className == "DEATHKNIGHT" && specialization == "frost") {
             output[lualength(output) + 1] = "dual wield";
         } else if (className == "WARRIOR" && specialization == "fury") {
             output[lualength(output) + 1] = "single minded fury";
         }
-    } else if (strmatch(profileName, "_2[hH]_")) {
+    } else if (match(profileName, "_2[hH]_")) {
         if (className == "DEATHKNIGHT" && specialization == "frost") {
             output[lualength(output) + 1] = "two hander";
         } else if (className == "WARRIOR" && specialization == "fury") {
             output[lualength(output) + 1] = "titans grip";
         }
-    } else if (strmatch(profileName, "_[gG]ladiator_")) {
+    } else if (match(profileName, "_[gG]ladiator_")) {
         output[lualength(output) + 1] = "gladiator";
     }
-    let outputString = CamelCase(tconcat(output, " "));
+    let outputString = CamelCase(concat(output, " "));
     self_outputPool.Release(output);
     return outputString;
 }
@@ -1274,13 +1256,13 @@ const InitializeDisambiguation = function() {
     AddDisambiguation("shield_barrier", "shield_barrier_tank", "WARRIOR", "protection");
 }
 const IsTotem = function(name) {
-    if (strsub(name, 1, 13) == "wild_mushroom") {
+    if (sub(name, 1, 13) == "wild_mushroom") {
         return true;
     } else if (name == "prismatic_crystal" || name == "rune_of_power") {
         return true;
-    } else if (strsub(name, -7, -1) == "_statue") {
+    } else if (sub(name, -7, -1) == "_statue") {
         return true;
-    } else if (strsub(name, -6, -1) == "_totem") {
+    } else if (sub(name, -6, -1) == "_totem") {
         return true;
     }
     return false;
@@ -1323,7 +1305,7 @@ const ConcatenatedBodyNode = function(bodyList, nodeList, annotation) {
     if (lualength(bodyList) > 0) {
         bodyNode = OvaleAST.NewNode(nodeList, true);
         bodyNode.type = "group";
-        for (const [k, node] of _ipairs(bodyList)) {
+        for (const [k, node] of ipairs(bodyList)) {
             bodyNode.child[k] = node;
         }
     }
@@ -1331,7 +1313,7 @@ const ConcatenatedBodyNode = function(bodyList, nodeList, annotation) {
 }
 const OvaleTaggedFunctionName = function(name, tag) {
     let bodyName, conditionName;
-    let [prefix, suffix] = strmatch(name, "([A-Z]%w+)(Actions)");
+    let [prefix, suffix] = match(name, "([A-Z]%w+)(Actions)");
     if (prefix && suffix) {
         let camelTag;
         if (tag == "shortcd") {
@@ -1454,30 +1436,30 @@ SplitByTagCustomFunction = function (tag, node, nodeList, annotation) {
         let [bodyName, conditionName] = OvaleTaggedFunctionName(functionName, tag);
         bodyNode = OvaleAST.NewNode(nodeList);
         bodyNode.name = bodyName;
-        bodyNode.lowername = strlower(bodyName);
+        bodyNode.lowername = lower(bodyName);
         bodyNode.type = "custom_function";
         bodyNode.func = bodyName;
         bodyNode.asString = `${bodyName}()`;
         conditionNode = OvaleAST.NewNode(nodeList);
         conditionNode.name = conditionName;
-        conditionNode.lowername = strlower(conditionName);
+        conditionNode.lowername = lower(conditionName);
         conditionNode.type = "custom_function";
         conditionNode.func = conditionName;
         conditionNode.asString = `${conditionName}()`;
     } else {
         let functionTag = annotation.functionTag[functionName];
         if (!functionTag) {
-            if (strfind(functionName, "Bloodlust")) {
+            if (find(functionName, "Bloodlust")) {
                 functionTag = "cd";
-            } else if (strfind(functionName, "GetInMeleeRange")) {
+            } else if (find(functionName, "GetInMeleeRange")) {
                 functionTag = "shortcd";
-            } else if (strfind(functionName, "InterruptActions")) {
+            } else if (find(functionName, "InterruptActions")) {
                 functionTag = "cd";
-            } else if (strfind(functionName, "SummonPet")) {
+            } else if (find(functionName, "SummonPet")) {
                 functionTag = "shortcd";
-            } else if (strfind(functionName, "UseItemActions")) {
+            } else if (find(functionName, "UseItemActions")) {
                 functionTag = "cd";
-            } else if (strfind(functionName, "UsePotion")) {
+            } else if (find(functionName, "UsePotion")) {
                 functionTag = "cd";
             }
         }
@@ -1506,27 +1488,27 @@ SplitByTagGroup = function (tag, node, nodeList, annotation) {
         if (childNode.type != "comment") {
             let [bodyNode, conditionNode] = SplitByTag(tag, childNode, nodeList, annotation);
             if (conditionNode) {
-                tinsert(conditionList, 1, conditionNode);
-                tinsert(remainderList, 1, conditionNode);
+                insert(conditionList, 1, conditionNode);
+                insert(remainderList, 1, conditionNode);
             }
             if (bodyNode) {
                 if (lualength(conditionList) == 0) {
-                    tinsert(bodyList, 1, bodyNode);
+                    insert(bodyList, 1, bodyNode);
                 } else if (lualength(bodyList) == 0) {
-                    _wipe(conditionList);
-                    tinsert(bodyList, 1, bodyNode);
+                    wipe(conditionList);
+                    insert(bodyList, 1, bodyNode);
                 } else {
                     let unlessNode = OvaleAST.NewNode(nodeList, true);
                     unlessNode.type = "unless";
                     unlessNode.child[1] = ConcatenatedConditionNode(conditionList, nodeList, annotation);
                     unlessNode.child[2] = ConcatenatedBodyNode(bodyList, nodeList, annotation);
-                    _wipe(bodyList);
-                    _wipe(conditionList);
-                    tinsert(bodyList, 1, unlessNode);
+                    wipe(bodyList);
+                    wipe(conditionList);
+                    insert(bodyList, 1, unlessNode);
                     let commentNode = OvaleAST.NewNode(nodeList);
                     commentNode.type = "comment";
-                    tinsert(bodyList, 1, commentNode);
-                    tinsert(bodyList, 1, bodyNode);
+                    insert(bodyList, 1, commentNode);
+                    insert(bodyList, 1, bodyNode);
                 }
                 if (index > 0) {
                     childNode = node.child[index];
@@ -1537,7 +1519,7 @@ SplitByTagGroup = function (tag, node, nodeList, annotation) {
                             for (let k = index - 1; k >= 1; k += -1) {
                                 childNode = node.child[k];
                                 if (childNode.type == "comment") {
-                                    if (childNode.comment && strsub(childNode.comment, 1, 5) == "pool_") {
+                                    if (childNode.comment && sub(childNode.comment, 1, 5) == "pool_") {
                                         start = k;
                                         break;
                                     }
@@ -1547,7 +1529,7 @@ SplitByTagGroup = function (tag, node, nodeList, annotation) {
                             }
                             if (start < index - 1) {
                                 for (let k = index - 1; k >= start; k += -1) {
-                                    tinsert(bodyList, 1, node.child[k]);
+                                    insert(bodyList, 1, node.child[k]);
                                 }
                                 index = start - 1;
                             }
@@ -1557,7 +1539,7 @@ SplitByTagGroup = function (tag, node, nodeList, annotation) {
                 while (index > 0) {
                     childNode = node.child[index];
                     if (childNode.type == "comment") {
-                        tinsert(bodyList, 1, childNode);
+                        insert(bodyList, 1, childNode);
                         index = index - 1;
                     } else {
                         break;
@@ -1671,7 +1653,7 @@ const EmitModifier = function (modifier, parseNode, nodeList, annotation, action
     } else if (modifier == "target_if") {
         node = Emit(parseNode, nodeList, annotation, action);
     } else if (modifier == "five_stacks" && action == "focus_fire") {
-        let value = _tonumber(Unparse(parseNode));
+        let value = tonumber(Unparse(parseNode));
         if (value == 1) {
             let buffName = "pet_frenzy_buff";
             AddSymbol(annotation, buffName);
@@ -1689,26 +1671,26 @@ const EmitModifier = function (modifier, parseNode, nodeList, annotation, action
         let expressionCode = OvaleAST.Unparse(Emit(parseNode, nodeList, annotation, action));
         code = format("DebuffCountOnAny(%s) < Enemies() and DebuffCountOnAny(%s) <= %s", debuffName, debuffName, expressionCode);
     } else if (modifier == "max_energy") {
-        let value = _tonumber(Unparse(parseNode));
+        let value = tonumber(Unparse(parseNode));
         if (value == 1) {
             code = format("Energy() >= EnergyCost(%s max=1)", action);
         }
     } else if (modifier == "min_frenzy" && action == "focus_fire") {
-        let value = _tonumber(Unparse(parseNode));
+        let value = tonumber(Unparse(parseNode));
         if (value) {
             let buffName = "pet_frenzy_buff";
             AddSymbol(annotation, buffName);
             code = format("pet.BuffStacks(%s) >= %d", buffName, value);
         }
     } else if (modifier == "moving") {
-        let value = _tonumber(Unparse(parseNode));
+        let value = tonumber(Unparse(parseNode));
         if (value == 0) {
             code = "not Speed() > 0";
         } else {
             code = "Speed() > 0";
         }
     } else if (modifier == "precombat") {
-        let value = _tonumber(Unparse(parseNode));
+        let value = tonumber(Unparse(parseNode));
         if (value == 1) {
             code = "not InCombat()";
         } else {
@@ -1774,7 +1756,7 @@ const EmitModifier = function (modifier, parseNode, nodeList, annotation, action
 const EmitConditionNode = function (nodeList, bodyNode, conditionNode, parseNode, annotation, action) {
     let extraConditionNode = conditionNode;
     conditionNode = undefined;
-    for (const [modifier, expressionNode] of _pairs(parseNode.child)) {
+    for (const [modifier, expressionNode] of pairs(parseNode.child)) {
         let rhsNode = EmitModifier(modifier, expressionNode, nodeList, annotation, action);
         if (rhsNode) {
             if (!conditionNode) {
@@ -1841,9 +1823,9 @@ const EmitNamedVariable = function (name, nodeList, annotation, modifier, parseN
     let value = Emit(modifier.value, nodeList, annotation, action);
     let newNode = EmitConditionNode(nodeList, value, conditionNode || undefined, parseNode, annotation, action);
     if (newNode.type == "if") {
-        tinsert(group.child, 1, newNode);
+        insert(group.child, 1, newNode);
     } else {
-        tinsert(group.child, newNode);
+        insert(group.child, newNode);
     }
     annotation.currentVariable = undefined;
 }
@@ -1886,7 +1868,7 @@ const checkOptionalSkill = function(action, className, specialization) {
 }
 EmitAction = function (parseNode, nodeList, annotation) {
     let node;
-    let canonicalizedName = strlower(gsub(parseNode.name, ":", "_"));
+    let canonicalizedName = lower(gsub(parseNode.name, ":", "_"));
     let className = annotation.class;
     let specialization = annotation.specialization;
     let camelSpecialization = CamelSpecialization(annotation);
@@ -1958,7 +1940,7 @@ EmitAction = function (parseNode, nodeList, annotation) {
             }
         } else if (className == "HUNTER" && action == "kill_command") {
             conditionCode = "pet.Present() and not pet.IsIncapacitated() and not pet.IsFeared() and not pet.IsStunned()";
-        } else if (className == "HUNTER" && strsub(action, -5) == "_trap") {
+        } else if (className == "HUNTER" && sub(action, -5) == "_trap") {
             annotation.trap_launcher = className;
             conditionCode = "CheckBoxOn(opt_trap_launcher)";
         } else if (className == "MAGE" && action == "arcane_brilliance") {
@@ -1968,10 +1950,10 @@ EmitAction = function (parseNode, nodeList, annotation) {
             annotation[action] = className;
             annotation.interrupt = className;
             isSpellAction = false;
-        } else if (className == "MAGE" && strfind(action, "pet_")) {
+        } else if (className == "MAGE" && find(action, "pet_")) {
             conditionCode = "pet.Present()";
         } else if (className == "MAGE" && (action == "start_burn_phase" || action == "start_pyro_chain" || action == "stop_burn_phase" || action == "stop_pyro_chain")) {
-            let [stateAction, stateVariable] = strmatch(action, "([^_]+)_(.*)");
+            let [stateAction, stateVariable] = match(action, "([^_]+)_(.*)");
             let value = (stateAction == "start") && 1 || 0;
             if (value == 0) {
                 conditionCode = format("GetState(%s) > 0", stateVariable);
@@ -2072,7 +2054,7 @@ EmitAction = function (parseNode, nodeList, annotation) {
         } else if (className == "ROGUE" && (specialization == "assassination" || specialization == "combat") && action == "vanish") {
             annotation.vanish = className;
             conditionCode = format("CheckBoxOn(opt_vanish)", action);
-        } else if (className == "SHAMAN" && strsub(action, 1, 11) == "ascendance_") {
+        } else if (className == "SHAMAN" && sub(action, 1, 11) == "ascendance_") {
             let buffName = `${action}_buff`;
             AddSymbol(annotation, buffName);
             conditionCode = format("BuffExpires(%s)", buffName);
@@ -2135,9 +2117,9 @@ EmitAction = function (parseNode, nodeList, annotation) {
             conditionCode = "BuffExpires(attack_power_multiplier_buff)";
         } else if (className == "WARRIOR" && action == "enraged_regeneration") {
             conditionCode = "HealthPercent() < 80";
-        } else if (className == "WARRIOR" && strsub(action, 1, 7) == "execute") {
+        } else if (className == "WARRIOR" && sub(action, 1, 7) == "execute") {
             if (modifier.target) {
-                let target = _tonumber(Unparse(modifier.target));
+                let target = tonumber(Unparse(modifier.target));
                 if (target) {
                     isSpellAction = false;
                 }
@@ -2189,13 +2171,13 @@ EmitAction = function (parseNode, nodeList, annotation) {
             bodyNode.type = "simc_pool_resource";
             bodyNode.for_next = (modifier.for_next != undefined);
             if (modifier.extra_amount) {
-                bodyNode.extra_amount = _tonumber(Unparse(modifier.extra_amount));
+                bodyNode.extra_amount = tonumber(Unparse(modifier.extra_amount));
             }
             isSpellAction = false;
         } else if (action == "potion") {
             let name = (modifier.name && Unparse(modifier.name)) || annotation.consumables["potion"];
-            if (strmatch(name, "^(%w+)_potion")) {
-                name = strmatch(name, "^(%w+)_potion");
+            if (match(name, "^(%w+)_potion")) {
+                name = match(name, "^(%w+)_potion");
             }
             if (name) {
                 bodyCode = format("Item(%s_potion usable=1)", name);
@@ -2229,13 +2211,13 @@ EmitAction = function (parseNode, nodeList, annotation) {
             let legendaryRing = false;
             if (modifier.slot) {
                 let slot = Unparse(modifier.slot);
-                if (strmatch(slot, "finger")) {
+                if (match(slot, "finger")) {
                     [legendaryRing] = Disambiguate("legendary_ring", className, specialization);
                 }
             } else if (modifier.name) {
                 let name = Unparse(modifier.name);
                 name = Disambiguate(name, className, specialization);
-                if (strmatch(name, "legendary_ring")) {
+                if (match(name, "legendary_ring")) {
                     legendaryRing = name;
                 }
                 // } else if (false) {
@@ -2255,7 +2237,7 @@ EmitAction = function (parseNode, nodeList, annotation) {
             isSpellAction = false;
         } else if (action == "wait") {
             if (modifier.sec) {
-                let seconds = _tonumber(Unparse(modifier.sec));
+                let seconds = tonumber(Unparse(modifier.sec));
                 if (seconds) {
                 } else {
                     bodyNode = OvaleAST.NewNode(nodeList);
@@ -2300,7 +2282,7 @@ EmitActionList = function (parseNode: Node, nodeList, annotation) {
     let child = groupNode.child;
     let poolResourceNode;
     let emit = true;
-    for (const [, actionNode] of _ipairs(parseNode.child)) {
+    for (const [, actionNode] of ipairs(parseNode.child)) {
         let commentNode = OvaleAST.NewNode(nodeList);
         commentNode.type = "comment";
         commentNode.comment = actionNode.action;
@@ -2449,9 +2431,9 @@ EmitExpression = function (parseNode, nodeList, annotation, action) {
                 let lhsNode = parseNode.child[1];
                 let rhsNode = parseNode.child[2];
                 let runeType = lhsNode.rune;
-                let number = (rhsNode.type == "number") && _tonumber(Unparse(rhsNode)) || undefined;
+                let number = (rhsNode.type == "number") && tonumber(Unparse(rhsNode)) || undefined;
                 if (rhsNode.type == "number") {
-                    number = _tonumber(Unparse(rhsNode));
+                    number = tonumber(Unparse(rhsNode));
                 }
                 if (runeType && number) {
                     let code;
@@ -2479,8 +2461,8 @@ EmitExpression = function (parseNode, nodeList, annotation, action) {
             } else if ((parseNode.operator == "=" || parseNode.operator == "!=") && (parseNode.child[1].name == "target" || parseNode.child[1].name == "current_target")) {
                 let rhsNode = parseNode.child[2];
                 let name = rhsNode.name;
-                if (strfind(name, "^[%a_]+%.")) {
-                    name = strmatch(name, "^[%a_]+%.([%a_]+)");
+                if (find(name, "^[%a_]+%.")) {
+                    name = match(name, "^[%a_]+%.([%a_]+)");
                 }
                 let code;
                 if (parseNode.operator == "=") {
@@ -2561,14 +2543,14 @@ EmitOperand = function (parseNode, nodeList, annotation, action) {
     let ok = false;
     let node;
     let operand = parseNode.name;
-    let [token] = strmatch(operand, OPERAND_TOKEN_PATTERN);
+    let [token] = match(operand, OPERAND_TOKEN_PATTERN);
     let target;
     if (token == "target") {
         [ok, node] = EmitOperandTarget(operand, parseNode, nodeList, annotation, action);
         if (!ok) {
             target = token;
-            operand = strsub(operand, strlen(target) + 2);
-            [token] = strmatch(operand, OPERAND_TOKEN_PATTERN);
+            operand = sub(operand, len(target) + 2);
+            [token] = match(operand, OPERAND_TOKEN_PATTERN);
         }
     }
     if (!ok) {
@@ -2647,7 +2629,7 @@ EmitOperandAction = function (operand, parseNode, nodeList, annotation, action, 
     let node;
     let name;
     let property;
-    if (strsub(operand, 1, 7) == "action.") {
+    if (sub(operand, 1, 7) == "action.") {
         let tokenIterator = gmatch(operand, OPERAND_TOKEN_PATTERN);
         tokenIterator();
         name = tokenIterator();
@@ -2661,7 +2643,7 @@ EmitOperandAction = function (operand, parseNode, nodeList, annotation, action, 
     target = target && (`${target}.`) || "";
     let buffName = `${name}_debuff`;
     [buffName] = Disambiguate(buffName, className, specialization);
-    let prefix = strfind(buffName, "_buff$") && "Buff" || "Debuff";
+    let prefix = find(buffName, "_buff$") && "Buff" || "Debuff";
     let buffTarget = (prefix == "Debuff") && "target." || target;
     let talentName = `${name}_talent`;
     [talentName] = Disambiguate(talentName, className, specialization);
@@ -2766,7 +2748,7 @@ EmitOperandActiveDot = function (operand, parseNode, nodeList, annotation, actio
         [name] = Disambiguate(name, annotation.class, annotation.specialization);
         let dotName = `${name}_debuff`;
         [dotName] = Disambiguate(dotName, annotation.class, annotation.specialization);
-        let prefix = strfind(dotName, "_buff$") && "Buff" || "Debuff";
+        let prefix = find(dotName, "_buff$") && "Buff" || "Debuff";
         target = target && (`${target}.`) || "";
         let code = format("%sCountOnAny(%s)", prefix, dotName);
         if (ok && code) {
@@ -2816,7 +2798,7 @@ EmitOperandRefresh = function (operand, parseNode, nodeList, annotation, action,
         let buffName = `${action}_debuff`;
         [buffName] = Disambiguate(buffName, annotation.class, annotation.specialization);
         let target;
-        let prefix = strfind(buffName, "_buff$") && "Buff" || "Debuff";
+        let prefix = find(buffName, "_buff$") && "Buff" || "Debuff";
         if (prefix == "Debuff") {
             target = "target.";
         } else {
@@ -2843,7 +2825,7 @@ EmitOperandBuff = function (operand, parseNode, nodeList, annotation, action, ta
         [name] = Disambiguate(name, annotation.class, annotation.specialization);
         let buffName = (token == "debuff") && `${name}_debuff` || `${name}_buff`;
         [buffName] = Disambiguate(buffName, annotation.class, annotation.specialization);
-        let prefix = strfind(buffName, "_buff$") && "Buff" || "Debuff";
+        let prefix = find(buffName, "_buff$") && "Buff" || "Debuff";
         let any = OvaleData.DEFAULT_SPELL_LIST[buffName] && " any=1" || "";
         target = target && (`${target}.`) || "";
         if (buffName == "dark_transformation_buff" && target == "") {
@@ -3014,11 +2996,11 @@ EmitOperandBuff = function (operand, parseNode, nodeList, annotation, action, ta
             let name = "anticipation_buff";
             code = format("BuffStacks(%s)", name);
             AddSymbol(annotation, name);
-        } else if (strsub(operand, 1, 22) == "active_enemies_within.") {
+        } else if (sub(operand, 1, 22) == "active_enemies_within.") {
             code = "Enemies()";
-        } else if (strfind(operand, "^incoming_damage_")) {
-            let [_seconds, measure] = strmatch(operand, "^incoming_damage_([%d]+)(m?s?)$");
-            let seconds = _tonumber(_seconds);
+        } else if (find(operand, "^incoming_damage_")) {
+            let [_seconds, measure] = match(operand, "^incoming_damage_([%d]+)(m?s?)$");
+            let seconds = tonumber(_seconds);
             if (measure == "ms") {
                 seconds = seconds / 1000;
             }
@@ -3027,8 +3009,8 @@ EmitOperandBuff = function (operand, parseNode, nodeList, annotation, action, ta
             } else {
                 code = format("IncomingDamage(%f)", seconds);
             }
-        } else if (strsub(operand, 1, 10) == "main_hand.") {
-            let weaponType = strsub(operand, 11);
+        } else if (sub(operand, 1, 10) == "main_hand.") {
+            let weaponType = sub(operand, 11);
             if (weaponType == "1h") {
                 code = "HasWeapon(main type=one_handed)";
             } else if (weaponType == "2h") {
@@ -3038,8 +3020,8 @@ EmitOperandBuff = function (operand, parseNode, nodeList, annotation, action, ta
             code = format("%sMasteryEffect() / 100", target);
         } else if (operand == "position_front") {
             code = "False(position_front)";
-        } else if (strsub(operand, 1, 5) == "role.") {
-            let role = strmatch(operand, "^role%.([%w_]+)");
+        } else if (sub(operand, 1, 5) == "role.") {
+            let role = match(operand, "^role%.([%w_]+)");
             if (role && role == annotation.role) {
                 code = format("True(role_%s)", role);
             } else {
@@ -3049,7 +3031,7 @@ EmitOperandBuff = function (operand, parseNode, nodeList, annotation, action, ta
             code = "100 / { 100 + SpellHaste() }";
         } else if (operand == "attack_haste" || operand == "stat.attack_haste") {
             code = "100 / { 100 + MeleeHaste() }";
-        } else if (strsub(operand, 1, 13) == "spell_targets") {
+        } else if (sub(operand, 1, 13) == "spell_targets") {
             code = "Enemies()";
         } else if (operand == "t18_class_trinket") {
             code = format("HasTrinket(%s)", operand);
@@ -3153,7 +3135,7 @@ EmitOperandDot = function (operand, parseNode, nodeList, annotation, action, tar
         [name] = Disambiguate(name, annotation.class, annotation.specialization);
         let dotName = `${name}_debuff`;
         [dotName] = Disambiguate(dotName, annotation.class, annotation.specialization);
-        let prefix = strfind(dotName, "_buff$") && "Buff" || "Debuff";
+        let prefix = find(dotName, "_buff$") && "Buff" || "Debuff";
         target = target && (`${target}.`) || "";
         let code;
         if (property == "duration") {
@@ -3237,11 +3219,11 @@ EmitOperandPet = function (operand, parseNode, nodeList, annotation, action) {
             code = "pet.Present()";
         } else if (name == "buff") {
             let pattern = format("^pet%%.([%%w_.]+)", operand);
-            let petOperand = strmatch(operand, pattern);
+            let petOperand = match(operand, pattern);
             [ok, node] = EmitOperandBuff(petOperand, parseNode, nodeList, annotation, action, "pet");
         } else {
             let pattern = format("^pet%%.%s%%.([%%w_.]+)", name);
-            let [petOperand] = strmatch(operand, pattern);
+            let [petOperand] = match(operand, pattern);
             let target = "pet";
             if (petOperand) {
                 [ok, node] = EmitOperandSpecial(petOperand, parseNode, nodeList, annotation, action, target);
@@ -3252,9 +3234,9 @@ EmitOperandPet = function (operand, parseNode, nodeList, annotation, action) {
                     [ok, node] = EmitOperandCharacter(petOperand, parseNode, nodeList, annotation, action, target);
                 }
                 if (!ok) {
-                    let [petAbilityName] = strmatch(petOperand, "^[%w_]+%.([^.]+)");
+                    let [petAbilityName] = match(petOperand, "^[%w_]+%.([^.]+)");
                     [petAbilityName] = Disambiguate(petAbilityName, annotation.class, annotation.specialization);
-                    if (strsub(petAbilityName, 1, 4) != "pet_") {
+                    if (sub(petAbilityName, 1, 4) != "pet_") {
                         petOperand = gsub(petOperand, "^([%w_]+)%.", `%1.${name}_`);
                     }
                     if (property == "buff") {
@@ -3292,8 +3274,8 @@ EmitOperandPreviousSpell = function (operand, parseNode, nodeList, annotation, a
     if (token == "prev" || token == "prev_gcd" || token == "prev_off_gcd") {
         let name = tokenIterator();
         let howMany = 1;
-        if (_tonumber(name) != math.nan) {
-            howMany = _tonumber(name);
+        if (tonumber(name) != nan) {
+            howMany = tonumber(name);
             name = tokenIterator();
         }
         [name] = Disambiguate(name, annotation.class, annotation.specialization);
@@ -3325,7 +3307,7 @@ EmitOperandRaidEvent = function (operand, parseNode, nodeList, annotation, actio
     let node;
     let name;
     let property;
-    if (strsub(operand, 1, 11) == "raid_event.") {
+    if (sub(operand, 1, 11) == "raid_event.") {
         let tokenIterator = gmatch(operand, OPERAND_TOKEN_PATTERN);
         tokenIterator();
         name = tokenIterator();
@@ -3376,7 +3358,7 @@ EmitOperandRace = function (operand, parseNode, nodeList, annotation, action) {
     let tokenIterator = gmatch(operand, OPERAND_TOKEN_PATTERN);
     let token = tokenIterator();
     if (token == "race") {
-        let race = strlower(tokenIterator());
+        let race = lower(tokenIterator());
         let code;
         if (race) {
             let raceId = undefined;
@@ -3409,8 +3391,8 @@ EmitOperandRune = function (operand, parseNode, nodeList, annotation, action) {
         } else {
             code = "RuneCount()";
         }
-    } else if (strmatch(operand, "^rune.time_to_([%d]+)$")) {
-        let runes = strmatch(operand, "^rune.time_to_([%d]+)$");
+    } else if (match(operand, "^rune.time_to_([%d]+)$")) {
+        let runes = match(operand, "^rune.time_to_([%d]+)$");
         code = format("TimeToRunes(%d)", runes);
     } else {
         ok = false;
@@ -3425,7 +3407,7 @@ EmitOperandRune = function (operand, parseNode, nodeList, annotation, action) {
 EmitOperandSetBonus = function (operand, parseNode, nodeList, annotation, action) {
     let ok = true;
     let node;
-    let [setBonus] = strmatch(operand, "^set_bonus%.(.*)$");
+    let [setBonus] = match(operand, "^set_bonus%.(.*)$");
     let code;
     if (setBonus) {
         let tokenIterator = gmatch(setBonus, "[^_]+");
@@ -3433,19 +3415,19 @@ EmitOperandSetBonus = function (operand, parseNode, nodeList, annotation, action
         let count = tokenIterator();
         let role = tokenIterator();
         if (name && count) {
-            let [setName, level] = strmatch(name, "^(%a+)(%d*)$");
+            let [setName, level] = match(name, "^(%a+)(%d*)$");
             if (setName == "tier") {
                 setName = "T";
             } else {
-                setName = strupper(setName);
+                setName = upper(setName);
             }
             if (level) {
-                name = `${setName}${_tostring(level)}`;
+                name = `${setName}${tostring(level)}`;
             }
             if (role) {
                 name = `${name}_${role}`;
             }
-            [count] = strmatch(count, "(%d+)pc");
+            [count] = match(count, "(%d+)pc");
             if (name && count) {
                 code = format("ArmorSetBonus(%s %d)", name, count);
             }
@@ -3469,7 +3451,7 @@ EmitOperandSeal = function (operand, parseNode, nodeList, annotation, action) {
     let tokenIterator = gmatch(operand, OPERAND_TOKEN_PATTERN);
     let token = tokenIterator();
     if (token == "seal") {
-        let name = strlower(tokenIterator());
+        let name = lower(tokenIterator());
         let code;
         if (name) {
             code = format("Stance(paladin_seal_of_%s)", name);
@@ -3492,20 +3474,20 @@ EmitOperandSpecial = function (operand, parseNode, nodeList, annotation, action,
     let className = annotation.class;
     let specialization = annotation.specialization;
     target = target && (`${target}.`) || "";
-    operand = strlower(operand);
+    operand = lower(operand);
     let code;
     if (className == "DEATHKNIGHT" && operand == "dot.breath_of_sindragosa.ticking") {
         let buffName = "breath_of_sindragosa_buff";
         code = format("BuffPresent(%s)", buffName);
         AddSymbol(annotation, buffName);
-    } else if (className == "DEATHKNIGHT" && strsub(operand, -9, -1) == ".ready_in") {
+    } else if (className == "DEATHKNIGHT" && sub(operand, -9, -1) == ".ready_in") {
         let tokenIterator = gmatch(operand, OPERAND_TOKEN_PATTERN);
         let spellName = tokenIterator();
         [spellName] = Disambiguate(spellName, className, specialization);
         code = format("TimeToSpell(%s)", spellName);
         AddSymbol(annotation, spellName);
-    } else if (className == "DEATHKNIGHT" && strsub(operand, 1, 24) == "pet.dancing_rune_weapon.") {
-        let petOperand = strsub(operand, 25);
+    } else if (className == "DEATHKNIGHT" && sub(operand, 1, 24) == "pet.dancing_rune_weapon.") {
+        let petOperand = sub(operand, 25);
         let tokenIterator = gmatch(petOperand, OPERAND_TOKEN_PATTERN);
         let token = tokenIterator();
         if (token == "active") {
@@ -3516,7 +3498,7 @@ EmitOperandSpecial = function (operand, parseNode, nodeList, annotation, action,
             if (target == "") {
                 target = "target";
             } else {
-                target = strsub(target, 1, -2);
+                target = sub(target, 1, -2);
             }
             [ok, node] = EmitOperandDot(petOperand, parseNode, nodeList, annotation, action, target);
         }
@@ -3566,7 +3548,7 @@ EmitOperandSpecial = function (operand, parseNode, nodeList, annotation, action,
             code = format("GetState(%s)", operand);
         }
     } else if (className == "MAGE" && (operand == "burn_phase_duration" || operand == "pyro_chain_duration")) {
-        let variable = strsub(operand, 1, -10);
+        let variable = sub(operand, 1, -10);
         if (parseNode.asType == "boolean") {
             code = format("GetStateDuration(%s) > 0", variable);
         } else {
@@ -3576,8 +3558,8 @@ EmitOperandSpecial = function (operand, parseNode, nodeList, annotation, action,
         let name = "frozen_orb";
         code = format("SpellCooldown(%s) > SpellCooldownDuration(%s) - 10", name, name);
         AddSymbol(annotation, name);
-    } else if (className == "MONK" && strsub(operand, 1, 35) == "debuff.storm_earth_and_fire_target.") {
-        let property = strsub(operand, 36);
+    } else if (className == "MONK" && sub(operand, 1, 35) == "debuff.storm_earth_and_fire_target.") {
+        let property = sub(operand, 36);
         if (target == "") {
             target = "target.";
         }
@@ -3594,8 +3576,8 @@ EmitOperandSpecial = function (operand, parseNode, nodeList, annotation, action,
         let buffName = "zen_sphere_buff";
         code = format("BuffPresent(%s)", buffName);
         AddSymbol(annotation, buffName);
-    } else if (className == "MONK" && strsub(operand, 1, 8) == "stagger.") {
-        let property = strsub(operand, 9);
+    } else if (className == "MONK" && sub(operand, 1, 8) == "stagger.") {
+        let property = sub(operand, 9);
         if (property == "heavy" || property == "light" || property == "moderate") {
             let buffName = format("%s_stagger_debuff", property);
             code = format("DebuffPresent(%s)", buffName);
@@ -3635,8 +3617,8 @@ EmitOperandSpecial = function (operand, parseNode, nodeList, annotation, action,
     } else if (className == "ROGUE" && operand == "exsanguinated") {
         code = "target.DebuffPresent(exsanguinated)";
         AddSymbol(annotation, "exsanguinated");
-    } else if (className == "ROGUE" && specialization == "subtlety" && strsub(operand, 1, 29) == "cooldown.honor_among_thieves.") {
-        let property = strsub(operand, 30);
+    } else if (className == "ROGUE" && specialization == "subtlety" && sub(operand, 1, 29) == "cooldown.honor_among_thieves.") {
+        let property = sub(operand, 30);
         let buffName = "honor_among_thieves_cooldown_buff";
         AddSymbol(annotation, buffName);
         annotation.honor_among_thieves = className;
@@ -3652,24 +3634,24 @@ EmitOperandSpecial = function (operand, parseNode, nodeList, annotation, action,
     } else if (className == "SHAMAN" && operand == "buff.resonance_totem.remains") {
         code = "TotemRemaining(totem_mastery)";
         ok = true;
-    } else if (className == "SHAMAN" && strmatch(operand, "pet.[a-z_]+.active")) {
+    } else if (className == "SHAMAN" && match(operand, "pet.[a-z_]+.active")) {
         code = "pet.Present()";
         ok = true;
-    } else if (className == "WARLOCK" && strmatch(operand, "pet%.service_[a-z_]+%..+")) {
-        let [spellName, property] = strmatch(operand, "pet%.(service_[a-z_]+)%.(.+)");
+    } else if (className == "WARLOCK" && match(operand, "pet%.service_[a-z_]+%..+")) {
+        let [spellName, property] = match(operand, "pet%.(service_[a-z_]+)%.(.+)");
         if (property == "active") {
             code = format("SpellCooldown(%s) > 100", spellName);
             AddSymbol(annotation, spellName);
         } else {
             ok = false;
         }
-    } else if (className == "WARLOCK" && strmatch(operand, "dot.unstable_affliction_([1-5]).remains")) {
-        let num = strmatch(operand, "dot.unstable_affliction_([1-5]).remains");
+    } else if (className == "WARLOCK" && match(operand, "dot.unstable_affliction_([1-5]).remains")) {
+        let num = match(operand, "dot.unstable_affliction_([1-5]).remains");
         code = format("target.DebuffStacks(unstable_affliction_debuff) >= %s", num);
     } else if (className == "WARLOCK" && operand == "buff.active_uas.stack") {
         code = "target.DebuffStacks(unstable_affliction_debuff)";
-    } else if (className == "WARRIOR" && strsub(operand, 1, 23) == "buff.colossus_smash_up.") {
-        let property = strsub(operand, 24);
+    } else if (className == "WARRIOR" && sub(operand, 1, 23) == "buff.colossus_smash_up.") {
+        let property = sub(operand, 24);
         let debuffName = "colossus_smash_debuff";
         AddSymbol(annotation, debuffName);
         if (property == "down") {
@@ -3696,18 +3678,18 @@ EmitOperandSpecial = function (operand, parseNode, nodeList, annotation, action,
         code = `${target}True(debuff_flying_down)`;
     } else if (operand == "distance") {
         code = `${target}Distance()`;
-    } else if (strsub(operand, 1, 9) == "equipped.") {
-        let name = strsub(operand, 10);
+    } else if (sub(operand, 1, 9) == "equipped.") {
+        let name = sub(operand, 10);
         code = format("HasEquippedItem(%s)", name);
         AddSymbol(annotation, name);
     } else if (operand == "gcd.max") {
         code = "GCD()";
     } else if (operand == "gcd.remains") {
         code = "GCDRemaining()";
-    } else if (strsub(operand, 1, 15) == "legendary_ring.") {
+    } else if (sub(operand, 1, 15) == "legendary_ring.") {
         let name = Disambiguate("legendary_ring", className, specialization);
         let buffName = `${name}_buff`;
-        let properties = strsub(operand, 16);
+        let properties = sub(operand, 16);
         let tokenIterator = gmatch(properties, OPERAND_TOKEN_PATTERN);
         let token = tokenIterator();
         if (token == "cooldown") {
@@ -3740,8 +3722,8 @@ EmitOperandSpecial = function (operand, parseNode, nodeList, annotation, action,
         } else {
             code = "target.TimeToDie()";
         }
-    } else if (strsub(operand, 1, 10) == "using_apl.") {
-        let [aplName] = strmatch(operand, "^using_apl%.([%w_]+)");
+    } else if (sub(operand, 1, 10) == "using_apl.") {
+        let [aplName] = match(operand, "^using_apl%.([%w_]+)");
         code = format("List(opt_using_apl %s)", aplName);
         annotation.using_apl = annotation.using_apl || {
         }
@@ -3768,7 +3750,7 @@ EmitOperandTalent = function (operand, parseNode, nodeList, annotation, action) 
     let tokenIterator = gmatch(operand, OPERAND_TOKEN_PATTERN);
     let token = tokenIterator();
     if (token == "talent") {
-        let name = strlower(tokenIterator());
+        let name = lower(tokenIterator());
         let property = tokenIterator();
         let talentName = `${name}_talent`;
         [talentName] = Disambiguate(talentName, annotation.class, annotation.specialization);
@@ -3828,7 +3810,7 @@ EmitOperandTotem = function (operand, parseNode, nodeList, annotation, action) {
     let tokenIterator = gmatch(operand, OPERAND_TOKEN_PATTERN);
     let token = tokenIterator();
     if (token == "totem") {
-        let name = strlower(tokenIterator());
+        let name = lower(tokenIterator());
         let property = tokenIterator();
         let code;
         if (property == "active") {
@@ -3857,7 +3839,7 @@ EmitOperandTrinket = function (operand, parseNode, nodeList, annotation, action)
         let procType = tokenIterator();
         let statName = tokenIterator();
         let code;
-        if (strsub(procType, 1, 4) == "has_") {
+        if (sub(procType, 1, 4) == "has_") {
             code = format("True(trinket_%s_%s)", procType, statName);
         } else {
             let property = tokenIterator();
@@ -3943,22 +3925,22 @@ function PreOrderTraversalMark(node: Node) {
             self_functionDefined[node.name] = true;
         }
         if (node.child) {
-            for (const [, childNode] of _ipairs(node.child)) {
+            for (const [, childNode] of ipairs(node.child)) {
                 PreOrderTraversalMark(childNode);
             }
         }
     }
 }
 function Mark(node: Node) {
-    _wipe(self_functionDefined);
-    _wipe(self_functionUsed);
+    wipe(self_functionDefined);
+    wipe(self_functionUsed);
     PreOrderTraversalMark(node);
 }
 function SweepComments(childNodes, index) {
     let count = 0;
     for (let k = index - 1; k >= 1; k += -1) {
         if (childNodes[k].type == "comment") {
-            tremove(childNodes, k);
+            remove(childNodes, k);
             count = count + 1;
         } else {
             break;
@@ -3968,7 +3950,7 @@ function SweepComments(childNodes, index) {
 }
 
 function isNode(n:any): n is Node {
-    return _type(n) == "table";
+    return type(n) == "table";
 }
 
 function Sweep(node: Node):[boolean, boolean|Node] {
@@ -3986,9 +3968,9 @@ function Sweep(node: Node):[boolean, boolean|Node] {
             let [changed, swept] = Sweep(childNode);
             if (isNode(swept)) {
                 if (swept.type == "group") {
-                    tremove(child, index);
+                    remove(child, index);
                     for (let k = lualength(swept.child); k >= 1; k += -1) {
-                        tinsert(child, index, swept.child[k]);
+                        insert(child, index, swept.child[k]);
                     }
                     if (node.type == "group") {
                         let count = SweepComments(child, index);
@@ -3998,7 +3980,7 @@ function Sweep(node: Node):[boolean, boolean|Node] {
                     child[index] = swept;
                 }
             } else if (swept) {
-                tremove(child, index);
+                remove(child, index);
                 if (node.type == "group") {
                     let count = SweepComments(child, index);
                     index = index - count;
@@ -4011,7 +3993,7 @@ function Sweep(node: Node):[boolean, boolean|Node] {
             let childNode = child[1];
             while (childNode && childNode.type == "comment" && (!childNode.comment || childNode.comment == "")) {
                 isChanged = true;
-                tremove(child, 1);
+                remove(child, 1);
                 childNode = child[1];
             }
         }
@@ -4024,7 +4006,7 @@ function Sweep(node: Node):[boolean, boolean|Node] {
     } else if (node.type == "logical") {
         if (node.expressionType == "binary") {
             let [lhsNode, rhsNode] = [node.child[1], node.child[2]];
-            for (const [index, childNode] of _ipairs(node.child)) {
+            for (const [index, childNode] of ipairs(node.child)) {
                 let [changed, swept] = Sweep(childNode);
                 if (isNode(swept)) {
                     node.child[index] = swept;
@@ -4085,7 +4067,7 @@ const InsertInterruptFunction = function(child, annotation, interrupts: LuaArray
     let spells = interrupts || {}
     if (OvaleData.BLOODELF_CLASSES[className]) {
         const [name] = Disambiguate("arcane_torrent", className, specialization);
-        tinsert(spells, {
+        insert(spells, {
             name: name,
             interrupt: 1,
             worksOnBoss: 1,
@@ -4094,52 +4076,52 @@ const InsertInterruptFunction = function(child, annotation, interrupts: LuaArray
         });
     }
     if (OvaleData.PANDAREN_CLASSES[className]) {
-        tinsert(spells, {
+        insert(spells, {
             name: "quaking_palm",
             stun: 1,
             order: 98
         });
     }
     if (OvaleData.TAUREN_CLASSES[className]) {
-        tinsert(spells, {
+        insert(spells, {
             name: "war_stomp",
             stun: 1,
             order: 99,
             range: "target.Distance(less 5)"
         });
     }
-    tsort(spells, function (a, b) {
-        return _tonumber(a.order || 0) < _tonumber(b.order || 0);
+    sort(spells, function (a, b) {
+        return tonumber(a.order || 0) < tonumber(b.order || 0);
     });
     let lines:LuaArray<string> = {}
-    for (const [, spell] of _pairs(spells)) {
+    for (const [, spell] of pairs(spells)) {
         AddSymbol(annotation, spell.name);
         if ((spell.addSymbol != undefined)) {
-            for (const [, v] of _pairs(spell.addSymbol)) {
+            for (const [, v] of pairs(spell.addSymbol)) {
                 AddSymbol(annotation, v);
             }
         }
         let conditions: LuaArray<string> = {}
         if (spell.range == undefined) {
-            tinsert(conditions, format("target.InRange(%s)", spell.name));
+            insert(conditions, format("target.InRange(%s)", spell.name));
         } else if (spell.range != "") {
-            tinsert(conditions, spell.range);
+            insert(conditions, spell.range);
         }
         if (spell.interrupt == 1) {
-            tinsert(conditions, "target.IsInterruptible()");
+            insert(conditions, "target.IsInterruptible()");
         }
         if (spell.worksOnBoss == 0 || spell.worksOnBoss == undefined) {
-            tinsert(conditions, "not target.Classification(worldboss)");
+            insert(conditions, "not target.Classification(worldboss)");
         }
         if (spell.extraCondition != undefined) {
-            tinsert(conditions, spell.extraCondition);
+            insert(conditions, spell.extraCondition);
         }
         let line = "";
         if (lualength(conditions) > 0) {
-            line = `${line}if ${tconcat(conditions, " and ")} `;
+            line = `${line}if ${concat(conditions, " and ")} `;
         }
         line = `${line}${format("Spell(%s)", spell.name)}`;
-        tinsert(lines, line);
+        insert(lines, line);
     }
     let fmt = `
 		AddFunction %sInterruptActions
@@ -4150,30 +4132,30 @@ const InsertInterruptFunction = function(child, annotation, interrupts: LuaArray
 			}
 		}
 	`;
-    let code = format(fmt, camelSpecialization, tconcat(lines, "\n"));
+    let code = format(fmt, camelSpecialization, concat(lines, "\n"));
     let [node] = OvaleAST.ParseCode("add_function", code, nodeList, annotation.astAnnotation);
-    tinsert(child, 1, node);
+    insert(child, 1, node);
     annotation.functionTag[node.name] = "cd";
 }
 const InsertInterruptFunctions = function(child, annotation) {
     let interrupts = {
     }
     if (annotation.mind_freeze == "DEATHKNIGHT") {
-        tinsert(interrupts, {
+        insert(interrupts, {
             name: "mind_freeze",
             interrupt: 1,
             worksOnBoss: 1,
             order: 10
         });
         if (annotation.specialization == "blood" || annotation.specialization == "unholy") {
-            tinsert(interrupts, {
+            insert(interrupts, {
                 name: "asphyxiate",
                 stun: 1,
                 order: 20
             });
         }
         if (annotation.specialization == "frost") {
-            tinsert(interrupts, {
+            insert(interrupts, {
                 name: "blinding_sleet",
                 disorient: 1,
                 range: "target.Distance(less 12)",
@@ -4182,25 +4164,25 @@ const InsertInterruptFunctions = function(child, annotation) {
         }
     }
     if (annotation.consume_magic == "DEMONHUNTER") {
-        tinsert(interrupts, {
+        insert(interrupts, {
             name: "consume_magic",
             interrupt: 1,
             worksOnBoss: 1,
             order: 10
         });
-        tinsert(interrupts, {
+        insert(interrupts, {
             name: "fel_eruption",
             stun: 1,
             order: 20
         });
-        tinsert(interrupts, {
+        insert(interrupts, {
             name: "imprison",
             cc: 1,
             extraCondition: "target.CreatureType(Demon Humanoid Beast)",
             order: 999
         });
         if (annotation.specialization == "havoc") {
-            tinsert(interrupts, {
+            insert(interrupts, {
                 name: "chaos_nova",
                 stun: 1,
                 range: "target.Distance(less 8)",
@@ -4208,21 +4190,21 @@ const InsertInterruptFunctions = function(child, annotation) {
             });
         }
         if (annotation.specialization == "vengeance") {
-            tinsert(interrupts, {
+            insert(interrupts, {
                 name: "sigil_of_silence",
                 interrupt: 1,
                 order: 110,
                 range: "",
                 extraCondition: "not SigilCharging(silence misery chains) and (target.RemainingCastTime() >= (2 - Talent(quickened_sigils_talent) + GCDRemaining()))"
             });
-            tinsert(interrupts, {
+            insert(interrupts, {
                 name: "sigil_of_misery",
                 disorient: 1,
                 order: 120,
                 range: "",
                 extraCondition: "not SigilCharging(silence misery chains) and (target.RemainingCastTime() >= (2 - Talent(quickened_sigils_talent) + GCDRemaining()))"
             });
-            tinsert(interrupts, {
+            insert(interrupts, {
                 name: "sigil_of_chains",
                 pull: 1,
                 order: 130,
@@ -4233,7 +4215,7 @@ const InsertInterruptFunctions = function(child, annotation) {
     }
     if (annotation.skull_bash == "DRUID" || annotation.solar_beam == "DRUID") {
         if (annotation.specialization == "guardian" || annotation.specialization == "feral") {
-            tinsert(interrupts, {
+            insert(interrupts, {
                 name: "skull_bash",
                 interrupt: 1,
                 worksOnBoss: 1,
@@ -4241,34 +4223,34 @@ const InsertInterruptFunctions = function(child, annotation) {
             });
         }
         if (annotation.specialization == "balance") {
-            tinsert(interrupts, {
+            insert(interrupts, {
                 name: "solar_beam",
                 interrupt: 1,
                 worksOnBoss: 1,
                 order: 10
             });
         }
-        tinsert(interrupts, {
+        insert(interrupts, {
             name: "mighty_bash",
             stun: 1,
             order: 20
         });
         if (annotation.specialization == "guardian") {
-            tinsert(interrupts, {
+            insert(interrupts, {
                 name: "incapacitating_roar",
                 incapacitate: 1,
                 order: 30,
                 range: "target.Distance(less 10)"
             });
         }
-        tinsert(interrupts, {
+        insert(interrupts, {
             name: "typhoon",
             knockback: 1,
             order: 110,
             range: "target.Distance(less 15)"
         });
         if (annotation.specialization == "feral") {
-            tinsert(interrupts, {
+            insert(interrupts, {
                 name: "maim",
                 stun: 1,
                 order: 40
@@ -4276,7 +4258,7 @@ const InsertInterruptFunctions = function(child, annotation) {
         }
     }
     if (annotation.counter_shot == "HUNTER") {
-        tinsert(interrupts, {
+        insert(interrupts, {
             name: "counter_shot",
             interrupt: 1,
             worksOnBoss: 1,
@@ -4284,7 +4266,7 @@ const InsertInterruptFunctions = function(child, annotation) {
         });
     }
     if (annotation.muzzle == "HUNTER") {
-        tinsert(interrupts, {
+        insert(interrupts, {
             name: "muzzle",
             interrupt: 1,
             worksOnBoss: 1,
@@ -4292,7 +4274,7 @@ const InsertInterruptFunctions = function(child, annotation) {
         });
     }
     if (annotation.counterspell == "MAGE") {
-        tinsert(interrupts, {
+        insert(interrupts, {
             name: "counterspell",
             interrupt: 1,
             worksOnBoss: 1,
@@ -4300,18 +4282,18 @@ const InsertInterruptFunctions = function(child, annotation) {
         });
     }
     if (annotation.spear_hand_strike == "MONK") {
-        tinsert(interrupts, {
+        insert(interrupts, {
             name: "spear_hand_strike",
             interrupt: 1,
             worksOnBoss: 1,
             order: 10
         });
-        tinsert(interrupts, {
+        insert(interrupts, {
             name: "paralysis",
             cc: 1,
             order: 999
         });
-        tinsert(interrupts, {
+        insert(interrupts, {
             name: "leg_sweep",
             stun: 1,
             order: 30,
@@ -4319,25 +4301,25 @@ const InsertInterruptFunctions = function(child, annotation) {
         });
     }
     if (annotation.rebuke == "PALADIN") {
-        tinsert(interrupts, {
+        insert(interrupts, {
             name: "rebuke",
             interrupt: 1,
             worksOnBoss: 1,
             order: 10
         });
-        tinsert(interrupts, {
+        insert(interrupts, {
             name: "hammer_of_justice",
             stun: 1,
             order: 20
         });
         if (annotation.specialization == "protection") {
-            tinsert(interrupts, {
+            insert(interrupts, {
                 name: "avengers_shield",
                 interrupt: 1,
                 worksOnBoss: 1,
                 order: 15
             });
-            tinsert(interrupts, {
+            insert(interrupts, {
                 name: "blinding_light",
                 disorient: 1,
                 order: 50,
@@ -4346,13 +4328,13 @@ const InsertInterruptFunctions = function(child, annotation) {
         }
     }
     if (annotation.silence == "PRIEST") {
-        tinsert(interrupts, {
+        insert(interrupts, {
             name: "silence",
             interrupt: 1,
             worksOnBoss: 1,
             order: 10
         });
-        tinsert(interrupts, {
+        insert(interrupts, {
             name: "mind_bomb",
             stun: 1,
             order: 30,
@@ -4360,32 +4342,32 @@ const InsertInterruptFunctions = function(child, annotation) {
         });
     }
     if (annotation.kick == "ROGUE") {
-        tinsert(interrupts, {
+        insert(interrupts, {
             name: "kick",
             interrupt: 1,
             worksOnBoss: 1,
             order: 10
         });
-        tinsert(interrupts, {
+        insert(interrupts, {
             name: "cheap_shot",
             stun: 1,
             order: 20
         });
         if (annotation.specialization == "outlaw") {
-            tinsert(interrupts, {
+            insert(interrupts, {
                 name: "between_the_eyes",
                 stun: 1,
                 order: 30,
                 extraCondition: "ComboPoints() >= 1"
             });
-            tinsert(interrupts, {
+            insert(interrupts, {
                 name: "gouge",
                 incapacitate: 1,
                 order: 100
             });
         }
         if (annotation.specialization == "assassination" || annotation.specialization == "subtlety") {
-            tinsert(interrupts, {
+            insert(interrupts, {
                 name: "kidney_shot",
                 stun: 1,
                 order: 30,
@@ -4394,28 +4376,28 @@ const InsertInterruptFunctions = function(child, annotation) {
         }
     }
     if (annotation.wind_shear == "SHAMAN") {
-        tinsert(interrupts, {
+        insert(interrupts, {
             name: "wind_shear",
             interrupt: 1,
             worksOnBoss: 1,
             order: 10
         });
         if (annotation.specialization == "enhancement") {
-            tinsert(interrupts, {
+            insert(interrupts, {
                 name: "sundering",
                 knockback: 1,
                 order: 20,
                 range: "target.Distance(less 5)"
             });
         }
-        tinsert(interrupts, {
+        insert(interrupts, {
             name: "lightning_surge_totem",
             stun: 1,
             order: 30,
             range: "",
             extraCondition: "target.RemainingCastTime() > 2"
         });
-        tinsert(interrupts, {
+        insert(interrupts, {
             name: "hex",
             cc: 1,
             order: 100,
@@ -4423,27 +4405,27 @@ const InsertInterruptFunctions = function(child, annotation) {
         });
     }
     if (annotation.pummel == "WARRIOR") {
-        tinsert(interrupts, {
+        insert(interrupts, {
             name: "pummel",
             interrupt: 1,
             worksOnBoss: 1,
             order: 10
         });
-        tinsert(interrupts, {
+        insert(interrupts, {
             name: "shockwave",
             stun: 1,
             worksOnBoss: 0,
             order: 20,
             range: "target.Distance(less 10)"
         });
-        tinsert(interrupts, {
+        insert(interrupts, {
             name: "storm_bolt",
             stun: 1,
             worksOnBoss: 0,
             order: 20
         });
         if ((annotation.specialization == "protection")) {
-            tinsert(interrupts, {
+            insert(interrupts, {
                 name: "intercept",
                 stun: 1,
                 worksOnBoss: 0,
@@ -4454,7 +4436,7 @@ const InsertInterruptFunctions = function(child, annotation) {
                 }
             });
         }
-        tinsert(interrupts, {
+        insert(interrupts, {
             name: "intimidating_shout",
             incapacitate: 1,
             worksOnBoss: 0,
@@ -4481,7 +4463,7 @@ const InsertSupportingFunctions = function(child, annotation) {
 		`;
         let code = format(fmt, camelSpecialization);
         let [node] = OvaleAST.ParseCode("add_function", code, nodeList, annotation.astAnnotation);
-        tinsert(child, 1, node);
+        insert(child, 1, node);
         annotation.functionTag[node.name] = "shortcd";
         AddSymbol(annotation, "death_strike");
         count = count + 1;
@@ -4499,7 +4481,7 @@ const InsertSupportingFunctions = function(child, annotation) {
 		`;
         let code = format(fmt, camelSpecialization);
         let [node] = OvaleAST.ParseCode("add_function", code, nodeList, annotation.astAnnotation);
-        tinsert(child, 1, node);
+        insert(child, 1, node);
         annotation.functionTag[node.name] = "shortcd";
         AddSymbol(annotation, "chaos_strike");
         count = count + 1;
@@ -4513,7 +4495,7 @@ const InsertSupportingFunctions = function(child, annotation) {
 		`;
         let code = format(fmt, camelSpecialization);
         let [node] = OvaleAST.ParseCode("add_function", code, nodeList, annotation.astAnnotation);
-        tinsert(child, 1, node);
+        insert(child, 1, node);
         annotation.functionTag[node.name] = "shortcd";
         AddSymbol(annotation, "shear");
         count = count + 1;
@@ -4531,7 +4513,7 @@ const InsertSupportingFunctions = function(child, annotation) {
 		`;
         let code = format(fmt, camelSpecialization);
         let [node] = OvaleAST.ParseCode("add_function", code, nodeList, annotation.astAnnotation);
-        tinsert(child, 1, node);
+        insert(child, 1, node);
         annotation.functionTag[node.name] = "shortcd";
         AddSymbol(annotation, "mangle");
         AddSymbol(annotation, "shred");
@@ -4552,7 +4534,7 @@ const InsertSupportingFunctions = function(child, annotation) {
 		`;
         let code = format(fmt, camelSpecialization);
         let [node] = OvaleAST.ParseCode("add_function", code, nodeList, annotation.astAnnotation);
-        tinsert(child, 1, node);
+        insert(child, 1, node);
         annotation.functionTag[node.name] = "shortcd";
         AddSymbol(annotation, "raptor_strike");
         count = count + 1;
@@ -4590,7 +4572,7 @@ const InsertSupportingFunctions = function(child, annotation) {
         }
         let code = format(fmt, camelSpecialization);
         let [node] = OvaleAST.ParseCode("add_function", code, nodeList, annotation.astAnnotation);
-        tinsert(child, 1, node);
+        insert(child, 1, node);
         annotation.functionTag[node.name] = "shortcd";
         AddSymbol(annotation, "revive_pet");
         count = count + 1;
@@ -4604,7 +4586,7 @@ const InsertSupportingFunctions = function(child, annotation) {
 		`;
         let code = format(fmt, camelSpecialization);
         let [node] = OvaleAST.ParseCode("add_function", code, nodeList, annotation.astAnnotation);
-        tinsert(child, 1, node);
+        insert(child, 1, node);
         annotation.functionTag[node.name] = "shortcd";
         AddSymbol(annotation, "tiger_palm");
         count = count + 1;
@@ -4617,7 +4599,7 @@ const InsertSupportingFunctions = function(child, annotation) {
 			}
 		`;
         let node = OvaleAST.ParseCode("add_function", code, nodeList, annotation.astAnnotation);
-        tinsert(child, 1, node);
+        insert(child, 1, node);
         AddSymbol(annotation, "crusader_strike");
         AddSymbol(annotation, "holy_shock");
         AddSymbol(annotation, "judgment");
@@ -4631,7 +4613,7 @@ const InsertSupportingFunctions = function(child, annotation) {
 			}
 		`;
         let node = OvaleAST.ParseCode("add_function", code, nodeList, annotation.astAnnotation);
-        tinsert(child, 1, node);
+        insert(child, 1, node);
         AddSymbol(annotation, "crusader_strike");
         AddSymbol(annotation, "exorcism");
         AddSymbol(annotation, "hammer_of_wrath");
@@ -4647,7 +4629,7 @@ const InsertSupportingFunctions = function(child, annotation) {
 			}
 		`;
         let node = OvaleAST.ParseCode("add_function", code, nodeList, annotation.astAnnotation);
-        tinsert(child, 1, node);
+        insert(child, 1, node);
         AddSymbol(annotation, "crusader_strike");
         AddSymbol(annotation, "holy_wrath");
         AddSymbol(annotation, "judgment");
@@ -4663,7 +4645,7 @@ const InsertSupportingFunctions = function(child, annotation) {
 		`;
         let code = format(fmt, camelSpecialization);
         let [node] = OvaleAST.ParseCode("add_function", code, nodeList, annotation.astAnnotation);
-        tinsert(child, 1, node);
+        insert(child, 1, node);
         annotation.functionTag[node.name] = "shortcd";
         AddSymbol(annotation, "rebuke");
         count = count + 1;
@@ -4681,7 +4663,7 @@ const InsertSupportingFunctions = function(child, annotation) {
 		`;
         let code = format(fmt, camelSpecialization);
         let [node] = OvaleAST.ParseCode("add_function", code, nodeList, annotation.astAnnotation);
-        tinsert(child, 1, node);
+        insert(child, 1, node);
         annotation.functionTag[node.name] = "shortcd";
         AddSymbol(annotation, "kick");
         AddSymbol(annotation, "shadowstep");
@@ -4700,7 +4682,7 @@ const InsertSupportingFunctions = function(child, annotation) {
 		`;
         let code = format(fmt, camelSpecialization);
         let [node] = OvaleAST.ParseCode("add_function", code, nodeList, annotation.astAnnotation);
-        tinsert(child, 1, node);
+        insert(child, 1, node);
         annotation.functionTag[node.name] = "shortcd";
         AddSymbol(annotation, "feral_lunge");
         AddSymbol(annotation, "stormstrike");
@@ -4719,7 +4701,7 @@ const InsertSupportingFunctions = function(child, annotation) {
 		`;
         let code = format(fmt, camelSpecialization);
         let [node] = OvaleAST.ParseCode("add_function", code, nodeList, annotation.astAnnotation);
-        tinsert(child, 1, node);
+        insert(child, 1, node);
         annotation.functionTag[node.name] = "cd";
         AddSymbol(annotation, "bloodlust");
         AddSymbol(annotation, "heroism");
@@ -4743,7 +4725,7 @@ const InsertSupportingFunctions = function(child, annotation) {
         }
         let code = format(fmt, camelSpecialization, charge, charge, charge, charge);
         let [node] = OvaleAST.ParseCode("add_function", code, nodeList, annotation.astAnnotation);
-        tinsert(child, 1, node);
+        insert(child, 1, node);
         annotation.functionTag[node.name] = "shortcd";
         AddSymbol(annotation, charge);
         AddSymbol(annotation, "heroic_leap");
@@ -4760,7 +4742,7 @@ const InsertSupportingFunctions = function(child, annotation) {
 		`;
         let code = format(fmt, camelSpecialization);
         let [node] = OvaleAST.ParseCode("add_function", code, nodeList, annotation.astAnnotation);
-        tinsert(child, 1, node);
+        insert(child, 1, node);
         annotation.functionTag[node.name] = "cd";
         count = count + 1;
     }
@@ -4782,26 +4764,26 @@ const AddOptionalSkillCheckBox = function(child, annotation, data, skill) {
 	`;
     let code = format(fmt, skill, skill, defaultText, annotation.specialization);
     let node = OvaleAST.ParseCode("checkbox", code, nodeList, annotation.astAnnotation);
-    tinsert(child, 1, node);
+    insert(child, 1, node);
     AddSymbol(annotation, skill);
     return 1;
 }
 const InsertSupportingControls = function(child, annotation) {
     let count = 0;
-    for (const [skill, data] of _pairs(OPTIONAL_SKILLS)) {
+    for (const [skill, data] of pairs(OPTIONAL_SKILLS)) {
         count = count + AddOptionalSkillCheckBox(child, annotation, data, skill);
     }
     let nodeList = annotation.astAnnotation.nodeList;
     let ifSpecialization = `specialization=${annotation.specialization}`;
-    if (annotation.using_apl && _next(annotation.using_apl)) {
-        for (const [name] of _pairs(annotation.using_apl)) {
+    if (annotation.using_apl && next(annotation.using_apl)) {
+        for (const [name] of pairs(annotation.using_apl)) {
             if (name != "normal") {
                 let fmt = `
 					AddListItem(opt_using_apl %s "%s APL")
 				`;
                 let code = format(fmt, name, name);
                 let node = OvaleAST.ParseCode("list_item", code, nodeList, annotation.astAnnotation);
-                tinsert(child, 1, node);
+                insert(child, 1, node);
             }
         }
         {
@@ -4809,7 +4791,7 @@ const InsertSupportingControls = function(child, annotation) {
 				AddListItem(opt_using_apl normal L(normal_apl) default)
 			`;
             let node = OvaleAST.ParseCode("list_item", code, nodeList, annotation.astAnnotation);
-            tinsert(child, 1, node);
+            insert(child, 1, node);
         }
     }
     if (annotation.opt_meta_only_during_boss == "DEMONHUNTER") {
@@ -4818,7 +4800,7 @@ const InsertSupportingControls = function(child, annotation) {
 		`;
         let code = format(fmt, ifSpecialization);
         let node = OvaleAST.ParseCode("checkbox", code, nodeList, annotation.astAnnotation);
-        tinsert(child, 1, node);
+        insert(child, 1, node);
         count = count + 1;
     }
     if (annotation.opt_arcane_mage_burn_phase == "MAGE") {
@@ -4827,7 +4809,7 @@ const InsertSupportingControls = function(child, annotation) {
 		`;
         let code = format(fmt, ifSpecialization);
         let node = OvaleAST.ParseCode("checkbox", code, nodeList, annotation.astAnnotation);
-        tinsert(child, 1, node);
+        insert(child, 1, node);
         count = count + 1;
     }
     if (annotation.opt_touch_of_death_on_elite_only == "MONK") {
@@ -4836,7 +4818,7 @@ const InsertSupportingControls = function(child, annotation) {
 		`;
         let code = format(fmt, ifSpecialization);
         let node = OvaleAST.ParseCode("checkbox", code, nodeList, annotation.astAnnotation);
-        tinsert(child, 1, node);
+        insert(child, 1, node);
         count = count + 1;
     }
     if (annotation.use_legendary_ring) {
@@ -4846,7 +4828,7 @@ const InsertSupportingControls = function(child, annotation) {
 		`;
         let code = format(fmt, legendaryRing, legendaryRing, ifSpecialization);
         let node = OvaleAST.ParseCode("checkbox", code, nodeList, annotation.astAnnotation);
-        tinsert(child, 1, node);
+        insert(child, 1, node);
         AddSymbol(annotation, legendaryRing);
         count = count + 1;
     }
@@ -4856,7 +4838,7 @@ const InsertSupportingControls = function(child, annotation) {
 		`;
         let code = format(fmt, ifSpecialization);
         let node = OvaleAST.ParseCode("checkbox", code, nodeList, annotation.astAnnotation);
-        tinsert(child, 1, node);
+        insert(child, 1, node);
         count = count + 1;
     }
     if (annotation.melee) {
@@ -4865,7 +4847,7 @@ const InsertSupportingControls = function(child, annotation) {
 		`;
         let code = format(fmt, ifSpecialization);
         let node = OvaleAST.ParseCode("checkbox", code, nodeList, annotation.astAnnotation);
-        tinsert(child, 1, node);
+        insert(child, 1, node);
         count = count + 1;
     }
     if (annotation.interrupt) {
@@ -4874,7 +4856,7 @@ const InsertSupportingControls = function(child, annotation) {
 		`;
         let code = format(fmt, ifSpecialization);
         let node = OvaleAST.ParseCode("checkbox", code, nodeList, annotation.astAnnotation);
-        tinsert(child, 1, node);
+        insert(child, 1, node);
         count = count + 1;
     }
     return count;
@@ -4887,13 +4869,13 @@ const InsertSupportingDefines = function(child, annotation) {
         {
             let code = format("SpellInfo(%s duration=%f)", buffName, annotation[buffName]);
             let node = OvaleAST.ParseCode("spell_info", code, nodeList, annotation.astAnnotation);
-            tinsert(child, 1, node);
+            insert(child, 1, node);
             count = count + 1;
         }
         {
             let code = format("Define(%s %d)", buffName, OvaleHonorAmongThieves.spellId);
             let node = OvaleAST.ParseCode("define", code, nodeList, annotation.astAnnotation);
-            tinsert(child, 1, node);
+            insert(child, 1, node);
             count = count + 1;
         }
         AddSymbol(annotation, buffName);
@@ -4902,8 +4884,8 @@ const InsertSupportingDefines = function(child, annotation) {
 }
 const InsertVariables = function(child, annotation) {
     if (annotation.variable) {
-        for (const [, v] of _pairs(annotation.variable)) {
-            tinsert(child, 1, v);
+        for (const [, v] of pairs(annotation.variable)) {
+            insert(child, 1, v);
         }
     }
 }
@@ -4914,15 +4896,15 @@ const GenerateIconBody = function(tag, profile) {
     let [precombatBodyName, precombatConditionName] = OvaleTaggedFunctionName(precombatName, tag);
     let [defaultBodyName, ] = OvaleTaggedFunctionName(defaultName, tag);
     let mainBodyCode;
-    if (annotation.using_apl && _next(annotation.using_apl)) {
+    if (annotation.using_apl && next(annotation.using_apl)) {
         let output = self_outputPool.Get();
         output[lualength(output) + 1] = format("if List(opt_using_apl normal) %s()", defaultBodyName);
-        for (const [name] of _pairs(annotation.using_apl)) {
+        for (const [name] of pairs(annotation.using_apl)) {
             let aplName = OvaleFunctionName(name, annotation);
             let [aplBodyName, ] = OvaleTaggedFunctionName(aplName, tag);
             output[lualength(output) + 1] = format("if List(opt_using_apl %s) %s()", name, aplBodyName);
         }
-        mainBodyCode = tconcat(output, "\n");
+        mainBodyCode = concat(output, "\n");
         self_outputPool.Release(output);
     } else {
         mainBodyCode = `${defaultBodyName}()`;
@@ -4955,7 +4937,7 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
     }
     ToString(tbl) {
         let output = print_r(tbl);
-        return tconcat(output, "\n");
+        return concat(output, "\n");
     }
     Release(profile: Profile) {
         if (profile.annotation) {
@@ -4964,13 +4946,13 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
                 OvaleAST.ReleaseAnnotation(annotation.astAnnotation);
             }
             if (annotation.nodeList) {
-                for (const [, node] of _ipairs(annotation.nodeList)) {
+                for (const [, node] of ipairs(annotation.nodeList)) {
                     self_pool.Release(node);
                 }
             }
-            for (const [key, value] of _pairs(annotation)) {
-                if (_type(value) == "table") {
-                    _wipe(value);
+            for (const [key, value] of pairs(annotation)) {
+                if (type(value) == "table") {
+                    wipe(value);
                 }
                 annotation[key] = undefined;
             }
@@ -4981,32 +4963,32 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
     ParseProfile(simc) {
         let profile:Profile = {}
         for (const [_line] of gmatch(simc, "[^\r\n]+")) {
-            let [line] = strmatch(_line, "^%s*(.-)%s*$");
-            if (!(strmatch(line, "^#.*") || strmatch(line, "^$"))) {
-                let [key, operator, value] = strmatch(line, "([^%+=]+)(%+?=)(.*)");
+            let [line] = match(_line, "^%s*(.-)%s*$");
+            if (!(match(line, "^#.*") || match(line, "^$"))) {
+                let [key, operator, value] = match(line, "([^%+=]+)(%+?=)(.*)");
                 if (operator == "=") {
                     profile[key] = value;
                 } else if (operator == "+=") {
-                    if (_type(profile[key]) != "table") {
+                    if (type(profile[key]) != "table") {
                         let oldValue = profile[key];
                         profile[key] = {
                         }
-                        tinsert(profile[key], oldValue);
+                        insert(profile[key], oldValue);
                     }
-                    tinsert(profile[key], value);
+                    insert(profile[key], value);
                 }
             }
         }
-        for (const [k, v] of _pairs(profile)) {
-            if (_type(v) == "table") {
-                profile[k] = tconcat(v);
+        for (const [k, v] of pairs(profile)) {
+            if (type(v) == "table") {
+                profile[k] = concat(v);
             }
         }
         profile.templates = {
         }
-        for (const [k, ] of _pairs(profile)) {
-            if (strsub(k, 1, 2) == "$(" && strsub(k, -1) == ")") {
-                tinsert(profile.templates, k);
+        for (const [k, ] of pairs(profile)) {
+            if (sub(k, 1, 2) == "$(" && sub(k, -1) == ")") {
+                insert(profile.templates, k);
             }
         }
         let ok = true;
@@ -5014,13 +4996,13 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
         let nodeList: LuaArray<Node> = {}
         let actionList: LuaArray<Action> = {
         }
-        for (const [k, _v] of _pairs(profile)) {
+        for (const [k, _v] of pairs(profile)) {
             let v = _v;
-            if (ok && strmatch(k, "^actions")) {
-                let name = strmatch(k, "^actions%.([%w_]+)") || "_default";
+            if (ok && match(k, "^actions")) {
+                let name = match(k, "^actions%.([%w_]+)") || "_default";
                 for (let index = lualength(profile.templates); index >= 1; index += -1) {
                     let template = profile.templates[index];
-                    let variable = strsub(template, 3, -2);
+                    let variable = sub(template, 3, -2);
                     let pattern = `%$%(${variable}%)`;
                     v = gsub(v, pattern, profile[template]);
                 }
@@ -5033,11 +5015,11 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
                 }
             }
         }
-        tsort(actionList, function (a, b) {
+        sort(actionList, function (a, b) {
             return a.name < b.name;
         });
-        for (const [className] of _pairs(_RAID_CLASS_COLORS)) {
-            let lowerClass = strlower(className);
+        for (const [className] of pairs(RAID_CLASS_COLORS)) {
+            let lowerClass = lower(className);
             if (profile[lowerClass]) {
                 annotation.class = className;
                 annotation.name = profile[lowerClass];
@@ -5048,7 +5030,7 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
         ok = ok && (annotation.class !== undefined && annotation.specialization !== undefined && annotation.level !== undefined);
         annotation.pet = profile.default_pet;
         let consumables:LuaObj<string> = {}
-        for (const [k, v] of _pairs(CONSUMABLE_ITEMS)) {
+        for (const [k, v] of pairs(CONSUMABLE_ITEMS)) {
             if (v) {
                 if (profile[k] != undefined) {
                     consumables[k] = profile[k];
@@ -5071,10 +5053,10 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
             }
         }
         let taggedFunctionName: LuaObj<boolean> = { }
-        for (const [, node] of _ipairs(actionList)) {
+        for (const [, node] of ipairs(actionList)) {
             let fname = OvaleFunctionName(node.name, annotation);
             taggedFunctionName[fname] = true;
-            for (const [, tag] of _pairs(OVALE_TAGS)) {
+            for (const [, tag] of pairs(OVALE_TAGS)) {
                 let [bodyName, conditionName] = OvaleTaggedFunctionName(fname, tag);
                 taggedFunctionName[bodyName] = true;
                 taggedFunctionName[conditionName] = true;
@@ -5094,11 +5076,11 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
     Unparse(profile) {
         let output = self_outputPool.Get();
         if (profile.actionList) {
-            for (const [, node] of _ipairs(profile.actionList)) {
+            for (const [, node] of ipairs(profile.actionList)) {
                 output[lualength(output) + 1] = Unparse(node);
             }
         }
-        let s = tconcat(output, "\n");
+        let s = concat(output, "\n");
         self_outputPool.Release(output);
         return s;
     }
@@ -5128,7 +5110,7 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
 				Include(ovale_%s_spells)
 				%s
 			`;
-                let dictionaryCode = format(dictionaryFormat, strlower(annotation.class), Ovale.db.profile.overrideCode || "");
+                let dictionaryCode = format(dictionaryFormat, lower(annotation.class), Ovale.db.profile.overrideCode || "");
                 dictionaryAST = OvaleAST.ParseCode("script", dictionaryCode, dictionaryAnnotation.nodeList, dictionaryAnnotation);
                 if (dictionaryAST) {
                     dictionaryAST.annotation = dictionaryAnnotation;
@@ -5141,7 +5123,7 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
                     OvaleCompile.EvaluateScript(dictionaryAST, true);
                 }
             }
-            for (const [, node] of _ipairs(profile.actionList)) {
+            for (const [, node] of ipairs(profile.actionList)) {
                 let addFunctionNode = EmitActionList(node, nodeList, annotation);
                 if (addFunctionNode) {
                     let actionListName = gsub(node.name, "^_+", "");
@@ -5149,7 +5131,7 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
                     commentNode.type = "comment";
                     commentNode.comment = `## actions.${actionListName}`;
                     child[lualength(child) + 1] = commentNode;
-                    for (const [, tag] of _pairs(OVALE_TAGS)) {
+                    for (const [, tag] of pairs(OVALE_TAGS)) {
                         let [bodyNode, conditionNode] = SplitByTag(tag, addFunctionNode, nodeList, annotation);
                         child[lualength(child) + 1] = bodyNode;
                         child[lualength(child) + 1] = conditionNode;
@@ -5167,16 +5149,16 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
             annotation.supportingDefineCount = InsertSupportingDefines(child, annotation);
             InsertVariables(child, annotation);
             let [className, specialization] = [annotation.class, annotation.specialization];
-            let lowerclass = strlower(className);
+            let lowerclass = lower(className);
             let aoeToggle = `opt_${lowerclass}_${specialization}_aoe`;
             {
                 let commentNode = OvaleAST.NewNode(nodeList);
                 commentNode.type = "comment";
                 commentNode.comment = `## ${CamelCase(specialization)} icons.`;
-                tinsert(child, commentNode);
+                insert(child, commentNode);
                 let code = format("AddCheckBox(%s L(AOE) default specialization=%s)", aoeToggle, specialization);
                 let [node] = OvaleAST.ParseCode("checkbox", code, nodeList, annotation.astAnnotation);
-                tinsert(child, node);
+                insert(child, node);
             }
             {
                 let fmt = `
@@ -5187,7 +5169,7 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
 			`;
                 let code = format(fmt, aoeToggle, specialization, GenerateIconBody("shortcd", profile));
                 let [node] = OvaleAST.ParseCode("icon", code, nodeList, annotation.astAnnotation);
-                tinsert(child, node);
+                insert(child, node);
             }
             {
                 let fmt = `
@@ -5198,7 +5180,7 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
 			`;
                 let code = format(fmt, aoeToggle, specialization, GenerateIconBody("shortcd", profile));
                 let [node] = OvaleAST.ParseCode("icon", code, nodeList, annotation.astAnnotation);
-                tinsert(child, node);
+                insert(child, node);
             }
             {
                 let fmt = `
@@ -5209,7 +5191,7 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
 			`;
                 let code = format(fmt, specialization, GenerateIconBody("main", profile));
                 let [node] = OvaleAST.ParseCode("icon", code, nodeList, annotation.astAnnotation);
-                tinsert(child, node);
+                insert(child, node);
             }
             {
                 let fmt = `
@@ -5220,7 +5202,7 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
 			`;
                 let code = format(fmt, aoeToggle, specialization, GenerateIconBody("main", profile));
                 let [node] = OvaleAST.ParseCode("icon", code, nodeList, annotation.astAnnotation);
-                tinsert(child, node);
+                insert(child, node);
             }
             {
                 let fmt = `
@@ -5231,7 +5213,7 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
 			`;
                 let code = format(fmt, aoeToggle, specialization, GenerateIconBody("cd", profile));
                 let [node] = OvaleAST.ParseCode("icon", code, nodeList, annotation.astAnnotation);
-                tinsert(child, node);
+                insert(child, node);
             }
             {
                 let fmt = `
@@ -5242,7 +5224,7 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
 			`;
                 let code = format(fmt, aoeToggle, specialization, GenerateIconBody("cd", profile));
                 let [node] = OvaleAST.ParseCode("icon", code, nodeList, annotation.astAnnotation);
-                tinsert(child, node);
+                insert(child, node);
             }
             Mark(ast);
             let changed = Sweep(ast);
@@ -5263,7 +5245,7 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
         let ast = this.EmitAST(profile);
         let annotation = profile.annotation;
         let className = annotation.class;
-        let lowerclass = strlower(className);
+        let lowerclass = lower(className);
         let specialization = annotation.specialization;
         let output = self_outputPool.Get();
         {
@@ -5300,9 +5282,9 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
         if (profile.annotation.symbolTable) {
             output[lualength(output) + 1] = "";
             output[lualength(output) + 1] = "### Required symbols";
-            tsort(profile.annotation.symbolTable);
-            for (const [, symbol] of _ipairs(profile.annotation.symbolTable)) {
-                if (!_tonumber(symbol) && profile.annotation.dictionary && !profile.annotation.dictionary[symbol] && !OvaleData.buffSpellList[symbol]) {
+            sort(profile.annotation.symbolTable);
+            for (const [, symbol] of ipairs(profile.annotation.symbolTable)) {
+                if (!tonumber(symbol) && profile.annotation.dictionary && !profile.annotation.dictionary[symbol] && !OvaleData.buffSpellList[symbol]) {
                     this.Print("Warning: Symbol '%s' not defined", symbol);
                 }
                 output[lualength(output) + 1] = `# ${symbol}`;
@@ -5315,7 +5297,7 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
         if (!noFinalNewLine && output[lualength(output)] != "") {
             output[lualength(output) + 1] = "";
         }
-        let s = tconcat(output, "\n");
+        let s = concat(output, "\n");
         self_outputPool.Release(output);
         OvaleAST.Release(ast);
         return s;

@@ -1,6 +1,6 @@
 local __addonName, __addon = ...
             __addon.require("./BossMod", { "./Debug", "./Profiler", "./Ovale", "./State" }, function(__exports, __Debug, __Profiler, __Ovale, __State)
-local OvaleBossModBase = __Ovale.Ovale:NewModule("OvaleBossMod")
+local OvaleBossModBase = __Profiler.OvaleProfiler:RegisterProfiling(__Debug.OvaleDebug:RegisterDebugging(__Ovale.Ovale:NewModule("OvaleBossMod")))
 local API_GetNumGroupMembers = GetNumGroupMembers
 local API_IsInGroup = IsInGroup
 local API_IsInInstance = IsInInstance
@@ -9,11 +9,11 @@ local API_UnitExists = UnitExists
 local API_UnitLevel = UnitLevel
 local _BigWigsLoader = BigWigsLoader
 local _DBM = DBM
-local OvaleBossModClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfiling(__Debug.OvaleDebug:RegisterDebugging(OvaleBossModBase)), {
+local OvaleBossModClass = __addon.__class(OvaleBossModBase, {
     constructor = function(self)
         self.EngagedDBM = nil
         self.EngagedBigWigs = nil
-        __Profiler.OvaleProfiler:RegisterProfiling(__Debug.OvaleDebug:RegisterDebugging(OvaleBossModBase)).constructor(self)
+        OvaleBossModBase.constructor(self)
         if _DBM then
             self:Debug("DBM is loaded")
             hooksecurefunc(_DBM, "StartCombat", function(_DBM, mod, delay, event, ...)

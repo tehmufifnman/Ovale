@@ -1,5 +1,5 @@
-import LibBabbleCreatureType from "LibBabble-CreatureType-3.0";
-import LibRangeCheck from "LibRangeCheck-2.0";
+import LibBabbleCreatureType from "@wowts/lib_babble-creature_type-3.0";
+import LibRangeCheck from "@wowts/lib_range_check-2.0";
 import { OvaleBestAction } from "./BestAction";
 import { OvaleCompile } from "./Compile";
 import { OvaleCondition, TestValue, Compare, TestBoolean, ParseCondition } from "./Condition";
@@ -32,39 +32,10 @@ import { dataState } from "./DataState";
 import { stanceState } from "./StanceState";
 import { spellBookState } from "./SpellBookState";
 import { futureState } from "./FutureState";
-let _ipairs = ipairs;
-let _pairs = pairs;
-let _type = type;
-let API_GetBuildInfo = GetBuildInfo;
-let API_GetItemCooldown = GetItemCooldown;
-let API_GetItemCount = GetItemCount;
-let API_GetNumTrackingTypes = GetNumTrackingTypes;
-let API_GetTime = GetTime;
-let API_GetTrackingInfo = GetTrackingInfo;
-let API_GetUnitSpeed = GetUnitSpeed;
-let API_GetWeaponEnchantInfo = GetWeaponEnchantInfo;
-let API_HasFullControl = HasFullControl;
-let API_IsStealthed = IsStealthed;
-let API_UnitCastingInfo = UnitCastingInfo;
-let API_UnitChannelInfo = UnitChannelInfo;
-let API_UnitClass = UnitClass;
-let API_UnitClassification = UnitClassification;
-let API_UnitCreatureFamily = UnitCreatureFamily;
-let API_UnitCreatureType = UnitCreatureType;
-let API_UnitDetailedThreatSituation = UnitDetailedThreatSituation;
-let API_UnitExists = UnitExists;
-let API_UnitInRaid = UnitInRaid;
-let API_UnitIsDead = UnitIsDead;
-let API_UnitIsFriend = UnitIsFriend;
-let API_UnitIsPVP = UnitIsPVP;
-let API_UnitIsUnit = UnitIsUnit;
-let API_UnitLevel = UnitLevel;
-let API_UnitName = UnitName;
-let API_UnitPower = UnitPower;
-let API_UnitPowerMax = UnitPowerMax;
-let API_UnitRace = UnitRace;
-let API_UnitStagger = UnitStagger;
-let INFINITY = math.huge;
+import { ipairs, pairs, type, LuaArray, LuaObj, lualength } from "@wowts/lua";
+import { GetBuildInfo, GetItemCooldown, GetItemCount, GetNumTrackingTypes, GetTime, GetTrackingInfo, GetUnitSpeed, GetWeaponEnchantInfo, HasFullControl, IsStealthed, UnitCastingInfo, UnitChannelInfo, UnitClass, UnitClassification, UnitCreatureFamily, UnitCreatureType, UnitDetailedThreatSituation, UnitExists, UnitInRaid, UnitIsDead, UnitIsFriend, UnitIsPVP, UnitIsUnit, UnitLevel, UnitName, UnitPower, UnitPowerMax, UnitRace, UnitStagger } from "@wowts/wow-mock";
+import { huge } from "@wowts/math";
+let INFINITY = huge;
 
 const BossArmorDamageReduction = function(target, state: BaseState) {
     let armor = 24835;
@@ -132,9 +103,9 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
         let value;
         if ((OvaleData.buffSpellList[auraId])) {
             let spellList = OvaleData.buffSpellList[auraId];
-            for (const [id] of _pairs(spellList)) {
+            for (const [id] of pairs(spellList)) {
                 value = OvaleData.GetBaseDuration(id, state);
-                if (value != math.huge) {
+                if (value != huge) {
                     break;
                 }
             }
@@ -208,7 +179,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
         let [target, filter, mine] = ParseCondition(positionalParams, namedParams, state);
         let spellList = OvaleData.buffSpellList[auraId];
         let count = 0;
-        for (const [id] of _pairs(spellList)) {
+        for (const [id] of pairs(spellList)) {
             let aura = auraState.GetAura(target, id, filter, mine);
             if (auraState.IsActiveAura(aura, atTime)) {
                 count = count + 1;
@@ -223,7 +194,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
         let [auraId, comparator, limit] = [positionalParams[1], positionalParams[2], positionalParams[3]];
         let minCooldown = INFINITY;
         if (OvaleData.buffSpellList[auraId]) {
-            for (const [id] of _pairs(OvaleData.buffSpellList[auraId])) {
+            for (const [id] of pairs(OvaleData.buffSpellList[auraId])) {
                 let si = OvaleData.spellInfo[id];
                 let cd = si && si.buff_cd;
                 if (cd && minCooldown > cd) {
@@ -455,9 +426,9 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
             castSpellId = futureState.currentSpellId;
             castSpellName = OvaleSpellBook.GetSpellName(castSpellId);
         } else {
-            let [spellName, _1, _2, _3, startTime, endTime] = API_UnitCastingInfo(target);
+            let [spellName, _1, _2, _3, startTime, endTime] = UnitCastingInfo(target);
             if (!spellName) {
-                [spellName, _1, _2, _3, startTime, endTime] = API_UnitChannelInfo(target);
+                [spellName, _1, _2, _3, startTime, endTime] = UnitChannelInfo(target);
             }
             if (spellName) {
                 castSpellName = spellName;
@@ -469,7 +440,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
             if (!spellId) {
                 return [start, ending];
             } else if (OvaleData.buffSpellList[spellId]) {
-                for (const [id] of _pairs(OvaleData.buffSpellList[spellId])) {
+                for (const [id] of pairs(OvaleData.buffSpellList[spellId])) {
                     if (id == castSpellId || OvaleSpellBook.GetSpellName(id) == castSpellName) {
                         return [start, ending];
                     }
@@ -480,7 +451,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
                 return [start, ending];
             } else if (spellId == castSpellId) {
                 return [start, ending];
-            } else if (_type(spellId) == "number" && OvaleSpellBook.GetSpellName(spellId) == castSpellName) {
+            } else if (type(spellId) == "number" && OvaleSpellBook.GetSpellName(spellId) == castSpellName) {
                 return [start, ending];
             }
         }
@@ -490,7 +461,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
 }
 {
     const CheckBoxOff = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
-        for (const [, id] of _ipairs(positionalParams)) {
+        for (const [, id] of ipairs(positionalParams)) {
             if (frame.IsChecked(id)) {
                 return undefined;
             }
@@ -498,7 +469,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
         return [0, INFINITY];
     }
     const CheckBoxOn = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
-        for (const [, id] of _ipairs(positionalParams)) {
+        for (const [, id] of ipairs(positionalParams)) {
             if (!frame.IsChecked(id)) {
                 return undefined;
             }
@@ -512,7 +483,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
     const Class = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let [className, yesno] = [positionalParams[1], positionalParams[2]];
         let [target] = ParseCondition(positionalParams, namedParams, state);
-        let [, classToken] = API_UnitClass(target);
+        let [, classToken] = UnitClass(target);
         let boolean = (classToken == className);
         return TestBoolean(boolean, yesno);
     }
@@ -524,16 +495,16 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
         let [classification, yesno] = [positionalParams[1], positionalParams[2]];
         let targetClassification;
         let [target] = ParseCondition(positionalParams, namedParams, state);
-        if (API_UnitLevel(target) < 0) {
+        if (UnitLevel(target) < 0) {
             targetClassification = "worldboss";
-        } else if (API_UnitExists("boss1") && OvaleGUID.UnitGUID(target) == OvaleGUID.UnitGUID("boss1")) {
+        } else if (UnitExists("boss1") && OvaleGUID.UnitGUID(target) == OvaleGUID.UnitGUID("boss1")) {
             targetClassification = "worldboss";
         } else {
             let aura = auraState.GetAura(target, IMBUED_BUFF_ID, "debuff", false);
             if (auraState.IsActiveAura(aura, atTime)) {
                 targetClassification = "worldboss";
             } else {
-                targetClassification = API_UnitClassification(target);
+                targetClassification = UnitClassification(target);
                 if (targetClassification == "rareelite") {
                     targetClassification = "elite";
                 } else if (targetClassification == "rare") {
@@ -566,7 +537,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
     const CreatureFamily = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let [name, yesno] = [positionalParams[1], positionalParams[2]];
         let [target] = ParseCondition(positionalParams, namedParams, state);
-        let family = API_UnitCreatureFamily(target);
+        let family = UnitCreatureFamily(target);
         let lookupTable = LibBabbleCreatureType && LibBabbleCreatureType.GetLookupTable();
         let boolean = (lookupTable && family == lookupTable[name]);
         return TestBoolean(boolean, yesno);
@@ -576,10 +547,10 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
 {
     const CreatureType = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let [target] = ParseCondition(positionalParams, namedParams, state);
-        let creatureType = API_UnitCreatureType(target);
+        let creatureType = UnitCreatureType(target);
         let lookupTable = LibBabbleCreatureType && LibBabbleCreatureType.GetLookupTable();
         if (lookupTable) {
-            for (const [, name] of _ipairs<string>(positionalParams)) {
+            for (const [, name] of ipairs<string>(positionalParams)) {
                 if (creatureType == lookupTable[name]) {
                     return [0, INFINITY];
                 }
@@ -794,7 +765,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
     const Exists = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let yesno = positionalParams[1];
         let [target] = ParseCondition(positionalParams, namedParams, state);
-        let boolean = API_UnitExists(target);
+        let boolean = UnitExists(target);
         return TestBoolean(boolean, yesno);
     }
     OvaleCondition.RegisterCondition("exists", false, Exists);
@@ -892,7 +863,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
         let [ilevel, slot] = [namedParams.ilevel, namedParams.slot];
         let boolean = false;
         let slotId;
-        if (_type(itemId) == "number") {
+        if (type(itemId) == "number") {
             slotId = OvaleEquipment.HasEquippedItem(itemId, slot);
             if (slotId) {
                 if (!ilevel || (ilevel && ilevel == OvaleEquipment.GetEquippedItemLevel(slotId))) {
@@ -900,7 +871,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
                 }
             }
         } else if (OvaleData.itemList[itemId]) {
-            for (const [, v] of _pairs(OvaleData.itemList[itemId])) {
+            for (const [, v] of pairs(OvaleData.itemList[itemId])) {
                 slotId = OvaleEquipment.HasEquippedItem(v, slot);
                 if (slotId) {
                     if (!ilevel || (ilevel && ilevel == OvaleEquipment.GetEquippedItemLevel(slotId))) {
@@ -915,12 +886,12 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
     OvaleCondition.RegisterCondition("hasequippeditem", false, HasEquippedItem);
 }
 {
-    const HasFullControl = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
+    const HasFullControlCondition = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let yesno = positionalParams[1];
-        let boolean = API_HasFullControl();
+        let boolean = HasFullControl();
         return TestBoolean(boolean, yesno);
     }
-    OvaleCondition.RegisterCondition("hasfullcontrol", false, HasFullControl);
+    OvaleCondition.RegisterCondition("hasfullcontrol", false, HasFullControlCondition);
 }
 {
     const HasShield = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
@@ -934,10 +905,10 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
     const HasTrinket = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let [trinketId, yesno] = [positionalParams[1], positionalParams[2]];
         let boolean = false;
-        if (_type(trinketId) == "number") {
+        if (type(trinketId) == "number") {
             boolean = OvaleEquipment.HasTrinket(trinketId);
         } else if (OvaleData.itemList[trinketId]) {
-            for (const [, v] of _pairs(OvaleData.itemList[trinketId])) {
+            for (const [, v] of pairs(OvaleData.itemList[trinketId])) {
                 boolean = OvaleEquipment.HasTrinket(v);
                 if (boolean) {
                     break;
@@ -973,7 +944,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
         let [target] = ParseCondition(positionalParams, namedParams, state);
         let health = OvaleHealth.UnitHealth(target) || 0;
         if (health > 0) {
-            let now = API_GetTime();
+            let now = GetTime();
             let timeToDie = OvaleHealth.UnitTimeToDie(target);
             let [value, origin, rate] = [health, now, -1 * health / timeToDie];
             let [start, ending] = [now, INFINITY];
@@ -989,7 +960,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
         let health = OvaleHealth.UnitHealth(target) || 0;
         let maxHealth = OvaleHealth.UnitHealthMax(target) || 1;
         if (health > 0) {
-            let now = API_GetTime();
+            let now = GetTime();
             let missing = maxHealth - health;
             let timeToDie = OvaleHealth.UnitTimeToDie(target);
             let [value, origin, rate] = [missing, now, health / timeToDie];
@@ -1005,7 +976,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
         let [target] = ParseCondition(positionalParams, namedParams, state);
         let health = OvaleHealth.UnitHealth(target) || 0;
         if (health > 0) {
-            let now = API_GetTime();
+            let now = GetTime();
             let maxHealth = OvaleHealth.UnitHealthMax(target) || 1;
             let healthPercent = health / maxHealth * 100;
             let timeToDie = OvaleHealth.UnitTimeToDie(target);
@@ -1027,7 +998,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
     const TimeToDie = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let [comparator, limit] = [positionalParams[1], positionalParams[2]];
         let [target] = ParseCondition(positionalParams, namedParams, state);
-        let now = API_GetTime();
+        let now = GetTime();
         let timeToDie = OvaleHealth.UnitTimeToDie(target);
         let [value, origin, rate] = [timeToDie, now, -1];
         let [start, ending] = [now, now + timeToDie];
@@ -1043,7 +1014,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
             let maxHealth = OvaleHealth.UnitHealthMax(target) || 1;
             let healthPercent = health / maxHealth * 100;
             if (healthPercent >= percent) {
-                let now = API_GetTime();
+                let now = GetTime();
                 let timeToDie = OvaleHealth.UnitTimeToDie(target);
                 let t = timeToDie * (healthPercent - percent) / healthPercent;
                 let [value, origin, rate] = [t, now, -1];
@@ -1085,7 +1056,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
     const IsAggroed = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let yesno = positionalParams[1];
         let [target] = ParseCondition(positionalParams, namedParams, state);
-        let [boolean] = API_UnitDetailedThreatSituation("player", target);
+        let [boolean] = UnitDetailedThreatSituation("player", target);
         return TestBoolean(boolean, yesno);
     }
     OvaleCondition.RegisterCondition("isaggroed", false, IsAggroed);
@@ -1094,7 +1065,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
     const IsDead = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let yesno = positionalParams[1];
         let [target] = ParseCondition(positionalParams, namedParams, state);
-        let boolean = API_UnitIsDead(target);
+        let boolean = UnitIsDead(target);
         return TestBoolean(boolean, yesno);
     }
     OvaleCondition.RegisterCondition("isdead", false, IsDead);
@@ -1110,7 +1081,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
     const IsFeared = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let yesno = positionalParams[1];
         let aura = auraState.GetAura("player", "fear_debuff", "HARMFUL");
-        let boolean = !API_HasFullControl() && auraState.IsActiveAura(aura, atTime);
+        let boolean = !HasFullControl() && auraState.IsActiveAura(aura, atTime);
         return TestBoolean(boolean, yesno);
     }
     OvaleCondition.RegisterCondition("isfeared", false, IsFeared);
@@ -1119,7 +1090,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
     const IsFriend = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let yesno = positionalParams[1];
         let [target] = ParseCondition(positionalParams, namedParams, state);
-        let boolean = API_UnitIsFriend("player", target);
+        let boolean = UnitIsFriend("player", target);
         return TestBoolean(boolean == 1, yesno);
     }
     OvaleCondition.RegisterCondition("isfriend", false, IsFriend);
@@ -1128,7 +1099,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
     const IsIncapacitated = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let yesno = positionalParams[1];
         let aura = auraState.GetAura("player", "incapacitate_debuff", "HARMFUL");
-        let boolean = !API_HasFullControl() && auraState.IsActiveAura(aura, atTime);
+        let boolean = !HasFullControl() && auraState.IsActiveAura(aura, atTime);
         return TestBoolean(boolean, yesno);
     }
     OvaleCondition.RegisterCondition("isincapacitated", false, IsIncapacitated);
@@ -1137,9 +1108,9 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
     const IsInterruptible = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let yesno = positionalParams[1];
         let [target] = ParseCondition(positionalParams, namedParams, state);
-        let [name, _1, _2, _3, _4, _5, _6, , notInterruptible] = API_UnitCastingInfo(target);
+        let [name, _1, _2, _3, _4, _5, _6, , notInterruptible] = UnitCastingInfo(target);
         if (!name) {
-            [name, _1, _2, _3, _4, _5, _6, notInterruptible] = API_UnitChannelInfo(target);
+            [name, _1, _2, _3, _4, _5, _6, notInterruptible] = UnitChannelInfo(target);
         }
         let boolean = notInterruptible != undefined && !notInterruptible;
         return TestBoolean(boolean, yesno);
@@ -1150,7 +1121,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
     const IsPVP = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let yesno = positionalParams[1];
         let [target] = ParseCondition(positionalParams, namedParams, state);
-        let boolean = API_UnitIsPVP(target);
+        let boolean = UnitIsPVP(target);
         return TestBoolean(boolean, yesno);
     }
     OvaleCondition.RegisterCondition("ispvp", false, IsPVP);
@@ -1168,7 +1139,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
     const IsStunned = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let yesno = positionalParams[1];
         let aura = auraState.GetAura("player", "stun_debuff", "HARMFUL");
-        let boolean = !API_HasFullControl() && auraState.IsActiveAura(aura, atTime);
+        let boolean = !HasFullControl() && auraState.IsActiveAura(aura, atTime);
         return TestBoolean(boolean, yesno);
     }
     OvaleCondition.RegisterCondition("isstunned", false, IsStunned);
@@ -1176,7 +1147,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
 {
     const ItemCharges = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let [itemId, comparator, limit] = [positionalParams[1], positionalParams[2], positionalParams[3]];
-        let value = API_GetItemCount(itemId, false, true);
+        let value = GetItemCount(itemId, false, true);
         return Compare(value, comparator, limit);
     }
     OvaleCondition.RegisterCondition("itemcharges", false, ItemCharges);
@@ -1184,11 +1155,11 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
 {
     const ItemCooldown = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let [itemId, comparator, limit] = [positionalParams[1], positionalParams[2], positionalParams[3]];
-        if (itemId && _type(itemId) != "number") {
+        if (itemId && type(itemId) != "number") {
             itemId = OvaleEquipment.GetEquippedItem(itemId);
         }
         if (itemId) {
-            let [start, duration] = API_GetItemCooldown(itemId);
+            let [start, duration] = GetItemCooldown(itemId);
             if (start > 0 && duration > 0) {
                 return TestValue(start, start + duration, duration, start, -1, comparator, limit);
             }
@@ -1200,7 +1171,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
 {
     const ItemCount = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let [itemId, comparator, limit] = [positionalParams[1], positionalParams[2], positionalParams[3]];
-        let value = API_GetItemCount(itemId);
+        let value = GetItemCount(itemId);
         return Compare(value, comparator, limit);
     }
     OvaleCondition.RegisterCondition("itemcount", false, ItemCount);
@@ -1225,7 +1196,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
         if (target == "player") {
             value = paperDollState.level;
         } else {
-            value = API_UnitLevel(target);
+            value = UnitLevel(target);
         }
         return Compare(value, comparator, limit);
     }
@@ -1245,10 +1216,10 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
     const Name = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let [name, yesno] = [positionalParams[1], positionalParams[2]];
         let [target] = ParseCondition(positionalParams, namedParams, state);
-        if (_type(name) == "number") {
+        if (type(name) == "number") {
             name = OvaleSpellBook.GetSpellName(name);
         }
-        let targetName = API_UnitName(target);
+        let targetName = UnitName(target);
         let boolean = (name == targetName);
         return TestBoolean(boolean, yesno);
     }
@@ -1257,7 +1228,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
 {
     const PTR = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let [comparator, limit] = [positionalParams[1], positionalParams[2]];
-        let [,,, uiVersion] = API_GetBuildInfo();
+        let [,,, uiVersion] = GetBuildInfo();
         let value = (uiVersion > 70200) && 1 || 0;
         return Compare(value, comparator, limit);
     }
@@ -1277,7 +1248,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
         let yesno = positionalParams[1];
         let name = namedParams.name;
         let target = "pet";
-        let boolean = API_UnitExists(target) && !API_UnitIsDead(target) && (name == undefined || name == API_UnitName(target));
+        let boolean = UnitExists(target) && !UnitIsDead(target) && (name == undefined || name == UnitName(target));
         return TestBoolean(boolean, yesno);
     }
     OvaleCondition.RegisterCondition("petpresent", false, PetPresent);
@@ -1291,7 +1262,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
             value = OvalePower.maxPower[powerType];
         } else {
             let powerInfo = OvalePower.POWER_INFO[powerType];
-            value = API_UnitPowerMax(target, powerInfo.id, powerInfo.segments);
+            value = UnitPowerMax(target, powerInfo.id, powerInfo.segments);
         }
         return Compare(value, comparator, limit);
     }
@@ -1304,7 +1275,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
             return TestValue(start, ending, value, origin, rate, comparator, limit);
         } else {
             let powerInfo = OvalePower.POWER_INFO[powerType];
-            let value = API_UnitPower(target, powerInfo.id);
+            let value = UnitPower(target, powerInfo.id);
             return Compare(value, comparator, limit);
         }
     }
@@ -1320,9 +1291,9 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
             }
         } else {
             let powerInfo = OvalePower.POWER_INFO[powerType];
-            let powerMax = API_UnitPowerMax(target, powerInfo.id, powerInfo.segments) || 0;
+            let powerMax = UnitPowerMax(target, powerInfo.id, powerInfo.segments) || 0;
             if (powerMax > 0) {
-                let power = API_UnitPower(target, powerInfo.id);
+                let power = UnitPower(target, powerInfo.id);
                 let value = powerMax - power;
                 return Compare(value, comparator, limit);
             }
@@ -1345,10 +1316,10 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
             }
         } else {
             let powerInfo = OvalePower.POWER_INFO[powerType];
-            let powerMax = API_UnitPowerMax(target, powerInfo.id, powerInfo.segments) || 0;
+            let powerMax = UnitPowerMax(target, powerInfo.id, powerInfo.segments) || 0;
             if (powerMax > 0) {
                 let conversion = 100 / powerMax;
-                let value = API_UnitPower(target, powerInfo.id) * conversion;
+                let value = UnitPower(target, powerInfo.id) * conversion;
                 return Compare(value, comparator, limit);
             }
         }
@@ -1359,7 +1330,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
         let primaryPowerType;
         let si = OvaleData.GetSpellInfo(spellId);
         if (si) {
-            for (const [powerType] of _pairs(OvalePower.PRIMARY_POWER)) {
+            for (const [powerType] of pairs(OvalePower.PRIMARY_POWER)) {
                 if (si[powerType]) {
                     primaryPowerType = powerType;
                     break;
@@ -1598,7 +1569,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
     const Present = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let yesno = positionalParams[1];
         let [target] = ParseCondition(positionalParams, namedParams, state);
-        let boolean = API_UnitExists(target) && !API_UnitIsDead(target);
+        let boolean = UnitExists(target) && !UnitIsDead(target);
         return TestBoolean(boolean, yesno);
     }
     OvaleCondition.RegisterCondition("present", false, Present);
@@ -1641,7 +1612,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
         if (target == "player") {
             level = paperDollState.level;
         } else {
-            level = API_UnitLevel(target);
+            level = UnitLevel(target);
         }
         if (level < 0) {
             value = 3;
@@ -1672,7 +1643,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
     const RemainingCastTime = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let [comparator, limit] = [positionalParams[1], positionalParams[2]];
         let [target] = ParseCondition(positionalParams, namedParams, state);
-        let [, , , , startTime, endTime] = API_UnitCastingInfo(target);
+        let [, , , , startTime, endTime] = UnitCastingInfo(target);
         if (startTime && endTime) {
             startTime = startTime / 1000;
             endTime = endTime / 1000;
@@ -1803,7 +1774,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
     const Speed = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let [comparator, limit] = [positionalParams[1], positionalParams[2]];
         let [target] = ParseCondition(positionalParams, namedParams, state);
-        let value = API_GetUnitSpeed(target) * 100 / 7;
+        let value = GetUnitSpeed(target) * 100 / 7;
         return Compare(value, comparator, limit);
     }
     OvaleCondition.RegisterCondition("speed", false, Speed);
@@ -1842,7 +1813,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
         let usable = (namedParams.usable == 1);
         let target = ParseCondition(positionalParams, namedParams, state, "target");
         let earliest = INFINITY;
-        for (const [i, spellId] of _ipairs<number>(positionalParams)) {
+        for (const [i, spellId] of ipairs<number>(positionalParams)) {
             if (OvaleCondition.COMPARATOR[spellId]) {
                 [comparator, limit] = [spellId, positionalParams[i + 1]];
                 break;
@@ -1964,7 +1935,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
         }
         if (auraState.IsActiveAura(aura, atTime)) {
             let [gain, start, ending] = [aura.gain, aura.start, aura.ending];
-            let stagger = API_UnitStagger(target);
+            let stagger = UnitStagger(target);
             let rate = -1 * stagger / (ending - start);
             return TestValue(gain, ending, 0, ending, rate, comparator, limit);
         }
@@ -1984,7 +1955,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
 {
     const Stealthed = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let yesno = positionalParams[1];
-        let boolean = auraState.GetAura("player", "stealthed_buff") || API_IsStealthed();
+        let boolean = auraState.GetAura("player", "stealthed_buff") || IsStealthed();
         return TestBoolean(boolean, yesno);
     }
     OvaleCondition.RegisterCondition("isstealthed", false, Stealthed);
@@ -2042,7 +2013,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
     const TargetIsPlayer = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let yesno = positionalParams[1];
         let [target] = ParseCondition(positionalParams, namedParams, state);
-        let boolean = API_UnitIsUnit("player", `${target}target`);
+        let boolean = UnitIsUnit("player", `${target}target`);
         return TestBoolean(boolean, yesno);
     }
     OvaleCondition.RegisterCondition("istargetingplayer", false, TargetIsPlayer);
@@ -2052,7 +2023,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
     const Threat = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let [comparator, limit] = [positionalParams[1], positionalParams[2]];
         let [target] = ParseCondition(positionalParams, namedParams, state, "target");
-        let [, , value] = API_UnitDetailedThreatSituation("player", target);
+        let [, , value] = UnitDetailedThreatSituation("player", target);
         return Compare(value, comparator, limit);
     }
     OvaleCondition.RegisterCondition("threat", false, Threat);
@@ -2225,7 +2196,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
     const TotemExpires = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let [id, seconds] = [positionalParams[1], positionalParams[2]];
         seconds = seconds || 0;
-        if (_type(id) == "string") {
+        if (type(id) == "string") {
             let [, , startTime, duration] = totemState.GetTotemInfo(id);
             if (startTime) {
                 return [startTime + duration - seconds, INFINITY];
@@ -2240,7 +2211,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
     }
     const TotemPresent = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let id = positionalParams[1];
-        if (_type(id) == "string") {
+        if (type(id) == "string") {
             let [, , startTime, duration] = totemState.GetTotemInfo(id);
             if (startTime && duration > 0) {
                 return [startTime, startTime + duration];
@@ -2257,7 +2228,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
     OvaleCondition.RegisterCondition("totempresent", false, TotemPresent);
     const TotemRemaining = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let [id, comparator, limit] = [positionalParams[1], positionalParams[2], positionalParams[3]];
-        if (_type(id) == "string") {
+        if (type(id) == "string") {
             let [, , startTime, duration] = totemState.GetTotemInfo(id);
             if (startTime && duration > 0) {
                 let [start, ending] = [startTime, startTime + duration];
@@ -2278,10 +2249,10 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
     const Tracking = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let [spellId, yesno] = [positionalParams[1], positionalParams[2]];
         let spellName = OvaleSpellBook.GetSpellName(spellId);
-        let numTrackingTypes = API_GetNumTrackingTypes();
+        let numTrackingTypes = GetNumTrackingTypes();
         let boolean = false;
         for (let i = 1; i <= numTrackingTypes; i += 1) {
-            let [name, , active] = API_GetTrackingInfo(i);
+            let [name, , active] = GetTrackingInfo(i);
             if (name && name == spellName) {
                 boolean = (active == 1);
                 break;
@@ -2340,8 +2311,8 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
     const WeaponEnchantExpires = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let [hand, seconds] = [positionalParams[1], positionalParams[2]];
         seconds = seconds || 0;
-        let [hasMainHandEnchant, mainHandExpiration, , hasOffHandEnchant, offHandExpiration] = API_GetWeaponEnchantInfo();
-        let now = API_GetTime();
+        let [hasMainHandEnchant, mainHandExpiration, , hasOffHandEnchant, offHandExpiration] = GetWeaponEnchantInfo();
+        let now = GetTime();
         if (hand == "mainhand" || hand == "main") {
             if (hasMainHandEnchant) {
                 mainHandExpiration = mainHandExpiration / 1000;
@@ -2360,7 +2331,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
 {
     const SigilCharging = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let charging = false;
-        for (const [, v] of _ipairs(positionalParams)) {
+        for (const [, v] of ipairs(positionalParams)) {
             charging = charging || sigilState.IsSigilCharging(v, atTime);
         }
         return TestBoolean(charging, "yes");
@@ -2378,8 +2349,8 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
     const Race = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let isRace = false;
         let target = namedParams.target || "player";
-        let [, targetRaceId] = API_UnitRace(target);
-        for (const [, v] of _ipairs(positionalParams)) {
+        let [, targetRaceId] = UnitRace(target);
+        for (const [, v] of ipairs(positionalParams)) {
             isRace = isRace || (v == targetRaceId);
         }
         return TestBoolean(isRace, "yes");
@@ -2387,12 +2358,12 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
     OvaleCondition.RegisterCondition("race", false, Race);
 }
 {
-    const UnitInRaid = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
+    const UnitInRaidCond = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let target = namedParams.target || "player";
-        let raidIndex = API_UnitInRaid(target);
+        let raidIndex = UnitInRaid(target);
         return TestBoolean(raidIndex != undefined, "yes");
     }
-    OvaleCondition.RegisterCondition("unitinraid", false, UnitInRaid);
+    OvaleCondition.RegisterCondition("unitinraid", false, UnitInRaidCond);
 }
 {
     const SoulFragments = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {

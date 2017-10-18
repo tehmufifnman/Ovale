@@ -5,16 +5,14 @@ import { OvaleData } from "./Data";
 import { OvalePower } from "./Power";
 import { OvaleState, baseState, StateModule } from "./State";
 import { paperDollState } from "./PaperDoll";
-import aceEvent from "AceEvent-3.0";
+import aceEvent from "@wowts/ace_event-3.0";
+import { ipairs, pairs, LuaArray } from "@wowts/lua";
+import { GetRuneCooldown, GetTime } from "@wowts/wow-mock";
+import { huge } from "@wowts/math";
+import { sort } from "@wowts/table";
 
 let OvaleRunesBase = Ovale.NewModule("OvaleRunes", aceEvent);
 export let OvaleRunes: OvaleRunesClass;
-let _ipairs = ipairs;
-let _pairs = pairs;
-let API_GetRuneCooldown = GetRuneCooldown;
-let API_GetTime = GetTime;
-let INFINITY = math.huge;
-let _sort = table.sort;
 let EMPOWER_RUNE_WEAPON = 47568;
 let RUNE_SLOTS = 6;
 
@@ -70,7 +68,7 @@ class OvaleRunesClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Registe
     UpdateRune(slot) {
         this.StartProfiling("OvaleRunes_UpdateRune");
         let rune = this.rune[slot];
-        let [start, duration] = API_GetRuneCooldown(slot);
+        let [start, duration] = GetRuneCooldown(slot);
         if (start && duration) {
             if (start > 0) {
                 rune.startCooldown = start;
@@ -91,7 +89,7 @@ class OvaleRunesClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Registe
         }
     }
     DebugRunes() {
-        let now = API_GetTime();
+        let now = GetTime();
         for (let slot = 1; slot <= RUNE_SLOTS; slot += 1) {
             let rune = this.rune[slot];
             if (IsActiveRune(rune, now)) {
@@ -112,23 +110,23 @@ class RunesState implements StateModule {
 
     InitializeState() {
         this.rune = {}
-        for (const [slot] of _ipairs(this.rune)) {
+        for (const [slot] of ipairs(this.rune)) {
             this.rune[slot] = {}
         }
     }
     ResetState() {
         OvaleRunes.StartProfiling("OvaleRunes_ResetState");
-        for (const [slot, rune] of _ipairs(this.rune)) {
+        for (const [slot, rune] of ipairs(this.rune)) {
             let stateRune = this.rune[slot];
-            for (const [k, v] of _pairs(rune)) {
+            for (const [k, v] of pairs(rune)) {
                 stateRune[k] = v;
             }
         }
         OvaleRunes.StopProfiling("OvaleRunes_ResetState");
     }
     CleanState() {
-        for (const [slot, rune] of _ipairs(this.rune)) {
-            for (const [k] of _pairs(rune)) {
+        for (const [slot, rune] of ipairs(this.rune)) {
+            for (const [k] of pairs(rune)) {
                 rune[k] = undefined;
             }
             this.rune[slot] = undefined;
@@ -146,7 +144,7 @@ class RunesState implements StateModule {
         if (!isChanneled) {
             this.ApplyRuneCost(spellId, endCast, spellcast);
             if (spellId == EMPOWER_RUNE_WEAPON) {
-                for (const [slot] of _ipairs(this.rune)) {
+                for (const [slot] of ipairs(this.rune)) {
                     this.ReactivateRune(slot, endCast);
                 }
             }
@@ -157,7 +155,7 @@ class RunesState implements StateModule {
     DebugRunes() {
         OvaleRunes.Print("Current rune state:");
         let now = baseState.currentTime;
-        for (const [slot, rune] of _ipairs(this.rune)) {
+        for (const [slot, rune] of ipairs(this.rune)) {
             if (IsActiveRune(rune, now)) {
                 OvaleRunes.Print("    rune[%d] is active.", slot);
             } else {
@@ -218,7 +216,7 @@ class RunesState implements StateModule {
         OvaleRunes.StartProfiling("OvaleRunes_state_RuneCount");
         atTime = atTime || baseState.currentTime;
         let count = 0;
-        let [startCooldown, endCooldown] = [INFINITY, INFINITY];
+        let [startCooldown, endCooldown] = [huge, huge];
         for (let slot = 1; slot <= RUNE_SLOTS; slot += 1) {
             let rune = this.rune[slot];
             if (IsActiveRune(rune, atTime)) {
@@ -244,7 +242,7 @@ class RunesState implements StateModule {
             let rune = this.rune[slot];
             usedRune[slot] = rune.endCooldown - atTime;
         }
-        _sort(usedRune);
+        sort(usedRune);
         OvaleRunes.StopProfiling("OvaleRunes_state_GetRunesCooldown");
         return usedRune[runes];
     }

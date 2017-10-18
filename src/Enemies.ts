@@ -3,23 +3,16 @@ import { OvaleProfiler } from "./Profiler";
 import { Ovale } from "./Ovale";
 import { OvaleGUID } from "./GUID";
 import { OvaleState, StateModule } from "./State";
-import aceEvent from "AceEvent-3.0";
-import AceTimer from "AceTimer-3.0";
+import aceEvent from "@wowts/ace_event-3.0";
+import AceTimer from "@wowts/ace_timer-3.0";
+import { band, bor } from "@wowts/bit";
+import { ipairs, pairs, wipe } from "@wowts/lua";
+import { find } from "@wowts/string";
+import { GetTime, COMBATLOG_OBJECT_AFFILIATION_MINE, COMBATLOG_OBJECT_AFFILIATION_PARTY, COMBATLOG_OBJECT_AFFILIATION_RAID, COMBATLOG_OBJECT_REACTION_FRIENDLY } from "@wowts/wow-mock";
 
 let OvaleEnemiesBase = Ovale.NewModule("OvaleEnemies", aceEvent, AceTimer);
 export let OvaleEnemies: OvaleEnemiesClass;
-let bit_band = bit.band;
-let bit_bor = bit.bor;
-let _ipairs = ipairs;
-let _pairs = pairs;
-let strfind = string.find;
-let _wipe = wipe;
-let API_GetTime = GetTime;
-let _COMBATLOG_OBJECT_AFFILIATION_MINE = COMBATLOG_OBJECT_AFFILIATION_MINE;
-let _COMBATLOG_OBJECT_AFFILIATION_PARTY = COMBATLOG_OBJECT_AFFILIATION_PARTY;
-let _COMBATLOG_OBJECT_AFFILIATION_RAID = COMBATLOG_OBJECT_AFFILIATION_RAID;
-let _COMBATLOG_OBJECT_REACTION_FRIENDLY = COMBATLOG_OBJECT_REACTION_FRIENDLY;
-let GROUP_MEMBER = bit_bor(_COMBATLOG_OBJECT_AFFILIATION_MINE, _COMBATLOG_OBJECT_AFFILIATION_PARTY, _COMBATLOG_OBJECT_AFFILIATION_RAID);
+let GROUP_MEMBER = bor(COMBATLOG_OBJECT_AFFILIATION_MINE, COMBATLOG_OBJECT_AFFILIATION_PARTY, COMBATLOG_OBJECT_AFFILIATION_RAID);
 let CLEU_TAG_SUFFIXES = {
     1: "_DAMAGE",
     2: "_MISSED",
@@ -58,8 +51,8 @@ const IsTagEvent = function(cleuEvent) {
     if (CLEU_AUTOATTACK[cleuEvent]) {
         isTagEvent = true;
     } else {
-        for (const [, suffix] of _ipairs(CLEU_TAG_SUFFIXES)) {
-            if (strfind(cleuEvent, `${suffix}$`)) {
+        for (const [, suffix] of ipairs(CLEU_TAG_SUFFIXES)) {
+            if (find(cleuEvent, `${suffix}$`)) {
                 isTagEvent = true;
                 break;
             }
@@ -68,7 +61,7 @@ const IsTagEvent = function(cleuEvent) {
     return isTagEvent;
 }
 const IsFriendly = function(unitFlags, isGroupMember?) {
-    return bit_band(unitFlags, _COMBATLOG_OBJECT_REACTION_FRIENDLY) > 0 && (!isGroupMember || bit_band(unitFlags, GROUP_MEMBER) > 0);
+    return band(unitFlags, COMBATLOG_OBJECT_REACTION_FRIENDLY) > 0 && (!isGroupMember || band(unitFlags, GROUP_MEMBER) > 0);
 }
 
 class OvaleEnemiesClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(OvaleEnemiesBase)) {
@@ -93,37 +86,37 @@ class OvaleEnemiesClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regis
     }
     COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, cleuEvent, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, ...__args) {
         if (CLEU_UNIT_REMOVED[cleuEvent]) {
-            let now = API_GetTime();
+            let now = GetTime();
             this.RemoveEnemy(cleuEvent, destGUID, now, true);
         } else if (sourceGUID && sourceGUID != "" && sourceName && sourceFlags && destGUID && destGUID != "" && destName && destFlags) {
             if (!IsFriendly(sourceFlags) && IsFriendly(destFlags, true)) {
                 if (!(cleuEvent == "SPELL_PERIODIC_DAMAGE" && IsTagEvent(cleuEvent))) {
-                    let now = API_GetTime();
+                    let now = GetTime();
                     this.AddEnemy(cleuEvent, sourceGUID, sourceName, now);
                 }
             } else if (IsFriendly(sourceFlags, true) && !IsFriendly(destFlags) && IsTagEvent(cleuEvent)) {
-                let now = API_GetTime();
+                let now = GetTime();
                 let isPlayerTag = (sourceGUID == Ovale.playerGUID) || OvaleGUID.IsPlayerPet(sourceGUID);
                 this.AddEnemy(cleuEvent, destGUID, destName, now, isPlayerTag);
             }
         }
     }
     PLAYER_REGEN_DISABLED() {
-        _wipe(self_enemyName);
-        _wipe(self_enemyLastSeen);
-        _wipe(self_taggedEnemyLastSeen);
+        wipe(self_enemyName);
+        wipe(self_enemyLastSeen);
+        wipe(self_taggedEnemyLastSeen);
         this.activeEnemies = 0;
         this.taggedEnemies = 0;
     }
     RemoveInactiveEnemies() {
         this.StartProfiling("OvaleEnemies_RemoveInactiveEnemies");
-        let now = API_GetTime();
-        for (const [guid, timestamp] of _pairs(self_enemyLastSeen)) {
+        let now = GetTime();
+        for (const [guid, timestamp] of pairs(self_enemyLastSeen)) {
             if (now - timestamp > REAP_INTERVAL) {
                 this.RemoveEnemy("REAPED", guid, now);
             }
         }
-        for (const [guid, timestamp] of _pairs(self_taggedEnemyLastSeen)) {
+        for (const [guid, timestamp] of pairs(self_taggedEnemyLastSeen)) {
             if (now - timestamp > REAP_INTERVAL) {
                 this.RemoveTaggedEnemy("REAPED", guid, now);
             }
@@ -200,7 +193,7 @@ class OvaleEnemiesClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Regis
         this.StopProfiling("OvaleEnemies_RemoveEnemy");
     }
     DebugEnemies() {
-        for (const [guid, seen] of _pairs(self_enemyLastSeen)) {
+        for (const [guid, seen] of pairs(self_enemyLastSeen)) {
             let name = self_enemyName[guid];
             let tagged = self_taggedEnemyLastSeen[guid];
             if (tagged) {

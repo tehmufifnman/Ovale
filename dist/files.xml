@@ -1,16 +1,17 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
    <Script file="Controls.lua"/>
    <Script file="TimeSpan.lua"/>
+   <Script file="TsAddon.lua"/>
    <Script file="Localization.lua"/>
    <Script file="Ovale.lua"/>
    <Script file="PoolGC.lua"/>
+   <Script file="Pool.lua"/>
+   <Script file="LastSpell.lua"/>
    <Script file="Queue.lua"/>
    <Script file="Lexer.lua"/>
    <Script file="Options.lua"/>
    <Script file="Profiler.lua"/>
    <Script file="SpellDamage.lua"/>
-   <Script file="Pool.lua"/>
-   <Script file="LastSpell.lua"/>
    <Script file="Debug.lua"/>
    <Script file="Version.lua"/>
    <Script file="DamageTaken.lua"/>

@@ -1,6 +1,6 @@
 local __addonName, __addon = ...
-            __addon.require("./Debug", { "AceConfig-3.0", "AceConfigDialog-3.0", "./Localization", "LibTextDump-1.0", "./Options", "./Ovale" }, function(__exports, AceConfig, AceConfigDialog, __Localization, LibTextDump, __Options, __Ovale)
-local OvaleDebugBase = __Ovale.Ovale:NewModule("OvaleDebug", "AceTimer-3.0")
+            __addon.require("./Debug", { "AceConfig-3.0", "AceConfigDialog-3.0", "./Localization", "LibTextDump-1.0", "./Options", "./Ovale", "AceTimer-3.0", "./TsAddon" }, function(__exports, AceConfig, AceConfigDialog, __Localization, LibTextDump, __Options, __Ovale, aceTimer, __TsAddon)
+local OvaleDebugBase = __Ovale.Ovale:NewModule("OvaleDebug", aceTimer)
 local format = string.format
 local _pairs = pairs
 local API_GetTime = GetTime

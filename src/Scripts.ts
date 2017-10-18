@@ -1,17 +1,15 @@
-import AceConfig from "AceConfig-3.0";
-import AceConfigDialog from "AceConfigDialog-3.0";
+import AceConfig from "@wowts/ace_config-3.0";
+import AceConfigDialog from "@wowts/ace_config_dialog-3.0";
 import { OvaleOptions } from "./Options";
 import { L } from "./Localization";
 import { OvalePaperDoll } from "./PaperDoll";
 import { Ovale } from "./Ovale";
-import aceEvent from "AceEvent-3.0";
+import aceEvent from "@wowts/ace_event-3.0";
+import { format, gsub, lower } from "@wowts/string";
+import { pairs } from "@wowts/lua";
 
 let OvaleScriptsBase = Ovale.NewModule("OvaleScripts", aceEvent);
 export let OvaleScripts: OvaleScriptsClass;
-let format = string.format;
-let gsub = string.gsub;
-let _pairs = pairs;
-let strlower = string.lower;
 let DEFAULT_NAME = "Ovale";
 let DEFAULT_DESCRIPTION = L["Script défaut"];
 let CUSTOM_NAME = "custom";
@@ -35,10 +33,10 @@ let DISABLED_DESCRIPTION = L["Disabled"];
             }
         }
     }
-    for (const [k, v] of _pairs(defaultDB)) {
+    for (const [k, v] of pairs(defaultDB)) {
         OvaleOptions.defaultDB.profile[k] = v;
     }
-    for (const [k, v] of _pairs(actions)) {
+    for (const [k, v] of pairs(actions)) {
         OvaleOptions.options.args.actions.args[k] = v;
     }
     OvaleOptions.RegisterOptions(OvaleScripts);
@@ -68,7 +66,7 @@ class OvaleScriptsClass  extends OvaleScriptsBase {
     GetDescriptions(scriptType) {
         let descriptionsTable = {
         }
-        for (const [name, script] of _pairs(this.script)) {
+        for (const [name, script] of pairs(this.script)) {
             if ((!scriptType || script.type == scriptType) && (!script.specialization || OvalePaperDoll.IsSpecialization(script.specialization))) {
                 if (name == DEFAULT_NAME) {
                     descriptionsTable[name] = `${script.desc} (${this.GetScriptName(name)})`;
@@ -162,7 +160,7 @@ class OvaleScriptsClass  extends OvaleScriptsBase {
             }
         }
         if (!name && specialization) {
-            name = format("simulationcraft_%s_%s_t19p", strlower(className), specialization);
+            name = format("simulationcraft_%s_%s_t19p", lower(className), specialization);
         }
         if (!(name && this.script[name])) {
             name = DISABLED_NAME;

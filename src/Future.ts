@@ -7,22 +7,16 @@ import { OvaleGUID } from "./GUID";
 import { OvalePaperDoll } from "./PaperDoll";
 import { OvaleSpellBook } from "./SpellBook";
 import { lastSpell, SpellCast, self_pool } from "./LastSpell";
-import aceEvent from "AceEvent-3.0";
+import aceEvent from "@wowts/ace_event-3.0";
+import { ipairs, pairs, type, lualength } from "@wowts/lua";
+import { sub } from "@wowts/string";
+import { insert, remove } from "@wowts/table";
+import { GetSpellInfo, GetTime, UnitCastingInfo, UnitChannelInfo, UnitExists, UnitGUID, UnitName } from "@wowts/wow-mock";
 
 let OvaleFutureBase = Ovale.NewModule("OvaleFuture", aceEvent);
-let _ipairs = ipairs;
-let _pairs = pairs;
-let strsub = string.sub;
-let tinsert = table.insert;
-let tremove = table.remove;
-let _type = type;
-let API_GetSpellInfo = GetSpellInfo;
-let API_GetTime = GetTime;
-let API_UnitCastingInfo = UnitCastingInfo;
-let API_UnitChannelInfo = UnitChannelInfo;
-let API_UnitExists = UnitExists;
-let API_UnitGUID = UnitGUID;
-let API_UnitName = UnitName;
+let strsub = sub;
+let tinsert = insert;
+let tremove = remove;
 let self_timeAuraAdded = undefined;
 
 let CLEU_AURA_EVENT = {
@@ -49,10 +43,10 @@ let CLEU_SPELLCAST_EVENT = {
     SPELL_CAST_SUCCESS: true
 }
 {
-    for (const [cleuEvent, v] of _pairs(CLEU_AURA_EVENT)) {
+    for (const [cleuEvent, v] of pairs(CLEU_AURA_EVENT)) {
         CLEU_SPELLCAST_FINISH_EVENT[cleuEvent] = v;
     }
-    for (const [cleuEvent, ] of _pairs(CLEU_SPELLCAST_FINISH_EVENT)) {
+    for (const [cleuEvent, ] of pairs(CLEU_SPELLCAST_FINISH_EVENT)) {
         CLEU_SPELLCAST_EVENT[cleuEvent] = true;
     }
 }
@@ -74,8 +68,8 @@ let WHITE_ATTACK = {
 let WHITE_ATTACK_NAME = {
 }
 {
-    for (const [spellId] of _pairs(WHITE_ATTACK)) {
-        let [name] = API_GetSpellInfo(spellId);
+    for (const [spellId] of pairs(WHITE_ATTACK)) {
+        let [name] = GetSpellInfo(spellId);
         if (name) {
             WHITE_ATTACK_NAME[name] = true;
         }
@@ -146,7 +140,7 @@ class OvaleFutureClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Regist
         if (sourceGUID == Ovale.playerGUID || OvaleGUID.IsPlayerPet(sourceGUID)) {
             this.StartProfiling("OvaleFuture_COMBAT_LOG_EVENT_UNFILTERED");
             if (CLEU_SPELLCAST_EVENT[cleuEvent]) {
-                let now = API_GetTime();
+                let now = GetTime();
                 let [spellId, spellName] = [arg12, arg13];
                 let eventDebug = false;
                 let delta = 0;
@@ -217,7 +211,7 @@ class OvaleFutureClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Regist
             finished = true;
         }
         if (finished) {
-            let now = API_GetTime();
+            let now = GetTime();
             if (self_timeAuraAdded) {
                 if (IsSameSpellcast(spellcast, lastSpell.lastGCDSpellcast)) {
                     this.UpdateSpellcastSnapshot(lastSpell.lastGCDSpellcast, self_timeAuraAdded);
@@ -244,7 +238,7 @@ class OvaleFutureClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Regist
     PLAYER_REGEN_DISABLED(event) {
         this.StartProfiling("OvaleFuture_PLAYER_REGEN_DISABLED");
         this.Debug(event, "Entering combat.");
-        let now = API_GetTime();
+        let now = GetTime();
         Ovale.inCombat = true;
         this.combatStartTime = now;
         Ovale.needRefresh();
@@ -254,7 +248,7 @@ class OvaleFutureClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Regist
     PLAYER_REGEN_ENABLED(event) {
         this.StartProfiling("OvaleFuture_PLAYER_REGEN_ENABLED");
         this.Debug(event, "Leaving combat.");
-        let now = API_GetTime();
+        let now = GetTime();
         Ovale.inCombat = false;
         Ovale.needRefresh();
         this.SendMessage("Ovale_CombatEnded", now);
@@ -264,10 +258,10 @@ class OvaleFutureClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Regist
         if ((unitId == "player" || unitId == "pet") && !WHITE_ATTACK[spellId]) {
             this.StartProfiling("OvaleFuture_UNIT_SPELLCAST_CHANNEL_START");
             this.DebugTimestamp(event, unitId, spell, rank, lineId, spellId);
-            let now = API_GetTime();
+            let now = GetTime();
             let [spellcast] = this.GetSpellcast(spell, spellId, undefined, now);
             if (spellcast) {
-                let [name, , , , startTime, endTime] = API_UnitChannelInfo(unitId);
+                let [name, , , , startTime, endTime] = UnitChannelInfo(unitId);
                 if (name == spell) {
                     startTime = startTime / 1000;
                     endTime = endTime / 1000;
@@ -297,7 +291,7 @@ class OvaleFutureClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Regist
         if ((unitId == "player" || unitId == "pet") && !WHITE_ATTACK[spellId]) {
             this.StartProfiling("OvaleFuture_UNIT_SPELLCAST_CHANNEL_STOP");
             this.DebugTimestamp(event, unitId, spell, rank, lineId, spellId);
-            let now = API_GetTime();
+            let now = GetTime();
             let [spellcast, index] = this.GetSpellcast(spell, spellId, undefined, now);
             if (spellcast && spellcast.channel) {
                 this.Debug("Finished channelling spell %s (%d) queued at %s.", spell, spellId, spellcast.queued);
@@ -316,10 +310,10 @@ class OvaleFutureClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Regist
         if ((unitId == "player" || unitId == "pet") && !WHITE_ATTACK[spellId]) {
             this.StartProfiling("OvaleFuture_UNIT_SPELLCAST_CHANNEL_UPDATE");
             this.DebugTimestamp(event, unitId, spell, rank, lineId, spellId);
-            let now = API_GetTime();
+            let now = GetTime();
             let [spellcast] = this.GetSpellcast(spell, spellId, undefined, now);
             if (spellcast && spellcast.channel) {
-                let [name, , , , startTime, endTime] = API_UnitChannelInfo(unitId);
+                let [name, , , , startTime, endTime] = UnitChannelInfo(unitId);
                 if (name == spell) {
                     startTime = startTime / 1000;
                     endTime = endTime / 1000;
@@ -343,10 +337,10 @@ class OvaleFutureClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Regist
         if ((unitId == "player" || unitId == "pet") && !WHITE_ATTACK[spellId]) {
             this.StartProfiling("OvaleFuture_UNIT_SPELLCAST_DELAYED");
             this.DebugTimestamp(event, unitId, spell, rank, lineId, spellId);
-            let now = API_GetTime();
+            let now = GetTime();
             let [spellcast] = this.GetSpellcast(spell, spellId, lineId, now);
             if (spellcast) {
-                let [name, , , , startTime, endTime, , castId] = API_UnitCastingInfo(unitId);
+                let [name, , , , startTime, endTime, , castId] = UnitCastingInfo(unitId);
                 if (lineId == castId && name == spell) {
                     startTime = startTime / 1000;
                     endTime = endTime / 1000;
@@ -370,7 +364,7 @@ class OvaleFutureClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Regist
         if ((unitId == "player" || unitId == "pet") && !WHITE_ATTACK_NAME[spell]) {
             this.StartProfiling("OvaleFuture_UNIT_SPELLCAST_SENT");
             this.DebugTimestamp(event, unitId, spell, rank, targetName, lineId);
-            let now = API_GetTime();
+            let now = GetTime();
             let caster = OvaleGUID.UnitGUID(unitId);
             let spellcast = self_pool.Get();
             spellcast.lineId = lineId;
@@ -391,10 +385,10 @@ class OvaleFutureClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Regist
                         name = OvaleGUID.UnitName("focus");
                         if (name == targetName) {
                             targetGUID = OvaleGUID.UnitGUID("focus");
-                        } else if (API_UnitExists("mouseover")) {
-                            name = API_UnitName("mouseover");
+                        } else if (UnitExists("mouseover")) {
+                            name = UnitName("mouseover");
                             if (name == targetName) {
-                                targetGUID = API_UnitGUID("mouseover");
+                                targetGUID = UnitGUID("mouseover");
                             }
                         }
                     }
@@ -413,10 +407,10 @@ class OvaleFutureClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Regist
         if ((unitId == "player" || unitId == "pet") && !WHITE_ATTACK[spellId]) {
             this.StartProfiling("OvaleFuture_UNIT_SPELLCAST_START");
             this.DebugTimestamp(event, unitId, spell, rank, lineId, spellId);
-            let now = API_GetTime();
+            let now = GetTime();
             let [spellcast] = this.GetSpellcast(spell, spellId, lineId, now);
             if (spellcast) {
-                let [name, ,, , startTime, endTime, , castId] = API_UnitCastingInfo(unitId);
+                let [name, ,, , startTime, endTime, , castId] = UnitCastingInfo(unitId);
                 if (lineId == castId && name == spell) {
                     startTime = startTime / 1000;
                     endTime = endTime / 1000;
@@ -449,7 +443,7 @@ class OvaleFutureClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Regist
         if ((unitId == "player" || unitId == "pet") && !WHITE_ATTACK[spellId]) {
             this.StartProfiling("OvaleFuture_UNIT_SPELLCAST_SUCCEEDED");
             this.DebugTimestamp(event, unitId, spell, rank, lineId, spellId);
-            let now = API_GetTime();
+            let now = GetTime();
             let [spellcast, index] = this.GetSpellcast(spell, spellId, lineId, now);
             if (spellcast) {
                 let success = false;
@@ -459,9 +453,9 @@ class OvaleFutureClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Regist
                     this.UpdateSpellcastSnapshot(spellcast, now);
                     success = true;
                 } else {
-                    let name = API_UnitChannelInfo(unitId);
+                    let name = UnitChannelInfo(unitId);
                     if (!name) {
-                        let now = API_GetTime();
+                        let now = GetTime();
                         spellcast.spellId = spellId;
                         spellcast.start = now;
                         spellcast.stop = now;
@@ -520,7 +514,7 @@ class OvaleFutureClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Regist
         if ((unitId == "player" || unitId == "pet") && !WHITE_ATTACK[spellId]) {
             this.StartProfiling("OvaleFuture_UnitSpellcastEnded");
             this.DebugTimestamp(event, unitId, spell, rank, lineId, spellId);
-            let now = API_GetTime();
+            let now = GetTime();
             let [spellcast, index] = this.GetSpellcast(spell, spellId, lineId, now);
             if (spellcast) {
                 this.Debug("End casting spell %s (%d) queued at %s due to %s.", spell, spellId, spellcast.queued, event);
@@ -539,7 +533,7 @@ class OvaleFutureClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Regist
         this.StartProfiling("OvaleFuture_GetSpellcast");
         let spellcast: SpellCast, index;
         if (!lineId || lineId != "") {
-            for (const [i, sc] of _ipairs(lastSpell.queue)) {
+            for (const [i, sc] of ipairs(lastSpell.queue)) {
                 if (!lineId || sc.lineId == lineId) {
                     if (spellId && sc.spellId == spellId) {
                         spellcast = sc;
@@ -572,11 +566,11 @@ class OvaleFutureClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Regist
         let auraId, auraGUID;
         let si = OvaleData.spellInfo[spellId];
         if (si && si.aura) {
-            for (const [, unitId] of _ipairs(SPELLCAST_AURA_ORDER)) {
-                for (const [, auraList] of _pairs(si.aura[unitId])) {
-                    for (const [id, spellData] of _pairs(auraList)) {
+            for (const [, unitId] of ipairs(SPELLCAST_AURA_ORDER)) {
+                for (const [, auraList] of pairs(si.aura[unitId])) {
+                    for (const [id, spellData] of pairs(auraList)) {
                         let [verified, value, ] = OvaleData.CheckSpellAuraData(id, spellData, atTime, targetGUID);
-                        if (verified && (SPELLAURALIST_AURA_VALUE[value] || _type(value) == "number" && value > 0)) {
+                        if (verified && (SPELLAURALIST_AURA_VALUE[value] || type(value) == "number" && value > 0)) {
                             auraId = id;
                             auraGUID = OvaleGUID.UnitGUID(unitId);
                             break;
@@ -601,7 +595,7 @@ class OvaleFutureClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Regist
         if (spellcast.spellId) {
             spellcast.damageMultiplier = this.GetDamageMultiplier(spellcast.spellId, spellcast.target, atTime);
         }
-        for (const [, mod] of _pairs(lastSpell.modules)) {
+        for (const [, mod] of pairs(lastSpell.modules)) {
             let func = mod.SaveSpellcastInfo;
             if (func) {
                 func(mod, spellcast, atTime);
@@ -610,15 +604,15 @@ class OvaleFutureClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Regist
         this.StopProfiling("OvaleFuture_SaveSpellcastInfo");
     }
     GetDamageMultiplier(spellId, targetGUID, atTime) {
-        atTime = atTime || this["currentTime"] || API_GetTime();
+        atTime = atTime || this["currentTime"] || GetTime();
         let damageMultiplier = 1;
         let si = OvaleData.spellInfo[spellId];
         if (si && si.aura && si.aura.damage) {
             let CheckRequirements;
-            for (const [filter, auraList] of _pairs(si.aura.damage)) {
-                for (const [auraId, spellData] of _pairs(auraList)) {
+            for (const [filter, auraList] of pairs(si.aura.damage)) {
+                for (const [auraId, spellData] of pairs(auraList)) {
                     let index, multiplier;
-                    if (_type(spellData) == "table") {
+                    if (type(spellData) == "table") {
                         multiplier = spellData[1];
                         index = 2;
                     } else {
@@ -658,7 +652,7 @@ class OvaleFutureClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Regist
         }
     }
     IsActive(spellId) {
-        for (const [, spellcast] of _ipairs(lastSpell.queue)) {
+        for (const [, spellcast] of ipairs(lastSpell.queue)) {
             if (spellcast.spellId == spellId && spellcast.start) {
                 return true;
             }
@@ -675,13 +669,13 @@ class OvaleFutureClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Regist
         this.lastCastTime[spellcast.spellId] = atTime;
         if (spellcast.offgcd) {
             this.Debug("    Caching spell %s (%d) as most recent off-GCD spellcast.", spellcast.spellName, spellcast.spellId);
-            for (const [k, v] of _pairs(spellcast)) {
+            for (const [k, v] of pairs(spellcast)) {
                 this.lastOffGCDSpellcast[k] = v;
             }
             lastSpell.lastSpellcast = this.lastOffGCDSpellcast;
         } else {
             this.Debug("    Caching spell %s (%d) as most recent GCD spellcast.", spellcast.spellName, spellcast.spellId);
-            for (const [k, v] of _pairs(spellcast)) {
+            for (const [k, v] of pairs(spellcast)) {
                 lastSpell.lastGCDSpellcast[k] = v;
             }
             lastSpell.lastSpellcast = lastSpell.lastGCDSpellcast;

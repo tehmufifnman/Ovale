@@ -1,9 +1,7 @@
 import { StateModule, OvaleState } from "./State";
 import { OvaleStance } from "./Stance";
 import { dataState } from "./DataState";
-
-let _type = type;
-
+import { type } from "@wowts/lua";
 
 class StanceState implements StateModule {
     stance = undefined;
@@ -21,7 +19,7 @@ class StanceState implements StateModule {
         OvaleStance.StartProfiling("OvaleStance_ApplySpellAfterCast");
         let stance = dataState.GetSpellInfoProperty(spellId, endCast, "to_stance", targetGUID);
         if (stance) {
-            if (_type(stance) == "string") {
+            if (type(stance) == "string") {
                 stance = OvaleStance.stanceId[stance];
             }
             this.stance = stance;

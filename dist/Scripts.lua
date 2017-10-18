@@ -1,6 +1,6 @@
 local __addonName, __addon = ...
-            __addon.require("./Scripts", { "AceConfig-3.0", "AceConfigDialog-3.0", "./Options", "./Localization", "./PaperDoll", "./Ovale" }, function(__exports, AceConfig, AceConfigDialog, __Options, __Localization, __PaperDoll, __Ovale)
-local OvaleScriptsBase = __Ovale.Ovale:NewModule("OvaleScripts", "AceEvent-3.0")
+            __addon.require("./Scripts", { "AceConfig-3.0", "AceConfigDialog-3.0", "./Options", "./Localization", "./PaperDoll", "./Ovale", "AceEvent-3.0" }, function(__exports, AceConfig, AceConfigDialog, __Options, __Localization, __PaperDoll, __Ovale, aceEvent)
+local OvaleScriptsBase = __Ovale.Ovale:NewModule("OvaleScripts", aceEvent)
 local format = string.format
 local gsub = string.gsub
 local _pairs = pairs

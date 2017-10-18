@@ -1,9 +1,6 @@
 import { Ovale } from "./Ovale";
-let _assert = assert;
-let tinsert = table.insert;
-let _tostring = tostring;
-let tremove = table.remove;
-let _wipe = wipe;
+import { assert, tostring, wipe, LuaArray } from "@wowts/lua";
+import { insert, remove } from "@wowts/table";
 
 export class OvalePool<T> {
     pool:LuaArray<T> = undefined;
@@ -18,8 +15,8 @@ export class OvalePool<T> {
 
     Get() {
         // OvalePool.StartProfiling(this.name);
-        _assert(this.pool);
-        let item = tremove(this.pool);
+        assert(this.pool);
+        let item = remove(this.pool);
         if (item) {
             this.unused = this.unused - 1;
         } else {
@@ -31,10 +28,10 @@ export class OvalePool<T> {
     }
     Release(item:T):void {
         // OvalePool.StartProfiling(this.name);
-        _assert(this.pool);
+        assert(this.pool);
         this.Clean(item);
-        _wipe(item);
-        tinsert(this.pool, item);
+        wipe(item);
+        insert(this.pool, item);
         this.unused = this.unused + 1;
        // OvalePool.StopProfiling(this.name);
     }
@@ -46,7 +43,7 @@ export class OvalePool<T> {
         //OvalePool.StopProfiling(this.name);
     }
     DebuggingInfo():void {
-        Ovale.Print("Pool %s has size %d with %d item(s).", _tostring(this.name), this.size, this.unused);
+        Ovale.Print("Pool %s has size %d with %d item(s).", tostring(this.name), this.size, this.unused);
     }
     Clean(item: T): void {
     }

@@ -5,10 +5,8 @@ import { dataState } from "./DataState";
 import { OvalePower, powerState } from "./Power";
 import { cooldownState } from "./CooldownState";
 import { runesState } from "./Runes";
-
-let _type = type;
-let API_IsUsableItem = IsUsableItem;
-
+import { type } from "@wowts/lua";
+import { IsUsableItem } from "@wowts/wow-mock";
 
 class SpellBookState implements StateModule {
     CleanState(): void {
@@ -20,7 +18,7 @@ class SpellBookState implements StateModule {
 
     IsUsableItem(itemId, atTime?) {
         OvaleSpellBook.StartProfiling("OvaleSpellBook_state_IsUsableItem");
-        let isUsable = API_IsUsableItem(itemId);
+        let isUsable = IsUsableItem(itemId);
         let ii = OvaleData.ItemInfo(itemId);
         if (ii) {
             if (isUsable) {
@@ -36,7 +34,7 @@ class SpellBookState implements StateModule {
     }
     IsUsableSpell(spellId, atTime, targetGUID) {
         OvaleSpellBook.StartProfiling("OvaleSpellBook_state_IsUsableSpell");
-        if (_type(atTime) == "string" && !targetGUID) {
+        if (type(atTime) == "string" && !targetGUID) {
             [atTime, targetGUID] = [undefined, atTime];
         }
         atTime = atTime || baseState.currentTime;
@@ -72,7 +70,7 @@ class SpellBookState implements StateModule {
         return [isUsable, noMana];
     }
     GetTimeToSpell(spellId, atTime, targetGUID, extraPower?) {
-        if (_type(atTime) == "string" && !targetGUID) {
+        if (type(atTime) == "string" && !targetGUID) {
             [atTime, targetGUID] = [undefined, atTime];
         }
         atTime = atTime || baseState.currentTime;

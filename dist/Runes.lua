@@ -1,6 +1,6 @@
 local __addonName, __addon = ...
-            __addon.require("./Runes", { "./Debug", "./Profiler", "./Ovale", "./Data", "./Power", "./State", "./PaperDoll" }, function(__exports, __Debug, __Profiler, __Ovale, __Data, __Power, __State, __PaperDoll)
-local OvaleRunesBase = __Ovale.Ovale:NewModule("OvaleRunes", "AceEvent-3.0")
+            __addon.require("./Runes", { "./Debug", "./Profiler", "./Ovale", "./Data", "./Power", "./State", "./PaperDoll", "AceEvent-3.0" }, function(__exports, __Debug, __Profiler, __Ovale, __Data, __Power, __State, __PaperDoll, aceEvent)
+local OvaleRunesBase = __Ovale.Ovale:NewModule("OvaleRunes", aceEvent)
 local _ipairs = ipairs
 local _pairs = pairs
 local API_GetRuneCooldown = GetRuneCooldown

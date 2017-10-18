@@ -1,10 +1,10 @@
 import { Ovale } from "./Ovale";
 import { OvaleAura } from "./Aura";
-import aceEvent from "AceEvent-3.0";
+import aceEvent from "@wowts/ace_event-3.0";
+import { GetTime } from "@wowts/wow-mock";
 
 let OvaleShadowWordDeathBase = Ovale.NewModule("OvaleShadowWordDeath", aceEvent);
 export let OvaleShadowWordDeath: OvaleShadowWordDeathClass;
-let API_GetTime = GetTime;
 let self_playerGUID = undefined;
 let SHADOW_WORD_DEATH = {
     [32379]: true,
@@ -44,7 +44,7 @@ class OvaleShadowWordDeathClass extends OvaleShadowWordDeathBase {
             if (cleuEvent == "SPELL_DAMAGE") {
                 let [spellId, overkill] = [arg12, arg16];
                 if (SHADOW_WORD_DEATH[spellId] && !(overkill && overkill > 0)) {
-                    let now = API_GetTime();
+                    let now = GetTime();
                     this.start = now;
                     this.ending = now + this.duration;
                     this.stacks = 1;

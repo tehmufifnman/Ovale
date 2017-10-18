@@ -3,24 +3,13 @@ import { OvaleDebug } from "./Debug";
 import { OvaleProfiler } from "./Profiler";
 import { OvaleSpellBook } from "./SpellBook";
 import { Ovale } from "./Ovale";
-import aceEvent from "AceEvent-3.0";
-import aceTimer from "AceTimer-3.0";
+import aceEvent from "@wowts/ace_event-3.0";
+import aceTimer from "@wowts/ace_timer-3.0";
+import { gsub, len, match, upper } from "@wowts/string";
+import { concat, sort, insert } from "@wowts/table";
+import { tonumber, wipe, pairs, tostring, ipairs, lualength, _G } from "@wowts/lua";
+import { GetActionInfo, GetActionText, GetBindingKey, GetBonusBarIndex, GetMacroItem, GetMacroSpell } from "@wowts/wow-mock";
 
-let gsub = string.gsub;
-let strlen = string.len;
-let strmatch = string.match;
-let strupper = string.upper;
-let tconcat = table.concat;
-let _tonumber = tonumber;
-let tsort = table.sort;
-const tinsert = table.insert;
-let _wipe = wipe;
-let API_GetActionInfo = GetActionInfo;
-let API_GetActionText = GetActionText;
-let API_GetBindingKey = GetBindingKey;
-let API_GetBonusBarIndex = GetBonusBarIndex;
-let API_GetMacroItem = GetMacroItem;
-let API_GetMacroSpell = GetMacroSpell;
 
 const OvaleActionBarBase = OvaleProfiler.RegisterProfiling(OvaleDebug.RegisterDebugging(Ovale.NewModule("OvaleActionBar", aceEvent, aceTimer)));
 class OvaleActionBarClass extends OvaleActionBarBase {
@@ -62,7 +51,7 @@ class OvaleActionBarClass extends OvaleActionBarBase {
 
     GetKeyBinding(slot) {
         let name;
-        if (Bartender4) {
+        if (_G["Bartender4"]) {
             name = `CLICK BT4Button ${slot}:LeftButton`;
         } else {
             if (slot <= 24 || slot > 72) {
@@ -77,9 +66,9 @@ class OvaleActionBarClass extends OvaleActionBarBase {
                 name = `MULTIACTIONBAR1BUTTON${slot - 60}`;
             }
         }
-        let key = name && API_GetBindingKey(name);
-        if (key && strlen(key) > 4) {
-            key = strupper(key);
+        let key = name && GetBindingKey(name);
+        if (key && len(key) > 4) {
+            key = upper(key);
             key = gsub(key, "%s+", "");
             key = gsub(key, "ALT%-", "A");
             key = gsub(key, "CTRL%-", "C");
@@ -94,7 +83,7 @@ class OvaleActionBarClass extends OvaleActionBarBase {
     }
 
     ParseHyperlink(hyperlink) {
-        let [color, linkType, linkData, text] = strmatch(hyperlink, "|?c?f?f?(%x*)|?H?([^:]*):?(%d+)|?h?%[?([^%[%]]*)%]?|?h?|?r?");
+        let [color, linkType, linkData, text] = match(hyperlink, "|?c?f?f?(%x*)|?H?([^:]*):?(%d+)|?h?%[?([^%[%]]*)%]?|?h?|?r?");
         return [color, linkType, linkData, text];
     }
 
@@ -108,11 +97,11 @@ class OvaleActionBarClass extends OvaleActionBarBase {
     }
 
     ACTIONBAR_SLOT_CHANGED(event, slot) {
-        slot = _tonumber(slot);
+        slot = tonumber(slot);
         if (slot == 0) {
             this.UpdateActionSlots(event);
         } else if (slot) {
-            let bonus = _tonumber(API_GetBonusBarIndex()) * 12;
+            let bonus = tonumber(GetBonusBarIndex()) * 12;
             let bonusStart = (bonus > 0) && (bonus - 11) || 1;
             let isBonus = slot >= bonusStart && slot < bonusStart + 12;
             if (isBonus || slot > 12 && slot < 73) {
@@ -130,12 +119,12 @@ class OvaleActionBarClass extends OvaleActionBarBase {
     UpdateActionSlots(event) {
         this.StartProfiling("OvaleActionBar_UpdateActionSlots");
         this.Debug("%s: Updating all action slot mappings.", event);
-        _wipe(this.action);
-        _wipe(this.item);
-        _wipe(this.macro);
-        _wipe(this.spell);
+        wipe(this.action);
+        wipe(this.item);
+        wipe(this.macro);
+        wipe(this.spell);
         let start = 1;
-        let bonus = _tonumber(API_GetBonusBarIndex()) * 12;
+        let bonus = tonumber(GetBonusBarIndex()) * 12;
         if (bonus > 0) {
             start = 13;
             for (let slot = bonus - 11; slot <= bonus; slot += 1) {
@@ -161,9 +150,9 @@ class OvaleActionBarClass extends OvaleActionBarBase {
             this.macro[action] = undefined;
         }
         this.action[slot] = undefined;
-        let [actionType, actionId] = API_GetActionInfo(slot);
+        let [actionType, actionId] = GetActionInfo(slot);
         if (actionType == "spell") {
-            const id = _tonumber(actionId);
+            const id = tonumber(actionId);
             if (id) {
                 if (!this.spell[id] || slot < this.spell[id]) {
                     this.spell[id] = slot;
@@ -171,7 +160,7 @@ class OvaleActionBarClass extends OvaleActionBarBase {
                 this.action[slot] = id;
             }
         } else if (actionType == "item") {
-            const id = _tonumber(actionId);
+            const id = tonumber(actionId);
             if (id) {
                 if (!this.item[id] || slot < this.item[id]) {
                     this.item[id] = slot;
@@ -179,25 +168,25 @@ class OvaleActionBarClass extends OvaleActionBarBase {
                 this.action[slot] = id;
             }
         } else if (actionType == "macro") {
-            const id = _tonumber(actionId);
+            const id = tonumber(actionId);
             if (id) {
-                let actionText = API_GetActionText(slot);
+                let actionText = GetActionText(slot);
                 if (actionText) {
                     if (!this.macro[actionText] || slot < this.macro[actionText]) {
                         this.macro[actionText] = slot;
                     }
-                    let [, , spellId] = API_GetMacroSpell(id);
+                    let [, , spellId] = GetMacroSpell(id);
                     if (spellId) {
                         if (!this.spell[spellId] || slot < this.spell[spellId]) {
                             this.spell[spellId] = slot;
                         }
                         this.action[slot] = spellId;
                     } else {
-                        let [, hyperlink] = API_GetMacroItem(id);
+                        let [, hyperlink] = GetMacroItem(id);
                         if (hyperlink) {
                             let [, , linkData] = this.ParseHyperlink(hyperlink);
                             let itemIdText = gsub(linkData, ":.*", "");
-                            const itemId = _tonumber(itemIdText);
+                            const itemId = tonumber(itemIdText);
                             if (itemId) {
                                 if (!this.item[itemId] || slot < this.item[itemId]) {
                                     this.item[itemId] = slot;
@@ -244,13 +233,13 @@ class OvaleActionBarClass extends OvaleActionBarBase {
     OutputTableValues(output, tbl) {}
 
     DebugActions() {
-        _wipe(this.output);
+        wipe(this.output);
         let array = {
         }
         for (const [k, v] of pairs(this.spell)) {
-            tinsert(array, `${tostring(this.GetKeyBinding(v))}: ${tostring(k)} ${tostring(OvaleSpellBook.GetSpellName(k))}`);
+            insert(array, `${tostring(this.GetKeyBinding(v))}: ${tostring(k)} ${tostring(OvaleSpellBook.GetSpellName(k))}`);
         }
-        tsort(array);
+        sort(array);
         for (const [, v] of ipairs(array)) {
             this.output[lualength(this.output) + 1] = v;
         }
@@ -259,7 +248,7 @@ class OvaleActionBarClass extends OvaleActionBarBase {
             total = total + 1;
         }
         this.output[lualength(this.output) + 1] = `Total spells: ${total}`;
-        return tconcat(this.output, "\n");
+        return concat(this.output, "\n");
     }
 }
 

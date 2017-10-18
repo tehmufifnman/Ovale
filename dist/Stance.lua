@@ -1,6 +1,6 @@
 local __addonName, __addon = ...
-            __addon.require("./Stance", { "./Localization", "./Debug", "./Profiler", "./Ovale", "./Requirement" }, function(__exports, __Localization, __Debug, __Profiler, __Ovale, __Requirement)
-local OvaleStanceBase = __Ovale.Ovale:NewModule("OvaleStance", "AceEvent-3.0")
+            __addon.require("./Stance", { "./Localization", "./Debug", "./Profiler", "./Ovale", "./Requirement", "AceEvent-3.0" }, function(__exports, __Localization, __Debug, __Profiler, __Ovale, __Requirement, aceEvent)
+local OvaleStanceBase = __Ovale.Ovale:NewModule("OvaleStance", aceEvent)
 local _pairs = pairs
 local substr = string.sub
 local tconcat = table.concat

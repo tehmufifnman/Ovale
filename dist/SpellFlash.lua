@@ -1,6 +1,6 @@
 local __addonName, __addon = ...
-            __addon.require("./SpellFlash", { "./Localization", "./Options", "./Ovale", "./Data", "./Future", "./SpellBook", "./Stance", "./State" }, function(__exports, __Localization, __Options, __Ovale, __Data, __Future, __SpellBook, __Stance, __State)
-local OvaleSpellFlashBase = __Ovale.Ovale:NewModule("OvaleSpellFlash", "AceEvent-3.0")
+            __addon.require("./SpellFlash", { "./Localization", "./Options", "./Ovale", "./Data", "./Future", "./SpellBook", "./Stance", "./State", "AceEvent-3.0" }, function(__exports, __Localization, __Options, __Ovale, __Data, __Future, __SpellBook, __Stance, __State, aceEvent)
+local OvaleSpellFlashBase = __Ovale.Ovale:NewModule("OvaleSpellFlash", aceEvent)
 local _pairs = pairs
 local API_GetTime = GetTime
 local API_UnitHasVehicleUI = UnitHasVehicleUI

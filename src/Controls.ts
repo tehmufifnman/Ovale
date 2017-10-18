@@ -1,4 +1,4 @@
-let _wipe = wipe;
+import { LuaObj, wipe } from "@wowts/lua";
 
 export interface CheckBox {
     text?: string;
@@ -20,6 +20,6 @@ export const lists: LuaObj<List> = {}
 
 
 export function ResetControls() {
-    _wipe(checkBoxes);
-    _wipe(lists);
+    wipe(checkBoxes);
+    wipe(lists);
 }

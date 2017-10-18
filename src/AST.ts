@@ -9,23 +9,12 @@ import { OvaleLexer, LexerFilter } from "./Lexer";
 import { OvaleScripts } from "./Scripts";
 import { OvaleSpellBook } from "./SpellBook";
 import { OvaleStance } from "./Stance";
+import { LuaArray, LuaObj, ipairs, next, pairs, tonumber, tostring, type, wipe, lualength } from "@wowts/lua";
+import { format, gsub, lower, sub } from "@wowts/string";
+import { concat, insert, sort } from "@wowts/table";
+import { GetItemInfo } from "@wowts/wow-mock";
 
 let OvaleASTBase = Ovale.NewModule("OvaleAST");
-let format = string.format;
-let gsub = string.gsub;
-let _ipairs = ipairs;
-let _next = next;
-let _pairs = pairs;
-let strlower = string.lower;
-let strsub = string.sub;
-let tconcat = table.concat;
-let tinsert = table.insert;
-let _tonumber = tonumber;
-let _tostring = tostring;
-let tsort = table.sort;
-let _type = type;
-let _wipe = wipe;
-let API_GetItemInfo = GetItemInfo;
 
 let KEYWORD = {
     ["and"]: true,
@@ -85,13 +74,13 @@ let STANCE_KEYWORD = {
     ["to_stance"]: true
 }
 {
-    for (const [keyword, value] of _pairs(SPELL_AURA_KEYWORD)) {
+    for (const [keyword, value] of pairs(SPELL_AURA_KEYWORD)) {
         DECLARATION_KEYWORD[keyword] = value;
     }
-    for (const [keyword, value] of _pairs(DECLARATION_KEYWORD)) {
+    for (const [keyword, value] of pairs(DECLARATION_KEYWORD)) {
         KEYWORD[keyword] = value;
     }
-    for (const [keyword, value] of _pairs(PARAMETER_KEYWORD)) {
+    for (const [keyword, value] of pairs(PARAMETER_KEYWORD)) {
         KEYWORD[keyword] = value;
     }
 }
@@ -288,7 +277,7 @@ const TokenizeNumber:Tokenizer = function(token) {
 }
 
 const TokenizeString:Tokenizer = function(token) {
-    token = strsub(token, 2, -2);
+    token = sub(token, 2, -2);
     return ["string", token];
 }
 const TokenizeWhitespace:Tokenizer = function(token) {
@@ -393,33 +382,32 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
     postOrderVisitedPool = new OvalePool<LuaObj<boolean>>("OvaleAST_postOrderVisitedPool");
     self_pool = new SelfPool(this);
     PARAMETER_KEYWORD = PARAMETER_KEYWORD;
-  
-    constructor() {
-        super();
-    }
     
+    OnInitialize(){
+    }
+
     print_r(node, indent?, done?, output?) {
         done = done || {}
         output = output || {}
         indent = indent || '';
-        for (const [key, value] of _pairs(node)) {
-            if (_type(value) == "table") {
+        for (const [key, value] of pairs(node)) {
+            if (type(value) == "table") {
                 if (done[value]) {
-                    tinsert(output, `${indent}[${ _tostring(key)}] => (self_reference)`);
+                    insert(output, `${indent}[${ tostring(key)}] => (self_reference)`);
                 } else {
                     done[value] = true;
                     if (value.type) {
-                        tinsert(output, `${indent}[${_tostring(key)}] =>`);
+                        insert(output, `${indent}[${tostring(key)}] =>`);
                     } else {
-                        tinsert(output, `${indent}[${_tostring(key)}] => {`);
+                        insert(output, `${indent}[${tostring(key)}] => {`);
                     }
                     this.print_r(value, `${indent}    `, done, output);
                     if (!value.type) {
-                        tinsert(output, `${indent}}`);
+                        insert(output, `${indent}}`);
                     }
                 }
             } else {
-                tinsert(output, `${indent}[${_tostring(key)}] => ${_tostring(value)}`);
+                insert(output, `${indent}[${tostring(key)}] => ${tostring(value)}`);
             }
         }
         return output;
@@ -441,7 +429,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
 
     PostOrderTraversal(node: Node, array: LuaArray<Node>, visited: LuaObj<boolean>) {
         if (node.child) {
-            for (const [, childNode] of _ipairs(node.child)) {
+            for (const [, childNode] of ipairs(node.child)) {
                 if (!visited[childNode.nodeId]) {
                     this.PostOrderTraversal(childNode, array, visited);
                     array[lualength(array) + 1] = node;
@@ -454,11 +442,11 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
 
     FlattenParameterValue(parameterValue, annotation) {
         let value = parameterValue;
-        if (_type(parameterValue) == "table") {
+        if (type(parameterValue) == "table") {
             let node = parameterValue;
             if (node.type == "comma_separated_values") {
                 value = this.self_parametersPool.Get();
-                for (const [k, v] of _ipairs(node.csv)) {
+                for (const [k, v] of ipairs(node.csv)) {
                     value[k] = this.FlattenParameterValue(v, annotation);
                 }
                 annotation.parametersList = annotation.parametersList || {
@@ -478,7 +466,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
                     value = node.value;
                 }
                 if (isBang) {
-                    value = `!${_tostring(value)}`;
+                    value = `!${tostring(value)}`;
                 }
             }
         }
@@ -501,7 +489,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
     }
 
     HasParameters(node) {
-        return node.rawPositionalParams && _next(node.rawPositionalParams) || node.rawNamedParams && _next(node.rawNamedParams);
+        return node.rawPositionalParams && next(node.rawPositionalParams) || node.rawNamedParams && next(node.rawNamedParams);
     }
 
     Unparse(node) {
@@ -524,7 +512,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
 
     UnparseAddCheckBox: UnparserFunction = (node) => {
         let s;
-        if (node.rawPositionalParams && _next(node.rawPositionalParams) || node.rawNamedParams && _next(node.rawNamedParams)) {
+        if (node.rawPositionalParams && next(node.rawPositionalParams) || node.rawNamedParams && next(node.rawNamedParams)) {
             s = format("AddCheckBox(%s %s %s)", node.name, this.Unparse(node.description), this.UnparseParameters(node.rawPositionalParams, node.rawNamedParams));
         } else {
             s = format("AddCheckBox(%s %s)", node.name, this.Unparse(node.description));
@@ -570,10 +558,10 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
     }
     UnparseCommaSeparatedValues: UnparserFunction = (node) => {
         let output = this.self_outputPool.Get();
-        for (const [k, v] of _ipairs(node.csv)) {
+        for (const [k, v] of ipairs(node.csv)) {
             output[k] = this.Unparse(v);
         }
-        let outputString = tconcat(output, ",");
+        let outputString = concat(output, ",");
         this.self_outputPool.Release(output);
         return outputString;
     }
@@ -649,7 +637,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         output[lualength(output) + 1] = "";
         output[lualength(output) + 1] = `${INDENT(this.self_indent)}{`;
         this.self_indent = this.self_indent + 1;
-        for (const [, statementNode] of _ipairs(node.child)) {
+        for (const [, statementNode] of ipairs(node.child)) {
             let s = this.Unparse(statementNode);
             if (s == "") {
                 output[lualength(output) + 1] = s;
@@ -659,7 +647,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         }
         this.self_indent = this.self_indent - 1;
         output[lualength(output) + 1] = `${INDENT(this.self_indent)}}`;
-        let outputString = tconcat(output, "\n");
+        let outputString = concat(output, "\n");
         this.self_outputPool.Release(output);
         return outputString;
     }
@@ -682,31 +670,31 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         return format("%s(%s %s)", node.keyword, node.name, this.UnparseParameters(node.rawPositionalParams, node.rawNamedParams));
     }
     UnparseNumber:UnparserFunction = (node) => {
-        return _tostring(node.value);
+        return tostring(node.value);
     }
     UnparseParameters(positionalParams, namedParams) {
         let output = this.self_outputPool.Get();
-        for (const [k, v] of _pairs(namedParams)) {
+        for (const [k, v] of pairs(namedParams)) {
             if (k == "checkbox") {
-                for (const [, name] of _ipairs(v)) {
+                for (const [, name] of ipairs(v)) {
                     output[lualength(output) + 1] = format("checkbox=%s", this.Unparse(name));
                 }
             } else if (k == "listitem") {
-                for (const [list, item] of _pairs(v)) {
+                for (const [list, item] of pairs(v)) {
                     output[lualength(output) + 1] = format("listitem=%s:%s", list, this.Unparse(item));
                 }
-            } else if (_type(v) == "table") {
+            } else if (type(v) == "table") {
                 output[lualength(output) + 1] = format("%s=%s", k, this.Unparse(v));
             } else if (k == "filter" || k == "target") {
             } else {
                 output[lualength(output) + 1] = format("%s=%s", k, v);
             }
         }
-        tsort(output);
+        sort(output);
         for (let k = lualength(positionalParams); k >= 1; k += -1) {
-            tinsert(output, 1, this.Unparse(positionalParams[k]));
+            insert(output, 1, this.Unparse(positionalParams[k]));
         }
-        let outputString = tconcat(output, " ");
+        let outputString = concat(output, " ");
         this.self_outputPool.Release(output);
         return outputString;
     }
@@ -716,7 +704,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
     UnparseScript:UnparserFunction = (node: Node) => {
         let output = this.self_outputPool.Get();
         let previousDeclarationType;
-        for (const [, declarationNode] of _ipairs(node.child)) {
+        for (const [, declarationNode] of ipairs(node.child)) {
             if (declarationNode.type == "item_info" || declarationNode.type == "spell_aura_list" || declarationNode.type == "spell_info" || declarationNode.type == "spell_require") {
                 let s = this.Unparse(declarationNode);
                 if (s == "") {
@@ -739,7 +727,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
                 previousDeclarationType = declarationNode.type;
             }
         }
-        let outputString = tconcat(output, "\n");
+        let outputString = concat(output, "\n");
         this.self_outputPool.Release(output);
         return outputString;
     }
@@ -815,7 +803,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
                 break;
             }
         }
-        this.Print(tconcat(context, " "));
+        this.Print(concat(context, " "));
     }
 
     Parse(nodeType, tokenStream: OvaleLexer, nodeList, annotation) {
@@ -1099,13 +1087,13 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
             if (tokenType == "-") {
                 [tokenType, token] = tokenStream.Consume();
                 if (tokenType == "number") {
-                    value = -1 * _tonumber(token);
+                    value = -1 * tonumber(token);
                 } else {
                     this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing DEFINE; number expected after '-'.", token);
                     ok = false;
                 }
             } else if (tokenType == "number") {
-                value = _tonumber(token);
+                value = tonumber(token);
             } else if (tokenType == "string") {
                 value = token;
             } else {
@@ -1219,7 +1207,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
             let [tokenType, token] = tokenStream.Consume();
             if (tokenType == "name") {
                 name = token;
-                lowername = strlower(name);
+                lowername = lower(name);
             } else {
                 this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing FUNCTION; name expected.", token);
                 ok = false;
@@ -1233,7 +1221,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
                 [tokenType, token] = tokenStream.Consume(2);
                 if (tokenType == "name") {
                     name = token;
-                    lowername = strlower(name);
+                    lowername = lower(name);
                 } else {
                     this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing FUNCTION; name expected.", token);
                     ok = false;
@@ -1267,20 +1255,20 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         }
         if (ok) {
             if (!namedParams.target) {
-                if (strsub(lowername, 1, 6) == "target") {
+                if (sub(lowername, 1, 6) == "target") {
                     namedParams.target = "target";
-                    lowername = strsub(lowername, 7);
-                    name = strsub(name, 7);
+                    lowername = sub(lowername, 7);
+                    name = sub(name, 7);
                 }
             }
             if (!namedParams.filter) {
-                if (strsub(lowername, 1, 6) == "debuff") {
+                if (sub(lowername, 1, 6) == "debuff") {
                     namedParams.filter = "debuff";
-                } else if (strsub(lowername, 1, 4) == "buff") {
+                } else if (sub(lowername, 1, 4) == "buff") {
                     namedParams.filter = "buff";
-                } else if (strsub(lowername, 1, 11) == "otherdebuff") {
+                } else if (sub(lowername, 1, 11) == "otherdebuff") {
                     namedParams.filter = "debuff";
-                } else if (strsub(lowername, 1, 9) == "otherbuff") {
+                } else if (sub(lowername, 1, 9) == "otherbuff") {
                     namedParams.filter = "buff";
                 }
             }
@@ -1625,7 +1613,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         {
             let [tokenType, token] = tokenStream.Consume();
             if (tokenType == "number") {
-                value = _tonumber(token);
+                value = tonumber(token);
             } else {
                 this.SyntaxError(tokenStream, "Syntax error: unexpected token '%s' when parsing NUMBER; number expected.", token);
                 ok = false;
@@ -1864,7 +1852,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
                 [ok, declarationNode] = this.ParseDeclaration(tokenStream, nodeList, annotation);
                 if (ok) {
                     if (declarationNode.type == "script") {
-                        for (const [, node] of _ipairs(declarationNode.child)) {
+                        for (const [, node] of ipairs(declarationNode.child)) {
                             child[lualength(child) + 1] = node;
                         }
                         this.self_pool.Release(declarationNode);
@@ -2299,27 +2287,27 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
     }
     NodeToString(node) {
         let output = this.print_r(node);
-        return tconcat(output, "\n");
+        return concat(output, "\n");
     }
     ReleaseAnnotation(annotation: Annotation) {
         if (annotation.controlList) {
-            for (const [, control] of _ipairs(annotation.controlList)) {
+            for (const [, control] of ipairs(annotation.controlList)) {
                 this.self_controlPool.Release(control);
             }
         }
         if (annotation.parametersList) {
-            for (const [, parameters] of _ipairs(annotation.parametersList)) {
+            for (const [, parameters] of ipairs(annotation.parametersList)) {
                 this.self_parametersPool.Release(parameters);
             }
         }
         if (annotation.nodeList) {
-            for (const [, node] of _ipairs(annotation.nodeList)) {
+            for (const [, node] of ipairs(annotation.nodeList)) {
                 this.self_pool.Release(node);
             }
         }
-        for (const [key, value] of _pairs(annotation)) {
-            if (_type(value) == "table") {
-                _wipe(value);
+        for (const [key, value] of pairs(annotation)) {
+            if (type(value) == "table") {
+                wipe(value);
             }
             annotation[key] = undefined;
         }
@@ -2384,7 +2372,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         if (ast.annotation) {
             let dictionary = ast.annotation.definition;
             if (dictionary && ast.annotation.nameReference) {
-                for (const [, node] of _ipairs<Node>(ast.annotation.nameReference)) {
+                for (const [, node] of ipairs<Node>(ast.annotation.nameReference)) {
                     if ((node.type == "item_info" || node.type == "item_require") && node.name) {
                         let itemId = dictionary[node.name];
                         if (itemId) {
@@ -2414,7 +2402,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
     PropagateStrings(ast) {
         this.StartProfiling("OvaleAST_PropagateStrings");
         if (ast.annotation && ast.annotation.stringReference) {
-            for (const [, node] of _ipairs<Node>(ast.annotation.stringReference)) {
+            for (const [, node] of ipairs<Node>(ast.annotation.stringReference)) {
                 if (node.type == "string") {
                     let key = node.value;
                     let value = L[key];
@@ -2428,13 +2416,13 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
                     node.type = "string";
                     node.value = value;
                 } else if (node.type == "number") {
-                    let value = _tostring(node.value);
+                    let value = tostring(node.value);
                     node.previousType = "number";
                     node.type = "string";
                     node.value = value;
                 } else if (node.type == "function") {
                     let key = node.rawPositionalParams[1];
-                    if (_type(key) == "table") {
+                    if (type(key) == "table") {
                         if (key.type == "value") {
                             key = key.value;
                         } else if (key.type == "variable") {
@@ -2447,7 +2435,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
                     if (key) {
                         let name = node.name;
                         if (name == "ItemName") {
-                            value = API_GetItemInfo(key) || "item:" + key;
+                            value = GetItemInfo(key) || "item:" + key;
                         } else if (name == "L") {
                             value = L[key];
                         } else if (name == "SpellName") {
@@ -2470,10 +2458,10 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         let annotation = ast.annotation;
         if (annotation && annotation.parametersReference) {
             let dictionary = annotation.definition;
-            for (const [, node] of _ipairs<Node>(annotation.parametersReference)) {
+            for (const [, node] of ipairs<Node>(annotation.parametersReference)) {
                 if (node.rawPositionalParams) {
                     let parameters = this.self_parametersPool.Get();
-                    for (const [key, value] of _ipairs(node.rawPositionalParams)) {
+                    for (const [key, value] of ipairs(node.rawPositionalParams)) {
                         parameters[key] = this.FlattenParameterValue(value, annotation);
                     }
                     node.positionalParams = parameters;
@@ -2483,15 +2471,15 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
                 }
                 if (node.rawNamedParams) {
                     let parameters = this.self_parametersPool.Get();
-                    for (let [key, value] of _pairs(node.rawNamedParams)) {
+                    for (let [key, value] of pairs(node.rawNamedParams)) {
                         if (key == "checkbox" || key == "listitem") {
                             let control = parameters[key] || this.self_controlPool.Get();
                             if (key == "checkbox") {
-                                for (const [i, name] of _ipairs(value)) {
+                                for (const [i, name] of ipairs(value)) {
                                     control[i] = this.FlattenParameterValue(name, annotation);
                                 }
                             } else {
-                                for (const [list, item] of _pairs(value)) {
+                                for (const [list, item] of pairs(value)) {
                                     control[list] = this.FlattenParameterValue(item, annotation);
                                 }
                             }
@@ -2502,7 +2490,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
                                 annotation.controlList[lualength(annotation.controlList) + 1] = control;
                             }
                         } else {
-                            if (_type(key) != "number" && dictionary && dictionary[key]) {
+                            if (type(key) != "number" && dictionary && dictionary[key]) {
                                 key = dictionary[key];
                             }
                             parameters[key] = this.FlattenParameterValue(value, annotation);
@@ -2514,27 +2502,27 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
                     annotation.parametersList[lualength(annotation.parametersList) + 1] = parameters;
                 }
                 let output = this.self_outputPool.Get();
-                for (const [k, v] of _pairs(node.namedParams)) {
+                for (const [k, v] of pairs(node.namedParams)) {
                     if (k == "checkbox") {
-                        for (const [, name] of _ipairs(v)) {
+                        for (const [, name] of ipairs(v)) {
                             output[lualength(output) + 1] = format("checkbox=%s", name);
                         }
                     } else if (k == "listitem") {
-                        for (const [list, item] of _ipairs(v)) {
+                        for (const [list, item] of ipairs(v)) {
                             output[lualength(output) + 1] = format("listitem=%s:%s", list, item);
                         }
-                    } else if (_type(v) == "table") {
-                        output[lualength(output) + 1] = format("%s=%s", k, tconcat(v, ","));
+                    } else if (type(v) == "table") {
+                        output[lualength(output) + 1] = format("%s=%s", k, concat(v, ","));
                     } else {
                         output[lualength(output) + 1] = format("%s=%s", k, v);
                     }
                 }
-                tsort(output);
+                sort(output);
                 for (let k = lualength(node.positionalParams); k >= 1; k += -1) {
-                    tinsert(output, 1, node.positionalParams[k]);
+                    insert(output, 1, node.positionalParams[k]);
                 }
                 if (lualength(output) > 0) {
-                    node.paramsAsString = tconcat(output, " ");
+                    node.paramsAsString = concat(output, " ");
                 } else {
                     node.paramsAsString = "";
                 }
@@ -2549,7 +2537,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
             let customFunction = ast.annotation.customFunction;
             let functionCall = ast.annotation.functionCall;
             if (functionCall) {
-                for (const [name] of _pairs(functionCall)) {
+                for (const [name] of pairs(functionCall)) {
                     if (ACTION_PARAMETER_COUNT[name]) {
                     } else if (STRING_LOOKUP_FUNCTION[name]) {
                     } else if (OvaleCondition.IsCondition(name)) {
@@ -2566,9 +2554,9 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         this.StartProfiling("OvaleAST_VerifyParameterStances");
         let annotation = ast.annotation;
         if (annotation && annotation.verify && annotation.parametersReference) {
-            for (const [, node] of _ipairs<Node>(annotation.parametersReference)) {
+            for (const [, node] of ipairs<Node>(annotation.parametersReference)) {
                 if (node.rawNamedParams) {
-                    for (const [stanceKeyword] of _pairs(STANCE_KEYWORD)) {
+                    for (const [stanceKeyword] of pairs(STANCE_KEYWORD)) {
                         let valueNode = node.rawNamedParams[stanceKeyword];
                         if (valueNode) {
                             if (valueNode.type == "comma_separated_values") {
@@ -2579,7 +2567,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
                             }
                             let value = this.FlattenParameterValue(valueNode, annotation);
                             if (OvaleStance.STANCE_NAME[value]) {
-                            } else if (_type(value) == "number") {
+                            } else if (type(value) == "number") {
                             } else {
                                 this.Error("unknown stance '%s'.", value);
                             }
@@ -2594,7 +2582,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         this.StartProfiling("OvaleAST_InsertPostOrderTraversal");
         let annotation = ast.annotation;
         if (annotation && annotation.postOrderReference) {
-            for (const [, node] of _ipairs<Node>(annotation.postOrderReference)) {
+            for (const [, node] of ipairs<Node>(annotation.postOrderReference)) {
                 let array = this.self_postOrderPool.Get();
                 let visited = this.postOrderVisitedPool.Get();
                 this.PostOrderTraversal(node, array, visited);
@@ -2613,7 +2601,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         if (ast.annotation) {
             if (ast.annotation.functionReference) {
                 let functionHash = ast.annotation.functionHash || {}
-                for (const [, node] of _ipairs<Node>(ast.annotation.functionReference)) {
+                for (const [, node] of ipairs<Node>(ast.annotation.functionReference)) {
                     if (node.positionalParams || node.namedParams) {
                         let hash = `${node.name}(${node.paramsAsString})`;
                         node.functionHash = hash;
@@ -2624,9 +2612,9 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
             }
             if (ast.annotation.functionHash && ast.annotation.nodeList) {
                 let functionHash = ast.annotation.functionHash;
-                for (const [, node] of _ipairs<Node>(ast.annotation.nodeList)) {
+                for (const [, node] of ipairs<Node>(ast.annotation.nodeList)) {
                     if (node.child) {
-                        for (const [k, childNode] of _ipairs(node.child)) {
+                        for (const [k, childNode] of ipairs(node.child)) {
                             if (childNode.functionHash) {
                                 node.child[k] = functionHash[childNode.functionHash];
                             }
@@ -2642,13 +2630,13 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         if (ast && ast.annotation && ast.annotation.nodeList) {
             let expressionHash = {
             }
-            for (const [, node] of _ipairs<Node>(ast.annotation.nodeList)) {
+            for (const [, node] of ipairs<Node>(ast.annotation.nodeList)) {
                 let hash = node.asString;
                 if (hash) {
                     expressionHash[hash] = expressionHash[hash] || node;
                 }
                 if (node.child) {
-                    for (const [i, childNode] of _ipairs(node.child)) {
+                    for (const [i, childNode] of ipairs(node.child)) {
                         hash = childNode.asString;
                         if (hash) {
                             let hashNode = expressionHash[hash];

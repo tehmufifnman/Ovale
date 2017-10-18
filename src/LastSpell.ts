@@ -1,8 +1,6 @@
 import { OvalePool } from "./Pool";
-
-const _pairs = pairs;
-const tremove = table.remove;
-const tinsert = table.insert;
+import { lualength, LuaObj, LuaArray, pairs } from "@wowts/lua";
+import { remove, insert } from "@wowts/table";
 
 export interface SpellCast extends PaperDollSnapshot {
     stop?: number;
@@ -85,7 +83,7 @@ class LastSpell {
         if (spellcast.damageMultiplier) {
             dest.damageMultiplier = spellcast.damageMultiplier;
         }
-        for (const [, mod] of _pairs(this.modules)) {
+        for (const [, mod] of pairs(this.modules)) {
             let func = mod.CopySpellcastInfo;
             if (func) {
                 func(mod, spellcast, dest);
@@ -94,12 +92,12 @@ class LastSpell {
     }
 
     RegisterSpellcastInfo(mod: SpellCastModule) {
-        tinsert(this.modules, mod);
+        insert(this.modules, mod);
     }
     UnregisterSpellcastInfo(mod: SpellCastModule) {
         for (let i = lualength(this.modules); i >= 1; i += -1) {
             if (this.modules[i] == mod) {
-                tremove(this.modules, i);
+                remove(this.modules, i);
             }
         }
     }

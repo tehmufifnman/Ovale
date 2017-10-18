@@ -1,7 +1,8 @@
 import { OvaleDebug } from "./Debug";
 import { Ovale } from "./Ovale";
 import { OvaleAura } from "./Aura";
-import aceEvent from "AceEvent-3.0";
+import aceEvent from "@wowts/ace_event-3.0";
+import { GetSpellInfo, GetTime } from "@wowts/wow-mock";
 
 let OvaleBanditsGuileBase = Ovale.NewModule("OvaleBanditsGuile", aceEvent);
 let API_GetSpellInfo = GetSpellInfo;

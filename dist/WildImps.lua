@@ -1,6 +1,6 @@
 local __addonName, __addon = ...
-            __addon.require("./WildImps", { "./State", "./Ovale" }, function(__exports, __State, __Ovale)
-local OvaleWildImpsBase = __Ovale.Ovale:NewModule("OvaleWildImps", "AceEvent-3.0")
+            __addon.require("./WildImps", { "./State", "./Ovale", "AceEvent-3.0" }, function(__exports, __State, __Ovale, aceEvent)
+local OvaleWildImpsBase = __Ovale.Ovale:NewModule("OvaleWildImps", aceEvent)
 local demonData = {
     [55659] = {
         duration = 12

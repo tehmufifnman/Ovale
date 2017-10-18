@@ -1,6 +1,6 @@
 local __addonName, __addon = ...
-            __addon.require("./DemonHunterSigils", { "./Profiler", "./Ovale", "./PaperDoll", "./SpellBook", "./State" }, function(__exports, __Profiler, __Ovale, __PaperDoll, __SpellBook, __State)
-local OvaleSigilBase = __Ovale.Ovale:NewModule("OvaleSigil", "AceEvent-3.0")
+            __addon.require("./DemonHunterSigils", { "./Profiler", "./Ovale", "./PaperDoll", "./SpellBook", "./State", "AceEvent-3.0" }, function(__exports, __Profiler, __Ovale, __PaperDoll, __SpellBook, __State, aceEvent)
+local OvaleSigilBase = __Ovale.Ovale:NewModule("OvaleSigil", aceEvent)
 local _ipairs = ipairs
 local tinsert = table.insert
 local tremove = table.remove

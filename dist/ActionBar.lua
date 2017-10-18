@@ -1,5 +1,5 @@
 local __addonName, __addon = ...
-            __addon.require("./ActionBar", { "./Localization", "./Debug", "./Profiler", "./SpellBook", "./Ovale" }, function(__exports, __Localization, __Debug, __Profiler, __SpellBook, __Ovale)
+            __addon.require("./ActionBar", { "./Localization", "./Debug", "./Profiler", "./SpellBook", "./Ovale", "AceEvent-3.0", "AceTimer-3.0" }, function(__exports, __Localization, __Debug, __Profiler, __SpellBook, __Ovale, aceEvent, aceTimer)
 local gsub = string.gsub
 local strlen = string.len
 local strmatch = string.match
@@ -15,7 +15,7 @@ local API_GetBindingKey = GetBindingKey
 local API_GetBonusBarIndex = GetBonusBarIndex
 local API_GetMacroItem = GetMacroItem
 local API_GetMacroSpell = GetMacroSpell
-local OvaleActionBarBase = __Profiler.OvaleProfiler:RegisterProfiling(__Debug.OvaleDebug:RegisterDebugging(__Ovale.Ovale:NewModule("OvaleActionBar", "AceEvent-3.0", "AceTimer-3.0")))
+local OvaleActionBarBase = __Profiler.OvaleProfiler:RegisterProfiling(__Debug.OvaleDebug:RegisterDebugging(__Ovale.Ovale:NewModule("OvaleActionBar", aceEvent, aceTimer)))
 local OvaleActionBarClass = __addon.__class(OvaleActionBarBase, {
     constructor = function(self)
         self.debugOptions = {

@@ -1,6 +1,6 @@
 local __addonName, __addon = ...
-            __addon.require("./PaperDoll", { "./Debug", "./Profiler", "./Ovale", "./Equipment", "./Stance", "./State", "./LastSpell" }, function(__exports, __Debug, __Profiler, __Ovale, __Equipment, __Stance, __State, __LastSpell)
-local OvalePaperDollBase = __Ovale.Ovale:NewModule("OvalePaperDoll", "AceEvent-3.0")
+            __addon.require("./PaperDoll", { "./Debug", "./Profiler", "./Ovale", "./Equipment", "./Stance", "./State", "./LastSpell", "AceEvent-3.0" }, function(__exports, __Debug, __Profiler, __Ovale, __Equipment, __Stance, __State, __LastSpell, aceEvent)
+local OvalePaperDollBase = __Ovale.Ovale:NewModule("OvalePaperDoll", aceEvent)
 local _pairs = pairs
 local _tonumber = tonumber
 local _type = type

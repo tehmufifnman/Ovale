@@ -1,15 +1,11 @@
 import { L } from "./Localization";
 import { OvaleSpellBook } from "./SpellBook";
 import { Ovale } from "./Ovale";
-let format = string.format;
-let _next = next;
-let _pairs = pairs;
-let strfind = string.find;
-let strsub = string.sub;
-let _tostring = tostring;
-let API_GetTime = GetTime;
-let API_PlaySoundFile = PlaySoundFile;
-let INFINITY = math.huge;
+import { format, find, sub } from "@wowts/string";
+import { next, pairs, tostring, _G } from "@wowts/lua";
+import { GetTime, PlaySoundFile, UIFrame, UIFontString, UITexture, UICooldown, UICheckButton, CreateFrame, GameTooltip, UIPosition } from "@wowts/wow-mock";
+import { huge } from "@wowts/math";
+let INFINITY = huge;
 let COOLDOWN_THRESHOLD = 0.1;
 
 interface IconParent {
@@ -48,7 +44,7 @@ export class OvaleIcon {
     frame: UICheckButton;
 
     HasScriptControls() {
-        return (_next(this.parent.checkBoxWidget) != undefined || _next(this.parent.listWidget) != undefined);
+        return (next(this.parent.checkBoxWidget) != undefined || next(this.parent.listWidget) != undefined);
     }
 
     constructor(private name: string, private parent: IconParent, secure: boolean) {
@@ -90,7 +86,7 @@ export class OvaleIcon {
         this.actionType = actionType;
         this.actionId = actionId;
         this.value = undefined;
-        let now = API_GetTime();
+        let now = GetTime();
         const profile = Ovale.db.profile;
         if (startTime && actionTexture) {
             let cd = this.cd;
@@ -153,7 +149,7 @@ export class OvaleIcon {
                 let delay = element.namedParams.soundtime || 0.5;
                 if (now >= startTime - delay) {
                     this.lastSound = element.namedParams.sound;
-                    API_PlaySoundFile(this.lastSound);
+                    PlaySoundFile(this.lastSound);
                 }
             }
             let red = false; // TODO This value is not set anymore, find why
@@ -194,7 +190,7 @@ export class OvaleIcon {
                 this.rangeIndicator.Hide();
             }
             if (element.namedParams.text) {
-                this.focusText.SetText(_tostring(element.namedParams.text));
+                this.focusText.SetText(tostring(element.namedParams.text));
                 this.focusText.Show();
             } else if (actionTarget && actionTarget != "target") {
                 this.focusText.SetText(actionTarget);
@@ -229,11 +225,11 @@ export class OvaleIcon {
         this.namedParams = namedParams;
         this.actionButton = false;
         if (secure) {
-            for (const [k, v] of _pairs(namedParams)) {
-                let [index] = strfind(k, "spell");
+            for (const [k, v] of pairs(namedParams)) {
+                let [index] = find(k, "spell");
                 if (index) {
-                    let prefix = strsub(k, 1, index - 1);
-                    let suffix = strsub(k, index + 5);
+                    let prefix = sub(k, 1, index - 1);
+                    let suffix = sub(k, index + 5);
                     this.frame.SetAttribute(`${prefix}type${suffix}`, "spell");
                     this.frame.SetAttribute("unit", this.namedParams.target || "target");
                     this.frame.SetAttribute(k, OvaleSpellBook.GetSpellName(v));
@@ -275,9 +271,9 @@ export class OvaleIcon {
                     if (this.actionType == "spell") {
                         actionHelp = OvaleSpellBook.GetSpellName(this.actionId);
                     } else if (this.actionType == "value") {
-                        actionHelp = (this.value < INFINITY) && _tostring(this.value) || "infinity";
+                        actionHelp = (this.value < INFINITY) && tostring(this.value) || "infinity";
                     } else {
-                        actionHelp = format("%s %s", this.actionType, _tostring(this.actionId));
+                        actionHelp = format("%s %s", this.actionType, tostring(this.actionId));
                     }
                 }
                 GameTooltip.AddLine(actionHelp, 0.5, 1, 0.75);

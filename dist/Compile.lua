@@ -1,6 +1,6 @@
 local __addonName, __addon = ...
-            __addon.require("./Compile", { "./Debug", "./Profiler", "./Artifact", "./AST", "./Condition", "./Cooldown", "./Data", "./Equipment", "./PaperDoll", "./Power", "./Score", "./SpellBook", "./Stance", "./Ovale", "./Controls" }, function(__exports, __Debug, __Profiler, __Artifact, __AST, __Condition, __Cooldown, __Data, __Equipment, __PaperDoll, __Power, __Score, __SpellBook, __Stance, __Ovale, __Controls)
-local OvaleCompileBase = __Ovale.Ovale:NewModule("OvaleCompile", "AceEvent-3.0")
+            __addon.require("./Compile", { "./Debug", "./Profiler", "./Artifact", "./AST", "./Condition", "./Cooldown", "./Data", "./Equipment", "./PaperDoll", "./Power", "./Score", "./SpellBook", "./Stance", "./Ovale", "./Controls", "AceEvent-3.0" }, function(__exports, __Debug, __Profiler, __Artifact, __AST, __Condition, __Cooldown, __Data, __Equipment, __PaperDoll, __Power, __Score, __SpellBook, __Stance, __Ovale, __Controls, aceEvent)
+local OvaleCompileBase = __Ovale.Ovale:NewModule("OvaleCompile", aceEvent)
 local _ipairs = ipairs
 local _pairs = pairs
 local _tonumber = tonumber
