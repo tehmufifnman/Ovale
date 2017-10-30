@@ -9,7 +9,10 @@
             "request": "launch",
             "name": "SimulationCraft",
             "program": "${workspaceFolder}/dist/utils/importsimc.js",
-            "protocol": "inspector"
+            "protocol": "inspector",
+            "outFiles": [
+                "${workspaceFolder}/dist/**/*.js"
+            ]
         },
         {
             "type": "node",

@@ -290,7 +290,7 @@ class OvaleSpellBookClass extends OvaleSpellBookBase {
     IsKnownTalent(talentId) {
         return (talentId && this.talentPoints[talentId]) && true || false;
     }
-    GetSpellBookIndex(spellId) {
+    GetSpellBookIndex(spellId): [number, string] {
         let bookType = BOOKTYPE_SPELL;
         while (true) {
             let index = this.spellbookId[bookType][spellId];
@@ -302,6 +302,7 @@ class OvaleSpellBookClass extends OvaleSpellBookBase {
                 break;
             }
         }
+        return [undefined, undefined];
     }
     IsPetSpell(spellId) {
         let [, bookType] = this.GetSpellBookIndex(spellId);

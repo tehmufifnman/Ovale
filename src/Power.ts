@@ -182,7 +182,7 @@ class OvalePowerClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Registe
     }
     POWER_TYPE = {}
 
-    POOLED_RESOURCE = {
+    POOLED_RESOURCE: LuaObj<string> = {
         ["DRUID"]: "energy",
         ["HUNTER"]: "focus",
         ["MONK"]: "energy",
@@ -192,7 +192,7 @@ class OvalePowerClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Registe
     constructor() {
         super();
         for (const [powerType, v] of pairs(this.POWER_INFO)) {
-            if (!v.id) {
+            if (v.id === undefined) {
                 this.Print("Unknown resource %s", v.token);
             }
             this.POWER_TYPE[v.id] = powerType;

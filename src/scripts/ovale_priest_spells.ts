@@ -1,5 +1,5 @@
 import { OvaleScripts } from "../Scripts";
-{
+export function register() {
     let name = "ovale_priest_spells";
     let desc = "[7.0] Ovale: Priest spells";
     let code = `

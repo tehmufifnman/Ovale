@@ -5,7 +5,7 @@ import { OvaleDebug } from "./Debug";
 import { OvaleOptions } from "./Options";
 import { OvalePool } from "./Pool";
 import { Ovale, MakeString } from "./Ovale";
-import { OvaleAST, Node, OperatorType } from "./AST";
+import { OvaleAST, AstNode, OperatorType, AstAnnotation, NodeType, isValueNode, FunctionNode, StringNode, ValueNode } from "./AST";
 import { OvaleCompile } from "./Compile";
 import { OvaleData } from "./Data";
 import { OvaleHonorAmongThieves } from "./HonorAmongThieves";
@@ -13,7 +13,7 @@ import { OvaleLexer, TokenizerDefinition, Tokenizer } from "./Lexer";
 import { OvalePower } from "./Power";
 import { ResetControls } from "./Controls";
 import { format, gmatch, gsub, find, len, lower, match, sub, upper } from "@wowts/string";
-import { ipairs, next, pairs, rawset, tonumber, tostring, type, wipe, LuaObj, LuaArray, setmetatable, lualength } from "@wowts/lua";
+import { ipairs, next, pairs, rawset, tonumber, tostring, type, wipe, LuaObj, LuaArray, setmetatable, lualength, truthy } from "@wowts/lua";
 import { concat, insert, remove, sort } from "@wowts/table";
 import { RAID_CLASS_COLORS } from "@wowts/wow-mock";
 import { nan } from "@wowts/math";
@@ -21,12 +21,9 @@ import { nan } from "@wowts/math";
 let OvaleSimulationCraftBase = Ovale.NewModule("OvaleSimulationCraft");
 export let OvaleSimulationCraft: OvaleSimulationCraftClass;
 
-interface Action {
-    name: string;
-}
-
 type ClassRole = "tank" | "spell" | "attack";
 type ClassType = string;
+
 
 interface Annotation {
     class?: ClassType;
@@ -40,7 +37,7 @@ interface Annotation {
     ranged?: ClassType;
     taggedFunctionName?: LuaObj<boolean>;
     functionTag?: any;
-    nodeList?: LuaArray<Node>;
+    nodeList?: LuaArray<ScNode>;
     
     astAnnotation?: any;
     dictionaryAST?: any;
@@ -49,8 +46,94 @@ interface Annotation {
     supportingInterruptCount?: number;
     supportingControlCount?: number;
     supportingDefineCount?: number;
-    symbolTable?: LuaArray<string>;
-    operand?: LuaArray<string>;
+    symbolTable?: LuaObj<boolean>;
+    symbolList?: LuaArray<string>;
+    operand?: LuaArray<ScNode>;
+
+    sync?: LuaObj<ParseNode>; 
+
+    using_apl?: LuaObj<boolean>;
+    currentVariable?: AstNode;
+    variable?: LuaObj<AstNode>;
+
+    trap_launcher?: string;
+    skull_bash?: string;
+    solar_beam?: string;
+    interrupt?: string;
+    consume_magic?: string;
+    mind_freeze?: string;
+    wild_charge?: string;
+    muzzle?: string;
+    counter_shot?: string;
+    counterspell?: string;
+    honor_among_thieves?: string;
+    honor_among_thieves_cooldown_buff?: string;
+    use_legendary_ring?:string;
+    opt_touch_of_death_on_elite_only?:string;
+    opt_arcane_mage_burn_phase?:string;
+    opt_meta_only_during_boss?: string;
+    pummel?: string;
+    wind_shear?: string;
+    kick?: string;
+    silence?: string;
+    rebuke?: string;
+    spear_hand_strike?: string;
+    time_to_hpg_heal?: string;
+    time_to_hpg_melee?: string;
+    time_to_hpg_tank?: string;
+    bloodlust?: string;
+    use_item?: boolean;
+    summon_pet?: string;
+    storm_earth_and_fire?: string;
+    touch_of_death?: string;
+    opt_use_consumables?: string;
+    righteous_fury?: string;
+    mind_bomb?: string;
+    blade_flurry?: string;
+    time_warp?:string;
+    vanish?: string;
+}
+
+interface ChildParseNode extends LuaArray<ParseNode> {
+    [key:string]: ParseNode;
+    ammo_type?: ParseNode;
+    cycle_targets?: ParseNode;
+    lethal?: ParseNode;
+    cooldown?: ParseNode;
+    target?: ParseNode;
+    for_next?: ParseNode;
+    extra_amount?: ParseNode;
+    choose?: ParseNode;
+    slot?: ParseNode;
+    sec?: ParseNode;
+
+    op?: ParseNode;
+    name?: ParseNode;
+    value?: ParseNode;
+    value_else?: ParseNode;
+    condition?: ParseNode;
+}
+
+interface ParseNode {
+    name: string;
+    child: ChildParseNode;
+    rune: string;
+    asType: NodeType;
+    type: "action" | "action_list" | "arithmetic" | "compare" |
+    "function" | "logical" | "number" | "operand";
+
+    // Not sure
+    value: number;
+    expressionType: "unary" | "binary";
+
+    // Dubious
+    operator: OperatorType;
+    includeDeath: boolean;
+    left: string;
+    right: string;
+    action: string;
+    nodeId: number;
+    precedence: number;
 }
 
 interface Profile {
@@ -60,25 +143,22 @@ interface Profile {
     default_pet?: string;
     role?: ClassRole;
     position?: "ranged_back";
-    actionList?:LuaArray<Action>;
+    actionList?:LuaArray<ParseNode>;
     annotation?: Annotation;
     talents?: string;
     glyphs?: string;
+    ["actions.precombat"]?:string;
 }
 
-interface DictionaryAnnotation {
-    nodeList: LuaArray<Node>;
-    definition?: any;
+let KEYWORD: LuaObj<boolean> = {
 }
-
-let KEYWORD = {
-}
-let MODIFIER_KEYWORD = {
+let MODIFIER_KEYWORD: LuaObj<boolean> = {
     ["ammo_type"]: true,
     ["animation_cancel"]: true,
     ["attack_speed"]: true,
     ["chain"]: true,
     ["choose"]: true,
+    ["condition"]: true,
     ["cooldown"]: true,
     ["cooldown_stddev"]: true,
     ["cycle_targets"]: true,
@@ -117,18 +197,19 @@ let MODIFIER_KEYWORD = {
     ["travel_speed"]: true,
     ["type"]: true,
     ["value"]: true,
+    ["value_else"]: true,
     ["wait"]: true,
     ["wait_on_ready"]: true,
     ["weapon"]: true
 }
-let LITTERAL_MODIFIER = {
+let LITTERAL_MODIFIER: LuaObj<boolean> = {
     ["name"]: true
 }
-let FUNCTION_KEYWORD = {
+let FUNCTION_KEYWORD: LuaObj<boolean> = {
     ["ceil"]: true,
     ["floor"]: true
 }
-let SPECIAL_ACTION = {
+let SPECIAL_ACTION: LuaObj<boolean> = {
     ["apply_poison"]: true,
     ["auto_attack"]: true,
     ["call_action_list"]: true,
@@ -151,10 +232,10 @@ let SPECIAL_ACTION = {
     ["variable"]: true,
     ["wait"]: true
 }
-let RUNE_OPERAND = {
+let RUNE_OPERAND: LuaObj<string> = {
     ["rune"]: "rune"
 }
-let CONSUMABLE_ITEMS = {
+let CONSUMABLE_ITEMS: LuaObj<boolean> = {
     ["potion"]: true,
     ["food"]: true,
     ["flask"]: true,
@@ -171,7 +252,7 @@ let CONSUMABLE_ITEMS = {
         KEYWORD[keyword] = value;
     }
 }
-let UNARY_OPERATOR = {
+let UNARY_OPERATOR: LuaObj<{1: "logical" | "arithmetic", 2: number}> = {
     ["!"]: {
         1: "logical",
         2: 15
@@ -185,7 +266,7 @@ let UNARY_OPERATOR = {
         2: 50
     }
 }
-let BINARY_OPERATOR = {
+let BINARY_OPERATOR: LuaObj<{1: "logical" | "compare" | "arithmetic", 2: number, 3?: string}> = {
     ["|"]: {
         1: "logical",
         2: 5,
@@ -256,15 +337,15 @@ let BINARY_OPERATOR = {
         3: "associative"
     }
 }
-let INDENT = {
+let INDENT: LuaArray<string> = {
 }
 {
     INDENT[0] = "";
     let metatable = {
-        __index: function (tbl, key) {
-            key = tonumber(key);
-            if (key > 0) {
-                let s = `${tbl[key - 1]}\t`;
+        __index: function (tbl: LuaArray<string>, key: string) {
+            const _key = tonumber(key);
+            if (_key > 0) {
+                let s = `${tbl[_key - 1]}\t`;
                 rawset(tbl, key, s);
                 return s;
             }
@@ -289,7 +370,7 @@ let OPERAND_TOKEN_PATTERN = "[^.]+";
 //     ["tolvir"]: "agility",
 //     ["virmens_bite"]: "agility"
 // }
-let OPTIONAL_SKILLS = {
+let OPTIONAL_SKILLS: LuaObj<{class: string, default?: boolean, specialization?: string}> = {
     ["volley"]: {
         class: "HUNTER",
         default: true
@@ -337,18 +418,40 @@ let OPTIONAL_SKILLS = {
         default: true
     }
 }
-let self_functionDefined = {
+
+type ScNodeType = "number" | "logical" | "arithmetic" | "action" | "action_list" |
+    "compare" | "function" | "operand";
+
+type ScNode = ParseNode;
+// interface ScNode {
+//     child: LuaArray<ScNode>;
+//     nodeId: number;
+//     type: ScNodeType;
+//     action: string;
+//     name: string;
+//     expressionType: "unary" | "binary";
+//     operator: OperatorType;
+//     precedence: number;
+//     value: number;
+//     asType: NodeType;
+//     rune: string;
+//     includeDeath: boolean;
+//     left: string;
+//     right: string;
+// }
+
+let self_functionDefined: LuaObj<boolean> = {
 }
-let self_functionUsed = {
+let self_functionUsed: LuaObj<boolean> = {
 }
 let self_outputPool = new OvalePool<LuaArray<string>>("OvaleSimulationCraft_outputPool");
-let self_childrenPool = new OvalePool<Node[]>("OvaleSimulationCraft_childrenPool");
-class SelfPool extends OvalePool<Node> {
+let self_childrenPool = new OvalePool<ChildParseNode>("OvaleSimulationCraft_childrenPool");
+class SelfPool extends OvalePool<ParseNode> {
     constructor(){
         super("OvaleSimulationCraft_pool");
     }
 
-    Clean(node) {
+    Clean(node: ParseNode) {
         if (node.child) {
             self_childrenPool.Release(node.child);
             node.child = undefined;
@@ -357,8 +460,8 @@ class SelfPool extends OvalePool<Node> {
 }
 
 let self_pool = new SelfPool();
-let self_lastSimC = undefined;
-let self_lastScript = undefined;
+let self_lastSimC: string = undefined;
+let self_lastScript: string = undefined;
 {
     let actions = {
         simc: {
@@ -381,8 +484,7 @@ let OVALE_TAGS:LuaArray<string> = {
     2: "shortcd",
     3: "cd"
 }
-let OVALE_TAG_PRIORITY = {
-}
+let OVALE_TAG_PRIORITY: LuaObj<number> = {}
 {
     for (const [i, tag] of ipairs(OVALE_TAGS)) {
         OVALE_TAG_PRIORITY[tag] = i * 10;
@@ -397,7 +499,7 @@ let OVALE_TAG_PRIORITY = {
     }
     OvaleOptions.RegisterOptions(OvaleSimulationCraft);
 }
-const print_r = function(node, indent?, done?, output?) {
+const print_r = function(node: any, indent?: string, done?: LuaObj<boolean>, output?: LuaArray<string>) {
     done = done || {}
     output = output || {}
     indent = indent || '';
@@ -427,7 +529,7 @@ const print_r = function(node, indent?, done?, output?) {
 //     let output = print_r(tbl);
 //     OvaleSimulationCraft.Debug(tconcat(output, "\n"));
 // }
-const NewNode = function(nodeList: LuaArray<Node>, hasChild?) {
+const NewNode = function(nodeList: ChildParseNode, hasChild?: boolean) {
     let node = self_pool.Get();
     if (nodeList) {
         let nodeId = lualength(nodeList) + 1;
@@ -457,44 +559,48 @@ const NoToken:Tokenizer = function() {
 }
 const MATCHES:LuaArray<TokenizerDefinition> = {
     1: {
+        1: "^%d+%a[%w_]*[.:]?[%w_.]*",
+        2: TokenizeName
+    },
+    2: {
         1: "^%d+%.?%d*",
         2: TokenizeNumber
     },
-    2: {
+    3: {
         1: "^[%a_][%w_]*[.:]?[%w_.]*",
         2: TokenizeName
     },
-    3: {
+    4: {
         1: "^!=",
         2: Tokenize
     },
-    4: {
+    5: {
         1: "^<=",
         2: Tokenize
     },
-    5: {
+    6: {
         1: "^>=",
         2: Tokenize
     },
-    6: {
+    7: {
         1: "^!~",
         2: Tokenize
     },
-    7: {
+    8: {
         1: "^==",
         2: Tokenize
     },
-    8: {
+    9: {
         1: "^.",
         2: Tokenize
     },
-    9: {
+    10: {
         1: "^$",
         2: NoToken
     }
 }
 
-const GetPrecedence = function(node) {
+const GetPrecedence = function(node: ScNode) {
     let precedence = node.precedence;
     if (!precedence) {
         let operator = node.operator;
@@ -508,8 +614,8 @@ const GetPrecedence = function(node) {
     }
     return precedence;
 }
-let UNPARSE_VISITOR = undefined;
-const Unparse = function(node) {
+let UNPARSE_VISITOR: LuaObj<(node: ParseNode) => string> = undefined;
+const Unparse = function(node: ParseNode) {
     let visitor = UNPARSE_VISITOR[node.type];
     if (!visitor) {
         OvaleSimulationCraft.Error("Unable to unparse node of type '%s'.", node.type);
@@ -517,7 +623,7 @@ const Unparse = function(node) {
         return visitor(node);
     }
 }
-const UnparseAction = function(node) {
+const UnparseAction = function(node: ParseNode) {
     let output = self_outputPool.Get();
     output[lualength(output) + 1] = node.name;
     for (const [modifier, expressionNode] of pairs(node.child)) {
@@ -527,7 +633,7 @@ const UnparseAction = function(node) {
     self_outputPool.Release(output);
     return s;
 }
-const UnparseActionList = function(node: Node) {
+const UnparseActionList = function(node: ParseNode) {
     let output = self_outputPool.Get();
     let listName;
     if (node.name == "_default") {
@@ -537,14 +643,14 @@ const UnparseActionList = function(node: Node) {
     }
     output[lualength(output) + 1] = "";
     for (const [i, actionNode] of pairs(node.child)) {
-        let operator = (i == 1) && "=" || "+=/";
+        let operator = (tonumber(i) == 1) && "=" || "+=/";
         output[lualength(output) + 1] = `${listName}${operator}${Unparse(actionNode)}`;
     }
     let s = concat(output, "\n");
     self_outputPool.Release(output);
     return s;
 }
-const UnparseExpression = function(node) {
+const UnparseExpression = function(node: ParseNode) {
     let expression;
     let precedence = GetPrecedence(node);
     if (node.expressionType == "unary") {
@@ -583,13 +689,13 @@ const UnparseExpression = function(node) {
     }
     return expression;
 }
-const UnparseFunction = function(node) {
+const UnparseFunction = function(node: ParseNode) {
     return `${node.name}(${Unparse(node.child[1])})`;
 }
-const UnparseNumber = function(node) {
+const UnparseNumber = function(node: ParseNode) {
     return tostring(node.value);
 }
-const UnparseOperand = function(node) {
+const UnparseOperand = function(node: ParseNode) {
     return node.name;
 }
 {
@@ -604,9 +710,9 @@ const UnparseOperand = function(node) {
         ["operand"]: UnparseOperand
     }
 }
-const SyntaxError = function(tokenStream: OvaleLexer, ...__args) {
+const SyntaxError = function(tokenStream: OvaleLexer, ...__args: any[]) {
     OvaleSimulationCraft.Print(...__args);
-    let context = {
+    let context: LuaArray<string> = {
         1: "Next tokens:"
     }
     for (let i = 1; i <= 20; i += 1) {
@@ -621,10 +727,10 @@ const SyntaxError = function(tokenStream: OvaleLexer, ...__args) {
     OvaleSimulationCraft.Print(concat(context, " "));
 }
 
-type ParseFunction = (action, nodeList: LuaArray<Node>, annotation: Annotation) => [boolean, Node];
+type ParseFunction = (tokenStream: OvaleLexer, nodeList: ChildParseNode, annotation: Annotation) => [boolean, ScNode];
 
 let ParseFunction: ParseFunction = undefined;
-let ParseModifier: (action, nodeList: LuaArray<Node>, annotation: Annotation) => [boolean, Node, Node] = undefined;
+let ParseModifier: (tokenStream: OvaleLexer, nodeList: ChildParseNode, annotation: Annotation) => [boolean, string, ScNode] = undefined;
 let ParseNumber: ParseFunction = undefined;
 let ParseOperand: ParseFunction = undefined;
 let ParseParentheses: ParseFunction = undefined;
@@ -638,7 +744,7 @@ const TicksRemainTranslationHelper = function(p1: string, p2: string, p3: string
         return `${p1}<${tostring(tonumber(p3) + 1)}`;
     }
 }
-const ParseAction = function (action: string, nodeList, annotation) {
+const ParseAction = function (action: string, nodeList: ChildParseNode, annotation: Annotation): [boolean, ScNode] {
     let ok = true;
     let stream = action;
     {
@@ -694,7 +800,7 @@ const ParseAction = function (action: string, nodeList, annotation) {
         while (ok && tokenType) {
             if (tokenType == ",") {
                 tokenStream.Consume();
-                let modifier, expressionNode;
+                let modifier: any, expressionNode: ScNode;
                 [ok, modifier, expressionNode] = ParseModifier(tokenStream, nodeList, annotation);
                 if (ok) {
                     child[modifier] = expressionNode;
@@ -706,25 +812,24 @@ const ParseAction = function (action: string, nodeList, annotation) {
             }
         }
     }
-    let node;
+    let node : ParseNode;
     if (ok) {
         node = NewNode(nodeList);
         node.type = "action";
         node.action = action;
         node.name = name;
         node.child = child;
-        annotation.sync = annotation.sync || {
-        }
+        annotation.sync = annotation.sync || {}
         annotation.sync[name] = annotation.sync[name] || node;
     } else {
         self_childrenPool.Release(child);
     }
     return [ok, node];
 }
-const ParseActionList = function (name, actionList, nodeList, annotation) {
+const ParseActionList = function (name: string, actionList: string, nodeList: ChildParseNode, annotation: Annotation): [boolean, ParseNode] {
     let ok = true;
     let child = self_childrenPool.Get();
-    for (const [action] of gmatch(actionList, "[^/]+")) {
+    for (const action of gmatch(actionList, "[^/]+")) {
         let actionNode;
         [ok, actionNode] = ParseAction(action, nodeList, annotation);
         if (ok) {
@@ -733,7 +838,7 @@ const ParseActionList = function (name, actionList, nodeList, annotation) {
             break;
         }
     }
-    let node;
+    let node: ParseNode;
     if (ok) {
         node = NewNode(nodeList);
         node.type = "action_list";
@@ -745,20 +850,20 @@ const ParseActionList = function (name, actionList, nodeList, annotation) {
     return [ok, node];
 }
 
-function  ParseExpression(tokenStream: OvaleLexer, nodeList, annotation, minPrecedence?) {
+function  ParseExpression(tokenStream: OvaleLexer, nodeList: ChildParseNode, annotation: Annotation, minPrecedence?: number):[boolean, ParseNode] {
     minPrecedence = minPrecedence || 0;
     let ok = true;
-    let node: Node;
+    let node: ScNode;
     {
         let [tokenType, token] = tokenStream.Peek();
         if (tokenType) {
             let opInfo: { 1: "logical" | "arithmetic", 2: number} = UNARY_OPERATOR[token];
             if (opInfo) {
                 let [opType, precedence] = [opInfo[1], opInfo[2]];
-                let asType = (opType == "logical") && "boolean" || "value";
+                let asType: "boolean" | "value" = (opType == "logical") && "boolean" || "value";
                 tokenStream.Consume();
                 let operator = token;
-                let rhsNode;
+                let rhsNode: ParseNode;
                 [ok, rhsNode] = ParseExpression(tokenStream, nodeList, annotation, precedence);
                 if (ok) {
                     if (operator == "-" && rhsNode.type == "number") {
@@ -791,7 +896,7 @@ function  ParseExpression(tokenStream: OvaleLexer, nodeList, annotation, minPrec
         let opInfo = BINARY_OPERATOR[token];
         if (opInfo) {
             let [opType, precedence] = [opInfo[1], opInfo[2]];
-            let asType = (opType == "logical") && "boolean" || "value";
+            let asType: "boolean" | "value" = (opType == "logical") && "boolean" || "value";
             if (precedence && precedence > minPrecedence) {
                 keepScanning = true;
                 tokenStream.Consume();
@@ -810,7 +915,7 @@ function  ParseExpression(tokenStream: OvaleLexer, nodeList, annotation, minPrec
                     lhsNode.asType = <"boolean"|"value"> asType;
                     if (!rhsNode) {
                         SyntaxError(tokenStream, "Internal error: no right operand in binary operator %s.", token);
-                        return false;
+                        return [false, undefined];
                     }
                     rhsNode.asType = asType;
                     while (node.type == rhsNode.type && node.operator == rhsNode.operator && BINARY_OPERATOR[node.operator][3] == "associative" && rhsNode.expressionType == "binary") {
@@ -823,7 +928,7 @@ function  ParseExpression(tokenStream: OvaleLexer, nodeList, annotation, minPrec
             }
         } else if (!node) {
             SyntaxError(tokenStream, "Syntax error: %s of type %s is not a binary operator", token, tokenType);
-            return false;
+            return [false, undefined];
         }
         if (!keepScanning) {
             break;
@@ -870,7 +975,7 @@ ParseFunction = function (tokenStream: OvaleLexer, nodeList, annotation) {
     }
     return [ok, node];
 }
-const ParseIdentifier = function (tokenStream: OvaleLexer, nodeList, annotation): [boolean, Node] {
+const ParseIdentifier = function (tokenStream: OvaleLexer, nodeList: ChildParseNode, annotation: Annotation): [boolean, ScNode] {
     let [, token] = tokenStream.Consume();
     let node = NewNode(nodeList);
     node.type = "operand";
@@ -882,7 +987,7 @@ const ParseIdentifier = function (tokenStream: OvaleLexer, nodeList, annotation)
 }
 ParseModifier = function (tokenStream: OvaleLexer, nodeList, annotation) {
     let ok = true;
-    let name;
+    let name: string;
     {
         let [tokenType, token] = tokenStream.Consume();
         if (tokenType == "keyword" && MODIFIER_KEYWORD[token]) {
@@ -899,7 +1004,7 @@ ParseModifier = function (tokenStream: OvaleLexer, nodeList, annotation) {
             ok = false;
         }
     }
-    let expressionNode: Node;
+    let expressionNode: ScNode;
     if (ok) {
         if (LITTERAL_MODIFIER[name]) {
             [ok, expressionNode] = ParseIdentifier(tokenStream, nodeList, annotation);
@@ -946,7 +1051,7 @@ ParseOperand = function (tokenStream: OvaleLexer, nodeList, annotation) {
             ok = false;
         }
     }
-    let node;
+    let node: ScNode;
     if (ok) {
         node = NewNode(nodeList);
         node.type = "operand";
@@ -976,7 +1081,7 @@ ParseParentheses = function (tokenStream: OvaleLexer, nodeList, annotation) {
             ok = false;
         }
     }
-    let node;
+    let node: ScNode;
     if (ok) {
         [ok, node] = ParseExpression(tokenStream, nodeList, annotation);
     }
@@ -993,7 +1098,7 @@ ParseParentheses = function (tokenStream: OvaleLexer, nodeList, annotation) {
     }
     return [ok, node];
 }
-ParseSimpleExpression = function (tokenStream: OvaleLexer, nodeList, annotation):[boolean, Node] {
+ParseSimpleExpression = function (tokenStream: OvaleLexer, nodeList, annotation):[boolean, ScNode] {
     let ok = true;
     let node;
     let [tokenType, token] = tokenStream.Peek();
@@ -1019,17 +1124,17 @@ ParseSimpleExpression = function (tokenStream: OvaleLexer, nodeList, annotation)
     }
     return [ok, node];
 }
-let CamelCase = undefined;
+let CamelCase: (s: string) => string = undefined;
 {
-    const CamelCaseHelper = function(first, rest) {
+    const CamelCaseHelper = function(first: string, rest: string) {
         return `${upper(first)}${lower(rest)}`;
     }
-    CamelCase = function (s) {
+    CamelCase = function (s: string) {
         let tc = gsub(s, "(%a)(%w*)", CamelCaseHelper);
         return gsub(tc, "[%s_]", "");
     }
 }
-const CamelSpecialization = function(annotation) {
+const CamelSpecialization = function(annotation: Annotation) {
     let output = self_outputPool.Get();
     let [profileName, className, specialization] = [annotation.name, annotation.class, annotation.specialization];
     if (specialization) {
@@ -1054,23 +1159,24 @@ const CamelSpecialization = function(annotation) {
     self_outputPool.Release(output);
     return outputString;
 }
-const OvaleFunctionName = function(name, annotation) {
+const OvaleFunctionName = function(name: string, annotation: Annotation) {
     let functionName = CamelCase(`${name} actions`);
     if (annotation.specialization) {
         functionName = `${CamelSpecialization(annotation)}${functionName}`;
     }
     return functionName;
 }
-const AddSymbol = function(annotation, symbol) {
-    let symbolTable = annotation.symbolTable || {
-    }
+const AddSymbol = function(annotation: Annotation, symbol: string) {
+    let symbolTable = annotation.symbolTable || {}
+    let symbolList = annotation.symbolList || {};
     if (!symbolTable[symbol] && !OvaleData.DEFAULT_SPELL_LIST[symbol]) {
         symbolTable[symbol] = true;
-        symbolTable[lualength(symbolTable) + 1] = symbol;
+        symbolList[lualength(symbolTable) + 1] = symbol;
     }
     annotation.symbolTable = symbolTable;
+    annotation.symbolList = symbolList;
 }
-const AddPerClassSpecialization = function(tbl, name, info, className, specialization, _type) {
+const AddPerClassSpecialization = function(tbl: LuaObj<LuaObj<LuaObj<{1: string, 2: string}>>>, name: string, info: string, className: string, specialization: string, _type: string) {
     className = className || "ALL_CLASSES";
     specialization = specialization || "ALL_SPECIALIZATIONS";
     tbl[className] = tbl[className] || {
@@ -1082,7 +1188,7 @@ const AddPerClassSpecialization = function(tbl, name, info, className, specializ
         2: _type || "Spell"
     }
 }
-const GetPerClassSpecialization = function(tbl, name, className, specialization) {
+const GetPerClassSpecialization = function(tbl: LuaObj<LuaObj<LuaObj<{1: string, 2: string}>>>, name: string, className: string, specialization: string) {
     let info;
     while (!info) {
         while (!info) {
@@ -1104,12 +1210,12 @@ const GetPerClassSpecialization = function(tbl, name, className, specialization)
     if (info) {
         return [info[1], info[2]];
     }
-    return undefined;
+    return [];
 }
-const AddDisambiguation = function(name, info, className?, specialization?, _type?) {
+const AddDisambiguation = function(name: string, info: string, className?: string, specialization?: string, _type?: string) {
     AddPerClassSpecialization(EMIT_DISAMBIGUATION, name, info, className, specialization, _type);
 }
-const Disambiguate = function(name, className, specialization, _type?) {
+const Disambiguate = function(name: string, className: string, specialization: string, _type?: string) {
     let [disname, distype] = GetPerClassSpecialization(EMIT_DISAMBIGUATION, name, className, specialization);
     if (!disname) {
         return [name, _type];
@@ -1255,7 +1361,7 @@ const InitializeDisambiguation = function() {
     AddDisambiguation("shield_barrier", "shield_barrier_melee", "WARRIOR", "fury");
     AddDisambiguation("shield_barrier", "shield_barrier_tank", "WARRIOR", "protection");
 }
-const IsTotem = function(name) {
+const IsTotem = function(name: string) {
     if (sub(name, 1, 13) == "wild_mushroom") {
         return true;
     } else if (name == "prismatic_crystal" || name == "rune_of_power") {
@@ -1267,8 +1373,7 @@ const IsTotem = function(name) {
     }
     return false;
 }
-const NewLogicalNode = function(operator: OperatorType, lhsNode, rhsNode, nodeList?) {
-    nodeList = nodeList || rhsNode;
+const NewLogicalNode = function(operator: OperatorType, lhsNode: AstNode, rhsNode: AstNode | undefined, nodeList: LuaArray<AstNode>) {
     let node = OvaleAST.NewNode(nodeList, true);
     node.type = "logical";
     node.operator = operator;
@@ -1282,8 +1387,8 @@ const NewLogicalNode = function(operator: OperatorType, lhsNode, rhsNode, nodeLi
     }
     return node;
 }
-const ConcatenatedConditionNode = function(conditionList, nodeList, annotation) {
-    let conditionNode;
+const ConcatenatedConditionNode = function(conditionList: LuaArray<AstNode>, nodeList: LuaArray<AstNode>, annotation: Annotation) {
+    let conditionNode: AstNode;
     if (lualength(conditionList) > 0) {
         if (lualength(conditionList) == 1) {
             conditionNode = conditionList[1];
@@ -1300,8 +1405,8 @@ const ConcatenatedConditionNode = function(conditionList, nodeList, annotation) 
     }
     return conditionNode;
 }
-const ConcatenatedBodyNode = function(bodyList, nodeList, annotation) {
-    let bodyNode;
+const ConcatenatedBodyNode = function(bodyList: LuaArray<AstNode>, nodeList: LuaArray<AstNode>, annotation: Annotation) {
+    let bodyNode: AstNode;
     if (lualength(bodyList) > 0) {
         bodyNode = OvaleAST.NewNode(nodeList, true);
         bodyNode.type = "group";
@@ -1311,8 +1416,8 @@ const ConcatenatedBodyNode = function(bodyList, nodeList, annotation) {
     }
     return bodyNode;
 }
-const OvaleTaggedFunctionName = function(name, tag) {
-    let bodyName, conditionName;
+const OvaleTaggedFunctionName = function(name: string, tag: string) {
+    let bodyName: string, conditionName: string;
     let [prefix, suffix] = match(name, "([A-Z]%w+)(Actions)");
     if (prefix && suffix) {
         let camelTag;
@@ -1326,17 +1431,19 @@ const OvaleTaggedFunctionName = function(name, tag) {
     }
     return [bodyName, conditionName];
 }
-const TagPriority = function(tag) {
+const TagPriority = function(tag: string) {
     return OVALE_TAG_PRIORITY[tag] || 10;
 }
-let SPLIT_BY_TAG_VISITOR = undefined;
-let SplitByTag = undefined;
-let SplitByTagAction = undefined;
-let SplitByTagAddFunction = undefined;
-let SplitByTagCustomFunction = undefined;
-let SplitByTagGroup = undefined;
-let SplitByTagIf = undefined;
-let SplitByTagState = undefined;
+
+type Splitter = (tag: string, node: AstNode, nodeList: LuaArray<AstNode>, annotation: Annotation) => [AstNode, AstNode]
+let SPLIT_BY_TAG_VISITOR: LuaObj<Splitter> = undefined;
+let SplitByTag: Splitter = undefined;
+let SplitByTagAction: Splitter = undefined;
+let SplitByTagAddFunction: Splitter = undefined;
+let SplitByTagCustomFunction: Splitter = undefined;
+let SplitByTagGroup: Splitter = undefined;
+let SplitByTagIf: Splitter = undefined;
+let SplitByTagState: Splitter = undefined;
 SplitByTag = function (tag, node, nodeList, annotation) {
     let visitor = SPLIT_BY_TAG_VISITOR[node.type];
     if (!visitor) {
@@ -1345,9 +1452,9 @@ SplitByTag = function (tag, node, nodeList, annotation) {
         return visitor(tag, node, nodeList, annotation);
     }
 }
-SplitByTagAction = function (tag, node, nodeList, annotation) {
+SplitByTagAction = function (tag, node: FunctionNode, nodeList, annotation) {
     let bodyNode, conditionNode;
-    let actionTag, invokesGCD;
+    let actionTag: string, invokesGCD: boolean;
     let name = "UNKNOWN";
     let actionType = node.func;
     if (actionType == "item" || actionType == "spell") {
@@ -1356,7 +1463,7 @@ SplitByTagAction = function (tag, node, nodeList, annotation) {
         if (firstParamNode.type == "variable") {
             name = firstParamNode.name;
             id = annotation.dictionary && annotation.dictionary[name];
-        } else if (firstParamNode.type == "value") {
+        } else if (isValueNode(firstParamNode)) {
             name = firstParamNode.value;
             id = name;
         }
@@ -1375,7 +1482,7 @@ SplitByTagAction = function (tag, node, nodeList, annotation) {
         if (firstParamNode.type == "variable") {
             name = firstParamNode.name;
             id = annotation.dictionary && annotation.dictionary[name];
-        } else if (firstParamNode.type == "value") {
+        } else if (isValueNode(firstParamNode)) {
             name = firstParamNode.value;
             id = name;
         }
@@ -1449,17 +1556,17 @@ SplitByTagCustomFunction = function (tag, node, nodeList, annotation) {
     } else {
         let functionTag = annotation.functionTag[functionName];
         if (!functionTag) {
-            if (find(functionName, "Bloodlust")) {
+            if (truthy(find(functionName, "Bloodlust"))) {
                 functionTag = "cd";
-            } else if (find(functionName, "GetInMeleeRange")) {
+            } else if (truthy(find(functionName, "GetInMeleeRange"))) {
                 functionTag = "shortcd";
-            } else if (find(functionName, "InterruptActions")) {
+            } else if (truthy(find(functionName, "InterruptActions"))) {
                 functionTag = "cd";
-            } else if (find(functionName, "SummonPet")) {
+            } else if (truthy(find(functionName, "SummonPet"))) {
                 functionTag = "shortcd";
-            } else if (find(functionName, "UseItemActions")) {
+            } else if (truthy(find(functionName, "UseItemActions"))) {
                 functionTag = "cd";
-            } else if (find(functionName, "UsePotion")) {
+            } else if (truthy(find(functionName, "UsePotion"))) {
                 functionTag = "cd";
             }
         }
@@ -1572,7 +1679,7 @@ SplitByTagIf = function (tag, node, nodeList, annotation) {
         let lhsNode = node.child[1];
         let rhsNode = conditionNode;
         if (node.type == "unless") {
-            lhsNode = NewLogicalNode("not", lhsNode, nodeList);
+            lhsNode = NewLogicalNode("not", lhsNode, undefined, nodeList);
         }
         let andNode = NewLogicalNode("and", lhsNode, rhsNode, nodeList);
         conditionNode = andNode;
@@ -1587,7 +1694,7 @@ SplitByTagIf = function (tag, node, nodeList, annotation) {
     return [bodyNode, conditionNode];
 }
 SplitByTagState = function (tag, node, nodeList, annotation) {
-    return node;
+    return [node, undefined];
 }
 {
     SPLIT_BY_TAG_VISITOR = {
@@ -1601,8 +1708,8 @@ SplitByTagState = function (tag, node, nodeList, annotation) {
     }
 }
 
-type EmitVisitor = (parseNode, nodeList, annotation, action?) => Node;
-type EmitOperandVisitor = (operand, parseNode, nodeList, annotation, action, target?) => [boolean, Node];
+type EmitVisitor = (parseNode: ParseNode, nodeList: LuaArray<AstNode>, annotation: Annotation, action?: string) => AstNode;
+type EmitOperandVisitor = (operand: string, parseNode: ParseNode, nodeList: LuaArray<AstNode>, annotation: Annotation, action: string, target?: string) => [boolean, AstNode];
 
 let EMIT_VISITOR: LuaObj<EmitVisitor> = undefined;
 let Emit:EmitVisitor = undefined;
@@ -1644,8 +1751,8 @@ Emit = function (parseNode, nodeList, annotation, action) {
     }
 }
 
-const EmitModifier = function (modifier, parseNode, nodeList, annotation, action) {
-    let node, code;
+const EmitModifier = function (modifier: string, parseNode: ParseNode, nodeList: LuaArray<AstNode>, annotation: Annotation, action: string) {
+    let node: AstNode, code;
     let className = annotation.class;
     let specialization = annotation.specialization;
     if (modifier == "if") {
@@ -1731,7 +1838,7 @@ const EmitModifier = function (modifier, parseNode, nodeList, annotation, action
                     node = andNode;
                 } else {
                     OvaleSimulationCraft.Print("Warning: Unable to emit action for 'sync=%s'.", name);
-                    name = Disambiguate(name, className, specialization);
+                    [name] = Disambiguate(name, className, specialization);
                     AddSymbol(annotation, name);
                     code = format("Spell(%s)", name);
                 }
@@ -1746,14 +1853,13 @@ const EmitModifier = function (modifier, parseNode, nodeList, annotation, action
         }
     }
     if (!node && code) {
-        annotation.astAnnotation = annotation.astAnnotation || {
-        }
-        node = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
+        annotation.astAnnotation = annotation.astAnnotation || {};
+        [node] = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
     }
     return node;
 }
 
-const EmitConditionNode = function (nodeList, bodyNode, conditionNode, parseNode, annotation, action) {
+const EmitConditionNode = function (nodeList: LuaArray<AstNode>, bodyNode: AstNode, conditionNode: AstNode, parseNode: ParseNode, annotation: Annotation, action: string) {
     let extraConditionNode = conditionNode;
     conditionNode = undefined;
     for (const [modifier, expressionNode] of pairs(parseNode.child)) {
@@ -1801,10 +1907,9 @@ const EmitConditionNode = function (nodeList, bodyNode, conditionNode, parseNode
         return bodyNode;
     }
 }
-const EmitNamedVariable = function (name, nodeList, annotation, modifier, parseNode, action, conditionNode?) {
+const EmitNamedVariable = function (name: string, nodeList: LuaArray<AstNode>, annotation: Annotation, modifier: ChildParseNode, parseNode: ParseNode, action: string, conditionNode?: AstNode) {
     if (!annotation.variable) {
-        annotation.variable = {
-        }
+        annotation.variable = {}
     }
     let node = annotation.variable[name];
     let group;
@@ -1829,19 +1934,50 @@ const EmitNamedVariable = function (name, nodeList, annotation, modifier, parseN
     }
     annotation.currentVariable = undefined;
 }
-const EmitVariableMin = function (name, nodeList, annotation, modifier, parseNode, action) {
+const EmitVariableMin = function (name: string, nodeList: LuaArray<AstNode>, annotation: Annotation, modifier: ChildParseNode, parseNode: ParseNode, action: string) {
     EmitNamedVariable(`${name}_min`, nodeList, annotation, modifier, parseNode, action);
     let valueNode = annotation.variable[name];
     valueNode.name = `${name}_value`;
     annotation.variable[valueNode.name] = valueNode;
     let bodyCode = format("AddFunction %s { if %s_value() > %s_min() %s_value() %s_min() }", name, name, name, name, name);
-    let node = OvaleAST.ParseCode("add_function", bodyCode, nodeList, annotation.astAnnotation);
+    let [node] = OvaleAST.ParseCode("add_function", bodyCode, nodeList, annotation.astAnnotation);
     annotation.variable[name] = node;
 }
-const EmitVariable = function (nodeList, annotation, modifier, parseNode, action, conditionNode?) {
+
+function EmitVariableIf(name: string, nodeList: LuaArray<AstNode>, annotation: Annotation, modifier: ChildParseNode, parseNode: ParseNode, action: string) {
+    let node = annotation.variable[name];
+    let group: AstNode;
+    if (!node) {
+        node = OvaleAST.NewNode(nodeList, true);
+        annotation.variable[name] = node;
+        node.type = "add_function";
+        node.name = name;
+        group = OvaleAST.NewNode(nodeList, true);
+        group.type = "group";
+        node.child[1] = group;
+    } else {
+        group = node.child[1];
+    }
+
+    annotation.currentVariable = node;
+
+    const ifNode = OvaleAST.NewNode(nodeList, true);
+    ifNode.type = "if";
+    ifNode.child[1] = Emit(modifier.condition, nodeList, annotation);
+    ifNode.child[2] = Emit(modifier.value, nodeList, annotation);
+    insert(group.child, ifNode);
+    const elseNode = OvaleAST.NewNode(nodeList, true);
+    elseNode.type = "unless";
+    elseNode.child[1] = ifNode.child[1];
+    elseNode.child[2] = Emit(modifier.value_else, nodeList, annotation);
+    insert(group.child, elseNode);
+
+    annotation.currentVariable = undefined;
+}
+
+const EmitVariable = function (nodeList: LuaArray<AstNode>, annotation: Annotation, modifier: ChildParseNode, parseNode: ParseNode, action: string, conditionNode?: AstNode) {
     if (!annotation.variable) {
-        annotation.variable = {
-        }
+        annotation.variable = {}
     }
     let op = (modifier.op && Unparse(modifier.op)) || "set";
     let name = Unparse(modifier.name);
@@ -1849,11 +1985,13 @@ const EmitVariable = function (nodeList, annotation, modifier, parseNode, action
         EmitVariableMin(name, nodeList, annotation, modifier, parseNode, action);
     } else if (op == "set") {
         EmitNamedVariable(name, nodeList, annotation, modifier, parseNode, action, conditionNode);
+    } else if (op === "setif") {
+        EmitVariableIf(name, nodeList, annotation, modifier, parseNode, action);
     } else {
         OvaleSimulationCraft.Error("Unknown variable operator '%s'.", op);
     }
 }
-const checkOptionalSkill = function(action, className, specialization) {
+const checkOptionalSkill = function(action: string, className: string, specialization: string) {
     let data = OPTIONAL_SKILLS[action];
     if (!data) {
         return false;
@@ -1866,16 +2004,16 @@ const checkOptionalSkill = function(action, className, specialization) {
     }
     return true;
 }
-EmitAction = function (parseNode, nodeList, annotation) {
-    let node;
+EmitAction = function (parseNode: ParseNode, nodeList, annotation) {
+    let node: AstNode;
     let canonicalizedName = lower(gsub(parseNode.name, ":", "_"));
     let className = annotation.class;
     let specialization = annotation.specialization;
     let camelSpecialization = CamelSpecialization(annotation);
     let role = annotation.role;
     let [action] = Disambiguate(canonicalizedName, className, specialization);
-    let bodyNode: Node;
-    let conditionNode: Node;
+    let bodyNode: AstNode;
+    let conditionNode: AstNode;
     if (action == "auto_attack" && !annotation.melee) {
     } else if (action == "auto_shot") {
     } else if (action == "choose_target") {
@@ -1950,7 +2088,7 @@ EmitAction = function (parseNode, nodeList, annotation) {
             annotation[action] = className;
             annotation.interrupt = className;
             isSpellAction = false;
-        } else if (className == "MAGE" && find(action, "pet_")) {
+        } else if (className == "MAGE" && truthy(find(action, "pet_"))) {
             conditionCode = "pet.Present()";
         } else if (className == "MAGE" && (action == "start_burn_phase" || action == "start_pyro_chain" || action == "stop_burn_phase" || action == "stop_pyro_chain")) {
             let [stateAction, stateVariable] = match(action, "([^_]+)_(.*)");
@@ -2033,8 +2171,7 @@ EmitAction = function (parseNode, nodeList, annotation) {
         } else if (className == "ROGUE" && action == "honor_among_thieves") {
             if (modifier.cooldown) {
                 let cooldown = Unparse(modifier.cooldown);
-                let buffName = `${action}_cooldown_buff`;
-                annotation[buffName] = cooldown;
+                annotation["honor_among_thieves_cooldown_buff"] = cooldown;
                 annotation[action] = className;
             }
             isSpellAction = false;
@@ -2143,7 +2280,7 @@ EmitAction = function (parseNode, nodeList, annotation) {
             annotation[action] = className;
             conditionCode = `CheckBoxOn(opt_${action})`;
         } else if (action == "variable") {
-            EmitVariable(nodeList, annotation, modifier, parseNode, action);
+            EmitVariable(nodeList, annotation, modifier, parseNode, action, conditionNode);
             isSpellAction = false;
         } else if (action == "call_action_list" || action == "run_action_list" || action == "swap_action_list") {
             if (modifier.name) {
@@ -2177,7 +2314,7 @@ EmitAction = function (parseNode, nodeList, annotation) {
         } else if (action == "potion") {
             let name = (modifier.name && Unparse(modifier.name)) || annotation.consumables["potion"];
             if (match(name, "^(%w+)_potion")) {
-                name = match(name, "^(%w+)_potion");
+                [name] = match(name, "^(%w+)_potion");
             }
             if (name) {
                 bodyCode = format("Item(%s_potion usable=1)", name);
@@ -2208,7 +2345,7 @@ EmitAction = function (parseNode, nodeList, annotation) {
             annotation["use_item"] = true;
             isSpellAction = false;
         } else if (action == "use_item") {
-            let legendaryRing = false;
+            let legendaryRing: string = undefined;
             if (modifier.slot) {
                 let slot = Unparse(modifier.slot);
                 if (match(slot, "finger")) {
@@ -2216,7 +2353,7 @@ EmitAction = function (parseNode, nodeList, annotation) {
                 }
             } else if (modifier.name) {
                 let name = Unparse(modifier.name);
-                name = Disambiguate(name, className, specialization);
+                [name] = Disambiguate(name, className, specialization);
                 if (match(name, "legendary_ring")) {
                     legendaryRing = name;
                 }
@@ -2276,7 +2413,7 @@ EmitAction = function (parseNode, nodeList, annotation) {
     }
     return node;
 }
-EmitActionList = function (parseNode: Node, nodeList, annotation) {
+EmitActionList = function (parseNode, nodeList, annotation) {
     let groupNode = OvaleAST.NewNode(nodeList, true);
     groupNode.type = "group";
     let child = groupNode.child;
@@ -2303,7 +2440,7 @@ EmitActionList = function (parseNode: Node, nodeList, annotation) {
                 } else if (poolResourceNode) {
                     child[lualength(child) + 1] = statementNode;
                     let bodyNode;
-                    let poolingConditionNode;
+                    let poolingConditionNode: AstNode;
                     if (statementNode.child) {
                         poolingConditionNode = statementNode.child[1];
                         bodyNode = statementNode.child[2];
@@ -2317,7 +2454,7 @@ EmitActionList = function (parseNode: Node, nodeList, annotation) {
                         let extraAmountPattern = powerType + "%(%) >= [%d.]+";
                         let replaceString = format("True(pool_%s %d)", poolResourceNode.powerType, extra_amount);
                         code = gsub(code, extraAmountPattern, replaceString);
-                        poolingConditionNode = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
+                        [poolingConditionNode] = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
                     }
                     if (bodyNode.type == "action" && bodyNode.rawPositionalParams && bodyNode.rawPositionalParams[1]) {
                         let name = OvaleAST.Unparse(bodyNode.rawPositionalParams[1]);
@@ -2383,12 +2520,12 @@ EmitActionList = function (parseNode: Node, nodeList, annotation) {
     return node;
 }
 EmitExpression = function (parseNode, nodeList, annotation, action) {
-    let node;
+    let node: AstNode;
     let msg;
     if (parseNode.expressionType == "unary") {
         let opInfo = UNARY_OPERATOR[parseNode.operator];
         if (opInfo) {
-            let operator;
+            let operator: OperatorType;
             if (parseNode.operator == "!") {
                 operator = "not";
             } else if (parseNode.operator == "-") {
@@ -2397,8 +2534,8 @@ EmitExpression = function (parseNode, nodeList, annotation, action) {
             if (operator) {
                 let rhsNode = Emit(parseNode.child[1], nodeList, annotation, action);
                 if (rhsNode) {
-                    if (operator == "-" && rhsNode.type == "value") {
-                        rhsNode.value = -1 * rhsNode.value;
+                    if (operator == "-" && isValueNode(rhsNode)) {
+                        rhsNode.value = -1 * <number>rhsNode.value;
                     } else {
                         node = OvaleAST.NewNode(nodeList, true);
                         node.type = opInfo[1];
@@ -2413,7 +2550,7 @@ EmitExpression = function (parseNode, nodeList, annotation, action) {
     } else if (parseNode.expressionType == "binary") {
         let opInfo = BINARY_OPERATOR[parseNode.operator];
         if (opInfo) {
-            let operator;
+            let operator: OperatorType;
             if (parseNode.operator == "&") {
                 operator = "and";
             } else if (parseNode.operator == "^") {
@@ -2453,16 +2590,15 @@ EmitExpression = function (parseNode, nodeList, annotation, action) {
                         code = format("%s < %d", runeCondition, number);
                     }
                     if (!node && code) {
-                        annotation.astAnnotation = annotation.astAnnotation || {
-                        }
-                        node = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
+                        annotation.astAnnotation = annotation.astAnnotation || {};
+                        [node] = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
                     }
                 }
             } else if ((parseNode.operator == "=" || parseNode.operator == "!=") && (parseNode.child[1].name == "target" || parseNode.child[1].name == "current_target")) {
                 let rhsNode = parseNode.child[2];
                 let name = rhsNode.name;
-                if (find(name, "^[%a_]+%.")) {
-                    name = match(name, "^[%a_]+%.([%a_]+)");
+                if (truthy(find(name, "^[%a_]+%."))) {
+                    [name] = match(name, "^[%a_]+%.([%a_]+)");
                 }
                 let code;
                 if (parseNode.operator == "=") {
@@ -2471,9 +2607,8 @@ EmitExpression = function (parseNode, nodeList, annotation, action) {
                     code = format("not target.Name(%s)", name);
                 }
                 AddSymbol(annotation, name);
-                annotation.astAnnotation = annotation.astAnnotation || {
-                }
-                node = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
+                annotation.astAnnotation = annotation.astAnnotation || {};
+                [node] = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
             } else if ((parseNode.operator == "=" || parseNode.operator == "!=") && parseNode.child[1].name == "sim_target") {
                 let code;
                 if (parseNode.operator == "=") {
@@ -2481,9 +2616,8 @@ EmitExpression = function (parseNode, nodeList, annotation, action) {
                 } else {
                     code = "False(target_is_sim_target)";
                 }
-                annotation.astAnnotation = annotation.astAnnotation || {
-                }
-                node = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
+                annotation.astAnnotation = annotation.astAnnotation || {};
+                [node] = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
             } else if (operator) {
                 let lhsNode = Emit(parseNode.child[1], nodeList, annotation, action);
                 let rhsNode = Emit(parseNode.child[2], nodeList, annotation, action);
@@ -2512,9 +2646,10 @@ EmitExpression = function (parseNode, nodeList, annotation, action) {
     } else {
         msg = msg || MakeString("Warning: Operator '%s' is not implemented.", parseNode.operator);
         OvaleSimulationCraft.Print(msg);
-        node = OvaleAST.NewNode(nodeList);
-        node.type = "string";
-        node.value = `FIXME_${parseNode.operator}`;
+        const stringNode = <StringNode>OvaleAST.NewNode(nodeList);
+        stringNode.type = "string";
+        stringNode.value = `FIXME_${parseNode.operator}`;
+        return stringNode;
     }
     return node;
 }
@@ -2532,7 +2667,7 @@ EmitFunction = function (parseNode, nodeList, annotation, action) {
 }
 
 EmitNumber = function (parseNode, nodeList, annotation, action) {
-    let node = OvaleAST.NewNode(nodeList);
+    let node = <ValueNode>OvaleAST.NewNode(nodeList);
     node.type = "value";
     node.value = parseNode.value;
     node.origin = 0;
@@ -2639,11 +2774,11 @@ EmitOperandAction = function (operand, parseNode, nodeList, annotation, action, 
         property = operand;
     }
     let [className, specialization] = [annotation.class, annotation.specialization];
-    name = Disambiguate(name, className, specialization);
+    [name] = Disambiguate(name, className, specialization);
     target = target && (`${target}.`) || "";
     let buffName = `${name}_debuff`;
     [buffName] = Disambiguate(buffName, className, specialization);
-    let prefix = find(buffName, "_buff$") && "Buff" || "Debuff";
+    let prefix = truthy(find(buffName, "_buff$")) && "Buff" || "Debuff";
     let buffTarget = (prefix == "Debuff") && "target." || target;
     let talentName = `${name}_talent`;
     [talentName] = Disambiguate(talentName, className, specialization);
@@ -2729,9 +2864,8 @@ EmitOperandAction = function (operand, parseNode, nodeList, annotation, action, 
         if (name == "call_action_list" && property != "gcd") {
             OvaleSimulationCraft.Print("Warning: dubious use of call_action_list in %s", code);
         }
-        annotation.astAnnotation = annotation.astAnnotation || {
-        }
-        node = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
+        annotation.astAnnotation = annotation.astAnnotation || {};
+        [node] = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
         if (!SPECIAL_ACTION[symbol]) {
             AddSymbol(annotation, symbol);
         }
@@ -2748,13 +2882,12 @@ EmitOperandActiveDot = function (operand, parseNode, nodeList, annotation, actio
         [name] = Disambiguate(name, annotation.class, annotation.specialization);
         let dotName = `${name}_debuff`;
         [dotName] = Disambiguate(dotName, annotation.class, annotation.specialization);
-        let prefix = find(dotName, "_buff$") && "Buff" || "Debuff";
+        let prefix = truthy(find(dotName, "_buff$")) && "Buff" || "Debuff";
         target = target && (`${target}.`) || "";
         let code = format("%sCountOnAny(%s)", prefix, dotName);
         if (ok && code) {
-            annotation.astAnnotation = annotation.astAnnotation || {
-            }
-            node = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
+            annotation.astAnnotation = annotation.astAnnotation || {};
+            [node] = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
             AddSymbol(annotation, dotName);
         }
     } else {
@@ -2779,9 +2912,8 @@ EmitOperandArtifact = function (operand, parseNode, nodeList, annotation, action
             ok = false;
         }
         if (ok && code) {
-            annotation.astAnnotation = annotation.astAnnotation || {
-            }
-            node = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
+            annotation.astAnnotation = annotation.astAnnotation || {};
+            [node] = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
             AddSymbol(annotation, name);
         }
     } else {
@@ -2798,7 +2930,7 @@ EmitOperandRefresh = function (operand, parseNode, nodeList, annotation, action,
         let buffName = `${action}_debuff`;
         [buffName] = Disambiguate(buffName, annotation.class, annotation.specialization);
         let target;
-        let prefix = find(buffName, "_buff$") && "Buff" || "Debuff";
+        let prefix = truthy(find(buffName, "_buff$")) && "Buff" || "Debuff";
         if (prefix == "Debuff") {
             target = "target.";
         } else {
@@ -2806,7 +2938,7 @@ EmitOperandRefresh = function (operand, parseNode, nodeList, annotation, action,
         }
         let any = OvaleData.DEFAULT_SPELL_LIST[buffName] && " any=1" || "";
         let code = format("%sRefreshable(%s%s)", target, buffName, any);
-        node = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
+        [node] = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
         AddSymbol(annotation, buffName);
     }
     return [ok, node];
@@ -2825,7 +2957,7 @@ EmitOperandBuff = function (operand, parseNode, nodeList, annotation, action, ta
         [name] = Disambiguate(name, annotation.class, annotation.specialization);
         let buffName = (token == "debuff") && `${name}_debuff` || `${name}_buff`;
         [buffName] = Disambiguate(buffName, annotation.class, annotation.specialization);
-        let prefix = find(buffName, "_buff$") && "Buff" || "Debuff";
+        let prefix = truthy(find(buffName, "_buff$")) && "Buff" || "Debuff";
         let any = OvaleData.DEFAULT_SPELL_LIST[buffName] && " any=1" || "";
         target = target && (`${target}.`) || "";
         if (buffName == "dark_transformation_buff" && target == "") {
@@ -2866,9 +2998,8 @@ EmitOperandBuff = function (operand, parseNode, nodeList, annotation, action, ta
             ok = false;
         }
         if (ok && code) {
-            annotation.astAnnotation = annotation.astAnnotation || {
-            }
-            node = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
+            annotation.astAnnotation = annotation.astAnnotation || {};
+            [node] = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
             AddSymbol(annotation, buffName);
         }
     } else {
@@ -2877,7 +3008,7 @@ EmitOperandBuff = function (operand, parseNode, nodeList, annotation, action, ta
     return [ok, node];
 }
 {
-    let CHARACTER_PROPERTY = {
+    let CHARACTER_PROPERTY: LuaObj<string> = {
         ["active_enemies"]: "Enemies()",
         ["astral_power"]: "AstralPower()",
         ["astral_power.deficit"]: "AstralPowerDeficit()",
@@ -2998,7 +3129,7 @@ EmitOperandBuff = function (operand, parseNode, nodeList, annotation, action, ta
             AddSymbol(annotation, name);
         } else if (sub(operand, 1, 22) == "active_enemies_within.") {
             code = "Enemies()";
-        } else if (find(operand, "^incoming_damage_")) {
+        } else if (truthy(find(operand, "^incoming_damage_"))) {
             let [_seconds, measure] = match(operand, "^incoming_damage_([%d]+)(m?s?)$");
             let seconds = tonumber(_seconds);
             if (measure == "ms") {
@@ -3021,7 +3152,7 @@ EmitOperandBuff = function (operand, parseNode, nodeList, annotation, action, ta
         } else if (operand == "position_front") {
             code = "False(position_front)";
         } else if (sub(operand, 1, 5) == "role.") {
-            let role = match(operand, "^role%.([%w_]+)");
+            let [role] = match(operand, "^role%.([%w_]+)");
             if (role && role == annotation.role) {
                 code = format("True(role_%s)", role);
             } else {
@@ -3040,9 +3171,8 @@ EmitOperandBuff = function (operand, parseNode, nodeList, annotation, action, ta
             ok = false;
         }
         if (ok && code) {
-            annotation.astAnnotation = annotation.astAnnotation || {
-            }
-            node = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
+            annotation.astAnnotation = annotation.astAnnotation || {};
+            [node] = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
         }
         return [ok, node];
     }
@@ -3084,9 +3214,8 @@ EmitOperandCooldown = function (operand, parseNode, nodeList, annotation, action
             ok = false;
         }
         if (ok && code) {
-            annotation.astAnnotation = annotation.astAnnotation || {
-            }
-            node = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
+            annotation.astAnnotation = annotation.astAnnotation || {};
+            [node] = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
             AddSymbol(annotation, name);
         }
     } else {
@@ -3115,9 +3244,8 @@ EmitOperandDisease = function (operand, parseNode, nodeList, annotation, action,
             ok = false;
         }
         if (ok && code) {
-            annotation.astAnnotation = annotation.astAnnotation || {
-            }
-            node = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
+            annotation.astAnnotation = annotation.astAnnotation || {};
+            [node] = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
         }
     } else {
         ok = false;
@@ -3135,7 +3263,7 @@ EmitOperandDot = function (operand, parseNode, nodeList, annotation, action, tar
         [name] = Disambiguate(name, annotation.class, annotation.specialization);
         let dotName = `${name}_debuff`;
         [dotName] = Disambiguate(dotName, annotation.class, annotation.specialization);
-        let prefix = find(dotName, "_buff$") && "Buff" || "Debuff";
+        let prefix = truthy(find(dotName, "_buff$")) && "Buff" || "Debuff";
         target = target && (`${target}.`) || "";
         let code;
         if (property == "duration") {
@@ -3160,9 +3288,8 @@ EmitOperandDot = function (operand, parseNode, nodeList, annotation, action, tar
             ok = false;
         }
         if (ok && code) {
-            annotation.astAnnotation = annotation.astAnnotation || {
-            }
-            node = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
+            annotation.astAnnotation = annotation.astAnnotation || {};
+            [node] = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
             AddSymbol(annotation, dotName);
         }
     } else {
@@ -3172,7 +3299,7 @@ EmitOperandDot = function (operand, parseNode, nodeList, annotation, action, tar
 }
 EmitOperandGlyph = function (operand, parseNode, nodeList, annotation, action) {
     let ok = true;
-    let node;
+    let node: AstNode;
     let tokenIterator = gmatch(operand, OPERAND_TOKEN_PATTERN);
     let token = tokenIterator();
     if (token == "glyph") {
@@ -3190,9 +3317,8 @@ EmitOperandGlyph = function (operand, parseNode, nodeList, annotation, action) {
             ok = false;
         }
         if (ok && code) {
-            annotation.astAnnotation = annotation.astAnnotation || {
-            }
-            node = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
+            annotation.astAnnotation = annotation.astAnnotation || {};
+            [node] = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
             AddSymbol(annotation, glyphName);
         }
     } else {
@@ -3202,7 +3328,7 @@ EmitOperandGlyph = function (operand, parseNode, nodeList, annotation, action) {
 }
 EmitOperandPet = function (operand, parseNode, nodeList, annotation, action) {
     let ok = true;
-    let node;
+    let node: AstNode;
     let tokenIterator = gmatch(operand, OPERAND_TOKEN_PATTERN);
     let token = tokenIterator();
     if (token == "pet") {
@@ -3219,7 +3345,7 @@ EmitOperandPet = function (operand, parseNode, nodeList, annotation, action) {
             code = "pet.Present()";
         } else if (name == "buff") {
             let pattern = format("^pet%%.([%%w_.]+)", operand);
-            let petOperand = match(operand, pattern);
+            let [petOperand] = match(operand, pattern);
             [ok, node] = EmitOperandBuff(petOperand, parseNode, nodeList, annotation, action, "pet");
         } else {
             let pattern = format("^pet%%.%s%%.([%%w_.]+)", name);
@@ -3256,9 +3382,8 @@ EmitOperandPet = function (operand, parseNode, nodeList, annotation, action) {
             }
         }
         if (ok && code) {
-            annotation.astAnnotation = annotation.astAnnotation || {
-            }
-            node = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
+            annotation.astAnnotation = annotation.astAnnotation || {};
+            [node] = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
             AddSymbol(annotation, name);
         }
     } else {
@@ -3268,7 +3393,7 @@ EmitOperandPet = function (operand, parseNode, nodeList, annotation, action) {
 }
 EmitOperandPreviousSpell = function (operand, parseNode, nodeList, annotation, action) {
     let ok = true;
-    let node;
+    let node: AstNode;
     let tokenIterator = gmatch(operand, OPERAND_TOKEN_PATTERN);
     let token = tokenIterator();
     if (token == "prev" || token == "prev_gcd" || token == "prev_off_gcd") {
@@ -3292,9 +3417,8 @@ EmitOperandPreviousSpell = function (operand, parseNode, nodeList, annotation, a
             code = format("PreviousOffGCDSpell(%s)", name);
         }
         if (ok && code) {
-            annotation.astAnnotation = annotation.astAnnotation || {
-            }
-            node = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
+            annotation.astAnnotation = annotation.astAnnotation || {};
+            [node] = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
             AddSymbol(annotation, name);
         }
     } else {
@@ -3304,7 +3428,7 @@ EmitOperandPreviousSpell = function (operand, parseNode, nodeList, annotation, a
 }
 EmitOperandRaidEvent = function (operand, parseNode, nodeList, annotation, action) {
     let ok = true;
-    let node;
+    let node: AstNode;
     let name;
     let property;
     if (sub(operand, 1, 11) == "raid_event.") {
@@ -3346,15 +3470,14 @@ EmitOperandRaidEvent = function (operand, parseNode, nodeList, annotation, actio
         ok = false;
     }
     if (ok && code) {
-        annotation.astAnnotation = annotation.astAnnotation || {
-        }
-        node = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
+        annotation.astAnnotation = annotation.astAnnotation || {};
+        [node] = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
     }
     return [ok, node];
 }
 EmitOperandRace = function (operand, parseNode, nodeList, annotation, action) {
     let ok = true;
-    let node;
+    let node: AstNode;
     let tokenIterator = gmatch(operand, OPERAND_TOKEN_PATTERN);
     let token = tokenIterator();
     if (token == "race") {
@@ -3373,8 +3496,8 @@ EmitOperandRace = function (operand, parseNode, nodeList, annotation, action) {
         }
         if (ok && code) {
             annotation.astAnnotation = annotation.astAnnotation || {
-            }
-            node = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
+            };
+            [node] = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
         }
     } else {
         ok = false;
@@ -3383,7 +3506,7 @@ EmitOperandRace = function (operand, parseNode, nodeList, annotation, action) {
 }
 EmitOperandRune = function (operand, parseNode, nodeList, annotation, action) {
     let ok = true;
-    let node;
+    let node: AstNode;
     let code;
     if (parseNode.rune) {
         if (parseNode.asType == "boolean") {
@@ -3398,9 +3521,8 @@ EmitOperandRune = function (operand, parseNode, nodeList, annotation, action) {
         ok = false;
     }
     if (ok && code) {
-        annotation.astAnnotation = annotation.astAnnotation || {
-        }
-        node = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
+        annotation.astAnnotation = annotation.astAnnotation || {};
+        [node] = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
     }
     return [ok, node];
 }
@@ -3439,9 +3561,8 @@ EmitOperandSetBonus = function (operand, parseNode, nodeList, annotation, action
         ok = false;
     }
     if (ok && code) {
-        annotation.astAnnotation = annotation.astAnnotation || {
-        }
-        node = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
+        annotation.astAnnotation = annotation.astAnnotation || {};
+        [node] = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
     }
     return [ok, node];
 }
@@ -3459,9 +3580,8 @@ EmitOperandSeal = function (operand, parseNode, nodeList, annotation, action) {
             ok = false;
         }
         if (ok && code) {
-            annotation.astAnnotation = annotation.astAnnotation || {
-            }
-            node = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
+            annotation.astAnnotation = annotation.astAnnotation || {};
+            [node] = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
         }
     } else {
         ok = false;
@@ -3470,7 +3590,7 @@ EmitOperandSeal = function (operand, parseNode, nodeList, annotation, action) {
 }
 EmitOperandSpecial = function (operand, parseNode, nodeList, annotation, action, target) {
     let ok = true;
-    let node;
+    let node: AstNode;
     let className = annotation.class;
     let specialization = annotation.specialization;
     target = target && (`${target}.`) || "";
@@ -3687,7 +3807,7 @@ EmitOperandSpecial = function (operand, parseNode, nodeList, annotation, action,
     } else if (operand == "gcd.remains") {
         code = "GCDRemaining()";
     } else if (sub(operand, 1, 15) == "legendary_ring.") {
-        let name = Disambiguate("legendary_ring", className, specialization);
+        let [name] = Disambiguate("legendary_ring", className, specialization);
         let buffName = `${name}_buff`;
         let properties = sub(operand, 16);
         let tokenIterator = gmatch(properties, OPERAND_TOKEN_PATTERN);
@@ -3738,15 +3858,14 @@ EmitOperandSpecial = function (operand, parseNode, nodeList, annotation, action,
         ok = false;
     }
     if (ok && code) {
-        annotation.astAnnotation = annotation.astAnnotation || {
-        }
-        node = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
+        annotation.astAnnotation = annotation.astAnnotation || {};
+        [node] = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
     }
     return [ok, node];
 }
 EmitOperandTalent = function (operand, parseNode, nodeList, annotation, action) {
     let ok = true;
-    let node;
+    let node: AstNode;
     let tokenIterator = gmatch(operand, OPERAND_TOKEN_PATTERN);
     let token = tokenIterator();
     if (token == "talent") {
@@ -3772,8 +3891,8 @@ EmitOperandTalent = function (operand, parseNode, nodeList, annotation, action) 
         }
         if (ok && code) {
             annotation.astAnnotation = annotation.astAnnotation || {
-            }
-            node = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
+            };
+            [node] = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
             AddSymbol(annotation, talentName);
         }
     } else {
@@ -3783,7 +3902,7 @@ EmitOperandTalent = function (operand, parseNode, nodeList, annotation, action) 
 }
 EmitOperandTarget = function (operand, parseNode, nodeList, annotation, action) {
     let ok = true;
-    let node;
+    let node: AstNode;
     let tokenIterator = gmatch(operand, OPERAND_TOKEN_PATTERN);
     let token = tokenIterator();
     if (token == "target") {
@@ -3796,8 +3915,8 @@ EmitOperandTarget = function (operand, parseNode, nodeList, annotation, action) 
         }
         if (ok && code) {
             annotation.astAnnotation = annotation.astAnnotation || {
-            }
-            node = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
+            };
+            [node] = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
         }
     } else {
         ok = false;
@@ -3806,7 +3925,7 @@ EmitOperandTarget = function (operand, parseNode, nodeList, annotation, action) 
 }
 EmitOperandTotem = function (operand, parseNode, nodeList, annotation, action) {
     let ok = true;
-    let node;
+    let node: AstNode;
     let tokenIterator = gmatch(operand, OPERAND_TOKEN_PATTERN);
     let token = tokenIterator();
     if (token == "totem") {
@@ -3822,8 +3941,8 @@ EmitOperandTotem = function (operand, parseNode, nodeList, annotation, action) {
         }
         if (ok && code) {
             annotation.astAnnotation = annotation.astAnnotation || {
-            }
-            node = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
+            };
+            [node] = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
         }
     } else {
         ok = false;
@@ -3832,7 +3951,7 @@ EmitOperandTotem = function (operand, parseNode, nodeList, annotation, action) {
 }
 EmitOperandTrinket = function (operand, parseNode, nodeList, annotation, action) {
     let ok = true;
-    let node;
+    let node: AstNode;
     let tokenIterator = gmatch(operand, OPERAND_TOKEN_PATTERN);
     let token = tokenIterator();
     if (token == "trinket") {
@@ -3872,8 +3991,8 @@ EmitOperandTrinket = function (operand, parseNode, nodeList, annotation, action)
         }
         if (ok && code) {
             annotation.astAnnotation = annotation.astAnnotation || {
-            }
-            node = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
+            };
+            [node] = OvaleAST.ParseCode("expression", code, nodeList, annotation.astAnnotation);
         }
     } else {
         ok = false;
@@ -3883,16 +4002,16 @@ EmitOperandTrinket = function (operand, parseNode, nodeList, annotation, action)
 EmitOperandVariable = function (operand, parseNode, nodeList, annotation, action) {
     let tokenIterator = gmatch(operand, OPERAND_TOKEN_PATTERN);
     let token = tokenIterator();
-    let node;
+    let node: AstNode;
     let ok;
     if (token == "variable") {
         let name = tokenIterator();
         if (annotation.currentVariable && annotation.currentVariable.name == name) {
             let group = annotation.currentVariable.child[1];
             if (lualength(group.child) == 0) {
-                node = OvaleAST.ParseCode("expression", "0", nodeList, annotation.astAnnotation);
+                [node] = OvaleAST.ParseCode("expression", "0", nodeList, annotation.astAnnotation);
             } else {
-                node = OvaleAST.ParseCode("expression", OvaleAST.Unparse(group), nodeList, annotation.astAnnotation);
+                [node] = OvaleAST.ParseCode("expression", OvaleAST.Unparse(group), nodeList, annotation.astAnnotation);
             }
         } else {
             node = OvaleAST.NewNode(nodeList);
@@ -3917,7 +4036,7 @@ EmitOperandVariable = function (operand, parseNode, nodeList, annotation, action
         ["operand"]: EmitOperand
     }
 }
-function PreOrderTraversalMark(node: Node) {
+function PreOrderTraversalMark(node: AstNode) {
     if (node.type == "custom_function") {
         self_functionUsed[node.name] = true;
     } else {
@@ -3931,12 +4050,12 @@ function PreOrderTraversalMark(node: Node) {
         }
     }
 }
-function Mark(node: Node) {
+function Mark(node: AstNode) {
     wipe(self_functionDefined);
     wipe(self_functionUsed);
     PreOrderTraversalMark(node);
 }
-function SweepComments(childNodes, index) {
+function SweepComments(childNodes: LuaArray<AstNode>, index: number) {
     let count = 0;
     for (let k = index - 1; k >= 1; k += -1) {
         if (childNodes[k].type == "comment") {
@@ -3949,13 +4068,13 @@ function SweepComments(childNodes, index) {
     return count;
 }
 
-function isNode(n:any): n is Node {
+function isNode(n:any): n is AstNode {
     return type(n) == "table";
 }
 
-function Sweep(node: Node):[boolean, boolean|Node] {
+function Sweep(node: AstNode):[boolean, boolean|AstNode] {
     let isChanged: boolean;
-    let isSwept: boolean | Node;
+    let isSwept: boolean | AstNode;
     [isChanged, isSwept] = [false, false];
     if (node.type == "add_function") {
     } else if (node.type == "custom_function" && !self_functionDefined[node.name]) {
@@ -4059,7 +4178,7 @@ interface Spell {
     extraCondition?:string;
 }
 
-const InsertInterruptFunction = function(child, annotation, interrupts: LuaArray<Spell>) {
+const InsertInterruptFunction = function(child: LuaArray<AstNode>, annotation: Annotation, interrupts: LuaArray<Spell>) {
     let nodeList = annotation.astAnnotation.nodeList;
     let className = annotation.class;
     let specialization = annotation.specialization;
@@ -4137,7 +4256,7 @@ const InsertInterruptFunction = function(child, annotation, interrupts: LuaArray
     insert(child, 1, node);
     annotation.functionTag[node.name] = "cd";
 }
-const InsertInterruptFunctions = function(child, annotation) {
+const InsertInterruptFunctions = function(child: LuaArray<AstNode>, annotation: Annotation) {
     let interrupts = {
     }
     if (annotation.mind_freeze == "DEATHKNIGHT") {
@@ -4450,7 +4569,7 @@ const InsertInterruptFunctions = function(child, annotation) {
         return 0;
     }
 }
-const InsertSupportingFunctions = function(child, annotation) {
+const InsertSupportingFunctions = function(child: LuaArray<AstNode>, annotation: Annotation) {
     let count = 0;
     let nodeList = annotation.astAnnotation.nodeList;
     let camelSpecialization = CamelSpecialization(annotation);
@@ -4598,7 +4717,7 @@ const InsertSupportingFunctions = function(child, annotation) {
 				SpellCooldown(crusader_strike holy_shock judgment)
 			}
 		`;
-        let node = OvaleAST.ParseCode("add_function", code, nodeList, annotation.astAnnotation);
+        let [node] = OvaleAST.ParseCode("add_function", code, nodeList, annotation.astAnnotation);
         insert(child, 1, node);
         AddSymbol(annotation, "crusader_strike");
         AddSymbol(annotation, "holy_shock");
@@ -4612,7 +4731,7 @@ const InsertSupportingFunctions = function(child, annotation) {
 				SpellCooldown(crusader_strike exorcism hammer_of_wrath hammer_of_wrath_empowered judgment usable=1)
 			}
 		`;
-        let node = OvaleAST.ParseCode("add_function", code, nodeList, annotation.astAnnotation);
+        let [node] = OvaleAST.ParseCode("add_function", code, nodeList, annotation.astAnnotation);
         insert(child, 1, node);
         AddSymbol(annotation, "crusader_strike");
         AddSymbol(annotation, "exorcism");
@@ -4628,7 +4747,7 @@ const InsertSupportingFunctions = function(child, annotation) {
 				if not Talent(sanctified_wrath_talent) SpellCooldown(crusader_strike judgment)
 			}
 		`;
-        let node = OvaleAST.ParseCode("add_function", code, nodeList, annotation.astAnnotation);
+        let [node] = OvaleAST.ParseCode("add_function", code, nodeList, annotation.astAnnotation);
         insert(child, 1, node);
         AddSymbol(annotation, "crusader_strike");
         AddSymbol(annotation, "holy_wrath");
@@ -4748,7 +4867,7 @@ const InsertSupportingFunctions = function(child, annotation) {
     }
     return count;
 }
-const AddOptionalSkillCheckBox = function(child, annotation, data, skill) {
+const AddOptionalSkillCheckBox = function(child: LuaArray<AstNode>, annotation: Annotation, data:any, skill: string) {
     let nodeList = annotation.astAnnotation.nodeList;
     if (data.class != annotation[skill]) {
         return 0;
@@ -4763,12 +4882,12 @@ const AddOptionalSkillCheckBox = function(child, annotation, data, skill) {
 		AddCheckBox(opt_%s SpellName(%s)%s specialization=%s)
 	`;
     let code = format(fmt, skill, skill, defaultText, annotation.specialization);
-    let node = OvaleAST.ParseCode("checkbox", code, nodeList, annotation.astAnnotation);
+    let [node] = OvaleAST.ParseCode("checkbox", code, nodeList, annotation.astAnnotation);
     insert(child, 1, node);
     AddSymbol(annotation, skill);
     return 1;
 }
-const InsertSupportingControls = function(child, annotation) {
+const InsertSupportingControls = function(child: LuaArray<AstNode>, annotation: Annotation) {
     let count = 0;
     for (const [skill, data] of pairs(OPTIONAL_SKILLS)) {
         count = count + AddOptionalSkillCheckBox(child, annotation, data, skill);
@@ -4782,7 +4901,7 @@ const InsertSupportingControls = function(child, annotation) {
 					AddListItem(opt_using_apl %s "%s APL")
 				`;
                 let code = format(fmt, name, name);
-                let node = OvaleAST.ParseCode("list_item", code, nodeList, annotation.astAnnotation);
+                let [node] = OvaleAST.ParseCode("list_item", code, nodeList, annotation.astAnnotation);
                 insert(child, 1, node);
             }
         }
@@ -4790,7 +4909,7 @@ const InsertSupportingControls = function(child, annotation) {
             let code = `
 				AddListItem(opt_using_apl normal L(normal_apl) default)
 			`;
-            let node = OvaleAST.ParseCode("list_item", code, nodeList, annotation.astAnnotation);
+            let [node] = OvaleAST.ParseCode("list_item", code, nodeList, annotation.astAnnotation);
             insert(child, 1, node);
         }
     }
@@ -4799,7 +4918,7 @@ const InsertSupportingControls = function(child, annotation) {
 			AddCheckBox(opt_meta_only_during_boss L(meta_only_during_boss) default %s)
 		`;
         let code = format(fmt, ifSpecialization);
-        let node = OvaleAST.ParseCode("checkbox", code, nodeList, annotation.astAnnotation);
+        let [node] = OvaleAST.ParseCode("checkbox", code, nodeList, annotation.astAnnotation);
         insert(child, 1, node);
         count = count + 1;
     }
@@ -4808,7 +4927,7 @@ const InsertSupportingControls = function(child, annotation) {
 			AddCheckBox(opt_arcane_mage_burn_phase L(arcane_mage_burn_phase) default %s)
 		`;
         let code = format(fmt, ifSpecialization);
-        let node = OvaleAST.ParseCode("checkbox", code, nodeList, annotation.astAnnotation);
+        let [node] = OvaleAST.ParseCode("checkbox", code, nodeList, annotation.astAnnotation);
         insert(child, 1, node);
         count = count + 1;
     }
@@ -4817,7 +4936,7 @@ const InsertSupportingControls = function(child, annotation) {
 			AddCheckBox(opt_touch_of_death_on_elite_only L(touch_of_death_on_elite_only) default %s)
 		`;
         let code = format(fmt, ifSpecialization);
-        let node = OvaleAST.ParseCode("checkbox", code, nodeList, annotation.astAnnotation);
+        let [node] = OvaleAST.ParseCode("checkbox", code, nodeList, annotation.astAnnotation);
         insert(child, 1, node);
         count = count + 1;
     }
@@ -4827,7 +4946,7 @@ const InsertSupportingControls = function(child, annotation) {
 			AddCheckBox(opt_%s ItemName(%s) default %s)
 		`;
         let code = format(fmt, legendaryRing, legendaryRing, ifSpecialization);
-        let node = OvaleAST.ParseCode("checkbox", code, nodeList, annotation.astAnnotation);
+        let [node] = OvaleAST.ParseCode("checkbox", code, nodeList, annotation.astAnnotation);
         insert(child, 1, node);
         AddSymbol(annotation, legendaryRing);
         count = count + 1;
@@ -4837,7 +4956,7 @@ const InsertSupportingControls = function(child, annotation) {
 			AddCheckBox(opt_use_consumables L(opt_use_consumables) default %s)
 		`;
         let code = format(fmt, ifSpecialization);
-        let node = OvaleAST.ParseCode("checkbox", code, nodeList, annotation.astAnnotation);
+        let [node] = OvaleAST.ParseCode("checkbox", code, nodeList, annotation.astAnnotation);
         insert(child, 1, node);
         count = count + 1;
     }
@@ -4846,7 +4965,7 @@ const InsertSupportingControls = function(child, annotation) {
 			AddCheckBox(opt_melee_range L(not_in_melee_range) %s)
 		`;
         let code = format(fmt, ifSpecialization);
-        let node = OvaleAST.ParseCode("checkbox", code, nodeList, annotation.astAnnotation);
+        let [node] = OvaleAST.ParseCode("checkbox", code, nodeList, annotation.astAnnotation);
         insert(child, 1, node);
         count = count + 1;
     }
@@ -4855,26 +4974,26 @@ const InsertSupportingControls = function(child, annotation) {
 			AddCheckBox(opt_interrupt L(interrupt) default %s)
 		`;
         let code = format(fmt, ifSpecialization);
-        let node = OvaleAST.ParseCode("checkbox", code, nodeList, annotation.astAnnotation);
+        let [node] = OvaleAST.ParseCode("checkbox", code, nodeList, annotation.astAnnotation);
         insert(child, 1, node);
         count = count + 1;
     }
     return count;
 }
-const InsertSupportingDefines = function(child, annotation) {
+const InsertSupportingDefines = function(child: LuaArray<AstNode>, annotation: Annotation) {
     let count = 0;
     let nodeList = annotation.astAnnotation.nodeList;
     if (annotation.honor_among_thieves == "ROGUE") {
         let buffName = "honor_among_thieves_cooldown_buff";
         {
             let code = format("SpellInfo(%s duration=%f)", buffName, annotation[buffName]);
-            let node = OvaleAST.ParseCode("spell_info", code, nodeList, annotation.astAnnotation);
+            let [node] = OvaleAST.ParseCode("spell_info", code, nodeList, annotation.astAnnotation);
             insert(child, 1, node);
             count = count + 1;
         }
         {
             let code = format("Define(%s %d)", buffName, OvaleHonorAmongThieves.spellId);
-            let node = OvaleAST.ParseCode("define", code, nodeList, annotation.astAnnotation);
+            let [node] = OvaleAST.ParseCode("define", code, nodeList, annotation.astAnnotation);
             insert(child, 1, node);
             count = count + 1;
         }
@@ -4882,14 +5001,14 @@ const InsertSupportingDefines = function(child, annotation) {
     }
     return count;
 }
-const InsertVariables = function(child, annotation) {
+const InsertVariables = function(child: LuaArray<AstNode>, annotation: Annotation) {
     if (annotation.variable) {
         for (const [, v] of pairs(annotation.variable)) {
             insert(child, 1, v);
         }
     }
 }
-const GenerateIconBody = function(tag, profile) {
+const GenerateIconBody = function(tag: string, profile: Profile) {
     let annotation = profile.annotation;
     let precombatName = OvaleFunctionName("precombat", annotation);
     let defaultName = OvaleFunctionName("_default", annotation);
@@ -4960,7 +5079,7 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
         }
         profile.actionList = undefined;
     }
-    ParseProfile(simc) {
+    ParseProfile(simc: string) {
         let profile:Profile = {}
         for (const _line of gmatch(simc, "[^\r\n]+")) {
             let [line] = match(_line, "^%s*(.-)%s*$");
@@ -4993,13 +5112,13 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
         }
         let ok = true;
         let annotation: Annotation = {}
-        let nodeList: LuaArray<Node> = {}
-        let actionList: LuaArray<Action> = {
+        let nodeList: ChildParseNode = {}
+        let actionList: LuaArray<ScNode> = {
         }
         for (const [k, _v] of pairs(profile)) {
             let v = _v;
             if (ok && match(k, "^actions")) {
-                let name = match(k, "^actions%.([%w_]+)") || "_default";
+                let [name] = match(k, "^actions%.([%w_]+)") || "_default";
                 for (let index = lualength(profile.templates); index >= 1; index += -1) {
                     let template = profile.templates[index];
                     let variable = sub(template, 3, -2);
@@ -5073,7 +5192,7 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
         }
         return profile;
     }
-    Unparse(profile) {
+    Unparse(profile: Profile) {
         let output = self_outputPool.Get();
         if (profile.actionList) {
             for (const [, node] of ipairs(profile.actionList)) {
@@ -5096,10 +5215,10 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
             annotation.astAnnotation = annotation.astAnnotation || {
             }
             annotation.astAnnotation.nodeList = nodeList;
-            let dictionaryAST;
+            let dictionaryAST: AstNode;
             {
                 OvaleDebug.ResetTrace();
-                let dictionaryAnnotation: DictionaryAnnotation = {
+                let dictionaryAnnotation: AstAnnotation = {
                     nodeList: {
                     }
                 }
@@ -5111,7 +5230,7 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
 				%s
 			`;
                 let dictionaryCode = format(dictionaryFormat, lower(annotation.class), Ovale.db.profile.overrideCode || "");
-                dictionaryAST = OvaleAST.ParseCode("script", dictionaryCode, dictionaryAnnotation.nodeList, dictionaryAnnotation);
+                [dictionaryAST] = OvaleAST.ParseCode("script", dictionaryCode, dictionaryAnnotation.nodeList, dictionaryAnnotation);
                 if (dictionaryAST) {
                     dictionaryAST.annotation = dictionaryAnnotation;
                     annotation.dictionaryAST = dictionaryAST;
@@ -5227,10 +5346,10 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
                 insert(child, node);
             }
             Mark(ast);
-            let changed = Sweep(ast);
+            let [changed] = Sweep(ast);
             while (changed) {
                 Mark(ast);
-                changed = Sweep(ast);
+                [changed] = Sweep(ast);
             }
             Mark(ast);
             Sweep(ast);
@@ -5283,7 +5402,8 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
             output[lualength(output) + 1] = "";
             output[lualength(output) + 1] = "### Required symbols";
             sort(profile.annotation.symbolTable);
-            for (const [, symbol] of ipairs(profile.annotation.symbolTable)) {
+
+            for (const [, symbol] of ipairs(profile.annotation.symbolList)) {
                 if (!tonumber(symbol) && profile.annotation.dictionary && !profile.annotation.dictionary[symbol] && !OvaleData.buffSpellList[symbol]) {
                     this.Print("Warning: Symbol '%s' not defined", symbol);
                 }
@@ -5323,10 +5443,10 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
                             type: "input",
                             multiline: 25,
                             width: "full",
-                            get: (info) => {
+                            get: (info: any) => {
                                 return self_lastSimC;
                             },
-                            set: (info, value) => {
+                            set: (info: any, value: string) => {
                                 self_lastSimC = value;
                                 let profile = this.ParseProfile(self_lastSimC);
                                 let code = "";
@@ -5354,11 +5474,11 @@ class OvaleSimulationCraftClass extends OvaleDebug.RegisterDebugging(OvaleSimula
                             type: "input",
                             multiline: 25,
                             width: "full",
-                            get: (info) => {
+                            get: (info: any) => {
                                 const code = Ovale.db.profile.code;
                                 return gsub(code, "\t", "    ");
                             },
-                            set: (info, value) => {
+                            set: (info: any, value: string) => {
                                 Ovale.db.profile.overrideCode = value;
                                 if (self_lastSimC) {
                                     let profile = this.ParseProfile(self_lastSimC);

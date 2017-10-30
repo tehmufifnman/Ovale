@@ -1,5 +1,5 @@
 import { OvaleScripts } from "../Scripts";
-{
+export function register() {
     let name = "ovale_trinkets_wod";
     let desc = "[6.2] Ovale: Trinkets (Warlords of Draenor)";
     let code = `

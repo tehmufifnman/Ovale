@@ -4,13 +4,13 @@ import { OvalePaperDoll } from "./PaperDoll";
 import { baseState } from "./State";
 import { OvaleDebug } from "./Debug";
 import { self_requirement, CheckRequirements } from "./Requirement";
-import { type, pairs, tonumber, wipe } from "@wowts/lua";
+import { type, pairs, tonumber, wipe, truthy, LuaArray, LuaObj } from "@wowts/lua";
 import { find } from "@wowts/string";
 import { huge, floor, ceil } from "@wowts/math";
 let OvaleDataBase = Ovale.NewModule("OvaleData");
 let INFINITY = huge;
 
-let BLOODELF_CLASSES = {
+let BLOODELF_CLASSES: LuaObj<boolean> = {
     ["DEATHKNIGHT"]: true,
     ["DEMONHUNTER"]: true,
     ["DRUID"]: false,
@@ -24,7 +24,7 @@ let BLOODELF_CLASSES = {
     ["WARLOCK"]: true,
     ["WARRIOR"]: true
 }
-let PANDAREN_CLASSES = {
+let PANDAREN_CLASSES: LuaObj<boolean> = {
     ["DEATHKNIGHT"]: false,
     ["DEMONHUNTER"]: false,
     ["DRUID"]: false,
@@ -38,7 +38,7 @@ let PANDAREN_CLASSES = {
     ["WARLOCK"]: false,
     ["WARRIOR"]: true
 }
-let TAUREN_CLASSES = {
+let TAUREN_CLASSES: LuaObj<boolean> = {
     ["DEATHKNIGHT"]: true,
     ["DEMONHUNTER"]: false,
     ["DRUID"]: true,
@@ -52,7 +52,7 @@ let TAUREN_CLASSES = {
     ["WARLOCK"]: false,
     ["WARRIOR"]: true
 }
-let STAT_NAMES = {
+let STAT_NAMES: LuaArray<string> = {
     1: "agility",
     2: "bonus_armor",
     3: "critical_strike",
@@ -65,14 +65,14 @@ let STAT_NAMES = {
     10: "strength",
     11: "versatility"
 }
-let STAT_SHORTNAME = {
+let STAT_SHORTNAME: LuaObj<string> = {
     agility: "agi",
     critical_strike: "crit",
     intellect: "int",
     strength: "str",
     spirit: "spi"
 }
-let STAT_USE_NAMES = {
+let STAT_USE_NAMES: LuaArray<string> = {
     1: "trinket_proc",
     2: "trinket_stacking_proc",
     3: "trinket_stacking_stat",
@@ -90,7 +90,7 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
     itemInfo = {}
     itemList = {}
     spellInfo = {}
-    buffSpellList = {
+    buffSpellList: LuaObj<LuaArray<boolean>> = {
         fear_debuff: {
             [5246]: true,
             [5484]: true,
@@ -281,7 +281,7 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
         }        
     }
 
-    DEFAULT_SPELL_LIST = {}
+    DEFAULT_SPELL_LIST: LuaObj<boolean> = {}
     
     Reset() {
         wipe(this.itemInfo);
@@ -290,7 +290,7 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
             if (!this.DEFAULT_SPELL_LIST[k]) {
                 wipe(v);
                 this.buffSpellList[k] = undefined;
-            } else if (find(k, "^trinket_")) {
+            } else if (truthy(find(k, "^trinket_"))) {
                 wipe(v);
             }
         }
@@ -338,10 +338,10 @@ class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
         }
         return ii;
     }
-    GetItemTagInfo(spellId) {
+    GetItemTagInfo(spellId): [string, boolean] {
         return ["cd", false];
     }
-    GetSpellTagInfo(spellId) {
+    GetSpellTagInfo(spellId): [string, boolean] {
         let tag = "main";
         let invokesGCD = true;
         let si = this.spellInfo[spellId];

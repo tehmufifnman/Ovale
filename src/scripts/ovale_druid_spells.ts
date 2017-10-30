@@ -1,5 +1,5 @@
 import { OvaleScripts } from "../Scripts";
-{
+export function register() {
     let name = "ovale_druid_spells";
     let desc = "[7.3] Ovale: Druid spells";
     let code = `

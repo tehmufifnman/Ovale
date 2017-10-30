@@ -3,8 +3,8 @@
 
 
 "@types/node@^8.0.44":
-  version "8.0.44"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.0.44.tgz#5c39800fda4b76dab39a5f28fda676fc500015ac"
+  version "8.0.47"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.0.47.tgz#968e596f91acd59069054558a00708c445ca30c2"
 
 "@wowts/ace_comm-3.0@^1.0.0":
   version "1.0.0"
@@ -93,9 +93,9 @@
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@wowts/bit/-/bit-1.0.0.tgz#3e5587292589d2b2a10cfd948e0fc754f58fe5f3"
 
-"@wowts/coroutine@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@wowts/coroutine/-/coroutine-1.0.0.tgz#8b797f2cf2e89123b0a568ea329f6d83dee39e77"
+"@wowts/coroutine@^1.0.0", "@wowts/coroutine@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@wowts/coroutine/-/coroutine-1.0.1.tgz#08a0150759b80b74c57a38580549c02d92c03e12"
 
 "@wowts/lib_artifact_data-1.0@^1.0.0":
   version "1.0.0"
@@ -153,9 +153,9 @@
     "@wowts/tsaddon" "^1.0.0"
     "@wowts/tslib" "^1.0.0"
 
-"@wowts/lua@^1.0.2", "@wowts/lua@^1.0.3", "@wowts/lua@^1.0.4":
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/@wowts/lua/-/lua-1.0.4.tgz#8fd6e82c0ca3a62a5f3076a7cc4071043f6ff476"
+"@wowts/lua@^1.0.3", "@wowts/lua@^1.0.4", "@wowts/lua@^1.0.5":
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/@wowts/lua/-/lua-1.0.5.tgz#a794fb82ff44156bb0e7499543d5f894b0f3b895"
 
 "@wowts/masque@^1.0.0":
   version "1.0.0"
@@ -179,17 +179,17 @@
     "@wowts/tslib" "^1.0.0"
     "@wowts/wow-mock" "^1.0.1"
 
-"@wowts/string@^1.0.1":
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/@wowts/string/-/string-1.0.1.tgz#8ea51c2f69619019c726f5bf2df4fbb56cee6cb0"
+"@wowts/string@^1.0.4":
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/@wowts/string/-/string-1.0.4.tgz#5f37bcb8c97a8b060ca113445c94566cc68d7f5d"
   dependencies:
     "@wowts/coroutine" "^1.0.0"
 
-"@wowts/table@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@wowts/table/-/table-1.0.0.tgz#745ac84dc12dfbec7fd9c9ef1574576ded569fed"
+"@wowts/table@^1.0.0", "@wowts/table@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@wowts/table/-/table-1.0.1.tgz#21872a8d22c69582d9bdcc2808f1971a5bbeebfc"
   dependencies:
-    "@wowts/lua" "^1.0.2"
+    "@wowts/lua" "^1.0.5"
 
 "@wowts/tsaddon@^1.0.0":
   version "1.0.0"
@@ -213,11 +213,11 @@
     commander "^2.11.0"
     typescript "^2.5.3"
 
-"@wowts/wow-mock@^1.0.1", "@wowts/wow-mock@^1.0.4":
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/@wowts/wow-mock/-/wow-mock-1.0.4.tgz#13da37f4a387703d6a2acfd6b4bb1efa6e688e52"
+"@wowts/wow-mock@^1.0.1", "@wowts/wow-mock@^1.0.8":
+  version "1.0.8"
+  resolved "https://registry.yarnpkg.com/@wowts/wow-mock/-/wow-mock-1.0.8.tgz#127d6169f1569538a40644ec5c314e8274bd5602"
   dependencies:
-    "@wowts/lua" "^1.0.2"
+    "@wowts/lua" "^1.0.5"
 
 ansi-regex@^2.0.0:
   version "2.1.1"
@@ -226,6 +226,12 @@ ansi-regex@^2.0.0:
 ansi-styles@^2.2.1:
   version "2.2.1"
   resolved "https://registry.yarnpkg.com/ansi-styles/-/ansi-styles-2.2.1.tgz#b432dd3358b634cf75e1e4664368240533c1ddbe"
+
+ansi-styles@^3.1.0:
+  version "3.2.0"
+  resolved "https://registry.yarnpkg.com/ansi-styles/-/ansi-styles-3.2.0.tgz#c159b8d5be0f9e5a6f346dab94f16ce022161b88"
+  dependencies:
+    color-convert "^1.9.0"
 
 babel-code-frame@^6.22.0:
   version "6.26.0"
@@ -246,6 +252,10 @@ brace-expansion@^1.1.7:
     balanced-match "^1.0.0"
     concat-map "0.0.1"
 
+builtin-modules@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/builtin-modules/-/builtin-modules-1.1.1.tgz#270f076c5a72c02f5b65a47df94c5fe3a278892f"
+
 chalk@^1.1.3:
   version "1.1.3"
   resolved "https://registry.yarnpkg.com/chalk/-/chalk-1.1.3.tgz#a8115c55e4a702fe4d150abd3872822a7e09fc98"
@@ -256,9 +266,23 @@ chalk@^1.1.3:
     strip-ansi "^3.0.0"
     supports-color "^2.0.0"
 
-colors@^1.1.2:
-  version "1.1.2"
-  resolved "https://registry.yarnpkg.com/colors/-/colors-1.1.2.tgz#168a4701756b6a7f51a12ce0c97bfa28c084ed63"
+chalk@^2.1.0:
+  version "2.3.0"
+  resolved "https://registry.yarnpkg.com/chalk/-/chalk-2.3.0.tgz#b5ea48efc9c1793dccc9b4767c93914d3f2d52ba"
+  dependencies:
+    ansi-styles "^3.1.0"
+    escape-string-regexp "^1.0.5"
+    supports-color "^4.0.0"
+
+color-convert@^1.9.0:
+  version "1.9.0"
+  resolved "https://registry.yarnpkg.com/color-convert/-/color-convert-1.9.0.tgz#1accf97dd739b983bf994d56fec8f95853641b7a"
+  dependencies:
+    color-name "^1.1.1"
+
+color-name@^1.1.1:
+  version "1.1.3"
+  resolved "https://registry.yarnpkg.com/color-name/-/color-name-1.1.3.tgz#a7d0558bd89c42f795dd42328f740831ca53bc25"
 
 commander@^2.11.0, commander@^2.9.0:
   version "2.11.0"
@@ -272,7 +296,7 @@ diff@^3.2.0:
   version "3.4.0"
   resolved "https://registry.yarnpkg.com/diff/-/diff-3.4.0.tgz#b1d85507daf3964828de54b37d0d73ba67dda56c"
 
-escape-string-regexp@^1.0.2:
+escape-string-regexp@^1.0.2, escape-string-regexp@^1.0.5:
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/escape-string-regexp/-/escape-string-regexp-1.0.5.tgz#1b61c0562190a8dff6ae3bb2cf0200ca130b86d4"
 
@@ -300,6 +324,10 @@ has-ansi@^2.0.0:
   resolved "https://registry.yarnpkg.com/has-ansi/-/has-ansi-2.0.0.tgz#34f5049ce1ecdf2b0649af3ef24e45ed35416d91"
   dependencies:
     ansi-regex "^2.0.0"
+
+has-flag@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/has-flag/-/has-flag-2.0.0.tgz#e8207af1cc7b30d446cc70b734b5e8be18f88d51"
 
 inflight@^1.0.4:
   version "1.0.6"
@@ -337,18 +365,14 @@ path-parse@^1.0.5:
   resolved "https://registry.yarnpkg.com/path-parse/-/path-parse-1.0.5.tgz#3c1adf871ea9cd6c9431b6ea2bd74a0ff055c4c1"
 
 resolve@^1.3.2:
-  version "1.4.0"
-  resolved "https://registry.yarnpkg.com/resolve/-/resolve-1.4.0.tgz#a75be01c53da25d934a98ebd0e4c4a7312f92a86"
+  version "1.5.0"
+  resolved "https://registry.yarnpkg.com/resolve/-/resolve-1.5.0.tgz#1f09acce796c9a762579f31b2c1cc4c3cddf9f36"
   dependencies:
     path-parse "^1.0.5"
 
 semver@^5.3.0:
   version "5.4.1"
   resolved "https://registry.yarnpkg.com/semver/-/semver-5.4.1.tgz#e059c09d8571f0540823733433505d3a2f00b18e"
-
-simulationcraft@simulationcraft/simc:
-  version "0.0.0"
-  resolved "https://codeload.github.com/simulationcraft/simc/tar.gz/2f893f6f62eb3dd8306c45bb6156cc0e81f9ae37"
 
 strip-ansi@^3.0.0:
   version "3.0.1"
@@ -360,16 +384,23 @@ supports-color@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/supports-color/-/supports-color-2.0.0.tgz#535d045ce6b6363fa40117084629995e9df324c7"
 
+supports-color@^4.0.0:
+  version "4.5.0"
+  resolved "https://registry.yarnpkg.com/supports-color/-/supports-color-4.5.0.tgz#be7a0de484dec5c5cddf8b3d59125044912f635b"
+  dependencies:
+    has-flag "^2.0.0"
+
 tslib@^1.7.1:
   version "1.8.0"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.8.0.tgz#dc604ebad64bcbf696d613da6c954aa0e7ea1eb6"
 
 tslint@^5.7.0:
-  version "5.7.0"
-  resolved "https://registry.yarnpkg.com/tslint/-/tslint-5.7.0.tgz#c25e0d0c92fa1201c2bc30e844e08e682b4f3552"
+  version "5.8.0"
+  resolved "https://registry.yarnpkg.com/tslint/-/tslint-5.8.0.tgz#1f49ad5b2e77c76c3af4ddcae552ae4e3612eb13"
   dependencies:
     babel-code-frame "^6.22.0"
-    colors "^1.1.2"
+    builtin-modules "^1.1.1"
+    chalk "^2.1.0"
     commander "^2.9.0"
     diff "^3.2.0"
     glob "^7.1.1"
@@ -377,9 +408,9 @@ tslint@^5.7.0:
     resolve "^1.3.2"
     semver "^5.3.0"
     tslib "^1.7.1"
-    tsutils "^2.8.1"
+    tsutils "^2.12.1"
 
-tsutils@^2.8.1:
+tsutils@^2.12.1:
   version "2.12.1"
   resolved "https://registry.yarnpkg.com/tsutils/-/tsutils-2.12.1.tgz#f4d95ce3391c8971e46e54c4cf0edb0a21dd5b24"
   dependencies:

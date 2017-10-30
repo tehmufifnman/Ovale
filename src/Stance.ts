@@ -4,7 +4,7 @@ import { OvaleProfiler } from "./Profiler";
 import { Ovale } from "./Ovale";
 import { RegisterRequirement, UnregisterRequirement } from "./Requirement";
 import aceEvent from "@wowts/ace_event-3.0";
-import { pairs, tonumber, type, wipe } from "@wowts/lua";
+import { pairs, tonumber, type, wipe, LuaObj } from "@wowts/lua";
 import { sub } from "@wowts/string";
 import { concat, insert, sort } from "@wowts/table";
 import { GetNumShapeshiftForms, GetShapeshiftForm, GetShapeshiftFormInfo, GetSpellInfo } from "@wowts/wow-mock";
@@ -31,7 +31,7 @@ let SPELL_NAME_TO_STANCE = {
     [druid_swift_flight_form]: "druid_swift_flight_form",
     [rogue_stealth]: "rogue_stealth"
 }
-let STANCE_NAME = {
+let STANCE_NAME: LuaObj<boolean> = {
 }
 {
     for (const [, name] of pairs(SPELL_NAME_TO_STANCE)) {

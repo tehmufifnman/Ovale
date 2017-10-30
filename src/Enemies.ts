@@ -6,7 +6,7 @@ import { OvaleState, StateModule } from "./State";
 import aceEvent from "@wowts/ace_event-3.0";
 import AceTimer from "@wowts/ace_timer-3.0";
 import { band, bor } from "@wowts/bit";
-import { ipairs, pairs, wipe } from "@wowts/lua";
+import { ipairs, pairs, wipe, truthy } from "@wowts/lua";
 import { find } from "@wowts/string";
 import { GetTime, COMBATLOG_OBJECT_AFFILIATION_MINE, COMBATLOG_OBJECT_AFFILIATION_PARTY, COMBATLOG_OBJECT_AFFILIATION_RAID, COMBATLOG_OBJECT_REACTION_FRIENDLY } from "@wowts/wow-mock";
 
@@ -52,7 +52,7 @@ const IsTagEvent = function(cleuEvent) {
         isTagEvent = true;
     } else {
         for (const [, suffix] of ipairs(CLEU_TAG_SUFFIXES)) {
-            if (find(cleuEvent, `${suffix}$`)) {
+            if (truthy(find(cleuEvent, `${suffix}$`))) {
                 isTagEvent = true;
                 break;
             }

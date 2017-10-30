@@ -1,5 +1,6 @@
 import { OvaleScripts } from "../Scripts";
-{
+
+export function register() {
     let name = "ovale_deathknight_spells";
     let desc = "[7.0] Ovale: Death Knight spells";
     let code = `

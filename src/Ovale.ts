@@ -1,7 +1,7 @@
 import { L } from "./Localization";
 import { NewAddon, AceModule } from "@wowts/tsaddon";
 import aceEvent from "@wowts/ace_event-3.0";
-import { assert, ipairs, pairs, select, strjoin, tostring, tostringall, wipe, LuaArray, LuaObj, _G } from "@wowts/lua";
+import { assert, ipairs, pairs, select, strjoin, tostring, tostringall, wipe, LuaArray, LuaObj, _G, truthy } from "@wowts/lua";
 import { format, find, len } from "@wowts/string";
 import { UnitClass, UnitGUID, DEFAULT_CHAT_FRAME } from "@wowts/wow-mock";
 import { huge } from "@wowts/math";
@@ -19,7 +19,7 @@ export type Constructor<T> = new(...args: any[]) => T;
 export function MakeString(s?, ...__args) {
     if (s && len(s) > 0) {
         if (__args) {
-            if (find(s, "%%%.%d") || find(s, "%%[%w]")) {
+            if (truthy(find(s, "%%%.%d")) || truthy(find(s, "%%[%w]"))) {
                 s = format(s, ...tostringall(...__args));
             } else {
                 s = strjoin(" ", s, ...tostringall(...__args));

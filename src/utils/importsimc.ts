@@ -10,9 +10,10 @@ import { OvaleSpellBook } from "../SpellBook";
 import { OvaleStance } from "../Stance";
 import { OvaleCompile } from "../Compile";
 import { OvaleSimulationCraft } from "../SimulationCraft";
+import  { registerScripts } from "../scripts/index";
 
 let outputDirectory = "src/scripts";
-let profilesDirectory = "node_modules/simulationcraft/profiles/Tier19P";
+let profilesDirectory = "c:/Users/Sidoine/Git/simc/profiles/Tier19P";
 let root = "../";
 let SIMC_CLASS = [
     "deathknight",
@@ -64,7 +65,7 @@ if (!fs.existsSync(outputDirectory)) fs.mkdirSync(outputDirectory);
         fs.writeFileSync(fileName, output.join("\n"));
     }
 }
-let files = []
+let files:string[] = []
 {
     let dir = fs.readdirSync(profilesDirectory);
     for (const name of dir) {
@@ -72,7 +73,9 @@ let files = []
     }
     files.sort();
 }
+
 for (const filename of files) {
+    if (filename.startsWith("generate")) continue;
     let output: string[] = []
     let inputName = profilesDirectory + "/" + filename;
     let simc = fs.readFileSync(inputName, { encoding: "utf8" });
@@ -87,13 +90,13 @@ for (const filename of files) {
             if (!className) {
                 for (const simcClass of SIMC_CLASS) {
                     let length = simcClass.length;
-                    if (line.substring(0, length) == simcClass + "=") {
+                    if (line.substring(0, length + 1) == simcClass + "=") {
                         className = simcClass.toUpperCase();
                     }
                 }
             }
             if (!specialization) {
-                if (line.substring(0, 4) == "spec=") {
+                if (line.substring(0, 5) == "spec=") {
                     specialization = line.substring(5);
                 }
             }
@@ -107,12 +110,15 @@ for (const filename of files) {
         }
         console.log(filename);
         Ovale.playerGUID = "player";
+        Ovale.playerClass = className;
         eventDispatcher.DispatchEvent("ADDON_LOADED", "Ovale");
         OvaleEquipment.UpdateEquippedItems();
         OvaleSpellBook.Update();
         OvaleStance.UpdateStances();
+        registerScripts();
+
         let profile = OvaleSimulationCraft.ParseProfile(simc);
-        let profileName = sub(profile.annotation.name, 2, -2);
+        let profileName = profile.annotation.name.substring(1, profile.annotation.name.length - 2);
         let name: string, desc: string;
         if (source) {
             desc = format("%s: %s", source, profileName);
@@ -133,6 +139,6 @@ for (const filename of files) {
         let outputFileName = "ovale_" + className.toLowerCase() + ".ts";
         console.log("Appending to " + outputFileName + ": " + name);
         let outputName = outputDirectory + "/" + outputFileName;
-        fs.writeFileSync(outputName, output.join("\n"));
+        fs.writeFileSync(outputName, output.join("\n"), { flag: 'a' });
     }
 }
