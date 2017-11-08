@@ -16,7 +16,7 @@ import { insert, remove } from "@wowts/table";
 import { GetTime, UnitPower, MAX_COMBO_POINTS, UNKNOWN } from "@wowts/wow-mock";
 import { lualength } from "@wowts/lua";
 
-let OvaleComboPointsBase = Ovale.NewModule("OvaleComboPoints", aceEvent);
+let OvaleComboPointsBase = RegisterPrinter(OvaleProfiler.RegisterProfiling(OvaleDebug.RegisterDebugging(Ovale.NewModule("OvaleComboPoints", aceEvent))));
 export let OvaleComboPoints: OvaleComboPointsClass;
 let tinsert = insert;
 let tremove = remove;
@@ -64,7 +64,7 @@ const RemovePendingComboEvents = function(atTime, spellId?, guid?, reason?, comb
     }
     return count;
 }
-class OvaleComboPointsClass extends RegisterPrinter(OvaleProfiler.RegisterProfiling(OvaleDebug.RegisterDebugging(OvaleComboPointsBase))) {
+class OvaleComboPointsClass extends OvaleComboPointsBase {
     combo = 0;
 
     constructor() {

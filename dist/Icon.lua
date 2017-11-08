@@ -1,18 +1,29 @@
-local __addonName, __addon = ...
-            __addon.require("./Icon", { "./Localization", "./SpellBook", "./Ovale" }, function(__exports, __Localization, __SpellBook, __Ovale)
+local __exports = LibStub:NewLibrary("ovale/Icon", 10000)
+if not __exports then return end
+local __class = LibStub:GetLibrary("tslib").newClass
+local __Localization = LibStub:GetLibrary("ovale/Localization")
+local L = __Localization.L
+local __SpellBook = LibStub:GetLibrary("ovale/SpellBook")
+local OvaleSpellBook = __SpellBook.OvaleSpellBook
+local __Ovale = LibStub:GetLibrary("ovale/Ovale")
+local Ovale = __Ovale.Ovale
 local format = string.format
-local _next = next
-local _pairs = pairs
-local strfind = string.find
-local strsub = string.sub
-local _tostring = tostring
-local API_GetTime = GetTime
-local API_PlaySoundFile = PlaySoundFile
-local INFINITY = math.huge
+local find = string.find
+local sub = string.sub
+local next = next
+local pairs = pairs
+local tostring = tostring
+local _G = _G
+local GetTime = GetTime
+local PlaySoundFile = PlaySoundFile
+local CreateFrame = CreateFrame
+local GameTooltip = GameTooltip
+local huge = math.huge
+local INFINITY = huge
 local COOLDOWN_THRESHOLD = 0.1
-__exports.OvaleIcon = __addon.__class(nil, {
+__exports.OvaleIcon = __class(nil, {
     HasScriptControls = function(self)
-        return (_next(self.parent.checkBoxWidget) ~= nil or _next(self.parent.listWidget) ~= nil)
+        return (next(self.parent.checkBoxWidget) ~= nil or next(self.parent.listWidget) ~= nil)
     end,
     constructor = function(self, name, parent, secure)
         self.name = name
@@ -27,7 +38,7 @@ __exports.OvaleIcon = __addon.__class(nil, {
     SetValue = function(self, value, actionTexture)
         self.icone:Show()
         self.icone:SetTexture(actionTexture)
-        self.icone:SetAlpha(__Ovale.Ovale.db.profile.apparence.alpha)
+        self.icone:SetAlpha(Ovale.db.profile.apparence.alpha)
         self.cd:Hide()
         self.focusText:Hide()
         self.rangeIndicator:Hide()
@@ -53,8 +64,8 @@ __exports.OvaleIcon = __addon.__class(nil, {
         self.actionType = actionType
         self.actionId = actionId
         self.value = nil
-        local now = API_GetTime()
-        local profile = __Ovale.Ovale.db.profile
+        local now = GetTime()
+        local profile = Ovale.db.profile
         if startTime and actionTexture then
             local cd = self.cd
             local resetCooldown = false
@@ -116,7 +127,7 @@ __exports.OvaleIcon = __addon.__class(nil, {
                 local delay = element.namedParams.soundtime or 0.5
                 if now >= startTime - delay then
                     self.lastSound = element.namedParams.sound
-                    API_PlaySoundFile(self.lastSound)
+                    PlaySoundFile(self.lastSound)
                 end
             end
             local red = false
@@ -157,7 +168,7 @@ __exports.OvaleIcon = __addon.__class(nil, {
                 self.rangeIndicator:Hide()
             end
             if element.namedParams.text then
-                self.focusText:SetText(_tostring(element.namedParams.text))
+                self.focusText:SetText(tostring(element.namedParams.text))
                 self.focusText:Show()
             elseif actionTarget and actionTarget ~= "target" then
                 self.focusText:SetText(actionTarget)
@@ -192,14 +203,14 @@ __exports.OvaleIcon = __addon.__class(nil, {
         self.namedParams = namedParams
         self.actionButton = false
         if secure then
-            for k, v in _pairs(namedParams) do
-                local index = strfind(k, "spell")
+            for k, v in pairs(namedParams) do
+                local index = find(k, "spell")
                 if index then
-                    local prefix = strsub(k, 1, index - 1)
-                    local suffix = strsub(k, index + 5)
+                    local prefix = sub(k, 1, index - 1)
+                    local suffix = sub(k, index + 5)
                     self.frame:SetAttribute(prefix .. "type" .. suffix, "spell")
                     self.frame:SetAttribute("unit", self.namedParams.target or "target")
-                    self.frame:SetAttribute(k, __SpellBook.OvaleSpellBook:GetSpellName(v))
+                    self.frame:SetAttribute(k, OvaleSpellBook:GetSpellName(v))
                     self.actionButton = true
                 end
             end
@@ -230,23 +241,23 @@ __exports.OvaleIcon = __addon.__class(nil, {
         if self.help or self.actionType or self:HasScriptControls() then
             GameTooltip:SetOwner(self.frame, "ANCHOR_BOTTOMLEFT")
             if self.help then
-                GameTooltip:SetText(__Localization.L[self.help])
+                GameTooltip:SetText(L[self.help])
             end
             if self.actionType then
                 local actionHelp = self.actionHelp
                 if  not actionHelp then
                     if self.actionType == "spell" then
-                        actionHelp = __SpellBook.OvaleSpellBook:GetSpellName(self.actionId)
+                        actionHelp = OvaleSpellBook:GetSpellName(self.actionId)
                     elseif self.actionType == "value" then
-                        actionHelp = (self.value < INFINITY) and _tostring(self.value) or "infinity"
+                        actionHelp = (self.value < INFINITY) and tostring(self.value) or "infinity"
                     else
-                        actionHelp = format("%s %s", self.actionType, _tostring(self.actionId))
+                        actionHelp = format("%s %s", self.actionType, tostring(self.actionId))
                     end
                 end
                 GameTooltip:AddLine(actionHelp, 0.5, 1, 0.75)
             end
             if self:HasScriptControls() then
-                GameTooltip:AddLine(__Localization.L["Cliquer pour afficher/cacher les options"], 1, 1, 1)
+                GameTooltip:AddLine(L["Cliquer pour afficher/cacher les options"], 1, 1, 1)
             end
             GameTooltip:Show()
         end
@@ -258,7 +269,7 @@ __exports.OvaleIcon = __addon.__class(nil, {
     end,
     OvaleIcon_OnLoad = function(self)
         local name = self.name
-        local profile = __Ovale.Ovale.db.profile
+        local profile = Ovale.db.profile
         self.icone = _G[name .. "Icon"]
         self.shortcut = _G[name .. "HotKey"]
         self.remains = _G[name .. "Name"]
@@ -298,7 +309,7 @@ __exports.OvaleIcon = __addon.__class(nil, {
         self.focusText:SetFontObject("GameFontNormalSmall")
         self.focusText:SetAllPoints(self.frame)
         self.focusText:SetTextColor(1, 1, 1)
-        self.focusText:SetText(__Localization.L["Focus"])
+        self.focusText:SetText(L["Focus"])
         self.frame:RegisterForClicks("AnyUp")
         if profile.apparence.clickThru then
             self.frame:EnableMouse(false)
@@ -320,4 +331,3 @@ __exports.OvaleIcon = __addon.__class(nil, {
         self.frame:EnableMouse(enabled)
     end,
 })
-end)

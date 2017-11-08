@@ -1,6 +1,8 @@
-local __addonName, __addon = ...
-            __addon.require("./scripts/ovale_rogue_spells", { "./Scripts" }, function(__exports, __Scripts)
-do
+local __exports = LibStub:NewLibrary("ovale/scripts/ovale_rogue_spells", 10000)
+if not __exports then return end
+local __Scripts = LibStub:GetLibrary("ovale/Scripts")
+local OvaleScripts = __Scripts.OvaleScripts
+__exports.register = function()
     local name = "ovale_rogue_spells"
     local desc = "[7.0] Ovale: Rogue spells"
     local code = [[
@@ -165,6 +167,9 @@ Define(finality_nightblade 197395)
 	SpellAddTargetDebuff(finality_nightblade finality_nightblade_debuff=1)
 Define(finality_nightblade_debuff 197395)
 	SpellInfo(finality_nightblade_debuff duration=6)
+Define(finality_eviscerate 197393)
+	SpellInfo(finality_eviscerate combo=finisher energy=35)
+Define(finality_eviscerate_buff 197496)
 Define(find_weakness 91023)
 Define(find_weakness_debuff 91021)
 	SpellInfo(find_weakness_debuff duration=10)
@@ -436,10 +441,15 @@ Define(master_poisoner_talent 1)
 Define(venom_rush_talent 19)
 Define(vigor_talent 9)
 
+#Artifact traits
+Define(loaded_dice_buff 240837)
+
+#Legendaries
+Define(the_first_of_the_dead 151818)
+
 # Non-default tags for OvaleSimulationCraft.
 	SpellInfo(premeditation tag=main)
 	SpellInfo(vanish tag=shortcd)
 ]]
-    __Scripts.OvaleScripts:RegisterScript("ROGUE", nil, name, desc, code, "include")
+    OvaleScripts:RegisterScript("ROGUE", nil, name, desc, code, "include")
 end
-end)

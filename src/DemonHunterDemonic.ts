@@ -6,7 +6,7 @@ import { GetSpecialization, GetSpecializationInfo, GetTime, GetTalentInfoByID } 
 import { huge } from "@wowts/math";
 import { select } from "@wowts/lua";
 
-let OvaleDemonHunterDemonicBase = Ovale.NewModule("OvaleDemonHunterDemonic", aceEvent);
+let OvaleDemonHunterDemonicBase = OvaleDebug.RegisterDebugging(Ovale.NewModule("OvaleDemonHunterDemonic", aceEvent));
 export let OvaleDemonHunterDemonic: OvaleDemonHunterDemonicClass;
 let INFINITY = huge;
 let HAVOC_DEMONIC_TALENT_ID = 22547;
@@ -16,14 +16,13 @@ let HAVOC_META_BUFF_ID = 162264;
 let HIDDEN_BUFF_ID = -HAVOC_DEMONIC_TALENT_ID;
 let HIDDEN_BUFF_DURATION = INFINITY;
 let HIDDEN_BUFF_EXTENDED_BY_DEMONIC = "Extended by Demonic";
-class OvaleDemonHunterDemonicClass extends OvaleDebug.RegisterDebugging(OvaleDemonHunterDemonicBase) {
+class OvaleDemonHunterDemonicClass extends OvaleDemonHunterDemonicBase {
     playerGUID:string;
     isDemonHunter:boolean;
     isHavoc:boolean;
     hasDemonic: boolean;
 
-    constructor() {
-        super();
+    OnInitialize() {
         this.playerGUID = undefined;
         this.isDemonHunter = Ovale.playerClass == "DEMONHUNTER" && true || false;
         this.isHavoc = false;

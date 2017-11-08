@@ -107,15 +107,15 @@ class OvaleScriptsClass  extends OvaleScriptsBase {
             if (specialization == "blood") {
                 name = "icyveins_deathknight_blood";
             } else if (specialization == "frost") {
-                name = "simulationcraft_death_knight_frost_t19p";
+                name = "sc_death_knight_frost_t19";
             } else if (specialization == "unholy") {
-                name = "simulationcraft_death_knight_unholy_t19p";
+                name = "sc_death_knight_unholy_t19";
             }
         } else if (className == "DEMONHUNTER") {
             if (specialization == "vengeance") {
                 name = "icyveins_demonhunter_vengeance";
             } else if (specialization == "havoc") {
-                name = "simulationcraft_demon_hunter_havoc_t19p";
+                name = "sc_demon_hunter_havoc_t19";
             }
         } else if (className == "DRUID") {
             if (specialization == "restoration") {
@@ -133,7 +133,7 @@ class OvaleScriptsClass  extends OvaleScriptsBase {
                 short = "sv";
             }
             if (short) {
-                name = format("simulationcraft_hunter_%s_t19p", short);
+                name = format("sc_hunter_%s_t19", short);
             }
         } else if (className == "MONK") {
             if (specialization == "mistweaver") {
@@ -163,7 +163,7 @@ class OvaleScriptsClass  extends OvaleScriptsBase {
             }
         }
         if (!name && specialization) {
-            name = format("simulationcraft_%s_%s_t19p", lower(className), specialization);
+            name = format("sc_%s_%s_t19", lower(className), specialization);
         }
         if (!(name && this.script[name])) {
             name = DISABLED_NAME;

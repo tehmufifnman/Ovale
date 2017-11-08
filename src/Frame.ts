@@ -522,14 +522,15 @@ class OvaleFrame extends AceGUI.WidgetContainerBase {
 
     constructor() {
         super();
+        frame = this;
         let hider = CreateFrame("Frame", `${Ovale.GetName()}PetBattleFrameHider`, UIParent, "SecureHandlerStateTemplate");
-        let frame = CreateFrame("Frame", undefined, hider);
+        let newFrame = CreateFrame("Frame", undefined, hider);
         hider.SetAllPoints(UIParent);
         RegisterStateDriver(hider, "visibility", "[petbattle] hide; show");
         
         const profile = Ovale.db.profile;
         
-        this.frame = frame;
+        this.frame = newFrame;
         this.hider = hider;
         this.updateFrame = CreateFrame("Frame", `${Ovale.GetName()}UpdateFrame`);
         this.barre = this.frame.CreateTexture();
@@ -538,35 +539,35 @@ class OvaleFrame extends AceGUI.WidgetContainerBase {
             this.skinGroup = Masque.Group(Ovale.GetName());
         }
         this.timeSinceLastUpdate = INFINITY;
-        frame.SetWidth(100);
-        frame.SetHeight(100);
-        frame.SetMovable(true);
-        frame.SetFrameStrata("MEDIUM");
-        frame.SetScript("OnMouseDown", () => {
+        newFrame.SetWidth(100);
+        newFrame.SetHeight(100);
+        newFrame.SetMovable(true);
+        newFrame.SetFrameStrata("MEDIUM");
+        newFrame.SetScript("OnMouseDown", () => {
             if ((!Ovale.db.profile.apparence.verrouille)) {
-                frame.StartMoving();
+                newFrame.StartMoving();
                 AceGUI.ClearFocus();
             }
         });
-        frame.SetScript("OnMouseUp", () => {
-            frame.StopMovingOrSizing();
+        newFrame.SetScript("OnMouseUp", () => {
+            newFrame.StopMovingOrSizing();
             const profile = Ovale.db.profile;
-            let [x, y] = frame.GetCenter();
-            let [parentX, parentY] = frame.GetParent().GetCenter();
+            let [x, y] = newFrame.GetCenter();
+            let [parentX, parentY] = newFrame.GetParent().GetCenter();
             profile.apparence.offsetX = x - parentX;
             profile.apparence.offsetY = y - parentY;
         });
-        frame.SetScript("OnEnter", () => {
+        newFrame.SetScript("OnEnter", () => {
             const profile = Ovale.db.profile;
             if (!(profile.apparence.enableIcons && profile.apparence.verrouille)) {
                 this.barre.Show();
             }
         });
-        frame.SetScript("OnLeave", () => {
+        newFrame.SetScript("OnLeave", () => {
             this.barre.Hide();
         });
-        frame.SetScript("OnHide", () => this.Hide());
-        frame.SetAlpha(profile.apparence.alpha);
+        newFrame.SetScript("OnHide", () => this.Hide());
+        newFrame.SetAlpha(profile.apparence.alpha);
         this.updateFrame.SetScript("OnUpdate", (updateFrame, elapsed) => this.OnUpdate(elapsed));
         this.barre.SetTexture(0, 0.8, 0);
         this.barre.SetPoint("TOPLEFT", 0, 0);
@@ -581,12 +582,16 @@ class OvaleFrame extends AceGUI.WidgetContainerBase {
     }
 }
 
-export const frame = new OvaleFrame();
+export let frame: OvaleFrame;
 
 const OvaleFrameBase = Ovale.NewModule("OvaleFrame", aceEvent);
 class OvaleFrameModuleClass extends OvaleFrameBase {
-    
+    OnInitialize() {
+       frame = new OvaleFrame();
+    }
+
     Ovale_OptionChanged(event, eventType) {
+        if (!frame) return;
         if (eventType == "visibility") {
             frame.UpdateVisibility();
         }

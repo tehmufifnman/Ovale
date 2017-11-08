@@ -1,8 +1,10 @@
-local __addonName, __addon = ...
-            __addon.require("./scripts/ovale_common", { "./Scripts" }, function(__exports, __Scripts)
-do
+local __exports = LibStub:NewLibrary("ovale/scripts/ovale_common", 10000)
+if not __exports then return end
+local __Scripts = LibStub:GetLibrary("ovale/Scripts")
+local OvaleScripts = __Scripts.OvaleScripts
+__exports.register = function()
     local name = "ovale_common"
-    local desc = "[6.0.2] Ovale: Common spell definitions"
+    local desc = "[7.3.0] Ovale: Common spell definitions"
     local code = [[
 # Common spell definitions shared by all classes and specializations.
 
@@ -55,10 +57,19 @@ Define(deadly_grace_potion 127843)
 Define(old_war_potion 127844)
 Define(prolonged_power_potion 142117)
 Define(unbending_potion 127845)
+Define(potion_of_prolonged_power_potion 142117)
 
 Define(prolonged_power_buff 229206)
 Define(unbending_potion_buff 188029)
 SpellList(potion_buff unbending_potion_buff)
+
+SpellList(trinket_proc_spell_power_buff)
+SpellList(trinket_stacking_proc_spell_power_buff)
+
+Define(astral_healing_potion 152615)
+Define(ancient_healing_potion 127834)
+Define(aged_healing_potion 136569)
+Define(healthstone 5512)
 
 ###
 ### Trinkets & OnUse Rings
@@ -191,7 +202,17 @@ AddFunction UseRacialSurvivalActions
 {
 	Spell(stoneform)
 }
+
+AddFunction UseHealthPotions
+{
+	Item(healthstone usable=1)
+	if CheckBoxOn(opt_use_consumables) 
+	{
+		Item(astral_healing_potion usable=1)
+		Item(ancient_healing_potion usable=1)
+		Item(aged_healing_potion usable=1)
+	}
+}
 ]]
-    __Scripts.OvaleScripts:RegisterScript(nil, nil, name, desc, code, "include")
+    OvaleScripts:RegisterScript(nil, nil, name, desc, code, "include")
 end
-end)

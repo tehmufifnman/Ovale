@@ -1,16 +1,22 @@
-local __addonName, __addon = ...
-            __addon.require("./GUID", { "./Debug", "./Ovale", "AceEvent-3.0" }, function(__exports, __Debug, __Ovale, aceEvent)
-local OvaleGUIDBase = __Ovale.Ovale:NewModule("OvaleGUID", aceEvent)
+local __exports = LibStub:NewLibrary("ovale/GUID", 10000)
+if not __exports then return end
+local __class = LibStub:GetLibrary("tslib").newClass
+local __Debug = LibStub:GetLibrary("ovale/Debug")
+local OvaleDebug = __Debug.OvaleDebug
+local __Ovale = LibStub:GetLibrary("ovale/Ovale")
+local Ovale = __Ovale.Ovale
+local aceEvent = LibStub:GetLibrary("AceEvent-3.0", true)
 local floor = math.floor
-local _ipairs = ipairs
-local _setmetatable = setmetatable
-local tinsert = table.insert
-local tremove = table.remove
-local _type = type
-local _unpack = unpack
-local API_GetTime = GetTime
-local API_UnitGUID = UnitGUID
-local API_UnitName = UnitName
+local ipairs = ipairs
+local setmetatable = setmetatable
+local type = type
+local unpack = unpack
+local insert = table.insert
+local remove = table.remove
+local GetTime = GetTime
+local UnitGUID = UnitGUID
+local UnitName = UnitName
+local OvaleGUIDBase = OvaleDebug:RegisterDebugging(Ovale:NewModule("OvaleGUID", aceEvent))
 local PET_UNIT = {}
 do
     PET_UNIT["player"] = "pet"
@@ -23,7 +29,7 @@ do
     for i = 1, 40, 1 do
         PET_UNIT["raid" .. i] = "raidpet" .. i
     end
-    _setmetatable(PET_UNIT, {
+    setmetatable(PET_UNIT, {
         __index = function(t, unitId)
             return unitId .. "pet"
         end
@@ -32,36 +38,36 @@ do
 end
 local UNIT_AURA_UNITS = {}
 do
-    tinsert(UNIT_AURA_UNITS, "player")
-    tinsert(UNIT_AURA_UNITS, "pet")
-    tinsert(UNIT_AURA_UNITS, "vehicle")
-    tinsert(UNIT_AURA_UNITS, "target")
-    tinsert(UNIT_AURA_UNITS, "focus")
+    insert(UNIT_AURA_UNITS, "player")
+    insert(UNIT_AURA_UNITS, "pet")
+    insert(UNIT_AURA_UNITS, "vehicle")
+    insert(UNIT_AURA_UNITS, "target")
+    insert(UNIT_AURA_UNITS, "focus")
     for i = 1, 40, 1 do
         local unitId = "raid" .. i
-        tinsert(UNIT_AURA_UNITS, unitId)
-        tinsert(UNIT_AURA_UNITS, PET_UNIT[unitId])
+        insert(UNIT_AURA_UNITS, unitId)
+        insert(UNIT_AURA_UNITS, PET_UNIT[unitId])
     end
     for i = 1, 4, 1 do
         local unitId = "party" .. i
-        tinsert(UNIT_AURA_UNITS, unitId)
-        tinsert(UNIT_AURA_UNITS, PET_UNIT[unitId])
+        insert(UNIT_AURA_UNITS, unitId)
+        insert(UNIT_AURA_UNITS, PET_UNIT[unitId])
     end
     for i = 1, 4, 1 do
-        tinsert(UNIT_AURA_UNITS, "boss" .. i)
+        insert(UNIT_AURA_UNITS, "boss" .. i)
     end
     for i = 1, 5, 1 do
         local unitId = "arena" .. i
-        tinsert(UNIT_AURA_UNITS, unitId)
-        tinsert(UNIT_AURA_UNITS, PET_UNIT[unitId])
+        insert(UNIT_AURA_UNITS, unitId)
+        insert(UNIT_AURA_UNITS, PET_UNIT[unitId])
     end
-    tinsert(UNIT_AURA_UNITS, "npc")
+    insert(UNIT_AURA_UNITS, "npc")
 end
 local UNIT_AURA_UNIT = {}
-for i, unitId in _ipairs(UNIT_AURA_UNITS) do
+for i, unitId in ipairs(UNIT_AURA_UNITS) do
     UNIT_AURA_UNIT[unitId] = i
 end
-_setmetatable(UNIT_AURA_UNIT, {
+setmetatable(UNIT_AURA_UNIT, {
     __index = function(t, unitId)
         return #UNIT_AURA_UNITS + 1
     end
@@ -72,7 +78,7 @@ local compareDefault = function(a, b)
 end
 
 local function BinaryInsert(t, value, unique, compare)
-    if _type(unique) == "function" then
+    if type(unique) == "function" then
         unique, compare = nil, unique
     end
     compare = compare or compareDefault
@@ -87,7 +93,7 @@ local function BinaryInsert(t, value, unique, compare)
             return mid
         end
     end
-    tinsert(t, low, value)
+    insert(t, low, value)
     return low
 end
 local function BinarySearch(t, value, compare)
@@ -108,7 +114,7 @@ end
 local function BinaryRemove(t, value, compare)
     local index = BinarySearch(t, value, compare)
     if index then
-        tremove(t, index)
+        remove(t, index)
     end
     return index
 end
@@ -116,7 +122,7 @@ local CompareUnit = function(a, b)
     return UNIT_AURA_UNIT[a] < UNIT_AURA_UNIT[b]
 end
 
-local OvaleGUIDClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(OvaleGUIDBase), {
+local OvaleGUIDClass = __class(OvaleGUIDBase, {
     constructor = function(self)
         self.unitGUID = {}
         self.guidUnit = {}
@@ -126,7 +132,7 @@ local OvaleGUIDClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(Oval
         self.nameGUID = {}
         self.petGUID = {}
         self.UNIT_AURA_UNIT = UNIT_AURA_UNIT
-        __Debug.OvaleDebug:RegisterDebugging(OvaleGUIDBase).constructor(self)
+        OvaleGUIDBase.constructor(self)
         self:RegisterEvent("ARENA_OPPONENT_UPDATE")
         self:RegisterEvent("GROUP_ROSTER_UPDATE")
         self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
@@ -186,7 +192,7 @@ local OvaleGUIDClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(Oval
         if unitId == "player" then
             local guid = self:UnitGUID("pet")
             if guid then
-                self.petGUID[guid] = API_GetTime()
+                self.petGUID[guid] = GetTime()
             end
             self:SendMessage("Ovale_PetChanged", guid)
         end
@@ -200,13 +206,13 @@ local OvaleGUIDClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(Oval
         end
     end,
     UpdateAllUnits = function(self)
-        for _, unitId in _ipairs(UNIT_AURA_UNITS) do
+        for _, unitId in ipairs(UNIT_AURA_UNITS) do
             self:UpdateUnitWithTarget(unitId)
         end
     end,
     UpdateUnit = function(self, unitId)
-        local guid = API_UnitGUID(unitId)
-        local name = API_UnitName(unitId)
+        local guid = UnitGUID(unitId)
+        local name = UnitName(unitId)
         local previousGUID = self.unitGUID[unitId]
         local previousName = self.unitName[unitId]
         if  not guid or guid ~= previousGUID then
@@ -215,7 +221,7 @@ local OvaleGUIDClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(Oval
                 if self.guidUnit[previousGUID] then
                     BinaryRemove(self.guidUnit[previousGUID], unitId, CompareUnit)
                 end
-                __Ovale.Ovale.refreshNeeded[previousGUID] = true
+                Ovale.refreshNeeded[previousGUID] = true
             end
         end
         if  not name or name ~= previousName then
@@ -238,7 +244,7 @@ local OvaleGUIDClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(Oval
                 self.guidUnit[guid] = list
             end
             self:Debug("'%s' is '%s'.", unitId, guid)
-            __Ovale.Ovale.refreshNeeded[guid] = true
+            Ovale.refreshNeeded[guid] = true
         end
         if name and name ~= previousName then
             self.unitName[unitId] = name
@@ -277,25 +283,25 @@ local OvaleGUIDClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(Oval
     end,
     UnitGUID = function(self, unitId)
         if unitId then
-            return self.unitGUID[unitId] or API_UnitGUID(unitId)
+            return self.unitGUID[unitId] or UnitGUID(unitId)
         end
         return nil
     end,
     GUIDUnit = function(self, guid)
         if guid and self.guidUnit[guid] then
-            return _unpack(self.guidUnit[guid])
+            return unpack(self.guidUnit[guid])
         end
         return nil
     end,
     UnitName = function(self, unitId)
         if unitId then
-            return self.unitName[unitId] or API_UnitName(unitId)
+            return self.unitName[unitId] or UnitName(unitId)
         end
         return nil
     end,
     NameUnit = function(self, name)
         if name and self.nameUnit[name] then
-            return _unpack(self.nameUnit[name])
+            return unpack(self.nameUnit[name])
         end
         return nil
     end,
@@ -307,10 +313,9 @@ local OvaleGUIDClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(Oval
     end,
     NameGUID = function(self, name)
         if name and self.nameGUID[name] then
-            return _unpack(self.nameGUID[name])
+            return unpack(self.nameGUID[name])
         end
         return nil
     end,
 })
 __exports.OvaleGUID = OvaleGUIDClass()
-end)

@@ -11,7 +11,7 @@ import { GetRuneCooldown, GetTime } from "@wowts/wow-mock";
 import { huge } from "@wowts/math";
 import { sort } from "@wowts/table";
 
-let OvaleRunesBase = Ovale.NewModule("OvaleRunes", aceEvent);
+let OvaleRunesBase = OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(Ovale.NewModule("OvaleRunes", aceEvent)));
 export let OvaleRunes: OvaleRunesClass;
 let EMPOWER_RUNE_WEAPON = 47568;
 let RUNE_SLOTS = 6;
@@ -24,7 +24,7 @@ interface Rune {
 const IsActiveRune = function(rune: Rune, atTime) {
     return (rune.startCooldown == 0 || rune.endCooldown <= atTime);
 }
-class OvaleRunesClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(OvaleRunesBase)) {
+class OvaleRunesClass extends OvaleRunesBase {
     rune:LuaArray<Rune> = {}
     
     constructor() {
@@ -110,13 +110,13 @@ class RunesState implements StateModule {
 
     InitializeState() {
         this.rune = {}
-        for (const [slot] of ipairs(this.rune)) {
+        for (const [slot] of ipairs(OvaleRunes.rune)) {
             this.rune[slot] = {}
         }
     }
     ResetState() {
         OvaleRunes.StartProfiling("OvaleRunes_ResetState");
-        for (const [slot, rune] of ipairs(this.rune)) {
+        for (const [slot, rune] of ipairs(OvaleRunes.rune)) {
             let stateRune = this.rune[slot];
             for (const [k, v] of pairs(rune)) {
                 stateRune[k] = v;

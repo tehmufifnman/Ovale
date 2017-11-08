@@ -1,6 +1,8 @@
-local __addonName, __addon = ...
-            __addon.require("./scripts/ovale_trinkets_mop", { "./Scripts" }, function(__exports, __Scripts)
-do
+local __exports = LibStub:NewLibrary("ovale/scripts/ovale_trinkets_mop", 10000)
+if not __exports then return end
+local __Scripts = LibStub:GetLibrary("ovale/Scripts")
+local OvaleScripts = __Scripts.OvaleScripts
+__exports.register = function()
     local name = "ovale_trinkets_mop"
     local desc = "[6.0.3] Ovale: Trinkets (Mists of Pandaria)"
     local code = [[
@@ -338,6 +340,5 @@ Define(tyrannical_gladiators_insignia_of_victory_alliance 99948)
 Define(tyrannical_gladiators_insignia_of_victory_horde 100085)
 	ItemInfo(tyrannical_gladiators_insignia_of_victory_horde buff=surge_of_victory_buff)
 ]]
-    __Scripts.OvaleScripts:RegisterScript(nil, nil, name, desc, code, "include")
+    OvaleScripts:RegisterScript(nil, nil, name, desc, code, "include")
 end
-end)

@@ -1,11 +1,17 @@
-local __addonName, __addon = ...
-            __addon.require("./SpellDamage", { "./Profiler", "./Ovale", "AceEvent-3.0" }, function(__exports, __Profiler, __Ovale, aceEvent)
+local __exports = LibStub:NewLibrary("ovale/SpellDamage", 10000)
+if not __exports then return end
+local __class = LibStub:GetLibrary("tslib").newClass
+local __Profiler = LibStub:GetLibrary("ovale/Profiler")
+local OvaleProfiler = __Profiler.OvaleProfiler
+local __Ovale = LibStub:GetLibrary("ovale/Ovale")
+local Ovale = __Ovale.Ovale
+local aceEvent = LibStub:GetLibrary("AceEvent-3.0", true)
 local CLEU_DAMAGE_EVENT = {
     SPELL_DAMAGE = true,
     SPELL_PERIODIC_AURA = true
 }
-local OvaleSpellDamageBase = __Profiler.OvaleProfiler:RegisterProfiling(__Ovale.Ovale:NewModule("OvaleSpellDamage", aceEvent))
-local OvaleSpellDamageClass = __addon.__class(OvaleSpellDamageBase, {
+local OvaleSpellDamageBase = OvaleProfiler:RegisterProfiling(Ovale:NewModule("OvaleSpellDamage", aceEvent))
+local OvaleSpellDamageClass = __class(OvaleSpellDamageBase, {
     constructor = function(self)
         self.value = {}
         OvaleSpellDamageBase.constructor(self)
@@ -16,12 +22,12 @@ local OvaleSpellDamageClass = __addon.__class(OvaleSpellDamageBase, {
     end,
     COMBAT_LOG_EVENT_UNFILTERED = function(self, event, timestamp, cleuEvent, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, ...)
         local arg12, _, _, arg15, _, _, _, _, _, _, _, _, _ = ...
-        if sourceGUID == __Ovale.Ovale.playerGUID then
+        if sourceGUID == Ovale.playerGUID then
             self:StartProfiling("OvaleSpellDamage_COMBAT_LOG_EVENT_UNFILTERED")
             if CLEU_DAMAGE_EVENT[cleuEvent] then
                 local spellId, amount = arg12, arg15
                 self.value[spellId] = amount
-                __Ovale.Ovale:needRefresh()
+                Ovale:needRefresh()
             end
             self:StopProfiling("OvaleSpellDamage_COMBAT_LOG_EVENT_UNFILTERED")
         end
@@ -31,4 +37,3 @@ local OvaleSpellDamageClass = __addon.__class(OvaleSpellDamageBase, {
     end,
 })
 __exports.OvaleSpellDamage = OvaleSpellDamageClass()
-end)

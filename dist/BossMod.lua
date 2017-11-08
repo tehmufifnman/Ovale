@@ -1,15 +1,27 @@
-local __addonName, __addon = ...
-            __addon.require("./BossMod", { "./Debug", "./Profiler", "./Ovale", "./State" }, function(__exports, __Debug, __Profiler, __Ovale, __State)
-local OvaleBossModBase = __Profiler.OvaleProfiler:RegisterProfiling(__Debug.OvaleDebug:RegisterDebugging(__Ovale.Ovale:NewModule("OvaleBossMod")))
-local API_GetNumGroupMembers = GetNumGroupMembers
-local API_IsInGroup = IsInGroup
-local API_IsInInstance = IsInInstance
-local API_IsInRaid = IsInRaid
-local API_UnitExists = UnitExists
-local API_UnitLevel = UnitLevel
-local _BigWigsLoader = BigWigsLoader
-local _DBM = DBM
-local OvaleBossModClass = __addon.__class(OvaleBossModBase, {
+local __exports = LibStub:NewLibrary("ovale/BossMod", 10000)
+if not __exports then return end
+local __class = LibStub:GetLibrary("tslib").newClass
+local __Debug = LibStub:GetLibrary("ovale/Debug")
+local OvaleDebug = __Debug.OvaleDebug
+local __Profiler = LibStub:GetLibrary("ovale/Profiler")
+local OvaleProfiler = __Profiler.OvaleProfiler
+local __Ovale = LibStub:GetLibrary("ovale/Ovale")
+local Ovale = __Ovale.Ovale
+local GetNumGroupMembers = GetNumGroupMembers
+local IsInGroup = IsInGroup
+local IsInInstance = IsInInstance
+local IsInRaid = IsInRaid
+local UnitExists = UnitExists
+local UnitLevel = UnitLevel
+local LE_PARTY_CATEGORY_INSTANCE = LE_PARTY_CATEGORY_INSTANCE
+local LE_PARTY_CATEGORY_HOME = LE_PARTY_CATEGORY_HOME
+local UnitName = UnitName
+local _G = _G
+local hooksecurefunc = hooksecurefunc
+local OvaleBossModBase = OvaleProfiler:RegisterProfiling(OvaleDebug:RegisterDebugging(Ovale:NewModule("OvaleBossMod")))
+local _BigWigsLoader = _G["BigWigsLoader"]
+local _DBM = _G["DBM"]
+local OvaleBossModClass = __class(OvaleBossModBase, {
     constructor = function(self)
         self.EngagedDBM = nil
         self.EngagedBigWigs = nil
@@ -27,10 +39,10 @@ local OvaleBossModClass = __addon.__class(OvaleBossModBase, {
         end
         if _BigWigsLoader then
             self:Debug("BigWigs is loaded")
-            _BigWigsLoader:RegisterMessage(__exports.OvaleBossMod, "BigWigs_OnBossEngage", function(_, mod, diff)
+            _BigWigsLoader.RegisterMessage(__exports.OvaleBossMod, "BigWigs_OnBossEngage", function(_, mod, diff)
                 self.EngagedBigWigs = mod
             end)
-            _BigWigsLoader:RegisterMessage(__exports.OvaleBossMod, "BigWigs_OnBossDisable", function(_, mod)
+            _BigWigsLoader.RegisterMessage(__exports.OvaleBossMod, "BigWigs_OnBossDisable", function(_, mod)
                 self.EngagedBigWigs = nil
             end)
         end
@@ -57,33 +69,33 @@ local OvaleBossModClass = __addon.__class(OvaleBossModBase, {
         local RecursiveScanTargets = function(target, depth)
             local isWorldBoss = false
             local dep = depth or 1
-            isWorldBoss = target ~= nil and API_UnitExists(target) and API_UnitLevel(target) < 0
+            isWorldBoss = target ~= nil and UnitExists(target) and UnitLevel(target) < 0
             if isWorldBoss then
                 self:Debug("%s is worldboss (%s)", target, UnitName(target))
             end
             return isWorldBoss or (dep <= 3 and RecursiveScanTargets(target .. "target", dep + 1))
         end
         local bossEngaged = false
-        bossEngaged = bossEngaged or API_UnitExists("boss1") or API_UnitExists("boss2") or API_UnitExists("boss3") or API_UnitExists("boss4")
+        bossEngaged = bossEngaged or UnitExists("boss1") or UnitExists("boss2") or UnitExists("boss3") or UnitExists("boss4")
         bossEngaged = bossEngaged or RecursiveScanTargets("target") or RecursiveScanTargets("pet") or RecursiveScanTargets("focus") or RecursiveScanTargets("focuspet") or RecursiveScanTargets("mouseover") or RecursiveScanTargets("mouseoverpet")
         if  not bossEngaged then
-            if (API_IsInInstance() and API_IsInGroup(LE_PARTY_CATEGORY_INSTANCE) and API_GetNumGroupMembers(LE_PARTY_CATEGORY_INSTANCE) > 1) then
-                for i = 1, API_GetNumGroupMembers(LE_PARTY_CATEGORY_INSTANCE), 1 do
+            if (IsInInstance() and IsInGroup(LE_PARTY_CATEGORY_INSTANCE) and GetNumGroupMembers(LE_PARTY_CATEGORY_INSTANCE) > 1) then
+                for i = 1, GetNumGroupMembers(LE_PARTY_CATEGORY_INSTANCE), 1 do
                     bossEngaged = bossEngaged or RecursiveScanTargets("party" .. i) or RecursiveScanTargets("party" .. i .. "pet")
                 end
             end
-            if ( not API_IsInInstance() and API_IsInGroup(LE_PARTY_CATEGORY_HOME) and API_GetNumGroupMembers(LE_PARTY_CATEGORY_HOME) > 1) then
-                for i = 1, API_GetNumGroupMembers(LE_PARTY_CATEGORY_HOME), 1 do
+            if ( not IsInInstance() and IsInGroup(LE_PARTY_CATEGORY_HOME) and GetNumGroupMembers(LE_PARTY_CATEGORY_HOME) > 1) then
+                for i = 1, GetNumGroupMembers(LE_PARTY_CATEGORY_HOME), 1 do
                     bossEngaged = bossEngaged or RecursiveScanTargets("party" .. i) or RecursiveScanTargets("party" .. i .. "pet")
                 end
             end
-            if (API_IsInInstance() and API_IsInRaid(LE_PARTY_CATEGORY_INSTANCE) and API_GetNumGroupMembers(LE_PARTY_CATEGORY_INSTANCE) > 1) then
-                for i = 1, API_GetNumGroupMembers(LE_PARTY_CATEGORY_INSTANCE), 1 do
+            if (IsInInstance() and IsInRaid(LE_PARTY_CATEGORY_INSTANCE) and GetNumGroupMembers(LE_PARTY_CATEGORY_INSTANCE) > 1) then
+                for i = 1, GetNumGroupMembers(LE_PARTY_CATEGORY_INSTANCE), 1 do
                     bossEngaged = bossEngaged or RecursiveScanTargets("raid" .. i) or RecursiveScanTargets("raid" .. i .. "pet")
                 end
             end
-            if ( not API_IsInInstance() and API_IsInRaid(LE_PARTY_CATEGORY_HOME) and API_GetNumGroupMembers(LE_PARTY_CATEGORY_HOME) > 1) then
-                for i = 1, API_GetNumGroupMembers(LE_PARTY_CATEGORY_HOME), 1 do
+            if ( not IsInInstance() and IsInRaid(LE_PARTY_CATEGORY_HOME) and GetNumGroupMembers(LE_PARTY_CATEGORY_HOME) > 1) then
+                for i = 1, GetNumGroupMembers(LE_PARTY_CATEGORY_HOME), 1 do
                     bossEngaged = bossEngaged or RecursiveScanTargets("raid" .. i) or RecursiveScanTargets("raid" .. i .. "pet")
                 end
             end
@@ -93,4 +105,3 @@ local OvaleBossModClass = __addon.__class(OvaleBossModBase, {
     end,
 })
 __exports.OvaleBossMod = OvaleBossModClass()
-end)

@@ -1,6 +1,8 @@
-local __addonName, __addon = ...
-            __addon.require("./scripts/ovale_deathknight_spells", { "./Scripts" }, function(__exports, __Scripts)
-do
+local __exports = LibStub:NewLibrary("ovale/scripts/ovale_deathknight_spells", 10000)
+if not __exports then return end
+local __Scripts = LibStub:GetLibrary("ovale/Scripts")
+local OvaleScripts = __Scripts.OvaleScripts
+__exports.register = function()
     local name = "ovale_deathknight_spells"
     local desc = "[7.0] Ovale: Death Knight spells"
     local code = [[
@@ -32,6 +34,9 @@ Define(asphyxiate_debuff 108194)
 	SpellInfo(asphyxiate_debuff duration=5)
 Define(blighted_rune_weapon 194918)
 	SpellInfo(blighted_rune_weapon cd=60)
+	SpellAddBuff(blighted_rune_weapon blighted_rune_weapon_buff=1)
+Define(blighted_rune_weapon_buff 194918)
+	SpellInfo(blighted_rune_weapon duration=60)
 Define(blinding_sleet 207167)
 	SpellInfo(blinding_sleet cd=60)
 Define(blood_boil 50842)
@@ -294,6 +299,5 @@ Define(perseverance_of_the_ebon_martyr_debuff 216059)
 	SpellInfo(blood_tap tag=main)
 	SpellInfo(outbreak tag=main)
 ]]
-    __Scripts.OvaleScripts:RegisterScript("DEATHKNIGHT", nil, name, desc, code, "include")
+    OvaleScripts:RegisterScript("DEATHKNIGHT", nil, name, desc, code, "include")
 end
-end)

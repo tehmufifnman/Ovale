@@ -6,13 +6,13 @@ import AceSerializer from "@wowts/ace_serializer-3.0";
 import { pairs, type } from "@wowts/lua";
 import { IsInGroup, SendAddonMessage, UnitName, LE_PARTY_CATEGORY_INSTANCE, GetTime, UnitCastingInfo, UnitChannelInfo } from "@wowts/wow-mock";
 
-let OvaleScoreBase = Ovale.NewModule("OvaleScore", aceEvent, AceSerializer);
+let OvaleScoreBase = OvaleDebug.RegisterDebugging(Ovale.NewModule("OvaleScore", aceEvent, AceSerializer));
 export let OvaleScore: OvaleScoreClass;
 let MSG_PREFIX = Ovale.MSG_PREFIX;
 let self_playerGUID = undefined;
 let self_name = undefined;
 
-class OvaleScoreClass extends OvaleDebug.RegisterDebugging(OvaleScoreBase) {
+class OvaleScoreClass extends OvaleScoreBase {
     damageMeter = {
     }
     damageMeterMethod = {

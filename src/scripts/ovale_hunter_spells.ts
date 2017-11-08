@@ -210,6 +210,16 @@ Define(killer_cobra_talent 20)
 Define(piercing_shot_talent 20)
 Define(trick_shot_talent 21)
 Define(spitting_cobra_talent 19)
+Define(one_with_the_pack_talent 10)
+
+# Legendary items
+Define(qapla_eredun_war_order 137227)
+Define(call_of_the_wild 137101)
+Define(parsels_tongue 151805)
+Define(parsels_tongue_buff 248085)
+
+# Item set
+Define(t20_2p_critical_aimed_damage_buff 242242) # TODO
 
 # Non-default tags for OvaleSimulationCraft.
 SpellInfo(dire_beast tag=main)

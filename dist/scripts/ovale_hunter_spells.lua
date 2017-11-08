@@ -1,6 +1,8 @@
-local __addonName, __addon = ...
-            __addon.require("./scripts/ovale_hunter_spells", { "./Scripts" }, function(__exports, __Scripts)
-do
+local __exports = LibStub:NewLibrary("ovale/scripts/ovale_hunter_spells", 10000)
+if not __exports then return end
+local __Scripts = LibStub:GetLibrary("ovale/Scripts")
+local OvaleScripts = __Scripts.OvaleScripts
+__exports.register = function()
     local name = "ovale_hunter_spells"
     local desc = "[7.0] Ovale: Hunter spells"
     local code = [[
@@ -211,6 +213,16 @@ Define(killer_cobra_talent 20)
 Define(piercing_shot_talent 20)
 Define(trick_shot_talent 21)
 Define(spitting_cobra_talent 19)
+Define(one_with_the_pack_talent 10)
+
+# Legendary items
+Define(qapla_eredun_war_order 137227)
+Define(call_of_the_wild 137101)
+Define(parsels_tongue 151805)
+Define(parsels_tongue_buff 248085)
+
+# Item set
+Define(t20_2p_critical_aimed_damage_buff 242242) # TODO
 
 # Non-default tags for OvaleSimulationCraft.
 SpellInfo(dire_beast tag=main)
@@ -218,6 +230,5 @@ SpellInfo(dire_frenzy tag=main)
 SpellInfo(barrage tag=shortcd)
 
 ]]
-    __Scripts.OvaleScripts:RegisterScript("HUNTER", nil, name, desc, code, "include")
+    OvaleScripts:RegisterScript("HUNTER", nil, name, desc, code, "include")
 end
-end)

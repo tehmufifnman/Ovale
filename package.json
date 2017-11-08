@@ -1,10 +1,11 @@
 {
-  "name": "ovale-ts",
+  "name": "ovale",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "tstolua -p tsconfig.lua.json"
   },
   "author": "",
   "license": "ISC",
@@ -20,7 +21,7 @@
     "@wowts/wow-mock": "^1.0.8",
     "@wowts/ace_comm-3.0": "^1.0.0",
     "@wowts/ace_config-3.0": "^1.0.1",
-    "@wowts/ace_config_dialog-3.0": "^1.0.1",
+    "@wowts/ace_config_dialog-3.0": "^1.0.3",
     "@wowts/ace_console-3.0": "^1.0.0",
     "@wowts/ace_db-3.0": "^1.0.0",
     "@wowts/ace_db_options-3.0": "^1.0.0",

@@ -9,7 +9,7 @@ import { insert, remove } from "@wowts/table";
 import { GetTime } from "@wowts/wow-mock";
 import { huge } from "@wowts/math";
 
-let OvaleSigilBase = Ovale.NewModule("OvaleSigil", aceEvent);
+let OvaleSigilBase = OvaleProfiler.RegisterProfiling(Ovale.NewModule("OvaleSigil", aceEvent));
 export let OvaleSigil: OvaleSigilClass;
 let UPDATE_DELAY = 0.5;
 let SIGIL_ACTIVATION_TIME = huge;
@@ -48,7 +48,7 @@ let sigil_end = {
     }
 }
 let QUICKENED_SIGILS_TALENT = 15;
-class OvaleSigilClass extends OvaleProfiler.RegisterProfiling(OvaleSigilBase) {
+class OvaleSigilClass extends OvaleSigilBase {
     constructor() {
         super();
         activated_sigils["flame"] = {

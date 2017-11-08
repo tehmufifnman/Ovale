@@ -1,6 +1,16 @@
-local __addonName, __addon = ...
-            __addon.require("./WildImps", { "./State", "./Ovale", "AceEvent-3.0" }, function(__exports, __State, __Ovale, aceEvent)
-local OvaleWildImpsBase = __Ovale.Ovale:NewModule("OvaleWildImps", aceEvent)
+local __exports = LibStub:NewLibrary("ovale/WildImps", 10000)
+if not __exports then return end
+local __class = LibStub:GetLibrary("tslib").newClass
+local __State = LibStub:GetLibrary("ovale/State")
+local OvaleState = __State.OvaleState
+local __Ovale = LibStub:GetLibrary("ovale/Ovale")
+local Ovale = __Ovale.Ovale
+local aceEvent = LibStub:GetLibrary("AceEvent-3.0", true)
+local tonumber = tonumber
+local pairs = pairs
+local GetTime = GetTime
+local find = string.find
+local OvaleWildImpsBase = Ovale:NewModule("OvaleWildImps", aceEvent)
 local demonData = {
     [55659] = {
         duration = 12
@@ -20,31 +30,29 @@ local demonData = {
 }
 local self_demons = {}
 local self_serial = 1
-local API_GetTime = GetTime
-local sfind = string.find
-local OvaleWildImpsClass = __addon.__class(OvaleWildImpsBase, {
+local OvaleWildImpsClass = __class(OvaleWildImpsBase, {
     constructor = function(self)
         OvaleWildImpsBase.constructor(self)
-        if __Ovale.Ovale.playerClass == "WARLOCK" then
+        if Ovale.playerClass == "WARLOCK" then
             self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
             self_demons = {}
         end
     end,
     OnDisable = function(self)
-        if __Ovale.Ovale.playerClass == "WARLOCK" then
+        if Ovale.playerClass == "WARLOCK" then
             self:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
         end
     end,
     COMBAT_LOG_EVENT_UNFILTERED = function(self, event, timestamp, cleuEvent, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, spellId)
         self_serial = self_serial + 1
-        __Ovale.Ovale:needRefresh()
-        if sourceGUID ~= __Ovale.Ovale.playerGUID then
+        Ovale:needRefresh()
+        if sourceGUID ~= Ovale.playerGUID then
             return 
         end
         if cleuEvent == "SPELL_SUMMON" then
-            local _, _, _, _, _, _, _, creatureId = sfind(destGUID, "(%S+)-(%d+)-(%d+)-(%d+)-(%d+)-(%d+)-(%S+)")
+            local _, _, _, _, _, _, _, creatureId = find(destGUID, "(%S+)-(%d+)-(%d+)-(%d+)-(%d+)-(%d+)-(%S+)")
             creatureId = tonumber(creatureId)
-            local now = API_GetTime()
+            local now = GetTime()
             for id, v in pairs(demonData) do
                 if id == creatureId then
                     self_demons[destGUID] = {
@@ -73,7 +81,7 @@ local OvaleWildImpsClass = __addon.__class(OvaleWildImpsBase, {
         end
     end,
 })
-local WildImpsState = __addon.__class(nil, {
+local WildImpsState = __class(nil, {
     CleanState = function(self)
     end,
     InitializeState = function(self)
@@ -112,6 +120,5 @@ local WildImpsState = __addon.__class(nil, {
     end,
 })
 __exports.wildImpsState = WildImpsState()
-__State.OvaleState:RegisterState(__exports.wildImpsState)
+OvaleState:RegisterState(__exports.wildImpsState)
 __exports.OvaleWildImps = OvaleWildImpsClass()
-end)

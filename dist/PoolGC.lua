@@ -1,7 +1,10 @@
-local __addonName, __addon = ...
-            __addon.require("./PoolGC", { "./Ovale" }, function(__exports, __Ovale)
-local _tostring = tostring
-__exports.OvalePoolGC = __addon.__class(nil, {
+local __exports = LibStub:NewLibrary("ovale/PoolGC", 10000)
+if not __exports then return end
+local __class = LibStub:GetLibrary("tslib").newClass
+local __Ovale = LibStub:GetLibrary("ovale/Ovale")
+local Ovale = __Ovale.Ovale
+local tostring = tostring
+__exports.OvalePoolGC = __class(nil, {
     constructor = function(self, name)
         self.name = "OvalePoolGC"
         self.size = 0
@@ -21,7 +24,6 @@ __exports.OvalePoolGC = __addon.__class(nil, {
         self.size = 0
     end,
     DebuggingInfo = function(self)
-        __Ovale.Ovale:Print("Pool %s has size %d.", _tostring(self.name), self.size)
+        Ovale:Print("Pool %s has size %d.", tostring(self.name), self.size)
     end,
 })
-end)

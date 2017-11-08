@@ -1,9 +1,19 @@
-local __addonName, __addon = ...
-            __addon.require("./DemonHunterSoulFragments", { "./Ovale", "./Debug", "./State", "AceEvent-3.0" }, function(__exports, __Ovale, __Debug, __State, aceEvent)
-local OvaleDemonHunterSoulFragmentsBase = __Ovale.Ovale:NewModule("OvaleDemonHunterSoulFragments", aceEvent)
-local tinsert = table.insert
-local API_GetTime = GetTime
-local API_GetSpellCount = GetSpellCount
+local __exports = LibStub:NewLibrary("ovale/DemonHunterSoulFragments", 10000)
+if not __exports then return end
+local __class = LibStub:GetLibrary("tslib").newClass
+local __Ovale = LibStub:GetLibrary("ovale/Ovale")
+local Ovale = __Ovale.Ovale
+local __Debug = LibStub:GetLibrary("ovale/Debug")
+local OvaleDebug = __Debug.OvaleDebug
+local __State = LibStub:GetLibrary("ovale/State")
+local OvaleState = __State.OvaleState
+local aceEvent = LibStub:GetLibrary("AceEvent-3.0", true)
+local insert = table.insert
+local GetTime = GetTime
+local GetSpellCount = GetSpellCount
+local type = type
+local pairs = pairs
+local OvaleDemonHunterSoulFragmentsBase = OvaleDebug:RegisterDebugging(Ovale:NewModule("OvaleDemonHunterSoulFragments", aceEvent))
 local SOUL_FRAGMENTS_BUFF_ID = 228477
 local SOUL_FRAGMENTS_SPELL_HEAL_ID = 203794
 local SOUL_FRAGMENTS_SPELL_CAST_SUCCESS_ID = 204255
@@ -12,18 +22,18 @@ local SOUL_FRAGMENT_FINISHERS = {
     [247454] = true,
     [227225] = true
 }
-local OvaleDemonHunterSoulFragmentsClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(OvaleDemonHunterSoulFragmentsBase), {
+local OvaleDemonHunterSoulFragmentsClass = __class(OvaleDemonHunterSoulFragmentsBase, {
     constructor = function(self)
-        __Debug.OvaleDebug:RegisterDebugging(OvaleDemonHunterSoulFragmentsBase).constructor(self)
+        OvaleDemonHunterSoulFragmentsBase.constructor(self)
         self:SetCurrentSoulFragments(0)
-        if __Ovale.Ovale.playerClass == "DEMONHUNTER" then
+        if Ovale.playerClass == "DEMONHUNTER" then
             self:RegisterEvent("PLAYER_REGEN_ENABLED")
             self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
             self:RegisterEvent("PLAYER_REGEN_DISABLED")
         end
     end,
     OnDisable = function(self)
-        if __Ovale.Ovale.playerClass == "DEMONHUNTER" then
+        if Ovale.playerClass == "DEMONHUNTER" then
             self:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
             self:UnregisterEvent("PLAYER_REGEN_ENABLED")
             self:UnregisterEvent("PLAYER_REGEN_DISABLED")
@@ -38,7 +48,7 @@ local OvaleDemonHunterSoulFragmentsClass = __addon.__class(__Debug.OvaleDebug:Re
         self:SetCurrentSoulFragments()
     end,
     COMBAT_LOG_EVENT_UNFILTERED = function(self, event, _2, subtype, _4, sourceGUID, _6, _7, _8, _9, _10, _11, _12, spellID, spellName)
-        local me = __Ovale.Ovale.playerGUID
+        local me = Ovale.playerGUID
         if sourceGUID == me then
             if subtype == "SPELL_HEAL" and spellID == SOUL_FRAGMENTS_SPELL_HEAL_ID then
                 self:SetCurrentSoulFragments(self.last_soul_fragment_count.fragments - 1)
@@ -49,18 +59,18 @@ local OvaleDemonHunterSoulFragmentsClass = __addon.__class(__Debug.OvaleDebug:Re
             if subtype == "SPELL_CAST_SUCCESS" and SOUL_FRAGMENT_FINISHERS[spellID] then
                 self:SetCurrentSoulFragments(0)
             end
-            local now = API_GetTime()
+            local now = GetTime()
             if self.last_checked == nil or now - self.last_checked >= 1.5 then
                 self:SetCurrentSoulFragments()
             end
         end
     end,
     SetCurrentSoulFragments = function(self, count)
-        local now = API_GetTime()
+        local now = GetTime()
         self.last_checked = now
         self.soul_fragments = self.soul_fragments or {}
         if type(count) ~= "number" then
-            count = API_GetSpellCount(SOUL_FRAGMENTS_BUFF_ID) or 0
+            count = GetSpellCount(SOUL_FRAGMENTS_BUFF_ID) or 0
         end
         if count < 0 then
             count = 0
@@ -72,13 +82,13 @@ local OvaleDemonHunterSoulFragmentsClass = __addon.__class(__Debug.OvaleDebug:Re
             }
             self:Debug("Setting current soul fragment count to '%d' (at: %s)", entry.fragments, entry.timestamp)
             self.last_soul_fragment_count = entry
-            tinsert(self.soul_fragments, entry)
+            insert(self.soul_fragments, entry)
         end
     end,
     DebugSoulFragments = function(self)
     end,
 })
-local DemonHunterSoulFragmentsState = __addon.__class(nil, {
+local DemonHunterSoulFragmentsState = __class(nil, {
     CleanState = function(self)
     end,
     InitializeState = function(self)
@@ -101,5 +111,4 @@ local DemonHunterSoulFragmentsState = __addon.__class(nil, {
     end,
 })
 __exports.demonHunterSoulFragmentsState = DemonHunterSoulFragmentsState()
-__State.OvaleState:RegisterState(__exports.demonHunterSoulFragmentsState)
-end)
+OvaleState:RegisterState(__exports.demonHunterSoulFragmentsState)

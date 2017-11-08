@@ -300,13 +300,17 @@ Define(wrathguard_wrathstorm 115831)
 # Talents
 Define(absolute_corruption_talent 5)
 Define(contagion_talent 4)
+Define(deaths_embrace_talent 19)
 Define(empowered_life_tap_talent 6)
 Define(eradication_talent 5)
+Define(fire_and_brimstone_talent 11)
 Define(grimoire_of_synergy_talent 18)
 Define(hand_of_doom_talent 10)
 Define(haunt_talent 1)
 Define(implosion_talent 6)
 Define(malefic_grasp_talent 3)
+Define(shadowy_inspiration_talent 1)
+	Define(shadowy_inspiration_buff 196606)
 Define(siphon_life_talent 10)
 Define(sow_the_seeds_talent 11)
 Define(summon_darkglare_talent 19)
@@ -318,11 +322,15 @@ Define(deadwind_harvester_buff 216708)
 	SpellAddBuff(reap_souls tormented_souls_buff=0)
 Define(sindorei_spite_icd 208871) # TODO should be the internal cooldown of the spell
 Define(tormented_souls_buff 216695)
+SpellList(concordance_of_the_legionfall_buff 243096 242583 242584 242586)
 
 # Legion Artifact
 Define(thalkiels_consumption 211714)
 	SpellInfo(thalkiels_consumption cd=45)
 Define(reap_souls 216698)
+
+# Legion traits
+Define(thalkiels_ascendance 238145)
 
 # Pets
 Define(doomguard 11859)

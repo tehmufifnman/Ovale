@@ -1,19 +1,43 @@
-local __addonName, __addon = ...
-            __addon.require("./Future", { "./Debug", "./Profiler", "./Ovale", "./Aura", "./Data", "./GUID", "./PaperDoll", "./SpellBook", "./LastSpell", "AceEvent-3.0" }, function(__exports, __Debug, __Profiler, __Ovale, __Aura, __Data, __GUID, __PaperDoll, __SpellBook, __LastSpell, aceEvent)
-local OvaleFutureBase = __Ovale.Ovale:NewModule("OvaleFuture", aceEvent)
-local _ipairs = ipairs
-local _pairs = pairs
-local strsub = string.sub
-local tinsert = table.insert
-local tremove = table.remove
-local _type = type
-local API_GetSpellInfo = GetSpellInfo
-local API_GetTime = GetTime
-local API_UnitCastingInfo = UnitCastingInfo
-local API_UnitChannelInfo = UnitChannelInfo
-local API_UnitExists = UnitExists
-local API_UnitGUID = UnitGUID
-local API_UnitName = UnitName
+local __exports = LibStub:NewLibrary("ovale/Future", 10000)
+if not __exports then return end
+local __class = LibStub:GetLibrary("tslib").newClass
+local __Debug = LibStub:GetLibrary("ovale/Debug")
+local OvaleDebug = __Debug.OvaleDebug
+local __Profiler = LibStub:GetLibrary("ovale/Profiler")
+local OvaleProfiler = __Profiler.OvaleProfiler
+local __Ovale = LibStub:GetLibrary("ovale/Ovale")
+local Ovale = __Ovale.Ovale
+local __Aura = LibStub:GetLibrary("ovale/Aura")
+local OvaleAura = __Aura.OvaleAura
+local __Data = LibStub:GetLibrary("ovale/Data")
+local OvaleData = __Data.OvaleData
+local __GUID = LibStub:GetLibrary("ovale/GUID")
+local OvaleGUID = __GUID.OvaleGUID
+local __PaperDoll = LibStub:GetLibrary("ovale/PaperDoll")
+local OvalePaperDoll = __PaperDoll.OvalePaperDoll
+local __SpellBook = LibStub:GetLibrary("ovale/SpellBook")
+local OvaleSpellBook = __SpellBook.OvaleSpellBook
+local __LastSpell = LibStub:GetLibrary("ovale/LastSpell")
+local lastSpell = __LastSpell.lastSpell
+local self_pool = __LastSpell.self_pool
+local aceEvent = LibStub:GetLibrary("AceEvent-3.0", true)
+local ipairs = ipairs
+local pairs = pairs
+local type = type
+local sub = string.sub
+local insert = table.insert
+local remove = table.remove
+local GetSpellInfo = GetSpellInfo
+local GetTime = GetTime
+local UnitCastingInfo = UnitCastingInfo
+local UnitChannelInfo = UnitChannelInfo
+local UnitExists = UnitExists
+local UnitGUID = UnitGUID
+local UnitName = UnitName
+local OvaleFutureBase = OvaleProfiler:RegisterProfiling(OvaleDebug:RegisterDebugging(Ovale:NewModule("OvaleFuture", aceEvent)))
+local strsub = sub
+local tinsert = insert
+local tremove = remove
 local self_timeAuraAdded = nil
 local CLEU_AURA_EVENT = {
     SPELL_AURA_APPLIED = "hit",
@@ -39,10 +63,10 @@ local CLEU_SPELLCAST_EVENT = {
     SPELL_CAST_SUCCESS = true
 }
 do
-    for cleuEvent, v in _pairs(CLEU_AURA_EVENT) do
+    for cleuEvent, v in pairs(CLEU_AURA_EVENT) do
         CLEU_SPELLCAST_FINISH_EVENT[cleuEvent] = v
     end
-    for cleuEvent in _pairs(CLEU_SPELLCAST_FINISH_EVENT) do
+    for cleuEvent in pairs(CLEU_SPELLCAST_FINISH_EVENT) do
         CLEU_SPELLCAST_EVENT[cleuEvent] = true
     end
 end
@@ -63,8 +87,8 @@ local WHITE_ATTACK = {
 }
 local WHITE_ATTACK_NAME = {}
 do
-    for spellId in _pairs(WHITE_ATTACK) do
-        local name = API_GetSpellInfo(spellId)
+    for spellId in pairs(WHITE_ATTACK) do
+        local name = GetSpellInfo(spellId)
         if name then
             WHITE_ATTACK_NAME[name] = true
         end
@@ -85,14 +109,14 @@ local IsSameSpellcast = function(a, b)
 end
 
 local eventDebug = false
-local OvaleFutureClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfiling(__Debug.OvaleDebug:RegisterDebugging(OvaleFutureBase)), {
+local OvaleFutureClass = __class(OvaleFutureBase, {
     constructor = function(self)
         self.inCombat = nil
         self.combatStartTime = nil
         self.lastCastTime = {}
         self.lastOffGCDSpellcast = {}
         self.counter = {}
-        __Profiler.OvaleProfiler:RegisterProfiling(__Debug.OvaleDebug:RegisterDebugging(OvaleFutureBase)).constructor(self)
+        OvaleFutureBase.constructor(self)
         self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
         self:RegisterEvent("PLAYER_ENTERING_WORLD")
         self:RegisterEvent("PLAYER_REGEN_DISABLED")
@@ -130,10 +154,10 @@ local OvaleFutureClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfil
     end,
     COMBAT_LOG_EVENT_UNFILTERED = function(self, event, timestamp, cleuEvent, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, ...)
         local arg12, arg13, _, _, _, _, _, _, _, _, _, _, arg24, arg25 = ...
-        if sourceGUID == __Ovale.Ovale.playerGUID or __GUID.OvaleGUID:IsPlayerPet(sourceGUID) then
+        if sourceGUID == Ovale.playerGUID or OvaleGUID:IsPlayerPet(sourceGUID) then
             self:StartProfiling("OvaleFuture_COMBAT_LOG_EVENT_UNFILTERED")
             if CLEU_SPELLCAST_EVENT[cleuEvent] then
-                local now = API_GetTime()
+                local now = GetTime()
                 local spellId, spellName = arg12, arg13
                 local eventDebug = false
                 local delta = 0
@@ -157,8 +181,8 @@ local OvaleFutureClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfil
                 end
                 if finish then
                     local anyFinished = false
-                    for i = #__LastSpell.lastSpell.queue, 1, -1 do
-                        local spellcast = __LastSpell.lastSpell.queue[i]
+                    for i = #lastSpell.queue, 1, -1 do
+                        local spellcast = lastSpell.queue[i]
                         if spellcast.success and (spellcast.spellId == spellId or spellcast.auraId == spellId) then
                             if self:FinishSpell(spellcast, cleuEvent, sourceName, sourceGUID, destName, destGUID, spellId, spellName, delta, finish, i) then
                                 anyFinished = true
@@ -167,8 +191,8 @@ local OvaleFutureClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfil
                     end
                     if  not anyFinished then
                         self:Debug("No spell found for %s (%d)", spellName, spellId)
-                        for i = #__LastSpell.lastSpell.queue, 1, -1 do
-                            local spellcast = __LastSpell.lastSpell.queue[i]
+                        for i = #lastSpell.queue, 1, -1 do
+                            local spellcast = lastSpell.queue[i]
                             if spellcast.success and (spellcast.spellName == spellName) then
                                 if self:FinishSpell(spellcast, cleuEvent, sourceName, sourceGUID, destName, destGUID, spellId, spellName, delta, finish, i) then
                                     anyFinished = true
@@ -204,10 +228,10 @@ local OvaleFutureClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfil
             finished = true
         end
         if finished then
-            local now = API_GetTime()
+            local now = GetTime()
             if self_timeAuraAdded then
-                if IsSameSpellcast(spellcast, __LastSpell.lastSpell.lastGCDSpellcast) then
-                    self:UpdateSpellcastSnapshot(__LastSpell.lastSpell.lastGCDSpellcast, self_timeAuraAdded)
+                if IsSameSpellcast(spellcast, lastSpell.lastGCDSpellcast) then
+                    self:UpdateSpellcastSnapshot(lastSpell.lastGCDSpellcast, self_timeAuraAdded)
                 end
                 if IsSameSpellcast(spellcast, self.lastOffGCDSpellcast) then
                     self:UpdateSpellcastSnapshot(self.lastOffGCDSpellcast, self_timeAuraAdded)
@@ -216,9 +240,9 @@ local OvaleFutureClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfil
             local delta = now - spellcast.stop
             local targetGUID = spellcast.target
             self:Debug("Spell %s (%d) was in flight for %s seconds.", spellName, spellId, delta)
-            tremove(__LastSpell.lastSpell.queue, i)
-            __LastSpell.self_pool:Release(spellcast)
-            __Ovale.Ovale:needRefresh()
+            tremove(lastSpell.queue, i)
+            self_pool:Release(spellcast)
+            Ovale:needRefresh()
             self:SendMessage("Ovale_SpellFinished", now, spellId, targetGUID, finish)
         end
         return finished
@@ -231,19 +255,19 @@ local OvaleFutureClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfil
     PLAYER_REGEN_DISABLED = function(self, event)
         self:StartProfiling("OvaleFuture_PLAYER_REGEN_DISABLED")
         self:Debug(event, "Entering combat.")
-        local now = API_GetTime()
-        __Ovale.Ovale.inCombat = true
+        local now = GetTime()
+        Ovale.inCombat = true
         self.combatStartTime = now
-        __Ovale.Ovale:needRefresh()
+        Ovale:needRefresh()
         self:SendMessage("Ovale_CombatStarted", now)
         self:StopProfiling("OvaleFuture_PLAYER_REGEN_DISABLED")
     end,
     PLAYER_REGEN_ENABLED = function(self, event)
         self:StartProfiling("OvaleFuture_PLAYER_REGEN_ENABLED")
         self:Debug(event, "Leaving combat.")
-        local now = API_GetTime()
-        __Ovale.Ovale.inCombat = false
-        __Ovale.Ovale:needRefresh()
+        local now = GetTime()
+        Ovale.inCombat = false
+        Ovale:needRefresh()
         self:SendMessage("Ovale_CombatEnded", now)
         self:StopProfiling("OvaleFuture_PLAYER_REGEN_ENABLED")
     end,
@@ -251,10 +275,10 @@ local OvaleFutureClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfil
         if (unitId == "player" or unitId == "pet") and  not WHITE_ATTACK[spellId] then
             self:StartProfiling("OvaleFuture_UNIT_SPELLCAST_CHANNEL_START")
             self:DebugTimestamp(event, unitId, spell, rank, lineId, spellId)
-            local now = API_GetTime()
+            local now = GetTime()
             local spellcast = self:GetSpellcast(spell, spellId, nil, now)
             if spellcast then
-                local name, _, _, _, startTime, endTime = API_UnitChannelInfo(unitId)
+                local name, _, _, _, startTime, endTime = UnitChannelInfo(unitId)
                 if name == spell then
                     startTime = startTime / 1000
                     endTime = endTime / 1000
@@ -268,7 +292,7 @@ local OvaleFutureClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfil
                     self:SaveSpellcastInfo(spellcast, now)
                     self:UpdateLastSpellcast(now, spellcast)
                     self:UpdateCounters(spellId, spellcast.start, spellcast.target)
-                    __Ovale.Ovale:needRefresh()
+                    Ovale:needRefresh()
                 elseif  not name then
                     self:Debug("Warning: not channelling a spell.")
                 else
@@ -284,16 +308,16 @@ local OvaleFutureClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfil
         if (unitId == "player" or unitId == "pet") and  not WHITE_ATTACK[spellId] then
             self:StartProfiling("OvaleFuture_UNIT_SPELLCAST_CHANNEL_STOP")
             self:DebugTimestamp(event, unitId, spell, rank, lineId, spellId)
-            local now = API_GetTime()
+            local now = GetTime()
             local spellcast, index = self:GetSpellcast(spell, spellId, nil, now)
             if spellcast and spellcast.channel then
                 self:Debug("Finished channelling spell %s (%d) queued at %s.", spell, spellId, spellcast.queued)
                 spellcast.stop = now
                 self:UpdateLastSpellcast(now, spellcast)
                 local targetGUID = spellcast.target
-                tremove(__LastSpell.lastSpell.queue, index)
-                __LastSpell.self_pool:Release(spellcast)
-                __Ovale.Ovale:needRefresh()
+                tremove(lastSpell.queue, index)
+                self_pool:Release(spellcast)
+                Ovale:needRefresh()
                 self:SendMessage("Ovale_SpellFinished", now, spellId, targetGUID, "hit")
             end
             self:StopProfiling("OvaleFuture_UNIT_SPELLCAST_CHANNEL_STOP")
@@ -303,10 +327,10 @@ local OvaleFutureClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfil
         if (unitId == "player" or unitId == "pet") and  not WHITE_ATTACK[spellId] then
             self:StartProfiling("OvaleFuture_UNIT_SPELLCAST_CHANNEL_UPDATE")
             self:DebugTimestamp(event, unitId, spell, rank, lineId, spellId)
-            local now = API_GetTime()
+            local now = GetTime()
             local spellcast = self:GetSpellcast(spell, spellId, nil, now)
             if spellcast and spellcast.channel then
-                local name, _, _, _, startTime, endTime = API_UnitChannelInfo(unitId)
+                local name, _, _, _, startTime, endTime = UnitChannelInfo(unitId)
                 if name == spell then
                     startTime = startTime / 1000
                     endTime = endTime / 1000
@@ -314,7 +338,7 @@ local OvaleFutureClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfil
                     spellcast.start = startTime
                     spellcast.stop = endTime
                     self:Debug("Updating channelled spell %s (%d) to ending = %s (+%s).", spell, spellId, endTime, delta)
-                    __Ovale.Ovale:needRefresh()
+                    Ovale:needRefresh()
                 elseif  not name then
                     self:Debug("Warning: not channelling a spell.")
                 else
@@ -330,10 +354,10 @@ local OvaleFutureClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfil
         if (unitId == "player" or unitId == "pet") and  not WHITE_ATTACK[spellId] then
             self:StartProfiling("OvaleFuture_UNIT_SPELLCAST_DELAYED")
             self:DebugTimestamp(event, unitId, spell, rank, lineId, spellId)
-            local now = API_GetTime()
+            local now = GetTime()
             local spellcast = self:GetSpellcast(spell, spellId, lineId, now)
             if spellcast then
-                local name, _, _, _, startTime, endTime, _, castId = API_UnitCastingInfo(unitId)
+                local name, _, _, _, startTime, endTime, _, castId = UnitCastingInfo(unitId)
                 if lineId == castId and name == spell then
                     startTime = startTime / 1000
                     endTime = endTime / 1000
@@ -341,7 +365,7 @@ local OvaleFutureClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfil
                     spellcast.start = startTime
                     spellcast.stop = endTime
                     self:Debug("Delaying spell %s (%d) to ending = %s (+%s).", spell, spellId, endTime, delta)
-                    __Ovale.Ovale:needRefresh()
+                    Ovale:needRefresh()
                 elseif  not name then
                     self:Debug("Warning: not casting a spell.")
                 else
@@ -357,39 +381,39 @@ local OvaleFutureClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfil
         if (unitId == "player" or unitId == "pet") and  not WHITE_ATTACK_NAME[spell] then
             self:StartProfiling("OvaleFuture_UNIT_SPELLCAST_SENT")
             self:DebugTimestamp(event, unitId, spell, rank, targetName, lineId)
-            local now = API_GetTime()
-            local caster = __GUID.OvaleGUID:UnitGUID(unitId)
-            local spellcast = __LastSpell.self_pool:Get()
+            local now = GetTime()
+            local caster = OvaleGUID:UnitGUID(unitId)
+            local spellcast = self_pool:Get()
             spellcast.lineId = lineId
             spellcast.caster = caster
             spellcast.spellName = spell
             spellcast.queued = now
-            tinsert(__LastSpell.lastSpell.queue, spellcast)
+            tinsert(lastSpell.queue, spellcast)
             if targetName == "" then
-                self:Debug("Queueing (%d) spell %s with no target.", #__LastSpell.lastSpell.queue, spell)
+                self:Debug("Queueing (%d) spell %s with no target.", #lastSpell.queue, spell)
             else
                 spellcast.targetName = targetName
-                local targetGUID, nextGUID = __GUID.OvaleGUID:NameGUID(targetName)
+                local targetGUID, nextGUID = OvaleGUID:NameGUID(targetName)
                 if nextGUID then
-                    local name = __GUID.OvaleGUID:UnitName("target")
+                    local name = OvaleGUID:UnitName("target")
                     if name == targetName then
-                        targetGUID = __GUID.OvaleGUID:UnitGUID("target")
+                        targetGUID = OvaleGUID:UnitGUID("target")
                     else
-                        name = __GUID.OvaleGUID:UnitName("focus")
+                        name = OvaleGUID:UnitName("focus")
                         if name == targetName then
-                            targetGUID = __GUID.OvaleGUID:UnitGUID("focus")
-                        elseif API_UnitExists("mouseover") then
-                            name = API_UnitName("mouseover")
+                            targetGUID = OvaleGUID:UnitGUID("focus")
+                        elseif UnitExists("mouseover") then
+                            name = UnitName("mouseover")
                             if name == targetName then
-                                targetGUID = API_UnitGUID("mouseover")
+                                targetGUID = UnitGUID("mouseover")
                             end
                         end
                     end
                     spellcast.target = targetGUID
-                    self:Debug("Queueing (%d) spell %s to %s (possibly %s).", #__LastSpell.lastSpell.queue, spell, targetName, targetGUID)
+                    self:Debug("Queueing (%d) spell %s to %s (possibly %s).", #lastSpell.queue, spell, targetName, targetGUID)
                 else
                     spellcast.target = targetGUID
-                    self:Debug("Queueing (%d) spell %s to %s (%s).", #__LastSpell.lastSpell.queue, spell, targetName, targetGUID)
+                    self:Debug("Queueing (%d) spell %s to %s (%s).", #lastSpell.queue, spell, targetName, targetGUID)
                 end
             end
             self:SaveSpellcastInfo(spellcast, now)
@@ -400,10 +424,10 @@ local OvaleFutureClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfil
         if (unitId == "player" or unitId == "pet") and  not WHITE_ATTACK[spellId] then
             self:StartProfiling("OvaleFuture_UNIT_SPELLCAST_START")
             self:DebugTimestamp(event, unitId, spell, rank, lineId, spellId)
-            local now = API_GetTime()
+            local now = GetTime()
             local spellcast = self:GetSpellcast(spell, spellId, lineId, now)
             if spellcast then
-                local name, _, _, _, startTime, endTime, _, castId = API_UnitCastingInfo(unitId)
+                local name, _, _, _, startTime, endTime, _, castId = UnitCastingInfo(unitId)
                 if lineId == castId and name == spell then
                     startTime = startTime / 1000
                     endTime = endTime / 1000
@@ -420,7 +444,7 @@ local OvaleFutureClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfil
                         self:Debug("Spell %s (%d) will finish after updating aura %d on %s.", spell, spellId, auraId, auraGUID)
                     end
                     self:SaveSpellcastInfo(spellcast, now)
-                    __Ovale.Ovale:needRefresh()
+                    Ovale:needRefresh()
                 elseif  not name then
                     self:Debug("Warning: not casting a spell.")
                 else
@@ -436,7 +460,7 @@ local OvaleFutureClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfil
         if (unitId == "player" or unitId == "pet") and  not WHITE_ATTACK[spellId] then
             self:StartProfiling("OvaleFuture_UNIT_SPELLCAST_SUCCEEDED")
             self:DebugTimestamp(event, unitId, spell, rank, lineId, spellId)
-            local now = API_GetTime()
+            local now = GetTime()
             local spellcast, index = self:GetSpellcast(spell, spellId, lineId, now)
             if spellcast then
                 local success = false
@@ -446,9 +470,9 @@ local OvaleFutureClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfil
                     self:UpdateSpellcastSnapshot(spellcast, now)
                     success = true
                 else
-                    local name = API_UnitChannelInfo(unitId)
+                    local name = UnitChannelInfo(unitId)
                     if  not name then
-                        local now = API_GetTime()
+                        local now = GetTime()
                         spellcast.spellId = spellId
                         spellcast.start = now
                         spellcast.stop = now
@@ -478,15 +502,15 @@ local OvaleFutureClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfil
                         self:Debug("Finished spell %s (%d) with no target queued at %s.", spell, spellId, spellcast.queued)
                         finished = true
                         finish = "hit"
-                    elseif targetGUID == __Ovale.Ovale.playerGUID and __SpellBook.OvaleSpellBook:IsHelpfulSpell(spellId) then
+                    elseif targetGUID == Ovale.playerGUID and OvaleSpellBook:IsHelpfulSpell(spellId) then
                         self:Debug("Finished helpful spell %s (%d) cast on player queued at %s.", spell, spellId, spellcast.queued)
                         finished = true
                         finish = "hit"
                     end
                     if finished then
-                        tremove(__LastSpell.lastSpell.queue, index)
-                        __LastSpell.self_pool:Release(spellcast)
-                        __Ovale.Ovale:needRefresh()
+                        tremove(lastSpell.queue, index)
+                        self_pool:Release(spellcast)
+                        Ovale:needRefresh()
                         self:SendMessage("Ovale_SpellFinished", now, spellId, targetGUID, finish)
                     end
                 end
@@ -497,9 +521,9 @@ local OvaleFutureClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfil
         end
     end,
     Ovale_AuraAdded = function(self, event, atTime, guid, auraId, caster)
-        if guid == __Ovale.Ovale.playerGUID then
+        if guid == Ovale.playerGUID then
             self_timeAuraAdded = atTime
-            self:UpdateSpellcastSnapshot(__LastSpell.lastSpell.lastGCDSpellcast, atTime)
+            self:UpdateSpellcastSnapshot(lastSpell.lastGCDSpellcast, atTime)
             self:UpdateSpellcastSnapshot(self.lastOffGCDSpellcast, atTime)
         end
     end,
@@ -507,14 +531,14 @@ local OvaleFutureClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfil
         if (unitId == "player" or unitId == "pet") and  not WHITE_ATTACK[spellId] then
             self:StartProfiling("OvaleFuture_UnitSpellcastEnded")
             self:DebugTimestamp(event, unitId, spell, rank, lineId, spellId)
-            local now = API_GetTime()
+            local now = GetTime()
             local spellcast, index = self:GetSpellcast(spell, spellId, lineId, now)
             if spellcast then
                 self:Debug("End casting spell %s (%d) queued at %s due to %s.", spell, spellId, spellcast.queued, event)
                 if  not spellcast.success then
-                    tremove(__LastSpell.lastSpell.queue, index)
-                    __LastSpell.self_pool:Release(spellcast)
-                    __Ovale.Ovale:needRefresh()
+                    tremove(lastSpell.queue, index)
+                    self_pool:Release(spellcast)
+                    Ovale:needRefresh()
                 end
             elseif lineId then
                 self:Debug("Warning: no queued spell %s (%d) found to end casting.", spell, spellId)
@@ -526,14 +550,14 @@ local OvaleFutureClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfil
         self:StartProfiling("OvaleFuture_GetSpellcast")
         local spellcast, index
         if  not lineId or lineId ~= "" then
-            for i, sc in _ipairs(__LastSpell.lastSpell.queue) do
+            for i, sc in ipairs(lastSpell.queue) do
                 if  not lineId or sc.lineId == lineId then
                     if spellId and sc.spellId == spellId then
                         spellcast = sc
                         index = i
                         break
                     elseif spell then
-                        local spellName = sc.spellName or __SpellBook.OvaleSpellBook:GetSpellName(spellId)
+                        local spellName = sc.spellName or OvaleSpellBook:GetSpellName(spellId)
                         if spell == spellName then
                             spellcast = sc
                             index = i
@@ -544,7 +568,7 @@ local OvaleFutureClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfil
             end
         end
         if spellcast then
-            local spellName = spell or spellcast.spellName or __SpellBook.OvaleSpellBook:GetSpellName(spellId)
+            local spellName = spell or spellcast.spellName or OvaleSpellBook:GetSpellName(spellId)
             if spellcast.targetName then
                 self:Debug("Found spellcast for %s to %s queued at %f.", spellName, spellcast.targetName, spellcast.queued)
             else
@@ -557,15 +581,15 @@ local OvaleFutureClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfil
     GetAuraFinish = function(self, spell, spellId, targetGUID, atTime)
         self:StartProfiling("OvaleFuture_GetAuraFinish")
         local auraId, auraGUID
-        local si = __Data.OvaleData.spellInfo[spellId]
+        local si = OvaleData.spellInfo[spellId]
         if si and si.aura then
-            for _, unitId in _ipairs(SPELLCAST_AURA_ORDER) do
-                for _, auraList in _pairs(si.aura[unitId]) do
-                    for id, spellData in _pairs(auraList) do
-                        local verified, value = __Data.OvaleData:CheckSpellAuraData(id, spellData, atTime, targetGUID)
-                        if verified and (SPELLAURALIST_AURA_VALUE[value] or _type(value) == "number" and value > 0) then
+            for _, unitId in ipairs(SPELLCAST_AURA_ORDER) do
+                for _, auraList in pairs(si.aura[unitId]) do
+                    for id, spellData in pairs(auraList) do
+                        local verified, value = OvaleData:CheckSpellAuraData(id, spellData, atTime, targetGUID)
+                        if verified and (SPELLAURALIST_AURA_VALUE[value] or type(value) == "number" and value > 0) then
                             auraId = id
-                            auraGUID = __GUID.OvaleGUID:UnitGUID(unitId)
+                            auraGUID = OvaleGUID:UnitGUID(unitId)
                             break
                         end
                     end
@@ -587,7 +611,7 @@ local OvaleFutureClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfil
         if spellcast.spellId then
             spellcast.damageMultiplier = self:GetDamageMultiplier(spellcast.spellId, spellcast.target, atTime)
         end
-        for _, mod in _pairs(__LastSpell.lastSpell.modules) do
+        for _, mod in pairs(lastSpell.modules) do
             local func = mod.SaveSpellcastInfo
             if func then
                 func(mod, spellcast, atTime)
@@ -596,15 +620,15 @@ local OvaleFutureClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfil
         self:StopProfiling("OvaleFuture_SaveSpellcastInfo")
     end,
     GetDamageMultiplier = function(self, spellId, targetGUID, atTime)
-        atTime = atTime or self["currentTime"] or API_GetTime()
+        atTime = atTime or self["currentTime"] or GetTime()
         local damageMultiplier = 1
-        local si = __Data.OvaleData.spellInfo[spellId]
+        local si = OvaleData.spellInfo[spellId]
         if si and si.aura and si.aura.damage then
             local CheckRequirements
-            for filter, auraList in _pairs(si.aura.damage) do
-                for auraId, spellData in _pairs(auraList) do
+            for filter, auraList in pairs(si.aura.damage) do
+                for auraId, spellData in pairs(auraList) do
                     local index, multiplier
-                    if _type(spellData) == "table" then
+                    if type(spellData) == "table" then
                         multiplier = spellData[1]
                         index = 2
                     else
@@ -617,10 +641,10 @@ local OvaleFutureClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfil
                         verified = true
                     end
                     if verified then
-                        local aura = __Aura.OvaleAura:GetAuraByGUID(__Ovale.Ovale.playerGUID, auraId, filter)
-                        local isActiveAura = __Aura.OvaleAura:IsActiveAura(aura, atTime)
+                        local aura = OvaleAura:GetAuraByGUID(Ovale.playerGUID, auraId, filter)
+                        local isActiveAura = OvaleAura:IsActiveAura(aura, atTime)
                         if isActiveAura then
-                            local siAura = __Data.OvaleData.spellInfo[auraId]
+                            local siAura = OvaleData.spellInfo[auraId]
                             if siAura and siAura.stacking and siAura.stacking > 0 then
                                 multiplier = 1 + (multiplier - 1) * aura.stacks
                             end
@@ -633,18 +657,18 @@ local OvaleFutureClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfil
         return damageMultiplier
     end,
     UpdateCounters = function(self, spellId, atTime, targetGUID)
-        local inccounter = __Data.OvaleData:GetSpellInfoProperty(spellId, atTime, "inccounter", targetGUID)
+        local inccounter = OvaleData:GetSpellInfoProperty(spellId, atTime, "inccounter", targetGUID)
         if inccounter then
             local value = self.counter[inccounter] and self.counter[inccounter] or 0
             self.counter[inccounter] = value + 1
         end
-        local resetcounter = __Data.OvaleData:GetSpellInfoProperty(spellId, atTime, "resetcounter", targetGUID)
+        local resetcounter = OvaleData:GetSpellInfoProperty(spellId, atTime, "resetcounter", targetGUID)
         if resetcounter then
             self.counter[resetcounter] = 0
         end
     end,
     IsActive = function(self, spellId)
-        for _, spellcast in _ipairs(__LastSpell.lastSpell.queue) do
+        for _, spellcast in ipairs(lastSpell.queue) do
             if spellcast.spellId == spellId and spellcast.start then
                 return true
             end
@@ -659,16 +683,16 @@ local OvaleFutureClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfil
         self.lastCastTime[spellcast.spellId] = atTime
         if spellcast.offgcd then
             self:Debug("    Caching spell %s (%d) as most recent off-GCD spellcast.", spellcast.spellName, spellcast.spellId)
-            for k, v in _pairs(spellcast) do
+            for k, v in pairs(spellcast) do
                 self.lastOffGCDSpellcast[k] = v
             end
-            __LastSpell.lastSpell.lastSpellcast = self.lastOffGCDSpellcast
+            lastSpell.lastSpellcast = self.lastOffGCDSpellcast
         else
             self:Debug("    Caching spell %s (%d) as most recent GCD spellcast.", spellcast.spellName, spellcast.spellId)
-            for k, v in _pairs(spellcast) do
-                __LastSpell.lastSpell.lastGCDSpellcast[k] = v
+            for k, v in pairs(spellcast) do
+                lastSpell.lastGCDSpellcast[k] = v
             end
-            __LastSpell.lastSpell.lastSpellcast = __LastSpell.lastSpell.lastGCDSpellcast
+            lastSpell.lastSpellcast = lastSpell.lastGCDSpellcast
         end
         self:StopProfiling("OvaleFuture_UpdateLastSpellcast")
     end,
@@ -679,7 +703,7 @@ local OvaleFutureClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfil
             else
                 self:Debug("    Updating to snapshot from %s for spell %s with no target queued at %s.", atTime, spellcast.spellName, spellcast.queued)
             end
-            __PaperDoll.OvalePaperDoll:UpdateSnapshot(__PaperDoll.OvalePaperDoll, spellcast, true)
+            OvalePaperDoll:UpdateSnapshot(OvalePaperDoll, spellcast, true)
             if spellcast.spellId then
                 spellcast.damageMultiplier = self:GetDamageMultiplier(spellcast.spellId, spellcast.target, atTime)
                 if spellcast.damageMultiplier ~= 1 then
@@ -690,4 +714,3 @@ local OvaleFutureClass = __addon.__class(__Profiler.OvaleProfiler:RegisterProfil
     end,
 })
 __exports.OvaleFuture = OvaleFutureClass()
-end)

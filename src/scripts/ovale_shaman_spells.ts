@@ -170,7 +170,8 @@ Define(landslide_talent 20)
 Define(lightning_rod_talent 20)
 Define(overcharge_talent 14)
 Define(storm_elemental_talent 17)
-	
+Define(aftershock_talent 10)
+
 # Artifact traits
 Define(alpha_wolf 198434)
 Define(seismic_storm 238141)
@@ -186,7 +187,8 @@ Define(power_of_the_maelstrom_buff 191877)
 # Legendary items
 Define(echoes_of_the_great_sundering_buff 208723)
 	SpellAddBuff(earthquake echoes_of_the_great_sundering_buff=0)
-
+Define(smoldering_heart 151819)
+Define(the_deceivers_blood_pact 137035)
 	
 `;
     OvaleScripts.RegisterScript("SHAMAN", undefined, name, desc, code, "include");

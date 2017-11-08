@@ -1,6 +1,8 @@
-local __addonName, __addon = ...
-            __addon.require("./scripts/ovale_paladin_spells", { "./Scripts" }, function(__exports, __Scripts)
-do
+local __exports = LibStub:NewLibrary("ovale/scripts/ovale_paladin_spells", 10000)
+if not __exports then return end
+local __Scripts = LibStub:GetLibrary("ovale/Scripts")
+local OvaleScripts = __Scripts.OvaleScripts
+__exports.register = function()
     local name = "ovale_paladin_spells"
     local desc = "[7.0] Ovale: Paladin spells"
     local code = [[
@@ -295,6 +297,9 @@ SpellList(word_of_glory_no_holy_buff bastion_of_power_buff divine_purpose_buff l
 Define(zeal 217020)
 	SpellInfo(zeal cd=4.5 holy=-1)
 
+#Artifact traits
+Define(ashes_to_ashes 179546)
+
 #Talents
 Define(bastion_of_light_talent 5)
 Define(beacon_of_virtue_talent 21)
@@ -321,6 +326,5 @@ Define(the_fires_of_justice_talent 4)
 Define(virtues_blade_talent 10)
 Define(zeal_talent 5)
 ]]
-    __Scripts.OvaleScripts:RegisterScript("PALADIN", nil, name, desc, code, "include")
+    OvaleScripts:RegisterScript("PALADIN", nil, name, desc, code, "include")
 end
-end)

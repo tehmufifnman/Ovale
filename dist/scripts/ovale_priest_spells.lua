@@ -1,6 +1,8 @@
-local __addonName, __addon = ...
-            __addon.require("./scripts/ovale_priest_spells", { "./Scripts" }, function(__exports, __Scripts)
-do
+local __exports = LibStub:NewLibrary("ovale/scripts/ovale_priest_spells", 10000)
+if not __exports then return end
+local __Scripts = LibStub:GetLibrary("ovale/Scripts")
+local OvaleScripts = __Scripts.OvaleScripts
+__exports.register = function()
     local name = "ovale_priest_spells"
     local desc = "[7.0] Ovale: Priest spells"
     local code = [[
@@ -174,7 +176,13 @@ AddFunction CurrentInsanityDrain {
 
 #Legendary
 Define(mangazas_madness 132864)
+Define(buff_sephuzs_secret 208052)
+
+#Artifact traits
+Define(to_the_pain 193644)
+Define(touch_of_darkness 194007)
+Define(void_corruption 194016)
+
 ]]
-    __Scripts.OvaleScripts:RegisterScript("PRIEST", nil, name, desc, code, "include")
+    OvaleScripts:RegisterScript("PRIEST", nil, name, desc, code, "include")
 end
-end)

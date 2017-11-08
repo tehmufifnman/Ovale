@@ -3,7 +3,7 @@ import { Ovale } from "./Ovale";
 import { OvaleDebug } from "./Debug";
 import { next, LuaObj, LuaArray } from "@wowts/lua";
 import { huge } from "@wowts/math";
-let OvaleConditionBase = Ovale.NewModule("OvaleCondition");
+let OvaleConditionBase = OvaleDebug.RegisterDebugging(Ovale.NewModule("OvaleCondition"));
 export let OvaleCondition: OvaleConditionClass;
 let INFINITY = huge;
 let self_condition: LuaObj<ConditionFunction> = {
@@ -17,7 +17,7 @@ let self_spellBookCondition = {
 export type ConditionResult = number[];
 export type ConditionFunction = (positionalParams: LuaArray<string>, namedParams: LuaObj<string>, state: BaseState, atTime: number) => ConditionResult;
 
-class OvaleConditionClass extends OvaleDebug.RegisterDebugging(OvaleConditionBase) {
+class OvaleConditionClass extends OvaleConditionBase {
     COMPARATOR = {
         atLeast: true,
         atMost: true,

@@ -40,7 +40,7 @@ const RequireValue = function(value) {
     let required = (sub(tostring(value), 1, 1) != "!");
     if (!required) {
         value = sub(value, 2);
-        if (match(value, NUMBER_PATTERN)) {
+        if (truthy(match(value, NUMBER_PATTERN))) {
             value = tonumber(value);
         }
     }
@@ -508,8 +508,7 @@ class OvaleCompileClass extends OvaleCompileClassBase {
     serial = undefined;
     ast = undefined;
      
-    constructor() {
-        super();
+    OnInitialize() {
         this.RegisterMessage("Ovale_CheckBoxValueChanged", "ScriptControlChanged");
         this.RegisterMessage("Ovale_EquipmentChanged", "EventHandler");
         this.RegisterMessage("Ovale_ListValueChanged", "ScriptControlChanged");
@@ -518,11 +517,10 @@ class OvaleCompileClass extends OvaleCompileClassBase {
         this.RegisterMessage("Ovale_SpellsChanged", "EventHandler");
         this.RegisterMessage("Ovale_StanceChanged");
         this.RegisterMessage("Ovale_TalentsChanged", "EventHandler");
-    }
-
-    OnInitialize() {
+    
         this.SendMessage("Ovale_ScriptChanged");
     }
+    
     OnDisable() {
         this.UnregisterMessage("Ovale_CheckBoxValueChanged");
         this.UnregisterMessage("Ovale_EquipmentChanged");

@@ -1,28 +1,37 @@
-local __addonName, __addon = ...
-            __addon.require("./Score", { "./Ovale", "./Debug", "./Future", "AceEvent-3.0", "AceSerializer-3.0" }, function(__exports, __Ovale, __Debug, __Future, aceEvent, AceSerializer)
-local OvaleScoreBase = __Ovale.Ovale:NewModule("OvaleScore", aceEvent, AceSerializer)
-local _pairs = pairs
-local _type = type
-local API_IsInGroup = IsInGroup
-local API_SendAddonMessage = SendAddonMessage
-local API_UnitName = UnitName
-local _LE_PARTY_CATEGORY_INSTANCE = LE_PARTY_CATEGORY_INSTANCE
-local MSG_PREFIX = __Ovale.Ovale.MSG_PREFIX
+local __exports = LibStub:NewLibrary("ovale/Score", 10000)
+if not __exports then return end
+local __class = LibStub:GetLibrary("tslib").newClass
+local __Ovale = LibStub:GetLibrary("ovale/Ovale")
+local Ovale = __Ovale.Ovale
+local __Debug = LibStub:GetLibrary("ovale/Debug")
+local OvaleDebug = __Debug.OvaleDebug
+local __Future = LibStub:GetLibrary("ovale/Future")
+local OvaleFuture = __Future.OvaleFuture
+local aceEvent = LibStub:GetLibrary("AceEvent-3.0", true)
+local AceSerializer = LibStub:GetLibrary("AceSerializer-3.0", true)
+local pairs = pairs
+local type = type
+local IsInGroup = IsInGroup
+local SendAddonMessage = SendAddonMessage
+local UnitName = UnitName
+local LE_PARTY_CATEGORY_INSTANCE = LE_PARTY_CATEGORY_INSTANCE
+local GetTime = GetTime
+local UnitCastingInfo = UnitCastingInfo
+local UnitChannelInfo = UnitChannelInfo
+local OvaleScoreBase = OvaleDebug:RegisterDebugging(Ovale:NewModule("OvaleScore", aceEvent, AceSerializer))
+local MSG_PREFIX = Ovale.MSG_PREFIX
 local self_playerGUID = nil
 local self_name = nil
-local API_GetTime = GetTime
-local API_UnitCastingInfo = UnitCastingInfo
-local API_UnitChannelInfo = UnitChannelInfo
-local OvaleScoreClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(OvaleScoreBase), {
+local OvaleScoreClass = __class(OvaleScoreBase, {
     constructor = function(self)
         self.damageMeter = {}
         self.damageMeterMethod = {}
         self.score = 0
         self.maxScore = 0
         self.scoredSpell = {}
-        __Debug.OvaleDebug:RegisterDebugging(OvaleScoreBase).constructor(self)
-        self_playerGUID = __Ovale.Ovale.playerGUID
-        self_name = API_UnitName("player")
+        OvaleScoreBase.constructor(self)
+        self_playerGUID = Ovale.playerGUID
+        self_name = UnitName("player")
         self:RegisterEvent("CHAT_MSG_ADDON")
         self:RegisterEvent("PLAYER_REGEN_ENABLED")
         self:RegisterEvent("PLAYER_REGEN_DISABLED")
@@ -45,10 +54,10 @@ local OvaleScoreClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(Ova
         end
     end,
     PLAYER_REGEN_ENABLED = function(self)
-        if self.maxScore > 0 and API_IsInGroup() then
+        if self.maxScore > 0 and IsInGroup() then
             local message = self:Serialize("score", self.score, self.maxScore, self_playerGUID)
-            local channel = API_IsInGroup(_LE_PARTY_CATEGORY_INSTANCE) and "INSTANCE_CHAT" or "RAID"
-            API_SendAddonMessage(MSG_PREFIX, message, channel)
+            local channel = IsInGroup(LE_PARTY_CATEGORY_INSTANCE) and "INSTANCE_CHAT" or "RAID"
+            SendAddonMessage(MSG_PREFIX, message, channel)
         end
     end,
     PLAYER_REGEN_DISABLED = function(self)
@@ -73,21 +82,21 @@ local OvaleScoreClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(Ova
     ScoreSpell = function(self, spellId)
     end,
     SendScore = function(self, name, guid, scored, scoreMax)
-        for moduleName, method in _pairs(self.damageMeterMethod) do
+        for moduleName, method in pairs(self.damageMeterMethod) do
             local addon = self.damageMeter[moduleName]
             if addon then
                 addon[method](addon, name, guid, scored, scoreMax)
-            elseif _type(method) == "function" then
+            elseif type(method) == "function" then
                 method(name, guid, scored, scoreMax)
             end
         end
     end,
     UNIT_SPELLCAST_CHANNEL_START = function(self, event, unitId, spell, rank, lineId, spellId)
         if unitId == "player" or unitId == "pet" then
-            local now = API_GetTime()
-            local spellcast = __Future.OvaleFuture:GetSpellcast(spell, spellId, nil, now)
+            local now = GetTime()
+            local spellcast = OvaleFuture:GetSpellcast(spell, spellId, nil, now)
             if spellcast then
-                local name = API_UnitChannelInfo(unitId)
+                local name = UnitChannelInfo(unitId)
                 if name == spell then
                     self:ScoreSpell(spellId)
                 end
@@ -96,10 +105,10 @@ local OvaleScoreClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(Ova
     end,
     UNIT_SPELLCAST_START = function(self, event, unitId, spell, rank, lineId, spellId)
         if unitId == "player" or unitId == "pet" then
-            local now = API_GetTime()
-            local spellcast = __Future.OvaleFuture:GetSpellcast(spell, spellId, lineId, now)
+            local now = GetTime()
+            local spellcast = OvaleFuture:GetSpellcast(spell, spellId, lineId, now)
             if spellcast then
-                local name, _, _, _, _, _, _, castId = API_UnitCastingInfo(unitId)
+                local name, _, _, _, _, _, _, castId = UnitCastingInfo(unitId)
                 if lineId == castId and name == spell then
                     self:ScoreSpell(spellId)
                 end
@@ -108,11 +117,11 @@ local OvaleScoreClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(Ova
     end,
     UNIT_SPELLCAST_SUCCEEDED = function(self, event, unitId, spell, rank, lineId, spellId)
         if unitId == "player" or unitId == "pet" then
-            local now = API_GetTime()
-            local spellcast = __Future.OvaleFuture:GetSpellcast(spell, spellId, lineId, now)
+            local now = GetTime()
+            local spellcast = OvaleFuture:GetSpellcast(spell, spellId, lineId, now)
             if spellcast then
                 if spellcast.success or ( not spellcast.start) or ( not spellcast.stop) or spellcast.channel then
-                    local name = API_UnitChannelInfo(unitId)
+                    local name = UnitChannelInfo(unitId)
                     if  not name then
                         __exports.OvaleScore:ScoreSpell(spellId)
                     end
@@ -122,4 +131,3 @@ local OvaleScoreClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(Ova
     end,
 })
 __exports.OvaleScore = OvaleScoreClass()
-end)

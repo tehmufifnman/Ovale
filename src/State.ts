@@ -17,7 +17,8 @@ export interface StateModule {
     ApplySpellOnHit?(spellId, targetGUID, startCast, endCast, channel, spellcast):void;
 }
 
-class OvaleStateClass extends OvaleDebug.RegisterDebugging(OvaleStateBase) {
+const OvaleStateBaseClass = OvaleDebug.RegisterDebugging(OvaleStateBase);
+class OvaleStateClass extends OvaleStateBaseClass {
     RegisterState(stateAddon: StateModule) {
         self_stateAddons.Insert(stateAddon);
     }

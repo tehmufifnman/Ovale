@@ -13,7 +13,7 @@ import { sub } from "@wowts/string";
 import { insert, remove } from "@wowts/table";
 import { GetSpellInfo, GetTime, UnitCastingInfo, UnitChannelInfo, UnitExists, UnitGUID, UnitName } from "@wowts/wow-mock";
 
-let OvaleFutureBase = Ovale.NewModule("OvaleFuture", aceEvent);
+let OvaleFutureBase = OvaleProfiler.RegisterProfiling(OvaleDebug.RegisterDebugging(Ovale.NewModule("OvaleFuture", aceEvent)));
 let strsub = sub;
 let tinsert = insert;
 let tremove = remove;
@@ -91,7 +91,7 @@ const IsSameSpellcast = function(a, b) {
 }
 let eventDebug = false;
 
-class OvaleFutureClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.RegisterDebugging(OvaleFutureBase)) {
+class OvaleFutureClass extends OvaleFutureBase {
     inCombat = undefined;
     combatStartTime = undefined;
     lastCastTime = {    }

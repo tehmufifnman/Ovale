@@ -8,7 +8,7 @@ import { band, bor } from "@wowts/bit";
 import { sub } from "@wowts/string";
 import { GetTime, SCHOOL_MASK_ARCANE, SCHOOL_MASK_FIRE, SCHOOL_MASK_FROST, SCHOOL_MASK_HOLY, SCHOOL_MASK_NATURE, SCHOOL_MASK_SHADOW } from "@wowts/wow-mock";
 
-let OvaleDamageTakenBase = Ovale.NewModule("OvaleDamageTaken", aceEvent);
+let OvaleDamageTakenBase = RegisterPrinter(OvaleProfiler.RegisterProfiling(OvaleDebug.RegisterDebugging(Ovale.NewModule("OvaleDamageTaken", aceEvent))));
 export let OvaleDamageTaken: OvaleDamageTakenClass;
 
 interface Event{
@@ -21,7 +21,7 @@ let DAMAGE_TAKEN_WINDOW = 20;
 let SCHOOL_MASK_MAGIC = bor(SCHOOL_MASK_ARCANE, SCHOOL_MASK_FIRE, SCHOOL_MASK_FROST, SCHOOL_MASK_HOLY, SCHOOL_MASK_NATURE, SCHOOL_MASK_SHADOW);
 
 
-class OvaleDamageTakenClass extends RegisterPrinter(OvaleProfiler.RegisterProfiling(OvaleDebug.RegisterDebugging(OvaleDamageTakenBase))) {
+class OvaleDamageTakenClass extends OvaleDamageTakenBase {
     damageEvent = new OvaleQueue<Event>("OvaleDamageTaken_damageEvent");
 
     constructor() {

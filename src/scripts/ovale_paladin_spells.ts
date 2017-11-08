@@ -294,6 +294,9 @@ SpellList(word_of_glory_no_holy_buff bastion_of_power_buff divine_purpose_buff l
 Define(zeal 217020)
 	SpellInfo(zeal cd=4.5 holy=-1)
 
+#Artifact traits
+Define(ashes_to_ashes 179546)
+
 #Talents
 Define(bastion_of_light_talent 5)
 Define(beacon_of_virtue_talent 21)

@@ -1,30 +1,73 @@
-local __addonName, __addon = ...
-            __addon.require("./BestAction", { "./Debug", "./Pool", "./Profiler", "./TimeSpan", "./ActionBar", "./Compile", "./Condition", "./Data", "./Equipment", "./GUID", "./SpellBook", "./Ovale", "./State", "./PaperDoll", "./DataState", "./SpellBookState", "./FutureState", "./CooldownState", "AceEvent-3.0" }, function(__exports, __Debug, __Pool, __Profiler, __TimeSpan, __ActionBar, __Compile, __Condition, __Data, __Equipment, __GUID, __SpellBook, __Ovale, __State, __PaperDoll, __DataState, __SpellBookState, __FutureState, __CooldownState, aceEvent)
-local OvaleBestActionBase = __Ovale.Ovale:NewModule("OvaleBestAction", aceEvent)
+local __exports = LibStub:NewLibrary("ovale/BestAction", 10000)
+if not __exports then return end
+local __class = LibStub:GetLibrary("tslib").newClass
+local __Debug = LibStub:GetLibrary("ovale/Debug")
+local OvaleDebug = __Debug.OvaleDebug
+local __Pool = LibStub:GetLibrary("ovale/Pool")
+local OvalePool = __Pool.OvalePool
+local __Profiler = LibStub:GetLibrary("ovale/Profiler")
+local OvaleProfiler = __Profiler.OvaleProfiler
+local __TimeSpan = LibStub:GetLibrary("ovale/TimeSpan")
+local UNIVERSE = __TimeSpan.UNIVERSE
+local newTimeSpanFromArray = __TimeSpan.newTimeSpanFromArray
+local EMPTY_SET = __TimeSpan.EMPTY_SET
+local newTimeSpan = __TimeSpan.newTimeSpan
+local releaseTimeSpans = __TimeSpan.releaseTimeSpans
+local __ActionBar = LibStub:GetLibrary("ovale/ActionBar")
+local OvaleActionBar = __ActionBar.OvaleActionBar
+local __Compile = LibStub:GetLibrary("ovale/Compile")
+local OvaleCompile = __Compile.OvaleCompile
+local __Condition = LibStub:GetLibrary("ovale/Condition")
+local OvaleCondition = __Condition.OvaleCondition
+local __Data = LibStub:GetLibrary("ovale/Data")
+local OvaleData = __Data.OvaleData
+local __Equipment = LibStub:GetLibrary("ovale/Equipment")
+local OvaleEquipment = __Equipment.OvaleEquipment
+local __GUID = LibStub:GetLibrary("ovale/GUID")
+local OvaleGUID = __GUID.OvaleGUID
+local __SpellBook = LibStub:GetLibrary("ovale/SpellBook")
+local OvaleSpellBook = __SpellBook.OvaleSpellBook
+local __Ovale = LibStub:GetLibrary("ovale/Ovale")
+local Ovale = __Ovale.Ovale
+local __State = LibStub:GetLibrary("ovale/State")
+local OvaleState = __State.OvaleState
+local __PaperDoll = LibStub:GetLibrary("ovale/PaperDoll")
+local paperDollState = __PaperDoll.paperDollState
+local __DataState = LibStub:GetLibrary("ovale/DataState")
+local dataState = __DataState.dataState
+local __SpellBookState = LibStub:GetLibrary("ovale/SpellBookState")
+local spellBookState = __SpellBookState.spellBookState
+local __FutureState = LibStub:GetLibrary("ovale/FutureState")
+local futureState = __FutureState.futureState
+local __CooldownState = LibStub:GetLibrary("ovale/CooldownState")
+local cooldownState = __CooldownState.cooldownState
+local aceEvent = LibStub:GetLibrary("AceEvent-3.0", true)
 local abs = math.abs
-local _assert = assert
+local huge = math.huge
 local floor = math.floor
-local _ipairs = ipairs
-local _loadstring = loadstring
-local _pairs = pairs
-local _tonumber = tonumber
-local _type = type
-local _wipe = wipe
-local INFINITY = math.huge
-local API_GetActionCooldown = GetActionCooldown
-local API_GetActionTexture = GetActionTexture
-local API_GetItemIcon = GetItemIcon
-local API_GetItemCooldown = GetItemCooldown
-local API_GetItemSpell = GetItemSpell
-local API_GetSpellTexture = GetSpellTexture
-local API_IsActionInRange = IsActionInRange
-local API_IsCurrentAction = IsCurrentAction
-local API_IsItemInRange = IsItemInRange
-local API_IsUsableAction = IsUsableAction
-local API_IsUsableItem = IsUsableItem
+local assert = assert
+local ipairs = ipairs
+local loadstring = loadstring
+local pairs = pairs
+local tonumber = tonumber
+local type = type
+local wipe = wipe
+local GetActionCooldown = GetActionCooldown
+local GetActionTexture = GetActionTexture
+local GetItemIcon = GetItemIcon
+local GetItemCooldown = GetItemCooldown
+local GetItemSpell = GetItemSpell
+local GetSpellTexture = GetSpellTexture
+local IsActionInRange = IsActionInRange
+local IsCurrentAction = IsCurrentAction
+local IsItemInRange = IsItemInRange
+local IsUsableAction = IsUsableAction
+local IsUsableItem = IsUsableItem
+local OvaleBestActionBase = OvaleDebug:RegisterDebugging(OvaleProfiler:RegisterProfiling(Ovale:NewModule("OvaleBestAction", aceEvent)))
+local INFINITY = huge
 local self_serial = 0
 local self_timeSpan = {}
-local self_valuePool = __Pool.OvalePool("OvaleBestAction_valuePool")
+local self_valuePool = OvalePool("OvaleBestAction_valuePool")
 local self_value = {}
 __exports.OvaleBestAction = nil
 local function SetValue(node, value, origin, rate)
@@ -44,9 +87,9 @@ local AsValue = function(atTime, timeSpan, node)
     if node and node.type == "value" then
         value, origin, rate = node.value, node.origin, node.rate
     elseif timeSpan and timeSpan:HasTime(atTime) then
-        value, origin, rate, timeSpan = 1, 0, 0, __TimeSpan.UNIVERSE
+        value, origin, rate, timeSpan = 1, 0, 0, UNIVERSE
     else
-        value, origin, rate, timeSpan = 0, 0, 0, __TimeSpan.UNIVERSE
+        value, origin, rate, timeSpan = 0, 0, 0, UNIVERSE
     end
     return value, origin, rate, timeSpan
 end
@@ -58,7 +101,7 @@ local GetTimeSpan = function(node, defaultTimeSpan)
             timeSpan:copyFromArray(defaultTimeSpan)
         end
     else
-        self_timeSpan[node] = __TimeSpan.newTimeSpanFromArray(defaultTimeSpan)
+        self_timeSpan[node] = newTimeSpanFromArray(defaultTimeSpan)
         timeSpan = self_timeSpan[node]
     end
     return timeSpan
@@ -68,25 +111,25 @@ local GetActionItemInfo = function(element, state, atTime, target)
     __exports.OvaleBestAction:StartProfiling("OvaleBestAction_GetActionItemInfo")
     local actionTexture, actionInRange, actionCooldownStart, actionCooldownDuration, actionUsable, actionShortcut, actionIsCurrent, actionEnable, actionType, actionId
     local itemId = element.positionalParams[1]
-    if _type(itemId) ~= "number" then
-        itemId = __Equipment.OvaleEquipment:GetEquippedItem(itemId)
+    if type(itemId) ~= "number" then
+        itemId = OvaleEquipment:GetEquippedItem(itemId)
     end
     if  not itemId then
         state:Log("Unknown item '%s'.", element.positionalParams[1])
     else
         state:Log("Item ID '%s'", itemId)
-        local action = __ActionBar.OvaleActionBar:GetForItem(itemId)
-        local spellName = API_GetItemSpell(itemId)
+        local action = OvaleActionBar:GetForItem(itemId)
+        local spellName = GetItemSpell(itemId)
         if element.namedParams.texture then
             actionTexture = "Interface\\Icons\\" .. element.namedParams.texture
         end
-        actionTexture = actionTexture or API_GetItemIcon(itemId)
-        actionInRange = API_IsItemInRange(itemId, target)
-        actionCooldownStart, actionCooldownDuration, actionEnable = API_GetItemCooldown(itemId)
-        actionUsable = spellName and API_IsUsableItem(itemId) and __SpellBookState.spellBookState:IsUsableItem(itemId)
+        actionTexture = actionTexture or GetItemIcon(itemId)
+        actionInRange = IsItemInRange(itemId, target)
+        actionCooldownStart, actionCooldownDuration, actionEnable = GetItemCooldown(itemId)
+        actionUsable = spellName and IsUsableItem(itemId) and spellBookState:IsUsableItem(itemId)
         if action then
-            actionShortcut = __ActionBar.OvaleActionBar:GetBinding(action)
-            actionIsCurrent = API_IsCurrentAction(action)
+            actionShortcut = OvaleActionBar:GetBinding(action)
+            actionIsCurrent = IsCurrentAction(action)
         end
         actionType = "item"
         actionId = itemId
@@ -99,19 +142,19 @@ local GetActionMacroInfo = function(element, state, atTime, target)
     __exports.OvaleBestAction:StartProfiling("OvaleBestAction_GetActionMacroInfo")
     local actionTexture, actionInRange, actionCooldownStart, actionCooldownDuration, actionUsable, actionShortcut, actionIsCurrent, actionEnable, actionType, actionId
     local macro = element.positionalParams[1]
-    local action = __ActionBar.OvaleActionBar:GetForMacro(macro)
+    local action = OvaleActionBar:GetForMacro(macro)
     if  not action then
         state:Log("Unknown macro '%s'.", macro)
     else
         if element.namedParams.texture then
             actionTexture = "Interface\\Icons\\" .. element.namedParams.texture
         end
-        actionTexture = actionTexture or API_GetActionTexture(action)
-        actionInRange = API_IsActionInRange(action, target)
-        actionCooldownStart, actionCooldownDuration, actionEnable = API_GetActionCooldown(action)
-        actionUsable = API_IsUsableAction(action)
-        actionShortcut = __ActionBar.OvaleActionBar:GetBinding(action)
-        actionIsCurrent = API_IsCurrentAction(action)
+        actionTexture = actionTexture or GetActionTexture(action)
+        actionInRange = IsActionInRange(action, target)
+        actionCooldownStart, actionCooldownDuration, actionEnable = GetActionCooldown(action)
+        actionUsable = IsUsableAction(action)
+        actionShortcut = OvaleActionBar:GetBinding(action)
+        actionIsCurrent = IsCurrentAction(action)
         actionType = "macro"
         actionId = macro
     end
@@ -122,46 +165,46 @@ end
 local GetActionSpellInfo = function(element, state, atTime, target)
     __exports.OvaleBestAction:StartProfiling("OvaleBestAction_GetActionSpellInfo")
     local actionTexture, actionInRange, actionCooldownStart, actionCooldownDuration, actionUsable, actionShortcut, actionIsCurrent, actionEnable, actionType, actionId, actionResourceExtend, actionCharges
-    local targetGUID = __GUID.OvaleGUID:UnitGUID(target)
+    local targetGUID = OvaleGUID:UnitGUID(target)
     local spellId = element.positionalParams[1]
-    local si = __Data.OvaleData.spellInfo[spellId]
+    local si = OvaleData.spellInfo[spellId]
     local replacedSpellId = nil
     if si and si.replace then
-        local replacement = __DataState.dataState:GetSpellInfoProperty(spellId, atTime, "replace", targetGUID)
+        local replacement = dataState:GetSpellInfoProperty(spellId, atTime, "replace", targetGUID)
         if replacement then
             replacedSpellId = spellId
             spellId = replacement
-            si = __Data.OvaleData.spellInfo[spellId]
+            si = OvaleData.spellInfo[spellId]
             state:Log("Spell ID '%s' is replaced by spell ID '%s'.", replacedSpellId, spellId)
         end
     end
-    local action = __ActionBar.OvaleActionBar:GetForSpell(spellId)
+    local action = OvaleActionBar:GetForSpell(spellId)
     if  not action and replacedSpellId then
         state:Log("Action not found for spell ID '%s'; checking for replaced spell ID '%s'.", spellId, replacedSpellId)
-        action = __ActionBar.OvaleActionBar:GetForSpell(replacedSpellId)
+        action = OvaleActionBar:GetForSpell(replacedSpellId)
     end
-    local isKnownSpell = __SpellBook.OvaleSpellBook:IsKnownSpell(spellId)
+    local isKnownSpell = OvaleSpellBook:IsKnownSpell(spellId)
     if  not isKnownSpell and replacedSpellId then
         state:Log("Spell ID '%s' is not known; checking for replaced spell ID '%s'.", spellId, replacedSpellId)
-        isKnownSpell = __SpellBook.OvaleSpellBook:IsKnownSpell(replacedSpellId)
+        isKnownSpell = OvaleSpellBook:IsKnownSpell(replacedSpellId)
     end
     if  not isKnownSpell and  not action then
         state:Log("Unknown spell ID '%s'.", spellId)
     else
-        local isUsable, noMana = __SpellBookState.spellBookState:IsUsableSpell(spellId, atTime, targetGUID)
+        local isUsable, noMana = spellBookState:IsUsableSpell(spellId, atTime, targetGUID)
         if isUsable or noMana then
             if element.namedParams.texture then
                 actionTexture = "Interface\\Icons\\" .. element.namedParams.texture
             end
-            actionTexture = actionTexture or API_GetSpellTexture(spellId)
-            actionInRange = __SpellBook.OvaleSpellBook:IsSpellInRange(spellId, target)
-            actionCooldownStart, actionCooldownDuration, actionEnable = __CooldownState.cooldownState:GetSpellCooldown(spellId)
-            actionCharges = __CooldownState.cooldownState:GetSpellCharges(spellId)
+            actionTexture = actionTexture or GetSpellTexture(spellId)
+            actionInRange = OvaleSpellBook:IsSpellInRange(spellId, target)
+            actionCooldownStart, actionCooldownDuration, actionEnable = cooldownState:GetSpellCooldown(spellId)
+            actionCharges = cooldownState:GetSpellCharges(spellId)
             actionResourceExtend = 0
             actionUsable = isUsable
             if action then
-                actionShortcut = __ActionBar.OvaleActionBar:GetBinding(action)
-                actionIsCurrent = API_IsCurrentAction(action)
+                actionShortcut = OvaleActionBar:GetBinding(action)
+                actionIsCurrent = IsCurrentAction(action)
             end
             actionType = "spell"
             actionId = spellId
@@ -171,7 +214,7 @@ local GetActionSpellInfo = function(element, state, atTime, target)
                 end
                 if actionCooldownStart and actionCooldownDuration then
                     local extraPower = element.namedParams.extra_amount or 0
-                    local seconds = __SpellBookState.spellBookState:GetTimeToSpell(spellId, atTime, targetGUID, extraPower)
+                    local seconds = spellBookState:GetTimeToSpell(spellId, atTime, targetGUID, extraPower)
                     if seconds > 0 and seconds > actionCooldownDuration then
                         if actionCooldownDuration > 0 then
                             actionResourceExtend = seconds - actionCooldownDuration
@@ -193,9 +236,9 @@ local GetActionTextureInfo = function(element, state, atTime, target)
     local actionTexture
     do
         local texture = element.positionalParams[1]
-        local spellId = _tonumber(texture)
+        local spellId = tonumber(texture)
         if spellId then
-            actionTexture = API_GetSpellTexture(spellId)
+            actionTexture = GetSpellTexture(spellId)
         else
             actionTexture = "Interface\\Icons\\" .. texture
         end
@@ -213,7 +256,7 @@ local GetActionTextureInfo = function(element, state, atTime, target)
     return actionTexture, actionInRange, actionCooldownStart, actionCooldownDuration, actionUsable, actionShortcut, actionIsCurrent, actionEnable, actionType, actionId, target
 end
 
-local OvaleBestActionClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleBestActionBase)), {
+local OvaleBestActionClass = __class(OvaleBestActionBase, {
     constructor = function(self)
         self.ComputeAction = function(element, state, atTime)
             self:StartProfiling("OvaleBestAction_ComputeAction")
@@ -238,22 +281,22 @@ local OvaleBestActionClass = __addon.__class(__Debug.OvaleDebug:RegisterDebuggin
             local action = element.positionalParams[1]
             if  not actionTexture then
                 state:Log("[%d]    Action %s not found.", nodeId, action)
-                _wipe(timeSpan)
+                wipe(timeSpan)
             elseif  not (actionEnable and actionEnable > 0) then
                 state:Log("[%d]    Action %s not enabled.", nodeId, action)
-                _wipe(timeSpan)
+                wipe(timeSpan)
             elseif element.namedParams.usable == 1 and  not actionUsable then
                 state:Log("[%d]    Action %s not usable.", nodeId, action)
-                _wipe(timeSpan)
+                wipe(timeSpan)
             else
                 local spellInfo
                 if actionType == "spell" then
                     local spellId = actionId
-                    spellInfo = spellId and __Data.OvaleData.spellInfo[spellId]
+                    spellInfo = spellId and OvaleData.spellInfo[spellId]
                     if spellInfo and spellInfo.casttime then
                         element.castTime = spellInfo.casttime
                     else
-                        element.castTime = __SpellBook.OvaleSpellBook:GetCastTime(spellId)
+                        element.castTime = OvaleSpellBook:GetCastTime(spellId)
                     end
                 else
                     element.castTime = 0
@@ -292,16 +335,16 @@ local OvaleBestActionClass = __addon.__class(__Debug.OvaleDebug:RegisterDebuggin
                 elseif start < atTime then
                     state:Log("[%d]    Action %s is waiting for the global cooldown.", nodeId, action)
                     local newStart = atTime
-                    if __FutureState.futureState:IsChanneling(atTime) then
-                        local spellId = __FutureState.futureState.currentSpellId
-                        local si = spellId and __Data.OvaleData.spellInfo[spellId]
+                    if futureState:IsChanneling(atTime) then
+                        local spellId = futureState.currentSpellId
+                        local si = spellId and OvaleData.spellInfo[spellId]
                         if si then
                             local channel = si.channel or si.canStopChannelling
                             if channel then
-                                local hasteMultiplier = __PaperDoll.paperDollState:GetHasteMultiplier(si.haste)
+                                local hasteMultiplier = paperDollState:GetHasteMultiplier(si.haste)
                                 local numTicks = floor(channel * hasteMultiplier + 0.5)
-                                local tick = (__FutureState.futureState.endCast - __FutureState.futureState.startCast) / numTicks
-                                local tickTime = __FutureState.futureState.startCast
+                                local tick = (futureState.endCast - futureState.startCast) / numTicks
+                                local tickTime = futureState.startCast
                                 for i = 1, numTicks, 1 do
                                     tickTime = tickTime + tick
                                     if newStart <= tickTime then
@@ -408,7 +451,7 @@ local OvaleBestActionClass = __addon.__class(__Debug.OvaleDebug:RegisterDebuggin
                 local B = x - y * z
                 if c == z then
                     if  not ((operator == "==" and A == B) or (operator == "!=" and A ~= B) or (operator == "<" and A < B) or (operator == "<=" and A <= B) or (operator == ">" and A > B) or (operator == ">=" and A >= B)) then
-                        _wipe(timeSpan)
+                        wipe(timeSpan)
                     end
                 else
                     local diff = B - A
@@ -430,7 +473,7 @@ local OvaleBestActionClass = __addon.__class(__Debug.OvaleDebug:RegisterDebuggin
                         timeSpan:copyFromArray(scratch)
                         scratch:Release()
                     else
-                        _wipe(timeSpan)
+                        wipe(timeSpan)
                     end
                 end
                 state:Log("[%d]    compare '%s' returns %s", element.nodeId, operator, timeSpan)
@@ -442,13 +485,13 @@ local OvaleBestActionClass = __addon.__class(__Debug.OvaleDebug:RegisterDebuggin
             self:StartProfiling("OvaleBestAction_Compute")
             local timeSpan = GetTimeSpan(element)
             local result
-            local node = __Compile.OvaleCompile:GetFunctionNode(element.name)
+            local node = OvaleCompile:GetFunctionNode(element.name)
             if node then
                 local timeSpanA, elementA = self:Compute(node.child[1], state, atTime)
                 timeSpan:copyFromArray(timeSpanA)
                 result = elementA
             else
-                _wipe(timeSpan)
+                wipe(timeSpan)
             end
             self:StopProfiling("OvaleBestAction_Compute")
             return timeSpan, result
@@ -457,11 +500,11 @@ local OvaleBestActionClass = __addon.__class(__Debug.OvaleDebug:RegisterDebuggin
             self:StartProfiling("OvaleBestAction_ComputeFunction")
             local timeSpan = GetTimeSpan(element)
             local result
-            local start, ending, value, origin, rate = __Condition.OvaleCondition:EvaluateCondition(element.func, element.positionalParams, element.namedParams, state, atTime)
+            local start, ending, value, origin, rate = OvaleCondition:EvaluateCondition(element.func, element.positionalParams, element.namedParams, state, atTime)
             if start and ending then
                 timeSpan:Copy(start, ending)
             else
-                _wipe(timeSpan)
+                wipe(timeSpan)
             end
             if value then
                 result = SetValue(element, value, origin, rate)
@@ -473,9 +516,9 @@ local OvaleBestActionClass = __addon.__class(__Debug.OvaleDebug:RegisterDebuggin
         self.ComputeGroup = function(element, state, atTime)
             self:StartProfiling("OvaleBestAction_Compute")
             local bestTimeSpan, bestElement, bestCastTime
-            local best = __TimeSpan.newTimeSpan()
-            local current = __TimeSpan.newTimeSpan()
-            for _, node in _ipairs(element.child) do
+            local best = newTimeSpan()
+            local current = newTimeSpan()
+            for _, node in ipairs(element.child) do
                 local currentTimeSpan, currentElement = self:Compute(node, state, atTime)
                 currentTimeSpan:IntersectInterval(atTime, INFINITY, current)
                 if current:Measure() > 0 then
@@ -485,7 +528,7 @@ local OvaleBestActionClass = __addon.__class(__Debug.OvaleDebug:RegisterDebuggin
                     if currentElement then
                         currentCastTime = currentElement.castTime
                     end
-                    local gcd = __FutureState.futureState:GetGCD()
+                    local gcd = futureState:GetGCD()
                     if  not currentCastTime or currentCastTime < gcd then
                         currentCastTime = gcd
                     end
@@ -508,10 +551,10 @@ local OvaleBestActionClass = __addon.__class(__Debug.OvaleDebug:RegisterDebuggin
                     end
                 end
             end
-            __TimeSpan.releaseTimeSpans(best, current)
+            releaseTimeSpans(best, current)
             local timeSpan = GetTimeSpan(element, bestTimeSpan)
             if  not bestTimeSpan then
-                _wipe(timeSpan)
+                wipe(timeSpan)
             end
             if bestElement then
                 local id = bestElement.value
@@ -577,9 +620,9 @@ local OvaleBestActionClass = __addon.__class(__Debug.OvaleDebug:RegisterDebuggin
                 local scratch = timeSpanA:Intersect(timeSpanB)
                 local right = scratch:Complement()
                 left:Intersect(right, timeSpan)
-                __TimeSpan.releaseTimeSpans(left, scratch, right)
+                releaseTimeSpans(left, scratch, right)
             else
-                _wipe(timeSpan)
+                wipe(timeSpan)
             end
             state:Log("[%d]    logical '%s' returns %s", element.nodeId, element.operator, timeSpan)
             self:StopProfiling("OvaleBestAction_Compute")
@@ -587,29 +630,29 @@ local OvaleBestActionClass = __addon.__class(__Debug.OvaleDebug:RegisterDebuggin
         end
         self.ComputeLua = function(element, state, atTime)
             self:StartProfiling("OvaleBestAction_ComputeLua")
-            local value = _loadstring(element.lua)()
+            local value = loadstring(element.lua)()
             state:Log("[%d]    lua returns %s", element.nodeId, value)
             local result
             if value then
                 result = SetValue(element, value)
             end
-            local timeSpan = GetTimeSpan(element, __TimeSpan.UNIVERSE)
+            local timeSpan = GetTimeSpan(element, UNIVERSE)
             self:StopProfiling("OvaleBestAction_ComputeLua")
             return timeSpan, result
         end
         self.ComputeState = function(element, state, atTime)
             self:StartProfiling("OvaleBestAction_Compute")
             local result = element
-            _assert(element.func == "setstate")
+            assert(element.func == "setstate")
             state:Log("[%d]    %s: %s = %s", element.nodeId, element.name, element.positionalParams[1], element.positionalParams[2])
-            local timeSpan = GetTimeSpan(element, __TimeSpan.UNIVERSE)
+            local timeSpan = GetTimeSpan(element, UNIVERSE)
             self:StopProfiling("OvaleBestAction_Compute")
             return timeSpan, result
         end
         self.ComputeValue = function(element, state, atTime)
             self:StartProfiling("OvaleBestAction_Compute")
             state:Log("[%d]    value is %s", element.nodeId, element.value)
-            local timeSpan = GetTimeSpan(element, __TimeSpan.UNIVERSE)
+            local timeSpan = GetTimeSpan(element, UNIVERSE)
             self:StopProfiling("OvaleBestAction_Compute")
             return timeSpan, element
         end
@@ -627,25 +670,25 @@ local OvaleBestActionClass = __addon.__class(__Debug.OvaleDebug:RegisterDebuggin
             ["unless"] = self.ComputeIf,
             ["value"] = self.ComputeValue
         }
-        __Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleBestActionBase)).constructor(self)
+        OvaleBestActionBase.constructor(self)
         self:RegisterMessage("Ovale_ScriptChanged")
     end,
     OnDisable = function(self)
         self:UnregisterMessage("Ovale_ScriptChanged")
     end,
     Ovale_ScriptChanged = function(self)
-        for node, timeSpan in _pairs(self_timeSpan) do
+        for node, timeSpan in pairs(self_timeSpan) do
             timeSpan:Release()
             self_timeSpan[node] = nil
         end
-        for node, value in _pairs(self_value) do
+        for node, value in pairs(self_value) do
             self_valuePool:Release(value)
             self_value[node] = nil
         end
     end,
     StartNewAction = function(self)
-        __State.OvaleState:ResetState()
-        __FutureState.futureState:ApplyInFlightSpells()
+        OvaleState:ResetState()
+        futureState:ApplyInFlightSpells()
         self_serial = self_serial + 1
     end,
     GetActionInfo = function(self, element, state, atTime)
@@ -760,7 +803,7 @@ local OvaleBestActionClass = __addon.__class(__Debug.OvaleDebug:RegisterDebuggin
     ComputeBool = function(self, element, state, atTime)
         local timeSpan, newElement = self:Compute(element, state, atTime)
         if newElement and newElement.type == "value" and newElement.value == 0 and newElement.rate == 0 then
-            return __TimeSpan.EMPTY_SET
+            return EMPTY_SET
         else
             return timeSpan
         end
@@ -770,4 +813,3 @@ local OvaleBestActionClass = __addon.__class(__Debug.OvaleDebug:RegisterDebuggin
     end,
 })
 __exports.OvaleBestAction = OvaleBestActionClass()
-end)

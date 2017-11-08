@@ -1,12 +1,29 @@
-local __addonName, __addon = ...
-            __addon.require("./SpellFlash", { "./Localization", "./Options", "./Ovale", "./Data", "./Future", "./SpellBook", "./Stance", "./State", "AceEvent-3.0" }, function(__exports, __Localization, __Options, __Ovale, __Data, __Future, __SpellBook, __Stance, __State, aceEvent)
-local OvaleSpellFlashBase = __Ovale.Ovale:NewModule("OvaleSpellFlash", aceEvent)
-local _pairs = pairs
-local API_GetTime = GetTime
-local API_UnitHasVehicleUI = UnitHasVehicleUI
-local API_UnitExists = UnitExists
-local API_UnitIsDead = UnitIsDead
-local API_UnitCanAttack = UnitCanAttack
+local __exports = LibStub:NewLibrary("ovale/SpellFlash", 10000)
+if not __exports then return end
+local __class = LibStub:GetLibrary("tslib").newClass
+local __Localization = LibStub:GetLibrary("ovale/Localization")
+local L = __Localization.L
+local __Options = LibStub:GetLibrary("ovale/Options")
+local OvaleOptions = __Options.OvaleOptions
+local __Ovale = LibStub:GetLibrary("ovale/Ovale")
+local Ovale = __Ovale.Ovale
+local __Data = LibStub:GetLibrary("ovale/Data")
+local OvaleData = __Data.OvaleData
+local __Future = LibStub:GetLibrary("ovale/Future")
+local OvaleFuture = __Future.OvaleFuture
+local __SpellBook = LibStub:GetLibrary("ovale/SpellBook")
+local OvaleSpellBook = __SpellBook.OvaleSpellBook
+local __Stance = LibStub:GetLibrary("ovale/Stance")
+local OvaleStance = __Stance.OvaleStance
+local aceEvent = LibStub:GetLibrary("AceEvent-3.0", true)
+local pairs = pairs
+local _G = _G
+local GetTime = GetTime
+local UnitHasVehicleUI = UnitHasVehicleUI
+local UnitExists = UnitExists
+local UnitIsDead = UnitIsDead
+local UnitCanAttack = UnitCanAttack
+local OvaleSpellFlashBase = Ovale:NewModule("OvaleSpellFlash", aceEvent)
 local SpellFlashCore = nil
 local colorMain = {
     r = nil,
@@ -127,143 +144,143 @@ do
             end
 ,
             get = function(info)
-                return __Ovale.Ovale.db.profile.apparence.spellFlash[info[#info]]
+                return Ovale.db.profile.apparence.spellFlash[info[#info]]
             end
 ,
             set = function(info, value)
-                __Ovale.Ovale.db.profile.apparence.spellFlash[info[#info]] = value
-                __Options.OvaleOptions:SendMessage("Ovale_OptionChanged")
+                Ovale.db.profile.apparence.spellFlash[info[#info]] = value
+                OvaleOptions:SendMessage("Ovale_OptionChanged")
             end
 ,
             args = {
                 enabled = {
                     order = 10,
                     type = "toggle",
-                    name = __Localization.L["Enabled"],
-                    desc = __Localization.L["Flash spells on action bars when they are ready to be cast. Requires SpellFlashCore."],
+                    name = L["Enabled"],
+                    desc = L["Flash spells on action bars when they are ready to be cast. Requires SpellFlashCore."],
                     width = "full"
                 },
                 inCombat = {
                     order = 10,
                     type = "toggle",
-                    name = __Localization.L["En combat uniquement"],
+                    name = L["En combat uniquement"],
                     disabled = function()
-                        return  not SpellFlashCore or  not __Ovale.Ovale.db.profile.apparence.spellFlash.enabled
+                        return  not SpellFlashCore or  not Ovale.db.profile.apparence.spellFlash.enabled
                     end
 
                 },
                 hasTarget = {
                     order = 20,
                     type = "toggle",
-                    name = __Localization.L["Si cible uniquement"],
+                    name = L["Si cible uniquement"],
                     disabled = function()
-                        return  not SpellFlashCore or  not __Ovale.Ovale.db.profile.apparence.spellFlash.enabled
+                        return  not SpellFlashCore or  not Ovale.db.profile.apparence.spellFlash.enabled
                     end
 
                 },
                 hasHostileTarget = {
                     order = 30,
                     type = "toggle",
-                    name = __Localization.L["Cacher si cible amicale ou morte"],
+                    name = L["Cacher si cible amicale ou morte"],
                     disabled = function()
-                        return  not SpellFlashCore or  not __Ovale.Ovale.db.profile.apparence.spellFlash.enabled
+                        return  not SpellFlashCore or  not Ovale.db.profile.apparence.spellFlash.enabled
                     end
 
                 },
                 hideInVehicle = {
                     order = 40,
                     type = "toggle",
-                    name = __Localization.L["Cacher dans les véhicules"],
+                    name = L["Cacher dans les véhicules"],
                     disabled = function()
-                        return  not SpellFlashCore or  not __Ovale.Ovale.db.profile.apparence.spellFlash.enabled
+                        return  not SpellFlashCore or  not Ovale.db.profile.apparence.spellFlash.enabled
                     end
 
                 },
                 brightness = {
                     order = 50,
                     type = "range",
-                    name = __Localization.L["Flash brightness"],
+                    name = L["Flash brightness"],
                     min = 0,
                     max = 1,
                     bigStep = 0.01,
                     isPercent = true,
                     disabled = function()
-                        return  not SpellFlashCore or  not __Ovale.Ovale.db.profile.apparence.spellFlash.enabled
+                        return  not SpellFlashCore or  not Ovale.db.profile.apparence.spellFlash.enabled
                     end
 
                 },
                 size = {
                     order = 60,
                     type = "range",
-                    name = __Localization.L["Flash size"],
+                    name = L["Flash size"],
                     min = 0,
                     max = 3,
                     bigStep = 0.01,
                     isPercent = true,
                     disabled = function()
-                        return  not SpellFlashCore or  not __Ovale.Ovale.db.profile.apparence.spellFlash.enabled
+                        return  not SpellFlashCore or  not Ovale.db.profile.apparence.spellFlash.enabled
                     end
 
                 },
                 threshold = {
                     order = 70,
                     type = "range",
-                    name = __Localization.L["Flash threshold"],
-                    desc = __Localization.L["Time (in milliseconds) to begin flashing the spell to use before it is ready."],
+                    name = L["Flash threshold"],
+                    desc = L["Time (in milliseconds) to begin flashing the spell to use before it is ready."],
                     min = 0,
                     max = 1000,
                     step = 1,
                     bigStep = 50,
                     disabled = function()
-                        return  not SpellFlashCore or  not __Ovale.Ovale.db.profile.apparence.spellFlash.enabled
+                        return  not SpellFlashCore or  not Ovale.db.profile.apparence.spellFlash.enabled
                     end
 
                 },
                 colors = {
                     order = 80,
                     type = "group",
-                    name = __Localization.L["Colors"],
+                    name = L["Colors"],
                     inline = true,
                     disabled = function()
-                        return  not SpellFlashCore or  not __Ovale.Ovale.db.profile.apparence.spellFlash.enabled
+                        return  not SpellFlashCore or  not Ovale.db.profile.apparence.spellFlash.enabled
                     end
 ,
                     get = function(info)
-                        local color = __Ovale.Ovale.db.profile.apparence.spellFlash[info[#info]]
+                        local color = Ovale.db.profile.apparence.spellFlash[info[#info]]
                         return color.r, color.g, color.b, 1
                     end
 ,
                     set = function(info, r, g, b, a)
-                        local color = __Ovale.Ovale.db.profile.apparence.spellFlash[info[#info]]
+                        local color = Ovale.db.profile.apparence.spellFlash[info[#info]]
                         color.r = r
                         color.g = g
                         color.b = b
-                        __Options.OvaleOptions:SendMessage("Ovale_OptionChanged")
+                        OvaleOptions:SendMessage("Ovale_OptionChanged")
                     end
 ,
                     args = {
                         colorMain = {
                             order = 10,
                             type = "color",
-                            name = __Localization.L["Main attack"],
+                            name = L["Main attack"],
                             hasAlpha = false
                         },
                         colorCd = {
                             order = 20,
                             type = "color",
-                            name = __Localization.L["Long cooldown abilities"],
+                            name = L["Long cooldown abilities"],
                             hasAlpha = false
                         },
                         colorShortCd = {
                             order = 30,
                             type = "color",
-                            name = __Localization.L["Short cooldown abilities"],
+                            name = L["Short cooldown abilities"],
                             hasAlpha = false
                         },
                         colorInterrupt = {
                             order = 40,
                             type = "color",
-                            name = __Localization.L["Interrupts"],
+                            name = L["Interrupts"],
                             hasAlpha = false
                         }
                     }
@@ -271,15 +288,15 @@ do
             }
         }
     }
-    for k, v in _pairs(defaultDB) do
-        __Options.OvaleOptions.defaultDB.profile.apparence[k] = v
+    for k, v in pairs(defaultDB) do
+        OvaleOptions.defaultDB.profile.apparence[k] = v
     end
-    for k, v in _pairs(options) do
-        __Options.OvaleOptions.options.args.apparence.args[k] = v
+    for k, v in pairs(options) do
+        OvaleOptions.options.args.apparence.args[k] = v
     end
-    __Options.OvaleOptions:RegisterOptions(__exports.OvaleSpellFlash)
+    OvaleOptions:RegisterOptions(__exports.OvaleSpellFlash)
 end
-local OvaleSpellFlashClass = __addon.__class(OvaleSpellFlashBase, {
+local OvaleSpellFlashClass = __class(OvaleSpellFlashBase, {
     constructor = function(self)
         OvaleSpellFlashBase.constructor(self)
         SpellFlashCore = _G["SpellFlashCore"]
@@ -291,7 +308,7 @@ local OvaleSpellFlashClass = __addon.__class(OvaleSpellFlashBase, {
         self:UnregisterMessage("Ovale_OptionChanged")
     end,
     Ovale_OptionChanged = function(self)
-        local db = __Ovale.Ovale.db.profile.apparence.spellFlash
+        local db = Ovale.db.profile.apparence.spellFlash
         colorMain.r = db.colorMain.r
         colorMain.g = db.colorMain.g
         colorMain.b = db.colorMain.b
@@ -307,33 +324,33 @@ local OvaleSpellFlashClass = __addon.__class(OvaleSpellFlashBase, {
     end,
     IsSpellFlashEnabled = function(self)
         local enabled = (SpellFlashCore ~= nil)
-        local db = __Ovale.Ovale.db.profile.apparence.spellFlash
+        local db = Ovale.db.profile.apparence.spellFlash
         if enabled and  not db.enabled then
             enabled = false
         end
-        if enabled and db.inCombat and  not __Future.OvaleFuture.inCombat then
+        if enabled and db.inCombat and  not OvaleFuture.inCombat then
             enabled = false
         end
-        if enabled and db.hideInVehicle and API_UnitHasVehicleUI("player") then
+        if enabled and db.hideInVehicle and UnitHasVehicleUI("player") then
             enabled = false
         end
-        if enabled and db.hasTarget and  not API_UnitExists("target") then
+        if enabled and db.hasTarget and  not UnitExists("target") then
             enabled = false
         end
-        if enabled and db.hasHostileTarget and (API_UnitIsDead("target") or  not API_UnitCanAttack("player", "target")) then
+        if enabled and db.hasHostileTarget and (UnitIsDead("target") or  not UnitCanAttack("player", "target")) then
             enabled = false
         end
         return enabled
     end,
     Flash = function(self, state, node, element, start, now)
-        local db = __Ovale.Ovale.db.profile.apparence.spellFlash
-        now = now or API_GetTime()
+        local db = Ovale.db.profile.apparence.spellFlash
+        now = now or GetTime()
         if self:IsSpellFlashEnabled() and start and start - now <= db.threshold / 1000 then
             if element and element.type == "action" then
                 local spellId, spellInfo
                 if element.lowername == "spell" then
                     spellId = element.positionalParams[1]
-                    spellInfo = __Data.OvaleData.spellInfo[spellId]
+                    spellInfo = OvaleData.spellInfo[spellId]
                 end
                 local interrupt = spellInfo and spellInfo.interrupt
                 local color = nil
@@ -358,10 +375,10 @@ local OvaleSpellFlashClass = __addon.__class(OvaleSpellFlashBase, {
                 end
                 local brightness = db.brightness * 100
                 if element.lowername == "spell" then
-                    if __Stance.OvaleStance:IsStanceSpell(spellId) then
+                    if OvaleStance:IsStanceSpell(spellId) then
                         SpellFlashCore:FlashForm(spellId, color, size, brightness)
                     end
-                    if __SpellBook.OvaleSpellBook:IsPetSpell(spellId) then
+                    if OvaleSpellBook:IsPetSpell(spellId) then
                         SpellFlashCore:FlashPet(spellId, color, size, brightness)
                     end
                     SpellFlashCore:FlashAction(spellId, color, size, brightness)
@@ -373,4 +390,3 @@ local OvaleSpellFlashClass = __addon.__class(OvaleSpellFlashBase, {
         end
     end,
 })
-end)

@@ -1,6 +1,8 @@
-local __addonName, __addon = ...
-            __addon.require("./scripts/ovale_shaman_spells", { "./Scripts" }, function(__exports, __Scripts)
-do
+local __exports = LibStub:NewLibrary("ovale/scripts/ovale_shaman_spells", 10000)
+if not __exports then return end
+local __Scripts = LibStub:GetLibrary("ovale/Scripts")
+local OvaleScripts = __Scripts.OvaleScripts
+__exports.register = function()
     local name = "ovale_shaman_spells"
     local desc = "[7.0] Ovale: Shaman spells"
     local code = [[
@@ -171,7 +173,8 @@ Define(landslide_talent 20)
 Define(lightning_rod_talent 20)
 Define(overcharge_talent 14)
 Define(storm_elemental_talent 17)
-	
+Define(aftershock_talent 10)
+
 # Artifact traits
 Define(alpha_wolf 198434)
 Define(seismic_storm 238141)
@@ -187,9 +190,9 @@ Define(power_of_the_maelstrom_buff 191877)
 # Legendary items
 Define(echoes_of_the_great_sundering_buff 208723)
 	SpellAddBuff(earthquake echoes_of_the_great_sundering_buff=0)
-
+Define(smoldering_heart 151819)
+Define(the_deceivers_blood_pact 137035)
 	
 ]]
-    __Scripts.OvaleScripts:RegisterScript("SHAMAN", nil, name, desc, code, "include")
+    OvaleScripts:RegisterScript("SHAMAN", nil, name, desc, code, "include")
 end
-end)

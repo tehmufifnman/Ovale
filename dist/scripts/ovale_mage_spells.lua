@@ -1,6 +1,8 @@
-local __addonName, __addon = ...
-            __addon.require("./scripts/ovale_mage_spells", { "./Scripts" }, function(__exports, __Scripts)
-do
+local __exports = LibStub:NewLibrary("ovale/scripts/ovale_mage_spells", 10000)
+if not __exports then return end
+local __Scripts = LibStub:GetLibrary("ovale/Scripts")
+local OvaleScripts = __Scripts.OvaleScripts
+__exports.register = function()
     local name = "ovale_mage_spells"
     local desc = "[7.0] Ovale: Mage spells"
     local code = [[
@@ -80,6 +82,7 @@ Define(dragons_breath 31661)
 Define(ebonbolt 214634)
 	SpellInfo(ebonbolt cd=45 tag=main)
 	SpellAddBuff(ebonbolt brain_freeze_buff=1)
+Define(erupting_infernal_core_buff 248147)
 Define(evocation 12051)
 	SpellInfo(evocation cd=120 channel=3 haste=spell)
 	SpellInfo(evocation addcd=-30 if_spell=improved_evocation)
@@ -118,6 +121,7 @@ Define(frostfire_bolt 44614)
 	SpellInfo(frostfire_bolt travel_time=1)
 	SpellAddBuff(frostfire_bolt brain_freeze_buff=0 if_spell=brain_freeze)
 	SpellAddBuff(frostfire_bolt ice_floes_buff=0 if_spell=ice_floes)
+Define(frozen_mass_buff 242253)
 Define(frozen_orb 84714)
 	SpellInfo(frozen_orb cd=60)
 Define(frozen_orb_debuff 84721)
@@ -274,6 +278,7 @@ Define(splitting_ice_talent 12)
 Define(summon_arcane_familiar 205022)
 	SpellInfo(summon_arcane_familiar cd=10)
 Define(unstable_magic_talent 17)
+Define(firestarter_talent 3)
 	
 # Artifacts
 Define(mark_of_aluneth 210726)
@@ -285,6 +290,10 @@ Define(phoenix_reborn 215773)
 Define(rhonins_assaulting_armwraps_buff 208081)
 Define(zannesu_journey_buff 226852)
 	SpellAddBuff(blizzard zannesu_journey_buff=-1)
+Define(mystic_kilt_of_the_rune_master 132451)
+Define(mantle_of_the_first_kirin_tor 151808)
+Define(lady_vashjs_grasp 132411)
+Define(shard_of_the_exodar 132410)
 
 # Non-default tags for OvaleSimulationCraft.
 	SpellInfo(arcane_orb tag=shortcd)
@@ -299,6 +308,5 @@ Define(zannesu_journey_buff 226852)
 ### Pyroblast
 AddFunction FirePyroblastHitDamage asValue=1 { 2.423 * Spellpower() * { BuffPresent(pyroblast_buff asValue=1) * 1.25 } }
 ]]
-    __Scripts.OvaleScripts:RegisterScript("MAGE", nil, name, desc, code, "include")
+    OvaleScripts:RegisterScript("MAGE", nil, name, desc, code, "include")
 end
-end)

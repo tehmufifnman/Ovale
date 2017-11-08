@@ -10,7 +10,7 @@ import { ipairs, next, pairs, wipe } from "@wowts/lua";
 import { insert, sort } from "@wowts/table";
 import { IsInGroup, IsInGuild, IsInRaid, LE_PARTY_CATEGORY_INSTANCE } from "@wowts/wow-mock";
 
-let OvaleVersionBase = Ovale.NewModule("OvaleVersion", AceComm, AceSerializer, AceTimer);
+let OvaleVersionBase = OvaleDebug.RegisterDebugging(Ovale.NewModule("OvaleVersion", AceComm, AceSerializer, AceTimer));
 export let OvaleVersion: OvaleVersionClass;
 let self_printTable = {
 }
@@ -42,7 +42,7 @@ let REPOSITORY_KEYWORD = `@${"project-version"}@`;
     }
     OvaleOptions.RegisterOptions(OvaleVersion);
 }
-class OvaleVersionClass extends OvaleDebug.RegisterDebugging(OvaleVersionBase) {
+class OvaleVersionClass extends OvaleVersionBase {
     version = (OVALE_VERSION == REPOSITORY_KEYWORD) && "development version" || OVALE_VERSION;
     warned = false;
     

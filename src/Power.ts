@@ -13,11 +13,11 @@ import { lastSpell } from "./LastSpell";
 import { DataState, dataState } from "./DataState";
 import aceEvent from "@wowts/ace_event-3.0";
 import { ceil, huge as INFINITY, floor } from "@wowts/math";
-import { pairs, wipe, type, LuaObj, lualength } from "@wowts/lua";
+import { pairs, wipe, type, LuaObj, lualength, tostring } from "@wowts/lua";
 import { concat } from "@wowts/table";
 import { GetPowerRegen, GetSpellPowerCost, GetTime, UnitPower, UnitPowerMax, UnitPowerType, SPELL_POWER_ALTERNATE_POWER, SPELL_POWER_CHI, CHI_COST, SPELL_POWER_COMBO_POINTS, COMBO_POINTS_COST, SPELL_POWER_ENERGY, ENERGY_COST, SPELL_POWER_FOCUS, FOCUS_COST, SPELL_POWER_HOLY_POWER, HOLY_POWER_COST, SPELL_POWER_MANA, MANA_COST, SPELL_POWER_RAGE, RAGE_COST, SPELL_POWER_RUNIC_POWER, RUNIC_POWER_COST, SPELL_POWER_SOUL_SHARDS, SOUL_SHARDS_COST, SPELL_POWER_LUNAR_POWER, LUNAR_POWER_COST, SPELL_POWER_INSANITY, INSANITY_COST, SPELL_POWER_MAELSTROM, MAELSTROM_COST, SPELL_POWER_ARCANE_CHARGES, ARCANE_CHARGES_COST, SPELL_POWER_PAIN, PAIN_COST, SPELL_POWER_FURY, FURY_COST } from "@wowts/wow-mock";
 
-let OvalePowerBase = Ovale.NewModule("OvalePower", aceEvent);
+let OvalePowerBase = OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(Ovale.NewModule("OvalePower", aceEvent)));
 export let OvalePower:OvalePowerClass;
 
 // let self_updateSpellcastInfo = {
@@ -70,7 +70,7 @@ function isString(s: any): s is string {
     return type(s) == "string";
 }
 
-class OvalePowerClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(OvalePowerBase)) {
+class OvalePowerClass extends OvalePowerBase {
     powerType = undefined;
     powerRate:number = undefined;
     power = {}
@@ -475,7 +475,13 @@ class OvalePowerClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.Registe
                 this.Log("    Require %f %s at time=%f: %s", cost, powerType, atTime, result);
             }
         } else {
-            Ovale.OneTimeMessage("Warning: requirement '%s' is missing a cost argument.", requirement);
+            Ovale.OneTimeMessage("Warning: requirement '%s' power is missing a cost argument.", requirement);
+            Ovale.OneTimeMessage(tostring(index));
+            if (type(tokens) == "table") {
+                for (const [k,v] of pairs(tokens)) {
+                    Ovale.OneTimeMessage(`${k} = ${tostring(v)}`);
+                }
+            }
         }
         return [verified, requirement, index];
     }

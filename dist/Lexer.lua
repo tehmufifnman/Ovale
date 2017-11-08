@@ -1,15 +1,18 @@
-local __addonName, __addon = ...
-            __addon.require("./Lexer", { "./Queue" }, function(__exports, __Queue)
-local _pairs = pairs
-local _ipairs = ipairs
+local __exports = LibStub:NewLibrary("ovale/Lexer", 10000)
+if not __exports then return end
+local __class = LibStub:GetLibrary("tslib").newClass
+local __Queue = LibStub:GetLibrary("ovale/Queue")
+local OvaleQueue = __Queue.OvaleQueue
+local pairs = pairs
+local ipairs = ipairs
 local wrap = coroutine.wrap
-local strfind = string.find
-local strsub = string.sub
-__exports.OvaleLexer = __addon.__class(nil, {
+local find = string.find
+local sub = string.sub
+__exports.OvaleLexer = __class(nil, {
     constructor = function(self, name, stream, matches, filter)
         self.name = name
-        self.typeQueue = __Queue.OvaleQueue("typeQueue")
-        self.tokenQueue = __Queue.OvaleQueue("tokenQueue")
+        self.typeQueue = OvaleQueue("typeQueue")
+        self.tokenQueue = OvaleQueue("tokenQueue")
         self.endOfStream = nil
         self.iterator = self:scan(stream, matches, filter)
     end,
@@ -22,12 +25,12 @@ __exports.OvaleLexer = __addon.__class(nil, {
             local sz = #s
             local idx = 1
             while true do
-                for _, m in _ipairs(matches) do
+                for _, m in ipairs(matches) do
                     local pat = m[1]
                     local fun = m[2]
-                    local i1, i2 = strfind(s, pat, idx)
+                    local i1, i2 = find(s, pat, idx)
                     if i1 then
-                        local tok = strsub(s, i1, i2)
+                        local tok = sub(s, i1, i2)
                         idx = i2 + 1
                         if  not filter or (fun ~= filter.comments and fun ~= filter.space) then
                             me.finished = idx > sz
@@ -43,7 +46,7 @@ __exports.OvaleLexer = __addon.__class(nil, {
         return wrap(lex)
     end,
     Release = function(self)
-        for key in _pairs(self) do
+        for key in pairs(self) do
             self[key] = nil
         end
     end,
@@ -90,4 +93,3 @@ __exports.OvaleLexer = __addon.__class(nil, {
         return tokenType, token
     end,
 })
-end)

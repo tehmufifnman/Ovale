@@ -1,6 +1,8 @@
-local __addonName, __addon = ...
-            __addon.require("./scripts/ovale_druid_spells", { "./Scripts" }, function(__exports, __Scripts)
-do
+local __exports = LibStub:NewLibrary("ovale/scripts/ovale_druid_spells", 10000)
+if not __exports then return end
+local __Scripts = LibStub:GetLibrary("ovale/Scripts")
+local OvaleScripts = __Scripts.OvaleScripts
+__exports.register = function()
     local name = "ovale_druid_spells"
     local desc = "[7.3] Ovale: Druid spells"
     local code = [[
@@ -15,6 +17,10 @@ Define(ashamanes_frenzy 210722)
 	SpellInfo(ashamanes_frenzy cd=75 combo=3)
 	SpellAddBuff(ashamanes_frenzy bloodtalons_buff=-1)
 Define(ashamanes_rip_debuff 224435)
+Define(astral_acceleration 242232)
+	SpellAddBuff(astral_acceleration astral_acceleration_buff=1)
+Define(astral_acceleration_buff 242232)
+	SpellInfo(astral_acceleration_buff duration=20)
 Define(astral_communion 202359)
 	SpellInfo(astral_communion cd=80 astralpower=-75)
 Define(astral_influence 197524)
@@ -289,6 +295,7 @@ Define(skull_bash 106839)
 	SpellInfo(skull_bash cd=15 gcd=0 offgcd=1 interrupt=1)
 Define(solar_beam 78675)
 	SpellInfo(solar_beam cd=60 gcd=0 offgcd=1 interrupt=1)
+Define(solar_solstice_buff 252767)
 Define(solar_wrath 190984)
 	SpellInfo(solar_wrath travel_time=1 astralpower=-8)
 	SpellRequire(solar_wrath astralpower_percent 125=buff,blessing_of_elune_buff)
@@ -382,6 +389,7 @@ Define(wild_charge_cat 49376)
 # Legendary items
 Define(ailuro_pouncers 137024)
 Define(elizes_everlasting_encasement 137067)
+Define(lady_and_the_child 144295)
 Define(luffa_wrappings 137056)
 Define(the_emerald_dreamcatcher 137062)
 Define(the_emerald_dreamcatcher_buff 224706)
@@ -389,6 +397,7 @@ Define(the_emerald_dreamcatcher_buff 224706)
 Define(oneths_overconfidence_buff 209407)
 	SpellRequire(starfall astralpower 0=buff,oneths_overconfidence_buff)
 	SpellAddBuff(starfall oneths_overconfidence_buff=-1)
+Define(oneths_intuition_buff 209406)
 
 # Talents
 Define(astral_communion_talent 17)
@@ -430,6 +439,5 @@ Define(typhoon_talent 12)
 Define(warrior_of_elune_talent 2)
 Define(wild_charge_talent 6)
 	]]
-    __Scripts.OvaleScripts:RegisterScript("DRUID", nil, name, desc, code, "include")
+    OvaleScripts:RegisterScript("DRUID", nil, name, desc, code, "include")
 end
-end)

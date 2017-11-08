@@ -1,12 +1,29 @@
-local __addonName, __addon = ...
-            __addon.require("./Health", { "./Debug", "./Profiler", "./Ovale", "./GUID", "./State", "./Requirement", "AceEvent-3.0" }, function(__exports, __Debug, __Profiler, __Ovale, __GUID, __State, __Requirement, aceEvent)
-local OvaleHealthBase = __Ovale.Ovale:NewModule("OvaleHealth", aceEvent)
-local strsub = string.sub
-local _tonumber = tonumber
-local _wipe = wipe
-local API_UnitHealth = UnitHealth
-local API_UnitHealthMax = UnitHealthMax
-local INFINITY = math.huge
+local __exports = LibStub:NewLibrary("ovale/Health", 10000)
+if not __exports then return end
+local __class = LibStub:GetLibrary("tslib").newClass
+local __Debug = LibStub:GetLibrary("ovale/Debug")
+local OvaleDebug = __Debug.OvaleDebug
+local __Profiler = LibStub:GetLibrary("ovale/Profiler")
+local OvaleProfiler = __Profiler.OvaleProfiler
+local __Ovale = LibStub:GetLibrary("ovale/Ovale")
+local Ovale = __Ovale.Ovale
+local __GUID = LibStub:GetLibrary("ovale/GUID")
+local OvaleGUID = __GUID.OvaleGUID
+local __State = LibStub:GetLibrary("ovale/State")
+local OvaleState = __State.OvaleState
+local baseState = __State.baseState
+local __Requirement = LibStub:GetLibrary("ovale/Requirement")
+local RegisterRequirement = __Requirement.RegisterRequirement
+local UnregisterRequirement = __Requirement.UnregisterRequirement
+local aceEvent = LibStub:GetLibrary("AceEvent-3.0", true)
+local sub = string.sub
+local tonumber = tonumber
+local wipe = wipe
+local UnitHealth = UnitHealth
+local UnitHealthMax = UnitHealthMax
+local huge = math.huge
+local OvaleHealthBase = Ovale:NewModule("OvaleHealth", aceEvent)
+local INFINITY = huge
 local CLEU_DAMAGE_EVENT = {
     DAMAGE_SHIELD = true,
     DAMAGE_SPLIT = true,
@@ -21,7 +38,8 @@ local CLEU_HEAL_EVENT = {
     SPELL_HEAL = true,
     SPELL_PERIODIC_HEAL = true
 }
-local OvaleHealthClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleHealthBase)), {
+local OvaleHealthClassBase = OvaleDebug:RegisterDebugging(OvaleProfiler:RegisterProfiling(OvaleHealthBase))
+local OvaleHealthClass = __class(OvaleHealthClassBase, {
     constructor = function(self)
         self.health = {}
         self.maxHealth = {}
@@ -29,20 +47,20 @@ local OvaleHealthClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(__
         self.totalHealing = {}
         self.firstSeen = {}
         self.lastUpdated = {}
-        __Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleHealthBase)).constructor(self)
+        OvaleHealthClassBase.constructor(self)
         self:RegisterEvent("PLAYER_REGEN_DISABLED")
         self:RegisterEvent("PLAYER_REGEN_ENABLED")
         self:RegisterEvent("UNIT_HEALTH_FREQUENT", "UpdateHealth")
         self:RegisterEvent("UNIT_MAXHEALTH", "UpdateHealth")
         self:RegisterMessage("Ovale_UnitChanged")
-        __Requirement.RegisterRequirement("health_pct", "RequireHealthPercentHandler", self)
-        __Requirement.RegisterRequirement("pet_health_pct", "RequireHealthPercentHandler", self)
-        __Requirement.RegisterRequirement("target_health_pct", "RequireHealthPercentHandler", self)
+        RegisterRequirement("health_pct", "RequireHealthPercentHandler", self)
+        RegisterRequirement("pet_health_pct", "RequireHealthPercentHandler", self)
+        RegisterRequirement("target_health_pct", "RequireHealthPercentHandler", self)
     end,
     OnDisable = function(self)
-        __Requirement.UnregisterRequirement("health_pct")
-        __Requirement.UnregisterRequirement("pet_health_pct")
-        __Requirement.UnregisterRequirement("target_health_pct")
+        UnregisterRequirement("health_pct")
+        UnregisterRequirement("pet_health_pct")
+        UnregisterRequirement("target_health_pct")
         self:UnregisterEvent("PLAYER_REGEN_ENABLED")
         self:UnregisterEvent("PLAYER_TARGET_CHANGED")
         self:UnregisterEvent("UNIT_HEALTH_FREQUENT")
@@ -86,10 +104,10 @@ local OvaleHealthClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(__
     end,
     PLAYER_REGEN_ENABLED = function(self, event)
         self:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-        _wipe(self.totalDamage)
-        _wipe(self.totalHealing)
-        _wipe(self.firstSeen)
-        _wipe(self.lastUpdated)
+        wipe(self.totalDamage)
+        wipe(self.totalHealing)
+        wipe(self.firstSeen)
+        wipe(self.lastUpdated)
     end,
     Ovale_UnitChanged = function(self, event, unitId, guid)
         self:StartProfiling("Ovale_UnitChanged")
@@ -105,15 +123,15 @@ local OvaleHealthClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(__
             return 
         end
         self:StartProfiling("OvaleHealth_UpdateHealth")
-        local func = API_UnitHealth
+        local func = UnitHealth
         local db = self.health
         if event == "UNIT_MAXHEALTH" then
-            func = API_UnitHealthMax
+            func = UnitHealthMax
             db = self.maxHealth
         end
         local amount = func(unitId)
         if amount then
-            local guid = __GUID.OvaleGUID:UnitGUID(unitId)
+            local guid = OvaleGUID:UnitGUID(unitId)
             self:Debug(event, unitId, guid, amount)
             if guid then
                 if amount > 0 then
@@ -123,7 +141,7 @@ local OvaleHealthClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(__
                     self.firstSeen[guid] = nil
                     self.lastUpdated[guid] = nil
                 end
-                __Ovale.Ovale.refreshNeeded[guid] = true
+                Ovale.refreshNeeded[guid] = true
             end
         end
         self:StopProfiling("OvaleHealth_UpdateHealth")
@@ -131,12 +149,12 @@ local OvaleHealthClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(__
     UnitHealth = function(self, unitId, guid)
         local amount
         if unitId then
-            guid = guid or __GUID.OvaleGUID:UnitGUID(unitId)
+            guid = guid or OvaleGUID:UnitGUID(unitId)
             if guid then
                 if unitId == "target" or unitId == "focus" then
                     amount = self.health[guid] or 0
                 else
-                    amount = API_UnitHealth(unitId)
+                    amount = UnitHealth(unitId)
                     self.health[guid] = amount
                 end
             else
@@ -148,12 +166,12 @@ local OvaleHealthClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(__
     UnitHealthMax = function(self, unitId, guid)
         local amount
         if unitId then
-            guid = guid or __GUID.OvaleGUID:UnitGUID(unitId)
+            guid = guid or OvaleGUID:UnitGUID(unitId)
             if guid then
                 if unitId == "target" or unitId == "focus" then
                     amount = self.maxHealth[guid] or 0
                 else
-                    amount = API_UnitHealthMax(unitId)
+                    amount = UnitHealthMax(unitId)
                     self.maxHealth[guid] = amount
                 end
             else
@@ -165,7 +183,7 @@ local OvaleHealthClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(__
     UnitTimeToDie = function(self, unitId, guid)
         self:StartProfiling("OvaleHealth_UnitTimeToDie")
         local timeToDie = INFINITY
-        guid = guid or __GUID.OvaleGUID:UnitGUID(unitId)
+        guid = guid or OvaleGUID:UnitGUID(unitId)
         if guid then
             local health = self:UnitHealth(unitId, guid)
             local maxHealth = self:UnitHealthMax(unitId, guid)
@@ -196,25 +214,25 @@ local OvaleHealthClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(__
         end
         if threshold then
             local isBang = false
-            if strsub(threshold, 1, 1) == "!" then
+            if sub(threshold, 1, 1) == "!" then
                 isBang = true
-                threshold = strsub(threshold, 2)
+                threshold = sub(threshold, 2)
             end
-            threshold = _tonumber(threshold) or 0
+            threshold = tonumber(threshold) or 0
             local guid, unitId
-            if strsub(requirement, 1, 7) == "target_" then
+            if sub(requirement, 1, 7) == "target_" then
                 if targetGUID then
                     guid = targetGUID
-                    unitId = __GUID.OvaleGUID:GUIDUnit(guid)
+                    unitId = OvaleGUID:GUIDUnit(guid)
                 else
-                    unitId = __State.baseState.defaultTarget or "target"
+                    unitId = baseState.defaultTarget or "target"
                 end
-            elseif strsub(requirement, 1, 4) == "pet_" then
+            elseif sub(requirement, 1, 4) == "pet_" then
                 unitId = "pet"
             else
                 unitId = "player"
             end
-            guid = guid or __GUID.OvaleGUID:UnitGUID(unitId)
+            guid = guid or OvaleGUID:UnitGUID(unitId)
             local health = __exports.OvaleHealth:UnitHealth(unitId, guid) or 0
             local maxHealth = __exports.OvaleHealth:UnitHealthMax(unitId, guid) or 0
             local healthPercent = (maxHealth > 0) and (health / maxHealth * 100) or 100
@@ -228,12 +246,12 @@ local OvaleHealthClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(__
                 self:Log("    Require %s health <= %f%% (%f) at time=%f: %s", unitId, threshold, healthPercent, atTime, result)
             end
         else
-            __Ovale.Ovale:OneTimeMessage("Warning: requirement '%s' is missing a threshold argument.", requirement)
+            Ovale:OneTimeMessage("Warning: requirement '%s' is missing a threshold argument.", requirement)
         end
         return verified, requirement, index
     end,
 })
-local HealthState = __addon.__class(nil, {
+local HealthState = __class(nil, {
     CleanState = function(self)
     end,
     InitializeState = function(self)
@@ -245,6 +263,5 @@ local HealthState = __addon.__class(nil, {
     end,
 })
 __exports.healthState = HealthState()
-__State.OvaleState:RegisterState(__exports.healthState)
+OvaleState:RegisterState(__exports.healthState)
 __exports.OvaleHealth = OvaleHealthClass()
-end)

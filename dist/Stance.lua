@@ -1,26 +1,39 @@
-local __addonName, __addon = ...
-            __addon.require("./Stance", { "./Localization", "./Debug", "./Profiler", "./Ovale", "./Requirement", "AceEvent-3.0" }, function(__exports, __Localization, __Debug, __Profiler, __Ovale, __Requirement, aceEvent)
-local OvaleStanceBase = __Ovale.Ovale:NewModule("OvaleStance", aceEvent)
-local _pairs = pairs
-local substr = string.sub
-local tconcat = table.concat
-local tinsert = table.insert
-local _tonumber = tonumber
-local tsort = table.sort
-local _type = type
-local _wipe = wipe
-local API_GetNumShapeshiftForms = GetNumShapeshiftForms
-local API_GetShapeshiftForm = GetShapeshiftForm
-local API_GetShapeshiftFormInfo = GetShapeshiftFormInfo
-local API_GetSpellInfo = GetSpellInfo
-local druidCatForm = API_GetSpellInfo(768)
-local druidTravelForm = API_GetSpellInfo(783)
-local druidAquaticForm = API_GetSpellInfo(1066)
-local druidBearForm = API_GetSpellInfo(5487)
-local druidMoonkinForm = API_GetSpellInfo(24858)
-local druid_flight_form = API_GetSpellInfo(33943)
-local druid_swift_flight_form = API_GetSpellInfo(40120)
-local rogue_stealth = API_GetSpellInfo(1784)
+local __exports = LibStub:NewLibrary("ovale/Stance", 10000)
+if not __exports then return end
+local __class = LibStub:GetLibrary("tslib").newClass
+local __Localization = LibStub:GetLibrary("ovale/Localization")
+local L = __Localization.L
+local __Debug = LibStub:GetLibrary("ovale/Debug")
+local OvaleDebug = __Debug.OvaleDebug
+local __Profiler = LibStub:GetLibrary("ovale/Profiler")
+local OvaleProfiler = __Profiler.OvaleProfiler
+local __Ovale = LibStub:GetLibrary("ovale/Ovale")
+local Ovale = __Ovale.Ovale
+local __Requirement = LibStub:GetLibrary("ovale/Requirement")
+local RegisterRequirement = __Requirement.RegisterRequirement
+local UnregisterRequirement = __Requirement.UnregisterRequirement
+local aceEvent = LibStub:GetLibrary("AceEvent-3.0", true)
+local pairs = pairs
+local tonumber = tonumber
+local type = type
+local wipe = wipe
+local sub = string.sub
+local concat = table.concat
+local insert = table.insert
+local sort = table.sort
+local GetNumShapeshiftForms = GetNumShapeshiftForms
+local GetShapeshiftForm = GetShapeshiftForm
+local GetShapeshiftFormInfo = GetShapeshiftFormInfo
+local GetSpellInfo = GetSpellInfo
+local OvaleStanceBase = OvaleDebug:RegisterDebugging(OvaleProfiler:RegisterProfiling(Ovale:NewModule("OvaleStance", aceEvent)))
+local druidCatForm = GetSpellInfo(768)
+local druidTravelForm = GetSpellInfo(783)
+local druidAquaticForm = GetSpellInfo(1066)
+local druidBearForm = GetSpellInfo(5487)
+local druidMoonkinForm = GetSpellInfo(24858)
+local druid_flight_form = GetSpellInfo(33943)
+local druid_swift_flight_form = GetSpellInfo(40120)
+local rogue_stealth = GetSpellInfo(1784)
 local SPELL_NAME_TO_STANCE = {
     [druidCatForm] = "druid_cat_form",
     [druidTravelForm] = "druid_travel_form",
@@ -33,18 +46,18 @@ local SPELL_NAME_TO_STANCE = {
 }
 local STANCE_NAME = {}
 do
-    for _, name in _pairs(SPELL_NAME_TO_STANCE) do
+    for _, name in pairs(SPELL_NAME_TO_STANCE) do
         STANCE_NAME[name] = true
     end
 end
 do
     local debugOptions = {
         stance = {
-            name = __Localization.L["Stances"],
+            name = L["Stances"],
             type = "group",
             args = {
                 stance = {
-                    name = __Localization.L["Stances"],
+                    name = L["Stances"],
                     type = "input",
                     multiline = 25,
                     width = "full",
@@ -56,28 +69,28 @@ do
             }
         }
     }
-    for k, v in _pairs(debugOptions) do
-        __Debug.OvaleDebug.options.args[k] = v
+    for k, v in pairs(debugOptions) do
+        OvaleDebug.options.args[k] = v
     end
 end
 local array = {}
-local OvaleStanceClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleStanceBase)), {
+local OvaleStanceClass = __class(OvaleStanceBase, {
     constructor = function(self)
         self.ready = false
         self.stanceList = {}
         self.stanceId = {}
         self.stance = nil
         self.STANCE_NAME = STANCE_NAME
-        __Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleStanceBase)).constructor(self)
+        OvaleStanceBase.constructor(self)
         self:RegisterEvent("PLAYER_ENTERING_WORLD", "UpdateStances")
         self:RegisterEvent("UPDATE_SHAPESHIFT_FORM")
         self:RegisterEvent("UPDATE_SHAPESHIFT_FORMS")
         self:RegisterMessage("Ovale_SpellsChanged", "UpdateStances")
         self:RegisterMessage("Ovale_TalentsChanged", "UpdateStances")
-        __Requirement.RegisterRequirement("stance", "RequireStanceHandler", self)
+        RegisterRequirement("stance", "RequireStanceHandler", self)
     end,
     OnDisable = function(self)
-        __Requirement.UnregisterRequirement("stance")
+        UnregisterRequirement("stance")
         self:UnregisterEvent("PLAYER_ALIVE")
         self:UnregisterEvent("PLAYER_ENTERING_WORLD")
         self:UnregisterEvent("UPDATE_SHAPESHIFT_FORM")
@@ -97,11 +110,11 @@ local OvaleStanceClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(__
     end,
     CreateStanceList = function(self)
         self:StartProfiling("OvaleStance_CreateStanceList")
-        _wipe(self.stanceList)
-        _wipe(self.stanceId)
+        wipe(self.stanceList)
+        wipe(self.stanceId)
         local _, name, stanceName
-        for i = 1, API_GetNumShapeshiftForms(), 1 do
-            _, name = API_GetShapeshiftFormInfo(i)
+        for i = 1, GetNumShapeshiftForms(), 1 do
+            _, name = GetShapeshiftFormInfo(i)
             stanceName = SPELL_NAME_TO_STANCE[name]
             if stanceName then
                 self.stanceList[i] = stanceName
@@ -111,16 +124,16 @@ local OvaleStanceClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(__
         self:StopProfiling("OvaleStance_CreateStanceList")
     end,
     DebugStances = function(self)
-        _wipe(array)
-        for k, v in _pairs(self.stanceList) do
+        wipe(array)
+        for k, v in pairs(self.stanceList) do
             if self.stance == k then
-                tinsert(array, v .. " (active)")
+                insert(array, v .. " (active)")
             else
-                tinsert(array, v)
+                insert(array, v)
             end
         end
-        tsort(array)
-        return tconcat(array, "\n")
+        sort(array)
+        return concat(array, "\n")
     end,
     GetStance = function(self, stanceId)
         stanceId = stanceId or self.stance
@@ -128,7 +141,7 @@ local OvaleStanceClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(__
     end,
     IsStance = function(self, name)
         if name and self.stance then
-            if _type(name) == "number" then
+            if type(name) == "number" then
                 return name == self.stance
             else
                 return name == __exports.OvaleStance:GetStance(self.stance)
@@ -137,16 +150,16 @@ local OvaleStanceClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(__
         return false
     end,
     IsStanceSpell = function(self, spellId)
-        local name = API_GetSpellInfo(spellId)
+        local name = GetSpellInfo(spellId)
         return  not  not (name and SPELL_NAME_TO_STANCE[name])
     end,
     ShapeshiftEventHandler = function(self)
         self:StartProfiling("OvaleStance_ShapeshiftEventHandler")
         local oldStance = self.stance
-        local newStance = API_GetShapeshiftForm()
+        local newStance = GetShapeshiftForm()
         if oldStance ~= newStance then
             self.stance = newStance
-            __Ovale.Ovale:needRefresh()
+            Ovale:needRefresh()
             self:SendMessage("Ovale_StanceChanged", self:GetStance(newStance), self:GetStance(oldStance))
         end
         self:StopProfiling("OvaleStance_ShapeshiftEventHandler")
@@ -165,11 +178,11 @@ local OvaleStanceClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(__
         end
         if stance then
             local isBang = false
-            if substr(stance, 1, 1) == "!" then
+            if sub(stance, 1, 1) == "!" then
                 isBang = true
-                stance = substr(stance, 2)
+                stance = sub(stance, 2)
             end
-            stance = _tonumber(stance) or stance
+            stance = tonumber(stance) or stance
             local isStance = self:IsStance(stance)
             if  not isBang and isStance or isBang and  not isStance then
                 verified = true
@@ -181,10 +194,9 @@ local OvaleStanceClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(__
                 self:Log("    Require stance '%s': %s", stance, result)
             end
         else
-            __Ovale.Ovale:OneTimeMessage("Warning: requirement '%s' is missing a stance argument.", requirement)
+            Ovale:OneTimeMessage("Warning: requirement '%s' is missing a stance argument.", requirement)
         end
         return verified, requirement, index
     end,
 })
 __exports.OvaleStance = OvaleStanceClass()
-end)

@@ -6,7 +6,7 @@ import { pairs, select, tonumber, type, unpack, wipe, _G, lualength } from "@wow
 import { gsub, match } from "@wowts/string";
 import { CreateFrame, GetAuctionItemSubClasses, GetInventoryItemID, GetItemInfo, INVSLOT_AMMO, INVSLOT_BACK, INVSLOT_BODY, INVSLOT_CHEST, INVSLOT_FEET, INVSLOT_FINGER1, INVSLOT_FINGER2, INVSLOT_FIRST_EQUIPPED, INVSLOT_HAND, INVSLOT_HEAD, INVSLOT_LAST_EQUIPPED, INVSLOT_LEGS, INVSLOT_MAINHAND, INVSLOT_NECK, INVSLOT_OFFHAND, INVSLOT_SHOULDER, INVSLOT_TABARD, INVSLOT_TRINKET1, INVSLOT_TRINKET2, INVSLOT_WAIST, INVSLOT_WRIST, UIGameTooltip, ITEM_LEVEL, UIParent } from "@wowts/wow-mock";
 
-let OvaleEquipmentBase = Ovale.NewModule("OvaleEquipment", aceEvent);
+let OvaleEquipmentBase = OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(Ovale.NewModule("OvaleEquipment", aceEvent)));
 export let OvaleEquipment: OvaleEquipmentClass;
 
 let self_tooltip: UIGameTooltip = undefined;
@@ -1328,7 +1328,7 @@ let armorSetName = {
         ["T15"]: "T15_caster"
     }
 }
-class OvaleEquipmentClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(OvaleEquipmentBase)) {
+class OvaleEquipmentClass extends OvaleEquipmentBase {
     ready = false;
     equippedItems = {    }
     equippedItemLevels = {    }

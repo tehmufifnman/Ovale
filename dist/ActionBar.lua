@@ -1,30 +1,47 @@
-local __addonName, __addon = ...
-            __addon.require("./ActionBar", { "./Localization", "./Debug", "./Profiler", "./SpellBook", "./Ovale", "AceEvent-3.0", "AceTimer-3.0" }, function(__exports, __Localization, __Debug, __Profiler, __SpellBook, __Ovale, aceEvent, aceTimer)
+local __exports = LibStub:NewLibrary("ovale/ActionBar", 10000)
+if not __exports then return end
+local __class = LibStub:GetLibrary("tslib").newClass
+local __Localization = LibStub:GetLibrary("ovale/Localization")
+local L = __Localization.L
+local __Debug = LibStub:GetLibrary("ovale/Debug")
+local OvaleDebug = __Debug.OvaleDebug
+local __Profiler = LibStub:GetLibrary("ovale/Profiler")
+local OvaleProfiler = __Profiler.OvaleProfiler
+local __SpellBook = LibStub:GetLibrary("ovale/SpellBook")
+local OvaleSpellBook = __SpellBook.OvaleSpellBook
+local __Ovale = LibStub:GetLibrary("ovale/Ovale")
+local Ovale = __Ovale.Ovale
+local aceEvent = LibStub:GetLibrary("AceEvent-3.0", true)
+local aceTimer = LibStub:GetLibrary("AceTimer-3.0", true)
 local gsub = string.gsub
-local strlen = string.len
-local strmatch = string.match
-local strupper = string.upper
-local tconcat = table.concat
-local _tonumber = tonumber
-local tsort = table.sort
-local tinsert = table.insert
-local _wipe = wipe
-local API_GetActionInfo = GetActionInfo
-local API_GetActionText = GetActionText
-local API_GetBindingKey = GetBindingKey
-local API_GetBonusBarIndex = GetBonusBarIndex
-local API_GetMacroItem = GetMacroItem
-local API_GetMacroSpell = GetMacroSpell
-local OvaleActionBarBase = __Profiler.OvaleProfiler:RegisterProfiling(__Debug.OvaleDebug:RegisterDebugging(__Ovale.Ovale:NewModule("OvaleActionBar", aceEvent, aceTimer)))
-local OvaleActionBarClass = __addon.__class(OvaleActionBarBase, {
+local len = string.len
+local match = string.match
+local upper = string.upper
+local concat = table.concat
+local sort = table.sort
+local insert = table.insert
+local tonumber = tonumber
+local wipe = wipe
+local pairs = pairs
+local tostring = tostring
+local ipairs = ipairs
+local _G = _G
+local GetActionInfo = GetActionInfo
+local GetActionText = GetActionText
+local GetBindingKey = GetBindingKey
+local GetBonusBarIndex = GetBonusBarIndex
+local GetMacroItem = GetMacroItem
+local GetMacroSpell = GetMacroSpell
+local OvaleActionBarBase = OvaleProfiler:RegisterProfiling(OvaleDebug:RegisterDebugging(Ovale:NewModule("OvaleActionBar", aceEvent, aceTimer)))
+local OvaleActionBarClass = __class(OvaleActionBarBase, {
     constructor = function(self)
         self.debugOptions = {
             actionbar = {
-                name = __Localization.L["Action bar"],
+                name = L["Action bar"],
                 type = "group",
                 args = {
                     spellbook = {
-                        name = __Localization.L["Action bar"],
+                        name = L["Action bar"],
                         type = "input",
                         multiline = 25,
                         width = "full",
@@ -43,7 +60,7 @@ local OvaleActionBarClass = __addon.__class(OvaleActionBarBase, {
         self.output = {}
         OvaleActionBarBase.constructor(self)
         for k, v in pairs(self.debugOptions) do
-            __Debug.OvaleDebug.options.args[k] = v
+            OvaleDebug.options.args[k] = v
         end
         self:RegisterEvent("ACTIONBAR_SLOT_CHANGED")
         self:RegisterEvent("PLAYER_ENTERING_WORLD", function(event)
@@ -62,7 +79,7 @@ local OvaleActionBarClass = __addon.__class(OvaleActionBarBase, {
     end,
     GetKeyBinding = function(self, slot)
         local name
-        if Bartender4 then
+        if _G["Bartender4"] then
             name = "CLICK BT4Button " .. slot .. ":LeftButton"
         else
             if slot <= 24 or slot > 72 then
@@ -77,9 +94,9 @@ local OvaleActionBarClass = __addon.__class(OvaleActionBarBase, {
                 name = "MULTIACTIONBAR1BUTTON" .. slot - 60
             end
         end
-        local key = name and API_GetBindingKey(name)
-        if key and strlen(key) > 4 then
-            key = strupper(key)
+        local key = name and GetBindingKey(name)
+        if key and len(key) > 4 then
+            key = upper(key)
             key = gsub(key, "%s+", "")
             key = gsub(key, "ALT%-", "A")
             key = gsub(key, "CTRL%-", "C")
@@ -93,7 +110,7 @@ local OvaleActionBarClass = __addon.__class(OvaleActionBarBase, {
         return key
     end,
     ParseHyperlink = function(self, hyperlink)
-        local color, linkType, linkData, text = strmatch(hyperlink, "|?c?f?f?(%x*)|?H?([^:]*):?(%d+)|?h?%[?([^%[%]]*)%]?|?h?|?r?")
+        local color, linkType, linkData, text = match(hyperlink, "|?c?f?f?(%x*)|?H?([^:]*):?(%d+)|?h?%[?([^%[%]]*)%]?|?h?|?r?")
         return color, linkType, linkData, text
     end,
     OnDisable = function(self)
@@ -105,11 +122,11 @@ local OvaleActionBarClass = __addon.__class(OvaleActionBarBase, {
         self:UnregisterMessage("Ovale_TalentsChanged")
     end,
     ACTIONBAR_SLOT_CHANGED = function(self, event, slot)
-        slot = _tonumber(slot)
+        slot = tonumber(slot)
         if slot == 0 then
             self:UpdateActionSlots(event)
         elseif slot then
-            local bonus = _tonumber(API_GetBonusBarIndex()) * 12
+            local bonus = tonumber(GetBonusBarIndex()) * 12
             local bonusStart = (bonus > 0) and (bonus - 11) or 1
             local isBonus = slot >= bonusStart and slot < bonusStart + 12
             if isBonus or slot > 12 and slot < 73 then
@@ -127,12 +144,12 @@ local OvaleActionBarClass = __addon.__class(OvaleActionBarBase, {
     UpdateActionSlots = function(self, event)
         self:StartProfiling("OvaleActionBar_UpdateActionSlots")
         self:Debug("%s: Updating all action slot mappings.", event)
-        _wipe(self.action)
-        _wipe(self.item)
-        _wipe(self.macro)
-        _wipe(self.spell)
+        wipe(self.action)
+        wipe(self.item)
+        wipe(self.macro)
+        wipe(self.spell)
         local start = 1
-        local bonus = _tonumber(API_GetBonusBarIndex()) * 12
+        local bonus = tonumber(GetBonusBarIndex()) * 12
         if bonus > 0 then
             start = 13
             for slot = bonus - 11, bonus, 1 do
@@ -158,9 +175,9 @@ local OvaleActionBarClass = __addon.__class(OvaleActionBarBase, {
             self.macro[action] = nil
         end
         self.action[slot] = nil
-        local actionType, actionId = API_GetActionInfo(slot)
+        local actionType, actionId = GetActionInfo(slot)
         if actionType == "spell" then
-            local id = _tonumber(actionId)
+            local id = tonumber(actionId)
             if id then
                 if  not self.spell[id] or slot < self.spell[id] then
                     self.spell[id] = slot
@@ -168,7 +185,7 @@ local OvaleActionBarClass = __addon.__class(OvaleActionBarBase, {
                 self.action[slot] = id
             end
         elseif actionType == "item" then
-            local id = _tonumber(actionId)
+            local id = tonumber(actionId)
             if id then
                 if  not self.item[id] or slot < self.item[id] then
                     self.item[id] = slot
@@ -176,25 +193,25 @@ local OvaleActionBarClass = __addon.__class(OvaleActionBarBase, {
                 self.action[slot] = id
             end
         elseif actionType == "macro" then
-            local id = _tonumber(actionId)
+            local id = tonumber(actionId)
             if id then
-                local actionText = API_GetActionText(slot)
+                local actionText = GetActionText(slot)
                 if actionText then
                     if  not self.macro[actionText] or slot < self.macro[actionText] then
                         self.macro[actionText] = slot
                     end
-                    local _, _, spellId = API_GetMacroSpell(id)
+                    local _, _, spellId = GetMacroSpell(id)
                     if spellId then
                         if  not self.spell[spellId] or slot < self.spell[spellId] then
                             self.spell[spellId] = slot
                         end
                         self.action[slot] = spellId
                     else
-                        local _, hyperlink = API_GetMacroItem(id)
+                        local _, hyperlink = GetMacroItem(id)
                         if hyperlink then
                             local _, _, linkData = self:ParseHyperlink(hyperlink)
                             local itemIdText = gsub(linkData, ":.*", "")
-                            local itemId = _tonumber(itemIdText)
+                            local itemId = tonumber(itemIdText)
                             if itemId then
                                 if  not self.item[itemId] or slot < self.item[itemId] then
                                     self.item[itemId] = slot
@@ -239,12 +256,12 @@ local OvaleActionBarClass = __addon.__class(OvaleActionBarBase, {
     OutputTableValues = function(self, output, tbl)
     end,
     DebugActions = function(self)
-        _wipe(self.output)
+        wipe(self.output)
         local array = {}
         for k, v in pairs(self.spell) do
-            tinsert(array, tostring(self:GetKeyBinding(v)) .. ": " .. tostring(k) .. " " .. tostring(__SpellBook.OvaleSpellBook:GetSpellName(k)))
+            insert(array, tostring(self:GetKeyBinding(v)) .. ": " .. tostring(k) .. " " .. tostring(OvaleSpellBook:GetSpellName(k)))
         end
-        tsort(array)
+        sort(array)
         for _, v in ipairs(array) do
             self.output[#self.output + 1] = v
         end
@@ -253,8 +270,7 @@ local OvaleActionBarClass = __addon.__class(OvaleActionBarBase, {
             total = total + 1
         end
         self.output[#self.output + 1] = "Total spells: " .. total
-        return tconcat(self.output, "\n")
+        return concat(self.output, "\n")
     end,
 })
 __exports.OvaleActionBar = OvaleActionBarClass()
-end)

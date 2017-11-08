@@ -9,7 +9,7 @@ import aceEvent from "@wowts/ace_event-3.0";
 import { pairs, tonumber, type } from "@wowts/lua";
 import { GetCombatRating, GetCritChance, GetMastery, GetMasteryEffect, GetMeleeHaste, GetMultistrike, GetMultistrikeEffect, GetRangedCritChance, GetRangedHaste, GetSpecialization, GetSpellBonusDamage, GetSpellBonusHealing, GetSpellCritChance, GetTime, UnitAttackPower, UnitAttackSpeed, UnitDamage, UnitLevel, UnitRangedAttackPower, UnitSpellHaste, UnitStat, CR_CRIT_MELEE, CR_HASTE_MELEE } from "@wowts/wow-mock";
 
-let OvalePaperDollBase = Ovale.NewModule("OvalePaperDoll", aceEvent);
+let OvalePaperDollBase = OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(Ovale.NewModule("OvalePaperDoll", aceEvent)));
 export let OvalePaperDoll: OvalePaperDollClass;
 let OVALE_SPELLDAMAGE_SCHOOL = {
     DEATHKNIGHT: 4,
@@ -95,7 +95,7 @@ let OVALE_SPECIALIZATION_NAME = {
     }
 }
 
-class OvalePaperDollClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(OvalePaperDollBase)) implements PaperDollSnapshot {
+class OvalePaperDollClass extends OvalePaperDollBase implements PaperDollSnapshot {
     class = Ovale.playerClass;
     level = UnitLevel("player");
     specialization = undefined;
@@ -509,9 +509,9 @@ class PaperDollState implements StateModule {
     }
 
     ResetState() {
-        this.class = this.class;
-        this.level = this.level;
-        this.specialization = this.specialization;
+        this.class = OvalePaperDoll.class;
+        this.level = OvalePaperDoll.level;
+        this.specialization = OvalePaperDoll.specialization;
         this.UpdateSnapshot(OvalePaperDoll, this, true);
     }
 
@@ -530,8 +530,13 @@ class PaperDollState implements StateModule {
     GetHasteMultiplier(haste, snapshot?:PaperDollSnapshot) {
         return OvalePaperDoll.GetHasteMultiplier(haste, snapshot);
     }
-    UpdateSnapshot(target, snapshot?:PaperDollSnapshot, updateAllStats?) {
-        OvalePaperDoll.UpdateSnapshot(target, snapshot, updateAllStats);
+    UpdateSnapshot(target:PaperDollSnapshot, snapshot?:PaperDollSnapshot, updateAllStats?: boolean) {
+        if (!snapshot) {
+            OvalePaperDoll.UpdateSnapshot(this, target);
+        }
+        else {
+            OvalePaperDoll.UpdateSnapshot(target, snapshot, updateAllStats);
+        }
     }
 }
 

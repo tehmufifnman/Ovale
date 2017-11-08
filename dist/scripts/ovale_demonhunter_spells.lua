@@ -1,6 +1,8 @@
-local __addonName, __addon = ...
-            __addon.require("./scripts/ovale_demonhunter_spells", { "./Scripts" }, function(__exports, __Scripts)
-do
+local __exports = LibStub:NewLibrary("ovale/scripts/ovale_demonhunter_spells", 10000)
+if not __exports then return end
+local __Scripts = LibStub:GetLibrary("ovale/Scripts")
+local OvaleScripts = __Scripts.OvaleScripts
+__exports.register = function()
     local name = "ovale_demonhunter_spells"
     local desc = "[7.0] Ovale: DemonHunter spells"
     local code = [[
@@ -196,6 +198,5 @@ Define(vengeful_retreat_debuff 198813)
 Define(wide_eyes_trait 238045)
 
 ]]
-    __Scripts.OvaleScripts:RegisterScript("DEMONHUNTER", nil, name, desc, code, "include")
+    OvaleScripts:RegisterScript("DEMONHUNTER", nil, name, desc, code, "include")
 end
-end)

@@ -1,10 +1,27 @@
-local __addonName, __addon = ...
-            __addon.require("./Cooldown", { "./Debug", "./Profiler", "./Data", "./SpellBook", "./Ovale", "./LastSpell", "./Requirement", "./DataState", "AceEvent-3.0" }, function(__exports, __Debug, __Profiler, __Data, __SpellBook, __Ovale, __LastSpell, __Requirement, __DataState, aceEvent)
-local OvaleCooldownBase = __Ovale.Ovale:NewModule("OvaleCooldown", aceEvent)
-local _next = next
-local _pairs = pairs
-local API_GetSpellCooldown = GetSpellCooldown
-local API_GetTime = GetTime
+local __exports = LibStub:NewLibrary("ovale/Cooldown", 10000)
+if not __exports then return end
+local __class = LibStub:GetLibrary("tslib").newClass
+local __Debug = LibStub:GetLibrary("ovale/Debug")
+local OvaleDebug = __Debug.OvaleDebug
+local __Profiler = LibStub:GetLibrary("ovale/Profiler")
+local OvaleProfiler = __Profiler.OvaleProfiler
+local __Data = LibStub:GetLibrary("ovale/Data")
+local OvaleData = __Data.OvaleData
+local __SpellBook = LibStub:GetLibrary("ovale/SpellBook")
+local OvaleSpellBook = __SpellBook.OvaleSpellBook
+local __Ovale = LibStub:GetLibrary("ovale/Ovale")
+local Ovale = __Ovale.Ovale
+local __LastSpell = LibStub:GetLibrary("ovale/LastSpell")
+local lastSpell = __LastSpell.lastSpell
+local __Requirement = LibStub:GetLibrary("ovale/Requirement")
+local RegisterRequirement = __Requirement.RegisterRequirement
+local UnregisterRequirement = __Requirement.UnregisterRequirement
+local aceEvent = LibStub:GetLibrary("AceEvent-3.0", true)
+local next = next
+local pairs = pairs
+local GetSpellCooldown = GetSpellCooldown
+local GetTime = GetTime
+local OvaleCooldownBase = OvaleDebug:RegisterDebugging(OvaleProfiler:RegisterProfiling(Ovale:NewModule("OvaleCooldown", aceEvent)))
 local GLOBAL_COOLDOWN = 61304
 local COOLDOWN_THRESHOLD = 0.1
 local BASE_GCD = {
@@ -57,7 +74,7 @@ local BASE_GCD = {
         [2] = "melee"
     }
 }
-local OvaleCooldownClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleCooldownBase)), {
+local OvaleCooldownClass = __class(OvaleCooldownBase, {
     constructor = function(self)
         self.serial = 0
         self.sharedCooldown = {}
@@ -73,14 +90,14 @@ local OvaleCooldownClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(
                 if state then
                     gcd = state:GetSpellInfoProperty(spellId, spellcast.start, "gcd", spellcast.target)
                 else
-                    gcd = __Data.OvaleData:GetSpellInfoProperty(spellId, spellcast.start, "gcd", spellcast.target)
+                    gcd = OvaleData:GetSpellInfoProperty(spellId, spellcast.start, "gcd", spellcast.target)
                 end
                 if gcd and gcd == 0 then
                     spellcast.offgcd = true
                 end
             end
         end
-        __Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleCooldownBase)).constructor(self)
+        OvaleCooldownBase.constructor(self)
         self:RegisterEvent("ACTIONBAR_UPDATE_COOLDOWN", "Update")
         self:RegisterEvent("BAG_UPDATE_COOLDOWN", "Update")
         self:RegisterEvent("PET_BAR_UPDATE_COOLDOWN", "Update")
@@ -92,12 +109,12 @@ local OvaleCooldownClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(
         self:RegisterEvent("UNIT_SPELLCAST_START", "Update")
         self:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED", "Update")
         self:RegisterEvent("UPDATE_SHAPESHIFT_COOLDOWN", "Update")
-        __LastSpell.lastSpell:RegisterSpellcastInfo(self)
-        __Requirement.RegisterRequirement("oncooldown", "RequireCooldownHandler", self)
+        lastSpell:RegisterSpellcastInfo(self)
+        RegisterRequirement("oncooldown", "RequireCooldownHandler", self)
     end,
     OnDisable = function(self)
-        __LastSpell.lastSpell:UnregisterSpellcastInfo(self)
-        __Requirement.UnregisterRequirement("oncooldown")
+        lastSpell:UnregisterSpellcastInfo(self)
+        UnregisterRequirement("oncooldown")
         self:UnregisterEvent("ACTIONBAR_UPDATE_COOLDOWN")
         self:UnregisterEvent("BAG_UPDATE_COOLDOWN")
         self:UnregisterEvent("PET_BAR_UPDATE_COOLDOWN")
@@ -122,20 +139,20 @@ local OvaleCooldownClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(
     Update = function(self, event, unit)
         if  not unit or unit == "player" or unit == "pet" then
             self.serial = self.serial + 1
-            __Ovale.Ovale:needRefresh()
+            Ovale:needRefresh()
             self:Debug(event, self.serial)
         end
     end,
     ResetSharedCooldowns = function(self)
-        for _, spellTable in _pairs(self.sharedCooldown) do
-            for spellId in _pairs(spellTable) do
+        for _, spellTable in pairs(self.sharedCooldown) do
+            for spellId in pairs(spellTable) do
                 spellTable[spellId] = nil
             end
         end
     end,
     IsSharedCooldown = function(self, name)
         local spellTable = self.sharedCooldown[name]
-        return (spellTable and _next(spellTable) ~= nil)
+        return (spellTable and next(spellTable) ~= nil)
     end,
     AddSharedCooldown = function(self, name, spellId)
         self.sharedCooldown[name] = self.sharedCooldown[name] or {}
@@ -144,9 +161,9 @@ local OvaleCooldownClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(
     GetGlobalCooldown = function(self, now)
         local cd = self.gcd
         if  not cd.start or  not cd.serial or cd.serial < self.serial then
-            now = now or API_GetTime()
+            now = now or GetTime()
             if now >= cd.start + cd.duration then
-                cd.start, cd.duration = API_GetSpellCooldown(GLOBAL_COOLDOWN)
+                cd.start, cd.duration = GetSpellCooldown(GLOBAL_COOLDOWN)
             end
         end
         return cd.start, cd.duration
@@ -154,7 +171,7 @@ local OvaleCooldownClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(
     GetSpellCooldown = function(self, spellId)
         local cdStart, cdDuration, cdEnable = 0, 0, 1
         if self.sharedCooldown[spellId] then
-            for id in _pairs(self.sharedCooldown[spellId]) do
+            for id in pairs(self.sharedCooldown[spellId]) do
                 local start, duration, enable = self:GetSpellCooldown(id)
                 if start then
                     cdStart, cdDuration, cdEnable = start, duration, enable
@@ -163,11 +180,11 @@ local OvaleCooldownClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(
             end
         else
             local start, duration, enable
-            local index, bookType = __SpellBook.OvaleSpellBook:GetSpellBookIndex(spellId)
+            local index, bookType = OvaleSpellBook:GetSpellBookIndex(spellId)
             if index and bookType then
-                start, duration, enable = API_GetSpellCooldown(index, bookType)
+                start, duration, enable = GetSpellCooldown(index, bookType)
             else
-                start, duration, enable = API_GetSpellCooldown(spellId)
+                start, duration, enable = GetSpellCooldown(spellId)
             end
             if start and start > 0 then
                 local gcdStart, gcdDuration = self:GetGlobalCooldown()
@@ -186,7 +203,7 @@ local OvaleCooldownClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(
     end,
     GetBaseGCD = function(self)
         local gcd, haste
-        local baseGCD = BASE_GCD[__Ovale.Ovale.playerClass]
+        local baseGCD = BASE_GCD[Ovale.playerClass]
         if baseGCD then
             gcd, haste = baseGCD[1], baseGCD[2]
         else
@@ -201,4 +218,3 @@ local OvaleCooldownClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(
     end,
 })
 __exports.OvaleCooldown = OvaleCooldownClass()
-end)

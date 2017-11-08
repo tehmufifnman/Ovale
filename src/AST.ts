@@ -14,7 +14,7 @@ import { format, gsub, lower, sub } from "@wowts/string";
 import { concat, insert, sort } from "@wowts/table";
 import { GetItemInfo } from "@wowts/wow-mock";
 
-let OvaleASTBase = Ovale.NewModule("OvaleAST");
+let OvaleASTBase = OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(Ovale.NewModule("OvaleAST")));
 
 let KEYWORD: LuaObj<boolean> = {
     ["and"]: true,
@@ -206,7 +206,7 @@ export interface AstAnnotation {
     functionReference?: LuaArray<FunctionNode>;
     nameReference?: LuaArray<AstNode>;
     definition?: LuaObj<any>;
-    numberFlyweight?: LuaObj<NumberNode>;
+    numberFlyweight?: LuaObj<ValueNode>;
     verify?:boolean;
     functionHash?: LuaObj<AstNode>;
     expressionHash?: LuaObj<AstNode>;
@@ -497,7 +497,7 @@ function isLuaArray<T>(a: any): a is LuaArray<T> {
     return type(a) === "table";
 }
 
-class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(OvaleASTBase)) {
+class OvaleASTClass extends OvaleASTBase {
     self_indent:number = 0;
     self_outputPool = new OvalePool<LuaArray<string>>("OvaleAST_outputPool");
     self_listPool = new OvalePool<ListParameters>("OvaleAST_listPool");
@@ -549,8 +549,8 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         annotation.numberFlyweight = annotation.numberFlyweight || {}
         let node = annotation.numberFlyweight[value];
         if (!node) {
-            node = <NumberNode>this.NewNode(nodeList);
-            node.type = "number";
+            node = <ValueNode>this.NewNode(nodeList);
+            node.type = "value";
             node.value = value;
             node.origin = 0;
             node.rate = 0;
@@ -1077,7 +1077,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         if (ok) {
             [ok, bodyNode] = this.ParseGroup(tokenStream, nodeList, annotation);
         }
-        let node;
+        let node: AstNode;
         if (ok) {
             node = this.NewNode(nodeList, true);
             node.type = "icon";
@@ -1321,9 +1321,6 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
                             node.operator = operator;
                             node.precedence = precedence;
 
-                            if (!lhsNode.type) debugger;
-                            if (!rhsNode.type) debugger;
-        
                             node.child[1] = lhsNode;
                             node.child[2] = rhsNode;
                             let rotated = false;
@@ -1756,7 +1753,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         }
         return [ok, node];
     }
-    ParseNumber = (tokenStream:OvaleLexer, nodeList: LuaArray<AstNode>, annotation: AstAnnotation): [boolean, NumberNode] => {
+    ParseNumber = (tokenStream:OvaleLexer, nodeList: LuaArray<AstNode>, annotation: AstAnnotation): [boolean, ValueNode] => {
         let ok = true;
         let value;
         {
@@ -1768,7 +1765,7 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
                 ok = false;
             }
         }
-        let node: NumberNode;
+        let node: ValueNode;
         if (ok) {
             node = this.GetNumberNode(value, nodeList, annotation);
         }
@@ -2499,10 +2496,8 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
         this.self_pool.Release(ast);
     }
     ParseCode(nodeType: string, code: string, nodeList: LuaArray<AstNode>, annotation: AstAnnotation): [AstNode, LuaArray<AstNode>, any] {
-        nodeList = nodeList || {
-        }
-        annotation = annotation || {
-        }
+        nodeList = nodeList || {}
+        annotation = annotation || {}
         let tokenStream = new OvaleLexer("Ovale", code, MATCHES, { comments:  TokenizeComment, space: TokenizeWhitespace });
         let [, node] = this.Parse(nodeType, tokenStream, nodeList, annotation);
         tokenStream.Release();
@@ -2620,11 +2615,11 @@ class OvaleASTClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterP
                     if (stringKey) {
                         let name = node.name;
                         if (name == "ItemName") {
-                            value = GetItemInfo(stringKey) || "item:" + key;
+                            value = GetItemInfo(stringKey) || "item:" + stringKey;
                         } else if (name == "L") {
                             value = L[stringKey];
                         } else if (name == "SpellName") {
-                            value = OvaleSpellBook.GetSpellName(key) || "spell:" + key;
+                            value = OvaleSpellBook.GetSpellName(stringKey) || "spell:" + stringKey;
                         }
                     }
                     if (value) {

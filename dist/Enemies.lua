@@ -1,18 +1,31 @@
-local __addonName, __addon = ...
-            __addon.require("./Enemies", { "./Debug", "./Profiler", "./Ovale", "./GUID", "./State", "AceEvent-3.0", "AceTimer-3.0" }, function(__exports, __Debug, __Profiler, __Ovale, __GUID, __State, aceEvent, AceTimer)
-local OvaleEnemiesBase = __Ovale.Ovale:NewModule("OvaleEnemies", aceEvent, AceTimer)
-local bit_band = bit.band
-local bit_bor = bit.bor
-local _ipairs = ipairs
-local _pairs = pairs
-local strfind = string.find
-local _wipe = wipe
-local API_GetTime = GetTime
-local _COMBATLOG_OBJECT_AFFILIATION_MINE = COMBATLOG_OBJECT_AFFILIATION_MINE
-local _COMBATLOG_OBJECT_AFFILIATION_PARTY = COMBATLOG_OBJECT_AFFILIATION_PARTY
-local _COMBATLOG_OBJECT_AFFILIATION_RAID = COMBATLOG_OBJECT_AFFILIATION_RAID
-local _COMBATLOG_OBJECT_REACTION_FRIENDLY = COMBATLOG_OBJECT_REACTION_FRIENDLY
-local GROUP_MEMBER = bit_bor(_COMBATLOG_OBJECT_AFFILIATION_MINE, _COMBATLOG_OBJECT_AFFILIATION_PARTY, _COMBATLOG_OBJECT_AFFILIATION_RAID)
+local __exports = LibStub:NewLibrary("ovale/Enemies", 10000)
+if not __exports then return end
+local __class = LibStub:GetLibrary("tslib").newClass
+local __Debug = LibStub:GetLibrary("ovale/Debug")
+local OvaleDebug = __Debug.OvaleDebug
+local __Profiler = LibStub:GetLibrary("ovale/Profiler")
+local OvaleProfiler = __Profiler.OvaleProfiler
+local __Ovale = LibStub:GetLibrary("ovale/Ovale")
+local Ovale = __Ovale.Ovale
+local __GUID = LibStub:GetLibrary("ovale/GUID")
+local OvaleGUID = __GUID.OvaleGUID
+local __State = LibStub:GetLibrary("ovale/State")
+local OvaleState = __State.OvaleState
+local aceEvent = LibStub:GetLibrary("AceEvent-3.0", true)
+local AceTimer = LibStub:GetLibrary("AceTimer-3.0", true)
+local band = bit.band
+local bor = bit.bor
+local ipairs = ipairs
+local pairs = pairs
+local wipe = wipe
+local find = string.find
+local GetTime = GetTime
+local COMBATLOG_OBJECT_AFFILIATION_MINE = COMBATLOG_OBJECT_AFFILIATION_MINE
+local COMBATLOG_OBJECT_AFFILIATION_PARTY = COMBATLOG_OBJECT_AFFILIATION_PARTY
+local COMBATLOG_OBJECT_AFFILIATION_RAID = COMBATLOG_OBJECT_AFFILIATION_RAID
+local COMBATLOG_OBJECT_REACTION_FRIENDLY = COMBATLOG_OBJECT_REACTION_FRIENDLY
+local OvaleEnemiesBase = OvaleDebug:RegisterDebugging(OvaleProfiler:RegisterProfiling(Ovale:NewModule("OvaleEnemies", aceEvent, AceTimer)))
+local GROUP_MEMBER = bor(COMBATLOG_OBJECT_AFFILIATION_MINE, COMBATLOG_OBJECT_AFFILIATION_PARTY, COMBATLOG_OBJECT_AFFILIATION_RAID)
 local CLEU_TAG_SUFFIXES = {
     [1] = "_DAMAGE",
     [2] = "_MISSED",
@@ -48,8 +61,8 @@ local IsTagEvent = function(cleuEvent)
     if CLEU_AUTOATTACK[cleuEvent] then
         isTagEvent = true
     else
-        for _, suffix in _ipairs(CLEU_TAG_SUFFIXES) do
-            if strfind(cleuEvent, suffix .. "$") then
+        for _, suffix in ipairs(CLEU_TAG_SUFFIXES) do
+            if find(cleuEvent, suffix .. "$") then
                 isTagEvent = true
                 break
             end
@@ -59,14 +72,14 @@ local IsTagEvent = function(cleuEvent)
 end
 
 local IsFriendly = function(unitFlags, isGroupMember)
-    return bit_band(unitFlags, _COMBATLOG_OBJECT_REACTION_FRIENDLY) > 0 and ( not isGroupMember or bit_band(unitFlags, GROUP_MEMBER) > 0)
+    return band(unitFlags, COMBATLOG_OBJECT_REACTION_FRIENDLY) > 0 and ( not isGroupMember or band(unitFlags, GROUP_MEMBER) > 0)
 end
 
-local OvaleEnemiesClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleEnemiesBase)), {
+local OvaleEnemiesClass = __class(OvaleEnemiesBase, {
     constructor = function(self)
         self.activeEnemies = 0
         self.taggedEnemies = 0
-        __Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleEnemiesBase)).constructor(self)
+        OvaleEnemiesBase.constructor(self)
         if  not self_reaperTimer then
             self_reaperTimer = self:ScheduleRepeatingTimer("RemoveInactiveEnemies", REAP_INTERVAL)
         end
@@ -83,37 +96,37 @@ local OvaleEnemiesClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(_
     end,
     COMBAT_LOG_EVENT_UNFILTERED = function(self, event, timestamp, cleuEvent, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, ...)
         if CLEU_UNIT_REMOVED[cleuEvent] then
-            local now = API_GetTime()
+            local now = GetTime()
             self:RemoveEnemy(cleuEvent, destGUID, now, true)
         elseif sourceGUID and sourceGUID ~= "" and sourceName and sourceFlags and destGUID and destGUID ~= "" and destName and destFlags then
             if  not IsFriendly(sourceFlags) and IsFriendly(destFlags, true) then
                 if  not (cleuEvent == "SPELL_PERIODIC_DAMAGE" and IsTagEvent(cleuEvent)) then
-                    local now = API_GetTime()
+                    local now = GetTime()
                     self:AddEnemy(cleuEvent, sourceGUID, sourceName, now)
                 end
             elseif IsFriendly(sourceFlags, true) and  not IsFriendly(destFlags) and IsTagEvent(cleuEvent) then
-                local now = API_GetTime()
-                local isPlayerTag = (sourceGUID == __Ovale.Ovale.playerGUID) or __GUID.OvaleGUID:IsPlayerPet(sourceGUID)
+                local now = GetTime()
+                local isPlayerTag = (sourceGUID == Ovale.playerGUID) or OvaleGUID:IsPlayerPet(sourceGUID)
                 self:AddEnemy(cleuEvent, destGUID, destName, now, isPlayerTag)
             end
         end
     end,
     PLAYER_REGEN_DISABLED = function(self)
-        _wipe(self_enemyName)
-        _wipe(self_enemyLastSeen)
-        _wipe(self_taggedEnemyLastSeen)
+        wipe(self_enemyName)
+        wipe(self_enemyLastSeen)
+        wipe(self_taggedEnemyLastSeen)
         self.activeEnemies = 0
         self.taggedEnemies = 0
     end,
     RemoveInactiveEnemies = function(self)
         self:StartProfiling("OvaleEnemies_RemoveInactiveEnemies")
-        local now = API_GetTime()
-        for guid, timestamp in _pairs(self_enemyLastSeen) do
+        local now = GetTime()
+        for guid, timestamp in pairs(self_enemyLastSeen) do
             if now - timestamp > REAP_INTERVAL then
                 self:RemoveEnemy("REAPED", guid, now)
             end
         end
-        for guid, timestamp in _pairs(self_taggedEnemyLastSeen) do
+        for guid, timestamp in pairs(self_taggedEnemyLastSeen) do
             if now - timestamp > REAP_INTERVAL then
                 self:RemoveTaggedEnemy("REAPED", guid, now)
             end
@@ -141,7 +154,7 @@ local OvaleEnemiesClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(_
             end
             if changed then
                 self:DebugTimestamp("%s: %d/%d enemy seen: %s (%s)", cleuEvent, self.taggedEnemies, self.activeEnemies, guid, name)
-                __Ovale.Ovale:needRefresh()
+                Ovale:needRefresh()
             end
         end
         self:StopProfiling("OvaleEnemies_AddEnemy")
@@ -167,7 +180,7 @@ local OvaleEnemiesClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(_
             end
             if changed then
                 self:DebugTimestamp("%s: %d/%d enemy %s: %s (%s)", cleuEvent, self.taggedEnemies, self.activeEnemies, isDead and "died" or "removed", guid, name)
-                __Ovale.Ovale:needRefresh()
+                Ovale:needRefresh()
                 self:SendMessage("Ovale_InactiveUnit", guid, isDead)
             end
         end
@@ -184,13 +197,13 @@ local OvaleEnemiesClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(_
                     self.taggedEnemies = self.taggedEnemies - 1
                 end
                 self:DebugTimestamp("%s: %d/%d enemy removed: %s (%s), last tagged at %f", cleuEvent, self.taggedEnemies, self.activeEnemies, guid, name, tagged)
-                __Ovale.Ovale:needRefresh()
+                Ovale:needRefresh()
             end
         end
         self:StopProfiling("OvaleEnemies_RemoveEnemy")
     end,
     DebugEnemies = function(self)
-        for guid, seen in _pairs(self_enemyLastSeen) do
+        for guid, seen in pairs(self_enemyLastSeen) do
             local name = self_enemyName[guid]
             local tagged = self_taggedEnemyLastSeen[guid]
             if tagged then
@@ -203,7 +216,7 @@ local OvaleEnemiesClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(_
         self:Print("Total tagged enemies: %d", self.taggedEnemies)
     end,
 })
-local EnemiesStateClass = __addon.__class(nil, {
+local EnemiesStateClass = __class(nil, {
     InitializeState = function(self)
         self.enemies = nil
     end,
@@ -226,5 +239,4 @@ local EnemiesStateClass = __addon.__class(nil, {
 })
 __exports.OvaleEnemies = OvaleEnemiesClass()
 __exports.EnemiesState = EnemiesStateClass()
-__State.OvaleState:RegisterState(__exports.EnemiesState)
-end)
+OvaleState:RegisterState(__exports.EnemiesState)

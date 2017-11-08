@@ -1,14 +1,29 @@
-local __addonName, __addon = ...
-            __addon.require("./Data", { "./Ovale", "./GUID", "./PaperDoll", "./State", "./Debug", "./Requirement" }, function(__exports, __Ovale, __GUID, __PaperDoll, __State, __Debug, __Requirement)
-local OvaleDataBase = __Ovale.Ovale:NewModule("OvaleData")
-local _type = type
-local _pairs = pairs
-local strfind = string.find
-local _tonumber = tonumber
-local _wipe = wipe
-local INFINITY = math.huge
+local __exports = LibStub:NewLibrary("ovale/Data", 10000)
+if not __exports then return end
+local __class = LibStub:GetLibrary("tslib").newClass
+local __Ovale = LibStub:GetLibrary("ovale/Ovale")
+local Ovale = __Ovale.Ovale
+local __GUID = LibStub:GetLibrary("ovale/GUID")
+local OvaleGUID = __GUID.OvaleGUID
+local __PaperDoll = LibStub:GetLibrary("ovale/PaperDoll")
+local OvalePaperDoll = __PaperDoll.OvalePaperDoll
+local __State = LibStub:GetLibrary("ovale/State")
+local baseState = __State.baseState
+local __Debug = LibStub:GetLibrary("ovale/Debug")
+local OvaleDebug = __Debug.OvaleDebug
+local __Requirement = LibStub:GetLibrary("ovale/Requirement")
+local self_requirement = __Requirement.self_requirement
+local CheckRequirements = __Requirement.CheckRequirements
+local type = type
+local pairs = pairs
+local tonumber = tonumber
+local wipe = wipe
+local find = string.find
+local huge = math.huge
 local floor = math.floor
 local ceil = math.ceil
+local OvaleDataBase = OvaleDebug:RegisterDebugging(Ovale:NewModule("OvaleData"))
+local INFINITY = huge
 local BLOODELF_CLASSES = {
     ["DEATHKNIGHT"] = true,
     ["DEMONHUNTER"] = true,
@@ -78,7 +93,7 @@ local STAT_USE_NAMES = {
     [4] = "trinket_stat",
     [5] = "trinket_stack_proc"
 }
-local OvaleDataClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(OvaleDataBase), {
+local OvaleDataClass = __class(OvaleDataBase, {
     constructor = function(self)
         self.STAT_NAMES = STAT_NAMES
         self.STAT_SHORTNAME = STAT_SHORTNAME
@@ -255,10 +270,10 @@ local OvaleDataClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(Oval
             }
         }
         self.DEFAULT_SPELL_LIST = {}
-        __Debug.OvaleDebug:RegisterDebugging(OvaleDataBase).constructor(self)
-        for _, useName in _pairs(STAT_USE_NAMES) do
+        OvaleDataBase.constructor(self)
+        for _, useName in pairs(STAT_USE_NAMES) do
             local name
-            for _, statName in _pairs(STAT_NAMES) do
+            for _, statName in pairs(STAT_NAMES) do
                 name = useName .. "_" .. statName .. "_buff"
                 self.buffSpellList[name] = {}
                 local shortName = STAT_SHORTNAME[statName]
@@ -271,20 +286,20 @@ local OvaleDataClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(Oval
             self.buffSpellList[name] = {}
         end
         do
-            for name in _pairs(self.buffSpellList) do
+            for name in pairs(self.buffSpellList) do
                 self.DEFAULT_SPELL_LIST[name] = true
             end
         end
     end,
     Reset = function(self)
-        _wipe(self.itemInfo)
-        _wipe(self.spellInfo)
-        for k, v in _pairs(self.buffSpellList) do
+        wipe(self.itemInfo)
+        wipe(self.spellInfo)
+        for k, v in pairs(self.buffSpellList) do
             if  not self.DEFAULT_SPELL_LIST[k] then
-                _wipe(v)
+                wipe(v)
                 self.buffSpellList[k] = nil
-            elseif strfind(k, "^trinket_") then
-                _wipe(v)
+            elseif find(k, "^trinket_") then
+                wipe(v)
             end
         end
     end,
@@ -305,10 +320,10 @@ local OvaleDataClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(Oval
         return si
     end,
     GetSpellInfo = function(self, spellId)
-        if _type(spellId) == "number" then
+        if type(spellId) == "number" then
             return self.spellInfo[spellId]
         elseif self.buffSpellList[spellId] then
-            for auraId in _pairs(self.buffSpellList[spellId]) do
+            for auraId in pairs(self.buffSpellList[spellId]) do
                 if self.spellInfo[auraId] then
                     return self.spellInfo[auraId]
                 end
@@ -353,9 +368,9 @@ local OvaleDataClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(Oval
         return tag, invokesGCD
     end,
     CheckSpellAuraData = function(self, auraId, spellData, atTime, guid)
-        guid = guid or __GUID.OvaleGUID:UnitGUID("player")
+        guid = guid or OvaleGUID:UnitGUID("player")
         local index, value, data
-        if _type(spellData) == "table" then
+        if type(spellData) == "table" then
             value = spellData[1]
             index = 2
         else
@@ -368,9 +383,9 @@ local OvaleDataClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(Oval
                 index = index + 1
             end
             if N then
-                data = _tonumber(N)
+                data = tonumber(N)
             else
-                __Ovale.Ovale:OneTimeMessage("Warning: '%d' has '%s' missing final stack count.", auraId, value)
+                Ovale:OneTimeMessage("Warning: '%d' has '%s' missing final stack count.", auraId, value)
             end
         elseif value == "extend" then
             local seconds
@@ -379,30 +394,30 @@ local OvaleDataClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(Oval
                 index = index + 1
             end
             if seconds then
-                data = _tonumber(seconds)
+                data = tonumber(seconds)
             else
-                __Ovale.Ovale:OneTimeMessage("Warning: '%d' has '%s' missing duration.", auraId, value)
+                Ovale:OneTimeMessage("Warning: '%d' has '%s' missing duration.", auraId, value)
             end
         else
-            local asNumber = _tonumber(value)
+            local asNumber = tonumber(value)
             value = asNumber or value
         end
         local verified = true
         if index then
-            verified = __Requirement.CheckRequirements(auraId, atTime, spellData, index, guid)
+            verified = CheckRequirements(auraId, atTime, spellData, index, guid)
         end
         return verified, value, data
     end,
     CheckSpellInfo = function(self, spellId, atTime, targetGUID)
-        targetGUID = targetGUID or __GUID.OvaleGUID:UnitGUID(__State.baseState.defaultTarget or "target")
+        targetGUID = targetGUID or OvaleGUID:UnitGUID(baseState.defaultTarget or "target")
         local verified = true
         local requirement
-        for name, handler in _pairs(__Requirement.self_requirement) do
+        for name, handler in pairs(self_requirement) do
             local value = self:GetSpellInfoProperty(spellId, atTime, name, targetGUID)
             if value then
                 local method, arg = handler[1], handler[2]
                 arg = self[method] and self or arg
-                local index = (_type(value) == "table") and 1 or nil
+                local index = (type(value) == "table") and 1 or nil
                 verified, requirement = arg[method](arg, spellId, atTime, name, value, index, targetGUID)
                 if  not verified then
                     break
@@ -412,15 +427,15 @@ local OvaleDataClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(Oval
         return verified, requirement
     end,
     GetItemInfoProperty = function(self, itemId, atTime, property)
-        local targetGUID = __GUID.OvaleGUID:UnitGUID("player")
+        local targetGUID = OvaleGUID:UnitGUID("player")
         local ii = self:ItemInfo(itemId)
         local value = ii and ii[property]
         local requirements = ii and ii.require[property]
         if requirements then
-            for v, requirement in _pairs(requirements) do
-                local verified = __Requirement.CheckRequirements(itemId, atTime, requirement, 1, targetGUID)
+            for v, requirement in pairs(requirements) do
+                local verified = CheckRequirements(itemId, atTime, requirement, 1, targetGUID)
                 if verified then
-                    value = _tonumber(v) or v
+                    value = tonumber(v) or v
                     break
                 end
             end
@@ -428,20 +443,20 @@ local OvaleDataClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(Oval
         return value
     end,
     GetSpellInfoProperty = function(self, spellId, atTime, property, targetGUID)
-        targetGUID = targetGUID or __GUID.OvaleGUID:UnitGUID(__State.baseState.defaultTarget or "target")
+        targetGUID = targetGUID or OvaleGUID:UnitGUID(baseState.defaultTarget or "target")
         local si = self.spellInfo[spellId]
         local value = si and si[property]
         local requirements = si and si.require[property]
         if requirements then
-            for v, requirement in _pairs(requirements) do
-                local verified = __Requirement.CheckRequirements(spellId, atTime, requirement, 1, targetGUID)
+            for v, requirement in pairs(requirements) do
+                local verified = CheckRequirements(spellId, atTime, requirement, 1, targetGUID)
                 if verified then
-                    value = _tonumber(v) or v
+                    value = tonumber(v) or v
                     break
                 end
             end
         end
-        if  not value or  not _tonumber(value) then
+        if  not value or  not tonumber(value) then
             return value
         end
         local addpower = si and si["add" .. property]
@@ -456,10 +471,10 @@ local OvaleDataClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(Oval
         end
         local multipliers = si and si.require[property .. "_percent"]
         if multipliers then
-            for v, requirement in _pairs(multipliers) do
-                local verified = __Requirement.CheckRequirements(spellId, atTime, requirement, 1, targetGUID)
+            for v, requirement in pairs(multipliers) do
+                local verified = CheckRequirements(spellId, atTime, requirement, 1, targetGUID)
                 if verified then
-                    ratio = ratio * (_tonumber(v) or 0) / 100
+                    ratio = ratio * (tonumber(v) or 0) / 100
                 end
             end
         end
@@ -515,7 +530,7 @@ local OvaleDataClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(Oval
             end
         end
         if si and si.haste and spellcast then
-            local hasteMultiplier = __PaperDoll.OvalePaperDoll:GetHasteMultiplier(si.haste, spellcast)
+            local hasteMultiplier = OvalePaperDoll:GetHasteMultiplier(si.haste, spellcast)
             duration = duration / hasteMultiplier
         end
         return duration
@@ -525,11 +540,10 @@ local OvaleDataClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(Oval
         local si = self.spellInfo[auraId]
         if si then
             tick = si.tick or tick
-            local hasteMultiplier = __PaperDoll.OvalePaperDoll:GetHasteMultiplier(si.haste, snapshot)
+            local hasteMultiplier = OvalePaperDoll:GetHasteMultiplier(si.haste, snapshot)
             tick = tick / hasteMultiplier
         end
         return tick
     end,
 })
 __exports.OvaleData = OvaleDataClass()
-end)

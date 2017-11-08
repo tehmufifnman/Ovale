@@ -11,8 +11,8 @@ let tinsert = insert;
 let tconcat = concat;
 
 
-let OvaleArtifactBase = Ovale.NewModule("OvaleArtifact", aceEvent);
-class OvaleArtifactClass extends OvaleDebug.RegisterDebugging(OvaleArtifactBase) {
+let OvaleArtifactBase = OvaleDebug.RegisterDebugging(Ovale.NewModule("OvaleArtifact", aceEvent));
+class OvaleArtifactClass extends OvaleArtifactBase {
     self_traits = {}
 
     debugOptions = {

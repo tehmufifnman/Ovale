@@ -1,26 +1,50 @@
-local __addonName, __addon = ...
-            __addon.require("./FutureState", { "./Future", "./Cooldown", "./LastSpell", "./SpellBook", "./GUID", "./State", "./Ovale", "./PaperDoll", "./DataState", "./Stance" }, function(__exports, __Future, __Cooldown, __LastSpell, __SpellBook, __GUID, __State, __Ovale, __PaperDoll, __DataState, __Stance)
-local _wipe = wipe
-local API_GetTime = GetTime
-local _pairs = pairs
-local tinsert = table.insert
-local tremove = table.remove
+local __exports = LibStub:NewLibrary("ovale/FutureState", 10000)
+if not __exports then return end
+local __class = LibStub:GetLibrary("tslib").newClass
+local __Future = LibStub:GetLibrary("ovale/Future")
+local OvaleFuture = __Future.OvaleFuture
+local __Cooldown = LibStub:GetLibrary("ovale/Cooldown")
+local OvaleCooldown = __Cooldown.OvaleCooldown
+local __LastSpell = LibStub:GetLibrary("ovale/LastSpell")
+local lastSpell = __LastSpell.lastSpell
+local self_pool = __LastSpell.self_pool
+local __SpellBook = LibStub:GetLibrary("ovale/SpellBook")
+local OvaleSpellBook = __SpellBook.OvaleSpellBook
+local __GUID = LibStub:GetLibrary("ovale/GUID")
+local OvaleGUID = __GUID.OvaleGUID
+local __State = LibStub:GetLibrary("ovale/State")
+local OvaleState = __State.OvaleState
+local baseState = __State.baseState
+local __Ovale = LibStub:GetLibrary("ovale/Ovale")
+local Ovale = __Ovale.Ovale
+local __PaperDoll = LibStub:GetLibrary("ovale/PaperDoll")
+local paperDollState = __PaperDoll.paperDollState
+local OvalePaperDoll = __PaperDoll.OvalePaperDoll
+local __DataState = LibStub:GetLibrary("ovale/DataState")
+local dataState = __DataState.dataState
+local __Stance = LibStub:GetLibrary("ovale/Stance")
+local OvaleStance = __Stance.OvaleStance
+local wipe = wipe
+local pairs = pairs
+local GetTime = GetTime
+local insert = table.insert
+local remove = table.remove
 local SIMULATOR_LAG = 0.005
-local FutureState = __addon.__class(nil, {
+local FutureState = __class(nil, {
     InitializeState = function(self)
         self.lastCast = {}
         self.counter = {}
     end,
     ResetState = function(self)
-        __Future.OvaleFuture:StartProfiling("OvaleFuture_ResetState")
-        local now = API_GetTime()
-        __State.baseState.currentTime = now
-        __Future.OvaleFuture:Log("Reset state with current time = %f", __State.baseState.currentTime)
-        self.inCombat = __Future.OvaleFuture.inCombat
-        self.combatStartTime = __Future.OvaleFuture.combatStartTime or 0
+        OvaleFuture:StartProfiling("OvaleFuture_ResetState")
+        local now = GetTime()
+        baseState.currentTime = now
+        OvaleFuture:Log("Reset state with current time = %f", baseState.currentTime)
+        self.inCombat = OvaleFuture.inCombat
+        self.combatStartTime = OvaleFuture.combatStartTime or 0
         self.nextCast = now
         local reason = ""
-        local start, duration = __Cooldown.OvaleCooldown:GetGlobalCooldown(now)
+        local start, duration = OvaleCooldown:GetGlobalCooldown(now)
         if start and start > 0 then
             local ending = start + duration
             if self.nextCast < ending then
@@ -29,10 +53,10 @@ local FutureState = __addon.__class(nil, {
             end
         end
         local lastGCDSpellcastFound, lastOffGCDSpellcastFound, lastSpellcastFound
-        for i = #__LastSpell.lastSpell.queue, 1, -1 do
-            local spellcast = __LastSpell.lastSpell.queue[i]
+        for i = #lastSpell.queue, 1, -1 do
+            local spellcast = lastSpell.queue[i]
             if spellcast.spellId and spellcast.start then
-                __Future.OvaleFuture:Log("    Found cast %d of spell %s (%d), start = %s, stop = %s.", i, spellcast.spellName, spellcast.spellId, spellcast.start, spellcast.stop)
+                OvaleFuture:Log("    Found cast %d of spell %s (%d), start = %s, stop = %s.", i, spellcast.spellName, spellcast.spellId, spellcast.start, spellcast.stop)
                 if  not lastSpellcastFound then
                     self.lastSpellId = spellcast.spellId
                     if spellcast.start and spellcast.stop and spellcast.start <= now and now < spellcast.stop then
@@ -61,7 +85,7 @@ local FutureState = __addon.__class(nil, {
             end
         end
         if  not lastSpellcastFound then
-            local spellcast = __LastSpell.lastSpell.lastSpellcast
+            local spellcast = lastSpell.lastSpellcast
             if spellcast then
                 self.lastSpellId = spellcast.spellId
                 if spellcast.start and spellcast.stop and spellcast.start <= now and now < spellcast.stop then
@@ -73,7 +97,7 @@ local FutureState = __addon.__class(nil, {
             end
         end
         if  not lastGCDSpellcastFound then
-            local spellcast = __LastSpell.lastSpell.lastGCDSpellcast
+            local spellcast = lastSpell.lastGCDSpellcast
             if spellcast then
                 self.lastGCDSpellId = spellcast.spellId
                 if spellcast.stop and self.nextCast < spellcast.stop then
@@ -83,40 +107,40 @@ local FutureState = __addon.__class(nil, {
             end
         end
         if  not lastOffGCDSpellcastFound then
-            local spellcast = __Future.OvaleFuture.lastOffGCDSpellcast
+            local spellcast = OvaleFuture.lastOffGCDSpellcast
             if spellcast then
                 self.lastOffGCDSpellId = spellcast.spellId
             end
         end
-        __Future.OvaleFuture:Log("    lastSpellId = %s, lastGCDSpellId = %s, lastOffGCDSpellId = %s", self.lastSpellId, self.lastGCDSpellId, self.lastOffGCDSpellId)
-        __Future.OvaleFuture:Log("    nextCast = %f%s", self.nextCast, reason)
-        _wipe(self.lastCast)
-        for k, v in _pairs(__Future.OvaleFuture.counter) do
+        OvaleFuture:Log("    lastSpellId = %s, lastGCDSpellId = %s, lastOffGCDSpellId = %s", self.lastSpellId, self.lastGCDSpellId, self.lastOffGCDSpellId)
+        OvaleFuture:Log("    nextCast = %f%s", self.nextCast, reason)
+        wipe(self.lastCast)
+        for k, v in pairs(OvaleFuture.counter) do
             self.counter[k] = v
         end
-        __Future.OvaleFuture:StopProfiling("OvaleFuture_ResetState")
+        OvaleFuture:StopProfiling("OvaleFuture_ResetState")
     end,
     CleanState = function(self)
-        for k in _pairs(self.lastCast) do
+        for k in pairs(self.lastCast) do
             self.lastCast[k] = nil
         end
-        for k in _pairs(self.counter) do
+        for k in pairs(self.counter) do
             self.counter[k] = nil
         end
     end,
     ApplySpellStartCast = function(self, spellId, targetGUID, startCast, endCast, channel, spellcast)
-        __Future.OvaleFuture:StartProfiling("OvaleFuture_ApplySpellStartCast")
+        OvaleFuture:StartProfiling("OvaleFuture_ApplySpellStartCast")
         if channel then
-            __Future.OvaleFuture:UpdateCounters(spellId, startCast, targetGUID)
+            OvaleFuture:UpdateCounters(spellId, startCast, targetGUID)
         end
-        __Future.OvaleFuture:StopProfiling("OvaleFuture_ApplySpellStartCast")
+        OvaleFuture:StopProfiling("OvaleFuture_ApplySpellStartCast")
     end,
     ApplySpellAfterCast = function(self, spellId, targetGUID, startCast, endCast, channel, spellcast)
-        __Future.OvaleFuture:StartProfiling("OvaleFuture_ApplySpellAfterCast")
+        OvaleFuture:StartProfiling("OvaleFuture_ApplySpellAfterCast")
         if  not channel then
-            __Future.OvaleFuture:UpdateCounters(spellId, endCast, targetGUID)
+            OvaleFuture:UpdateCounters(spellId, endCast, targetGUID)
         end
-        __Future.OvaleFuture:StopProfiling("OvaleFuture_ApplySpellAfterCast")
+        OvaleFuture:StopProfiling("OvaleFuture_ApplySpellAfterCast")
     end,
     GetCounter = function(self, id)
         return self.counter[id] or 0
@@ -125,49 +149,49 @@ local FutureState = __addon.__class(nil, {
         return self:GetCounter(id)
     end,
     TimeOfLastCast = function(self, spellId)
-        return self.lastCast[spellId] or __Future.OvaleFuture.lastCastTime[spellId] or 0
+        return self.lastCast[spellId] or OvaleFuture.lastCastTime[spellId] or 0
     end,
     IsChanneling = function(self, atTime)
-        atTime = atTime or __State.baseState.currentTime
+        atTime = atTime or baseState.currentTime
         return self.channel and (atTime < self.endCast)
     end,
     PushGCDSpellId = function(self, spellId)
         if self.lastGCDSpellId then
-            tinsert(self.lastGCDSpellIds, self.lastGCDSpellId)
+            insert(self.lastGCDSpellIds, self.lastGCDSpellId)
             if #self.lastGCDSpellIds > 5 then
-                tremove(self.lastGCDSpellIds, 1)
+                remove(self.lastGCDSpellIds, 1)
             end
         end
         self.lastGCDSpellId = spellId
     end,
     ApplySpell = function(self, spellId, targetGUID, startCast, endCast, channel, spellcast)
-        __Future.OvaleFuture:StartProfiling("OvaleFuture_state_ApplySpell")
+        OvaleFuture:StartProfiling("OvaleFuture_state_ApplySpell")
         if spellId then
             if  not targetGUID then
-                targetGUID = __Ovale.Ovale.playerGUID
+                targetGUID = Ovale.playerGUID
             end
             local castTime
             if startCast and endCast then
                 castTime = endCast - startCast
             else
-                castTime = __SpellBook.OvaleSpellBook:GetCastTime(spellId) or 0
+                castTime = OvaleSpellBook:GetCastTime(spellId) or 0
                 startCast = startCast or self.nextCast
                 endCast = endCast or (startCast + castTime)
             end
             if  not spellcast then
                 spellcast = FutureState.staticSpellcast
-                _wipe(spellcast)
-                spellcast.caster = __Ovale.Ovale.playerGUID
+                wipe(spellcast)
+                spellcast.caster = Ovale.playerGUID
                 spellcast.spellId = spellId
-                spellcast.spellName = __SpellBook.OvaleSpellBook:GetSpellName(spellId)
+                spellcast.spellName = OvaleSpellBook:GetSpellName(spellId)
                 spellcast.target = targetGUID
-                spellcast.targetName = __GUID.OvaleGUID:GUIDName(targetGUID)
+                spellcast.targetName = OvaleGUID:GUIDName(targetGUID)
                 spellcast.start = startCast
                 spellcast.stop = endCast
                 spellcast.channel = channel
-                __PaperDoll.paperDollState:UpdateSnapshot(spellcast)
+                paperDollState:UpdateSnapshot(spellcast)
                 local atTime = channel and startCast or endCast
-                for _, mod in _pairs(__LastSpell.lastSpell.modules) do
+                for _, mod in pairs(lastSpell.modules) do
                     local func = mod.SaveSpellcastInfo
                     if func then
                         func(mod, spellcast, atTime, self)
@@ -189,14 +213,14 @@ local FutureState = __addon.__class(nil, {
             else
                 self.lastOffGCDSpellId = spellId
             end
-            local now = API_GetTime()
+            local now = GetTime()
             if startCast >= now then
-                __State.baseState.currentTime = startCast + SIMULATOR_LAG
+                baseState.currentTime = startCast + SIMULATOR_LAG
             else
-                __State.baseState.currentTime = now
+                baseState.currentTime = now
             end
-            __Future.OvaleFuture:Log("Apply spell %d at %f currentTime=%f nextCast=%f endCast=%f targetGUID=%s", spellId, startCast, __State.baseState.currentTime, nextCast, endCast, targetGUID)
-            if  not self.inCombat and __SpellBook.OvaleSpellBook:IsHarmfulSpell(spellId) then
+            OvaleFuture:Log("Apply spell %d at %f currentTime=%f nextCast=%f endCast=%f targetGUID=%s", spellId, startCast, baseState.currentTime, nextCast, endCast, targetGUID)
+            if  not self.inCombat and OvaleSpellBook:IsHarmfulSpell(spellId) then
                 self.inCombat = true
                 if channel then
                     self.combatStartTime = startCast
@@ -205,26 +229,26 @@ local FutureState = __addon.__class(nil, {
                 end
             end
             if startCast > now then
-                __State.OvaleState:ApplySpellStartCast(spellId, targetGUID, startCast, endCast, channel, spellcast)
+                OvaleState:ApplySpellStartCast(spellId, targetGUID, startCast, endCast, channel, spellcast)
             end
             if endCast > now then
-                __State.OvaleState:ApplySpellAfterCast(spellId, targetGUID, startCast, endCast, channel, spellcast)
+                OvaleState:ApplySpellAfterCast(spellId, targetGUID, startCast, endCast, channel, spellcast)
             end
-            __State.OvaleState:ApplySpellOnHit(spellId, targetGUID, startCast, endCast, channel, spellcast)
+            OvaleState:ApplySpellOnHit(spellId, targetGUID, startCast, endCast, channel, spellcast)
         end
-        __Future.OvaleFuture:StopProfiling("OvaleFuture_state_ApplySpell")
+        OvaleFuture:StopProfiling("OvaleFuture_state_ApplySpell")
     end,
     GetDamageMultiplier = function(self, spellId, targetGUID, atTime)
-        return __Future.OvaleFuture:GetDamageMultiplier(spellId, targetGUID, atTime)
+        return OvaleFuture:GetDamageMultiplier(spellId, targetGUID, atTime)
     end,
     UpdateCounters = function(self, spellId, atTime, targetGUID)
-        return __Future.OvaleFuture:UpdateCounters(spellId, atTime, targetGUID)
+        return OvaleFuture:UpdateCounters(spellId, atTime, targetGUID)
     end,
     ApplyInFlightSpells = function(self)
-        local now = API_GetTime()
+        local now = GetTime()
         local index = 1
-        while index <= #__LastSpell.lastSpell.queue do
-            local spellcast = __LastSpell.lastSpell.queue[index]
+        while index <= #lastSpell.queue do
+            local spellcast = lastSpell.queue[index]
             if spellcast.stop then
                 local isValid = false
                 local description
@@ -237,14 +261,14 @@ local FutureState = __addon.__class(nil, {
                 end
                 if isValid then
                     if spellcast.target then
-                        __State.OvaleState:Log("Active spell %s (%d) is %s to %s (%s), now=%f, endCast=%f", spellcast.spellName, spellcast.spellId, description, spellcast.targetName, spellcast.target, now, spellcast.stop)
+                        OvaleState:Log("Active spell %s (%d) is %s to %s (%s), now=%f, endCast=%f", spellcast.spellName, spellcast.spellId, description, spellcast.targetName, spellcast.target, now, spellcast.stop)
                     else
-                        __State.OvaleState:Log("Active spell %s (%d) is %s, now=%f, endCast=%f", spellcast.spellName, spellcast.spellId, description, now, spellcast.stop)
+                        OvaleState:Log("Active spell %s (%d) is %s, now=%f, endCast=%f", spellcast.spellName, spellcast.spellId, description, now, spellcast.stop)
                     end
                     self:ApplySpell(spellcast.spellId, spellcast.target, spellcast.start, spellcast.stop, spellcast.channel, spellcast)
                 else
-                    tremove(__LastSpell.lastSpell.queue, index)
-                    __LastSpell.self_pool:Release(spellcast)
+                    remove(lastSpell.queue, index)
+                    self_pool:Release(spellcast)
                     index = index - 1
                 end
             end
@@ -254,36 +278,36 @@ local FutureState = __addon.__class(nil, {
     GetGCD = function(self, spellId, atTime, targetGUID)
         spellId = spellId or __exports.futureState.currentSpellId
         if  not atTime then
-            if __exports.futureState.endCast and __exports.futureState.endCast > __State.baseState.currentTime then
+            if __exports.futureState.endCast and __exports.futureState.endCast > baseState.currentTime then
                 atTime = __exports.futureState.endCast
             else
-                atTime = __State.baseState.currentTime
+                atTime = baseState.currentTime
             end
         end
-        targetGUID = targetGUID or __GUID.OvaleGUID:UnitGUID(__State.baseState.defaultTarget)
-        local gcd = spellId and __DataState.dataState:GetSpellInfoProperty(spellId, atTime, "gcd", targetGUID)
+        targetGUID = targetGUID or OvaleGUID:UnitGUID(baseState.defaultTarget)
+        local gcd = spellId and dataState:GetSpellInfoProperty(spellId, atTime, "gcd", targetGUID)
         if  not gcd then
             local haste
-            gcd, haste = __Cooldown.OvaleCooldown:GetBaseGCD()
-            if __Ovale.Ovale.playerClass == "MONK" and __PaperDoll.OvalePaperDoll:IsSpecialization("mistweaver") then
+            gcd, haste = OvaleCooldown:GetBaseGCD()
+            if Ovale.playerClass == "MONK" and OvalePaperDoll:IsSpecialization("mistweaver") then
                 gcd = 1.5
                 haste = "spell"
-            elseif __Ovale.Ovale.playerClass == "DRUID" then
-                if __Stance.OvaleStance:IsStance("druid_cat_form") then
+            elseif Ovale.playerClass == "DRUID" then
+                if OvaleStance:IsStance("druid_cat_form") then
                     gcd = 1
                     haste = false
                 end
             end
-            local gcdHaste = spellId and __DataState.dataState:GetSpellInfoProperty(spellId, atTime, "gcd_haste", targetGUID)
+            local gcdHaste = spellId and dataState:GetSpellInfoProperty(spellId, atTime, "gcd_haste", targetGUID)
             if gcdHaste then
                 haste = gcdHaste
             else
-                local siHaste = spellId and __DataState.dataState:GetSpellInfoProperty(spellId, atTime, "haste", targetGUID)
+                local siHaste = spellId and dataState:GetSpellInfoProperty(spellId, atTime, "haste", targetGUID)
                 if siHaste then
                     haste = siHaste
                 end
             end
-            local multiplier = __PaperDoll.paperDollState:GetHasteMultiplier(haste)
+            local multiplier = paperDollState:GetHasteMultiplier(haste)
             gcd = gcd / multiplier
             gcd = (gcd > 0.75) and gcd or 0.75
         end
@@ -307,5 +331,4 @@ local FutureState = __addon.__class(nil, {
     end
 })
 __exports.futureState = FutureState()
-__State.OvaleState:RegisterState(__exports.futureState)
-end)
+OvaleState:RegisterState(__exports.futureState)

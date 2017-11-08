@@ -1,14 +1,22 @@
-local __addonName, __addon = ...
-            __addon.require("./State", { "./Debug", "./Queue", "./Ovale" }, function(__exports, __Debug, __Queue, __Ovale)
-local OvaleStateBase = __Ovale.Ovale:NewModule("OvaleState")
-local _pairs = pairs
-local self_stateAddons = __Queue.OvaleQueue("OvaleState_stateAddons")
-local OvaleStateClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(OvaleStateBase), {
+local __exports = LibStub:NewLibrary("ovale/State", 10000)
+if not __exports then return end
+local __class = LibStub:GetLibrary("tslib").newClass
+local __Debug = LibStub:GetLibrary("ovale/Debug")
+local OvaleDebug = __Debug.OvaleDebug
+local __Queue = LibStub:GetLibrary("ovale/Queue")
+local OvaleQueue = __Queue.OvaleQueue
+local __Ovale = LibStub:GetLibrary("ovale/Ovale")
+local Ovale = __Ovale.Ovale
+local pairs = pairs
+local OvaleStateBase = Ovale:NewModule("OvaleState")
+local self_stateAddons = OvaleQueue("OvaleState_stateAddons")
+local OvaleStateBaseClass = OvaleDebug:RegisterDebugging(OvaleStateBase)
+local OvaleStateClass = __class(OvaleStateBaseClass, {
     RegisterState = function(self, stateAddon)
         self_stateAddons:Insert(stateAddon)
     end,
     UnregisterState = function(self, stateAddon)
-        local stateModules = __Queue.OvaleQueue("OvaleState_stateModules")
+        local stateModules = OvaleQueue("OvaleState_stateModules")
         while self_stateAddons:Size() > 0 do
             local addon = self_stateAddons:Remove()
             if stateAddon ~= addon then
@@ -56,7 +64,7 @@ local OvaleStateClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(Ova
     end,
 })
 __exports.OvaleState = OvaleStateClass()
-__exports.BaseState = __addon.__class(nil, {
+__exports.BaseState = __class(nil, {
     InitializeState = function(self)
         self.futureVariable = {}
         self.futureLastEnable = {}
@@ -65,12 +73,12 @@ __exports.BaseState = __addon.__class(nil, {
         self.defaultTarget = "target"
     end,
     ResetState = function(self)
-        for k in _pairs(self.futureVariable) do
+        for k in pairs(self.futureVariable) do
             self.futureVariable[k] = nil
             self.futureLastEnable[k] = nil
         end
         if  not self.inCombat then
-            for k in _pairs(self.variable) do
+            for k in pairs(self.variable) do
                 self:Log("Resetting state variable '%s'.", k)
                 self.variable[k] = nil
                 self.lastEnable[k] = nil
@@ -78,16 +86,16 @@ __exports.BaseState = __addon.__class(nil, {
         end
     end,
     CleanState = function(self)
-        for k in _pairs(self.futureVariable) do
+        for k in pairs(self.futureVariable) do
             self.futureVariable[k] = nil
         end
-        for k in _pairs(self.futureLastEnable) do
+        for k in pairs(self.futureLastEnable) do
             self.futureLastEnable[k] = nil
         end
-        for k in _pairs(self.variable) do
+        for k in pairs(self.variable) do
             self.variable[k] = nil
         end
-        for k in _pairs(self.lastEnable) do
+        for k in pairs(self.lastEnable) do
             self.lastEnable[k] = nil
         end
         self.defaultTarget = nil
@@ -130,4 +138,3 @@ __exports.BaseState = __addon.__class(nil, {
     end
 })
 __exports.baseState = __exports.BaseState()
-end)

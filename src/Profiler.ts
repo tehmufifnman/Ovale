@@ -104,6 +104,9 @@ class OvaleProfilerClass extends OvaleProfilerBase {
         OvaleOptions.defaultDB.global = OvaleOptions.defaultDB.global || {}
         OvaleOptions.defaultDB.global.profiler = {}
         OvaleOptions.RegisterOptions(OvaleProfilerClass);
+    }
+
+    OnInitialize() {
         let appName = this.GetName();
         AceConfig.RegisterOptionsTable(appName, this.options);
         AceConfigDialog.AddToBlizOptions(appName, L["Profiling"], Ovale.GetName());

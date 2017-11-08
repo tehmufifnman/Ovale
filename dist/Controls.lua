@@ -1,10 +1,9 @@
-local __addonName, __addon = ...
-            __addon.require("./Controls", {}, function(__exports)
-local _wipe = wipe
+local __exports = LibStub:NewLibrary("ovale/Controls", 10000)
+if not __exports then return end
+local wipe = wipe
 __exports.checkBoxes = {}
 __exports.lists = {}
 __exports.ResetControls = function()
-    _wipe(__exports.checkBoxes)
-    _wipe(__exports.lists)
+    wipe(__exports.checkBoxes)
+    wipe(__exports.lists)
 end
-end)

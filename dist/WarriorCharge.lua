@@ -1,27 +1,36 @@
-local __addonName, __addon = ...
-            __addon.require("./WarriorCharge", { "./Debug", "./Aura", "./Ovale", "AceEvent-3.0" }, function(__exports, __Debug, __Aura, __Ovale, aceEvent)
-local OvaleWarriorChargeBase = __Ovale.Ovale:NewModule("OvaleWarriorCharge", aceEvent)
-local API_GetSpellInfo = GetSpellInfo
-local API_GetTime = GetTime
-local INFINITY = math.huge
+local __exports = LibStub:NewLibrary("ovale/WarriorCharge", 10000)
+if not __exports then return end
+local __class = LibStub:GetLibrary("tslib").newClass
+local __Debug = LibStub:GetLibrary("ovale/Debug")
+local OvaleDebug = __Debug.OvaleDebug
+local __Aura = LibStub:GetLibrary("ovale/Aura")
+local OvaleAura = __Aura.OvaleAura
+local __Ovale = LibStub:GetLibrary("ovale/Ovale")
+local Ovale = __Ovale.Ovale
+local aceEvent = LibStub:GetLibrary("AceEvent-3.0", true)
+local GetSpellInfo = GetSpellInfo
+local GetTime = GetTime
+local huge = math.huge
+local OvaleWarriorChargeBase = OvaleDebug:RegisterDebugging(Ovale:NewModule("OvaleWarriorCharge", aceEvent))
+local INFINITY = huge
 local self_playerGUID = nil
 local CHARGED = 100
 local CHARGED_NAME = "Charged"
 local CHARGED_DURATION = INFINITY
 local CHARGED_ATTACKS = {
-    [100] = API_GetSpellInfo(100)
+    [100] = GetSpellInfo(100)
 }
-local OvaleWarriorChargeClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(OvaleWarriorChargeBase), {
+local OvaleWarriorChargeClass = __class(OvaleWarriorChargeBase, {
     constructor = function(self)
         self.targetGUID = nil
-        __Debug.OvaleDebug:RegisterDebugging(OvaleWarriorChargeBase).constructor(self)
-        if __Ovale.Ovale.playerClass == "WARRIOR" then
-            self_playerGUID = __Ovale.Ovale.playerGUID
+        OvaleWarriorChargeBase.constructor(self)
+        if Ovale.playerClass == "WARRIOR" then
+            self_playerGUID = Ovale.playerGUID
             self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
         end
     end,
     OnDisable = function(self)
-        if __Ovale.Ovale.playerClass == "WARRIOR" then
+        if Ovale.playerClass == "WARRIOR" then
             self:UnregisterMessage("COMBAT_LOG_EVENT_UNFILTERED")
         end
     end,
@@ -31,19 +40,18 @@ local OvaleWarriorChargeClass = __addon.__class(__Debug.OvaleDebug:RegisterDebug
             local spellId, spellName = arg12, arg13
             if CHARGED_ATTACKS[spellId] and destGUID ~= self.targetGUID then
                 self:Debug("Spell %d (%s) on new target %s.", spellId, spellName, destGUID)
-                local now = API_GetTime()
+                local now = GetTime()
                 if self.targetGUID then
                     self:Debug("Removing Charged debuff on previous target %s.", self.targetGUID)
-                    __Aura.OvaleAura:LostAuraOnGUID(self.targetGUID, now, CHARGED, self_playerGUID)
+                    OvaleAura:LostAuraOnGUID(self.targetGUID, now, CHARGED, self_playerGUID)
                 end
                 self:Debug("Adding Charged debuff to %s.", destGUID)
                 local duration = CHARGED_DURATION
                 local ending = now + CHARGED_DURATION
-                __Aura.OvaleAura:GainedAuraOnGUID(destGUID, now, CHARGED, self_playerGUID, "HARMFUL", nil, nil, 1, nil, duration, ending, nil, CHARGED_NAME, nil, nil, nil)
+                OvaleAura:GainedAuraOnGUID(destGUID, now, CHARGED, self_playerGUID, "HARMFUL", nil, nil, 1, nil, duration, ending, nil, CHARGED_NAME, nil, nil, nil)
                 self.targetGUID = destGUID
             end
         end
     end,
 })
 __exports.OvaleWarriorCharge = OvaleWarriorChargeClass()
-end)

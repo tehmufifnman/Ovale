@@ -10,7 +10,7 @@ import { ipairs, pairs, wipe, truthy } from "@wowts/lua";
 import { find } from "@wowts/string";
 import { GetTime, COMBATLOG_OBJECT_AFFILIATION_MINE, COMBATLOG_OBJECT_AFFILIATION_PARTY, COMBATLOG_OBJECT_AFFILIATION_RAID, COMBATLOG_OBJECT_REACTION_FRIENDLY } from "@wowts/wow-mock";
 
-let OvaleEnemiesBase = Ovale.NewModule("OvaleEnemies", aceEvent, AceTimer);
+let OvaleEnemiesBase = OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(Ovale.NewModule("OvaleEnemies", aceEvent, AceTimer)));
 export let OvaleEnemies: OvaleEnemiesClass;
 let GROUP_MEMBER = bor(COMBATLOG_OBJECT_AFFILIATION_MINE, COMBATLOG_OBJECT_AFFILIATION_PARTY, COMBATLOG_OBJECT_AFFILIATION_RAID);
 let CLEU_TAG_SUFFIXES = {
@@ -64,7 +64,7 @@ const IsFriendly = function(unitFlags, isGroupMember?) {
     return band(unitFlags, COMBATLOG_OBJECT_REACTION_FRIENDLY) > 0 && (!isGroupMember || band(unitFlags, GROUP_MEMBER) > 0);
 }
 
-class OvaleEnemiesClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(OvaleEnemiesBase)) {
+class OvaleEnemiesClass extends OvaleEnemiesBase {
     activeEnemies = 0;
     taggedEnemies = 0;
 

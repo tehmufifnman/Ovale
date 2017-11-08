@@ -1,6 +1,8 @@
-local __addonName, __addon = ...
-            __addon.require("./scripts/ovale_monk_spells", { "./Scripts" }, function(__exports, __Scripts)
-do
+local __exports = LibStub:NewLibrary("ovale/scripts/ovale_monk_spells", 10000)
+if not __exports then return end
+local __Scripts = LibStub:GetLibrary("ovale/Scripts")
+local OvaleScripts = __Scripts.OvaleScripts
+__exports.register = function()
     local name = "ovale_monk_spells"
     local desc = "[7.0] Ovale: Monk spells"
     local code = [[
@@ -333,6 +335,5 @@ SpellList(any_stagger_debuff light_stagger_debuff moderate_stagger_debuff heavy_
 	SpellInfo(dampen_harm tag=cd)
 	SpellInfo(diffuse_magic tag=cd)
 ]]
-    __Scripts.OvaleScripts:RegisterScript("MONK", nil, name, desc, code, "include")
+    OvaleScripts:RegisterScript("MONK", nil, name, desc, code, "include")
 end
-end)

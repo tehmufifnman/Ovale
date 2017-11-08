@@ -1,19 +1,20 @@
-local __addonName, __addon = ...
-            __addon.require("./Localization", {}, function(__exports)
-local _rawset = rawset
-local _setmetatable = setmetatable
-local _tostring = tostring
+local __exports = LibStub:NewLibrary("ovale/Localization", 10000)
+if not __exports then return end
+local setmetatable = setmetatable
+local rawset = rawset
+local tostring = tostring
+local GetLocale = GetLocale
 __exports.L = nil
 do
     local MT = {
         __index = function(self, key)
-            local value = _tostring(key)
-            _rawset(self, key, value)
+            local value = tostring(key)
+            rawset(self, key, value)
             return value
         end
 
     }
-    __exports.L = _setmetatable({}, MT)
+    __exports.L = setmetatable({}, MT)
 end
 local locale = GetLocale()
 if locale == "deDE" then
@@ -1153,4 +1154,3 @@ elseif locale == "zhTW" then
     __exports.L["Vertical offset from the center of the screen."] = "距離畫面正中央的垂直方向移動距離。"
     __exports.L["Visibilité"] = "顯示"
 end
-end)

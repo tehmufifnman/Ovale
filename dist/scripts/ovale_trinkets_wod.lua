@@ -1,6 +1,8 @@
-local __addonName, __addon = ...
-            __addon.require("./scripts/ovale_trinkets_wod", { "./Scripts" }, function(__exports, __Scripts)
-do
+local __exports = LibStub:NewLibrary("ovale/scripts/ovale_trinkets_wod", 10000)
+if not __exports then return end
+local __Scripts = LibStub:GetLibrary("ovale/Scripts")
+local OvaleScripts = __Scripts.OvaleScripts
+__exports.register = function()
     local name = "ovale_trinkets_wod"
     local desc = "[6.2] Ovale: Trinkets (Warlords of Draenor)"
     local code = [[
@@ -397,6 +399,5 @@ Define(soul_capacitor 124225)
 Define(spirit_shift_buff 184293)
 	SpellInfo(spirit_shift_buff buff_cd=60 duration=10)
 ]]
-    __Scripts.OvaleScripts:RegisterScript(nil, nil, name, desc, code, "include")
+    OvaleScripts:RegisterScript(nil, nil, name, desc, code, "include")
 end
-end)

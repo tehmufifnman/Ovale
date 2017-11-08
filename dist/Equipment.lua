@@ -1,69 +1,79 @@
-local __addonName, __addon = ...
-            __addon.require("./Equipment", { "./Profiler", "./Ovale", "./Debug", "AceEvent-3.0" }, function(__exports, __Profiler, __Ovale, __Debug, aceEvent)
-local OvaleEquipmentBase = __Ovale.Ovale:NewModule("OvaleEquipment", aceEvent)
-local _pairs = pairs
-local _select = select
-local strgsub = string.gsub
-local strmatch = string.match
-local _tonumber = tonumber
-local _type = type
-local _unpack = unpack
-local _wipe = wipe
-local API_CreateFrame = CreateFrame
-local API_GetAuctionItemSubClasses = GetAuctionItemSubClasses
-local API_GetInventoryItemID = GetInventoryItemID
-local API_GetItemInfo = GetItemInfo
-local _INVSLOT_AMMO = INVSLOT_AMMO
-local _INVSLOT_BACK = INVSLOT_BACK
-local _INVSLOT_BODY = INVSLOT_BODY
-local _INVSLOT_CHEST = INVSLOT_CHEST
-local _INVSLOT_FEET = INVSLOT_FEET
-local _INVSLOT_FINGER1 = INVSLOT_FINGER1
-local _INVSLOT_FINGER2 = INVSLOT_FINGER2
-local _INVSLOT_FIRST_EQUIPPED = INVSLOT_FIRST_EQUIPPED
-local _INVSLOT_HAND = INVSLOT_HAND
-local _INVSLOT_HEAD = INVSLOT_HEAD
-local _INVSLOT_LAST_EQUIPPED = INVSLOT_LAST_EQUIPPED
-local _INVSLOT_LEGS = INVSLOT_LEGS
-local _INVSLOT_MAINHAND = INVSLOT_MAINHAND
-local _INVSLOT_NECK = INVSLOT_NECK
-local _INVSLOT_OFFHAND = INVSLOT_OFFHAND
-local _INVSLOT_SHOULDER = INVSLOT_SHOULDER
-local _INVSLOT_TABARD = INVSLOT_TABARD
-local _INVSLOT_TRINKET1 = INVSLOT_TRINKET1
-local _INVSLOT_TRINKET2 = INVSLOT_TRINKET2
-local _INVSLOT_WAIST = INVSLOT_WAIST
-local _INVSLOT_WRIST = INVSLOT_WRIST
+local __exports = LibStub:NewLibrary("ovale/Equipment", 10000)
+if not __exports then return end
+local __class = LibStub:GetLibrary("tslib").newClass
+local __Profiler = LibStub:GetLibrary("ovale/Profiler")
+local OvaleProfiler = __Profiler.OvaleProfiler
+local __Ovale = LibStub:GetLibrary("ovale/Ovale")
+local Ovale = __Ovale.Ovale
+local __Debug = LibStub:GetLibrary("ovale/Debug")
+local OvaleDebug = __Debug.OvaleDebug
+local aceEvent = LibStub:GetLibrary("AceEvent-3.0", true)
+local pairs = pairs
+local select = select
+local tonumber = tonumber
+local type = type
+local unpack = unpack
+local wipe = wipe
+local _G = _G
+local gsub = string.gsub
+local match = string.match
+local CreateFrame = CreateFrame
+local GetAuctionItemSubClasses = GetAuctionItemSubClasses
+local GetInventoryItemID = GetInventoryItemID
+local GetItemInfo = GetItemInfo
+local INVSLOT_AMMO = INVSLOT_AMMO
+local INVSLOT_BACK = INVSLOT_BACK
+local INVSLOT_BODY = INVSLOT_BODY
+local INVSLOT_CHEST = INVSLOT_CHEST
+local INVSLOT_FEET = INVSLOT_FEET
+local INVSLOT_FINGER1 = INVSLOT_FINGER1
+local INVSLOT_FINGER2 = INVSLOT_FINGER2
+local INVSLOT_FIRST_EQUIPPED = INVSLOT_FIRST_EQUIPPED
+local INVSLOT_HAND = INVSLOT_HAND
+local INVSLOT_HEAD = INVSLOT_HEAD
+local INVSLOT_LEGS = INVSLOT_LEGS
+local INVSLOT_MAINHAND = INVSLOT_MAINHAND
+local INVSLOT_NECK = INVSLOT_NECK
+local INVSLOT_OFFHAND = INVSLOT_OFFHAND
+local INVSLOT_SHOULDER = INVSLOT_SHOULDER
+local INVSLOT_TABARD = INVSLOT_TABARD
+local INVSLOT_TRINKET1 = INVSLOT_TRINKET1
+local INVSLOT_TRINKET2 = INVSLOT_TRINKET2
+local INVSLOT_WAIST = INVSLOT_WAIST
+local INVSLOT_WRIST = INVSLOT_WRIST
+local ITEM_LEVEL = ITEM_LEVEL
+local UIParent = UIParent
+local OvaleEquipmentBase = OvaleDebug:RegisterDebugging(OvaleProfiler:RegisterProfiling(Ovale:NewModule("OvaleEquipment", aceEvent)))
 local self_tooltip = nil
-local OVALE_ITEM_LEVEL_PATTERN = "^" .. strgsub(ITEM_LEVEL, "%%d", "(%%d+)")
+local OVALE_ITEM_LEVEL_PATTERN = "^" .. gsub(ITEM_LEVEL, "%%d", "(%%d+)")
 local OVALE_SLOTNAME = {
-    AmmoSlot = _INVSLOT_AMMO,
-    BackSlot = _INVSLOT_BACK,
-    ChestSlot = _INVSLOT_CHEST,
-    FeetSlot = _INVSLOT_FEET,
-    Finger0Slot = _INVSLOT_FINGER1,
-    Finger1Slot = _INVSLOT_FINGER2,
-    HandsSlot = _INVSLOT_HAND,
-    HeadSlot = _INVSLOT_HEAD,
-    LegsSlot = _INVSLOT_LEGS,
-    MainHandSlot = _INVSLOT_MAINHAND,
-    NeckSlot = _INVSLOT_NECK,
-    SecondaryHandSlot = _INVSLOT_OFFHAND,
-    ShirtSlot = _INVSLOT_BODY,
-    ShoulderSlot = _INVSLOT_SHOULDER,
-    TabardSlot = _INVSLOT_TABARD,
-    Trinket0Slot = _INVSLOT_TRINKET1,
-    Trinket1Slot = _INVSLOT_TRINKET2,
-    WaistSlot = _INVSLOT_WAIST,
-    WristSlot = _INVSLOT_WRIST
+    AmmoSlot = INVSLOT_AMMO,
+    BackSlot = INVSLOT_BACK,
+    ChestSlot = INVSLOT_CHEST,
+    FeetSlot = INVSLOT_FEET,
+    Finger0Slot = INVSLOT_FINGER1,
+    Finger1Slot = INVSLOT_FINGER2,
+    HandsSlot = INVSLOT_HAND,
+    HeadSlot = INVSLOT_HEAD,
+    LegsSlot = INVSLOT_LEGS,
+    MainHandSlot = INVSLOT_MAINHAND,
+    NeckSlot = INVSLOT_NECK,
+    SecondaryHandSlot = INVSLOT_OFFHAND,
+    ShirtSlot = INVSLOT_BODY,
+    ShoulderSlot = INVSLOT_SHOULDER,
+    TabardSlot = INVSLOT_TABARD,
+    Trinket0Slot = INVSLOT_TRINKET1,
+    Trinket1Slot = INVSLOT_TRINKET2,
+    WaistSlot = INVSLOT_WAIST,
+    WristSlot = INVSLOT_WRIST
 }
 local OVALE_ARMORSET_SLOT_IDS = {
-    [1] = _INVSLOT_CHEST,
-    [2] = _INVSLOT_HAND,
-    [3] = _INVSLOT_HEAD,
-    [4] = _INVSLOT_LEGS,
-    [5] = _INVSLOT_SHOULDER,
-    [6] = _INVSLOT_BACK
+    [1] = INVSLOT_CHEST,
+    [2] = INVSLOT_HAND,
+    [3] = INVSLOT_HEAD,
+    [4] = INVSLOT_LEGS,
+    [5] = INVSLOT_SHOULDER,
+    [6] = INVSLOT_BACK
 }
 local OVALE_ARMORSET = {
     [85314] = "T14_tank",
@@ -1278,11 +1288,11 @@ local OVALE_ARMORSET = {
 }
 local OVALE_WEAPON_CLASS = {}
 do
-    OVALE_WEAPON_CLASS[1], OVALE_WEAPON_CLASS[2], OVALE_WEAPON_CLASS[3], OVALE_WEAPON_CLASS[4], OVALE_WEAPON_CLASS[5], OVALE_WEAPON_CLASS[6], OVALE_WEAPON_CLASS[7], OVALE_WEAPON_CLASS[8], OVALE_WEAPON_CLASS[9], OVALE_WEAPON_CLASS[10], OVALE_WEAPON_CLASS[11], OVALE_WEAPON_CLASS[12], OVALE_WEAPON_CLASS[13], OVALE_WEAPON_CLASS[14], OVALE_WEAPON_CLASS[15], OVALE_WEAPON_CLASS[16], OVALE_WEAPON_CLASS[17] = API_GetAuctionItemSubClasses(1)
+    OVALE_WEAPON_CLASS[1], OVALE_WEAPON_CLASS[2], OVALE_WEAPON_CLASS[3], OVALE_WEAPON_CLASS[4], OVALE_WEAPON_CLASS[5], OVALE_WEAPON_CLASS[6], OVALE_WEAPON_CLASS[7], OVALE_WEAPON_CLASS[8], OVALE_WEAPON_CLASS[9], OVALE_WEAPON_CLASS[10], OVALE_WEAPON_CLASS[11], OVALE_WEAPON_CLASS[12], OVALE_WEAPON_CLASS[13], OVALE_WEAPON_CLASS[14], OVALE_WEAPON_CLASS[15], OVALE_WEAPON_CLASS[16], OVALE_WEAPON_CLASS[17] = GetAuctionItemSubClasses(1)
 end
 local OVALE_META_GEM = nil
 do
-    local _, _, _, _, _, _, name = API_GetAuctionItemSubClasses(8)
+    local _, _, _, _, _, _, name = GetAuctionItemSubClasses(8)
     OVALE_META_GEM = name
 end
 local GetEquippedItemType = function(slotId)
@@ -1290,7 +1300,7 @@ local GetEquippedItemType = function(slotId)
     local itemId = __exports.OvaleEquipment:GetEquippedItem(slotId)
     local itemType
     if itemId then
-        local _, _, _, _, _, _, _, _, inventoryType = API_GetItemInfo(itemId)
+        local _, _, _, _, _, _, _, _, inventoryType = GetItemInfo(itemId)
         itemType = inventoryType
     end
     __exports.OvaleEquipment:StopProfiling("OvaleEquipment_GetEquippedItemType")
@@ -1304,9 +1314,9 @@ local GetItemLevel = function(slotId)
     for i = 2, self_tooltip:NumLines(), 1 do
         local text = (_G["OvaleEquipment_ScanningTooltipTextLeft" .. i]):GetText()
         if text then
-            itemLevel = strmatch(text, OVALE_ITEM_LEVEL_PATTERN)
+            itemLevel = match(text, OVALE_ITEM_LEVEL_PATTERN)
             if itemLevel then
-                itemLevel = _tonumber(itemLevel)
+                itemLevel = tonumber(itemLevel)
                 break
             end
         end
@@ -1318,7 +1328,7 @@ end
 local GetNormalizedWeaponSpeed = function(slotId)
     __exports.OvaleEquipment:StartProfiling("OvaleEquipment_GetNormalizedWeaponSpeed")
     local weaponSpeed
-    if slotId == _INVSLOT_MAINHAND or slotId == _INVSLOT_OFFHAND then
+    if slotId == INVSLOT_MAINHAND or slotId == INVSLOT_OFFHAND then
         local itemId = __exports.OvaleEquipment:GetEquippedItem(slotId)
         if itemId then
             weaponSpeed = 1.8
@@ -1351,7 +1361,7 @@ local armorSetName = {
         ["T15"] = "T15_caster"
     }
 }
-local OvaleEquipmentClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleEquipmentBase)), {
+local OvaleEquipmentClass = __class(OvaleEquipmentBase, {
     constructor = function(self)
         self.ready = false
         self.equippedItems = {}
@@ -1362,8 +1372,8 @@ local OvaleEquipmentClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging
         self.metaGem = nil
         self.mainHandWeaponSpeed = nil
         self.offHandWeaponSpeed = nil
-        __Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleEquipmentBase)).constructor(self)
-        self_tooltip = API_CreateFrame("GameTooltip", "OvaleEquipment_ScanningTooltip", nil, "GameTooltipTemplate")
+        OvaleEquipmentBase.constructor(self)
+        self_tooltip = CreateFrame("GameTooltip", "OvaleEquipment_ScanningTooltip", nil, "GameTooltipTemplate")
         self_tooltip:SetOwner(UIParent, "ANCHOR_NONE")
         self:RegisterEvent("GET_ITEM_INFO_RECEIVED")
         self:RegisterEvent("PLAYER_ENTERING_WORLD", "UpdateEquippedItems")
@@ -1378,13 +1388,13 @@ local OvaleEquipmentClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging
     end,
     GET_ITEM_INFO_RECEIVED = function(self, event)
         self:StartProfiling("OvaleEquipment_GET_ITEM_INFO_RECEIVED")
-        self.mainHandItemType = GetEquippedItemType(_INVSLOT_MAINHAND)
-        self.offHandItemType = GetEquippedItemType(_INVSLOT_OFFHAND)
-        self.mainHandWeaponSpeed = self:HasMainHandWeapon() and GetNormalizedWeaponSpeed(_INVSLOT_MAINHAND)
-        self.offHandWeaponSpeed = self:HasOffHandWeapon() and GetNormalizedWeaponSpeed(_INVSLOT_OFFHAND)
+        self.mainHandItemType = GetEquippedItemType(INVSLOT_MAINHAND)
+        self.offHandItemType = GetEquippedItemType(INVSLOT_OFFHAND)
+        self.mainHandWeaponSpeed = self:HasMainHandWeapon() and GetNormalizedWeaponSpeed(INVSLOT_MAINHAND)
+        self.offHandWeaponSpeed = self:HasOffHandWeapon() and GetNormalizedWeaponSpeed(INVSLOT_OFFHAND)
         local changed = false
         if changed then
-            __Ovale.Ovale:needRefresh()
+            Ovale:needRefresh()
             self:SendMessage("Ovale_EquipmentChanged")
         end
         self:StopProfiling("OvaleEquipment_GET_ITEM_INFO_RECEIVED")
@@ -1392,33 +1402,33 @@ local OvaleEquipmentClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging
     PLAYER_EQUIPMENT_CHANGED = function(self, event, slotId, hasItem)
         self:StartProfiling("OvaleEquipment_PLAYER_EQUIPMENT_CHANGED")
         if hasItem then
-            self.equippedItems[slotId] = API_GetInventoryItemID("player", slotId)
+            self.equippedItems[slotId] = GetInventoryItemID("player", slotId)
             self.equippedItemLevels[slotId] = GetItemLevel(slotId)
-            if slotId == _INVSLOT_MAINHAND then
+            if slotId == INVSLOT_MAINHAND then
                 self.mainHandItemType = GetEquippedItemType(slotId)
-                self.mainHandWeaponSpeed = self:HasMainHandWeapon() and GetNormalizedWeaponSpeed(_INVSLOT_MAINHAND)
-            elseif slotId == _INVSLOT_OFFHAND then
+                self.mainHandWeaponSpeed = self:HasMainHandWeapon() and GetNormalizedWeaponSpeed(INVSLOT_MAINHAND)
+            elseif slotId == INVSLOT_OFFHAND then
                 self.offHandItemType = GetEquippedItemType(slotId)
-                self.offHandWeaponSpeed = self:HasOffHandWeapon() and GetNormalizedWeaponSpeed(_INVSLOT_OFFHAND)
+                self.offHandWeaponSpeed = self:HasOffHandWeapon() and GetNormalizedWeaponSpeed(INVSLOT_OFFHAND)
             end
         else
             self.equippedItems[slotId] = nil
             self.equippedItemLevels[slotId] = nil
-            if slotId == _INVSLOT_MAINHAND then
+            if slotId == INVSLOT_MAINHAND then
                 self.mainHandItemType = nil
-            elseif slotId == _INVSLOT_OFFHAND then
+            elseif slotId == INVSLOT_OFFHAND then
                 self.offHandItemType = nil
             end
         end
         self:UpdateArmorSetCount()
-        __Ovale.Ovale:needRefresh()
+        Ovale:needRefresh()
         self:SendMessage("Ovale_EquipmentChanged")
         self:StopProfiling("OvaleEquipment_PLAYER_EQUIPMENT_CHANGED")
     end,
     GetArmorSetCount = function(self, name)
         local count = self.armorSetCount[name]
         if  not count then
-            local className = __Ovale.Ovale.playerClass
+            local className = Ovale.playerClass
             if armorSetName[className] and armorSetName[className][name] then
                 name = armorSetName[className][name]
                 count = self.armorSetCount[name]
@@ -1427,10 +1437,10 @@ local OvaleEquipmentClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging
         return count or 0
     end,
     GetEquippedItem = function(self, ...)
-        count = _select("#", ...)
+        count = select("#", ...)
         for n = 1, count, 1 do
-            local slotId = _select(n, ...)
-            if slotId and _type(slotId) ~= "number" then
+            local slotId = select(n, ...)
+            if slotId and type(slotId) ~= "number" then
                 slotId = OVALE_SLOTNAME[slotId]
             end
             if slotId then
@@ -1440,16 +1450,16 @@ local OvaleEquipmentClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging
             end
         end
         if count > 0 then
-            return _unpack(result, 1, count)
+            return unpack(result, 1, count)
         else
             return nil
         end
     end,
     GetEquippedItemLevel = function(self, ...)
-        count = _select("#", ...)
+        count = select("#", ...)
         for n = 1, count, 1 do
-            local slotId = _select(n, ...)
-            if slotId and _type(slotId) ~= "number" then
+            local slotId = select(n, ...)
+            if slotId and type(slotId) ~= "number" then
                 slotId = OVALE_SLOTNAME[slotId]
             end
             if slotId then
@@ -1459,28 +1469,28 @@ local OvaleEquipmentClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging
             end
         end
         if count > 0 then
-            return _unpack(result, 1, count)
+            return unpack(result, 1, count)
         else
             return nil
         end
     end,
     GetEquippedTrinkets = function(self)
-        return self.equippedItems[_INVSLOT_TRINKET1], self.equippedItems[_INVSLOT_TRINKET2]
+        return self.equippedItems[INVSLOT_TRINKET1], self.equippedItems[INVSLOT_TRINKET2]
     end,
     HasEquippedItem = function(self, itemId, slot, ...)
         if (slot ~= nil) then
             local slotId = slot
-            if _type(slotId) ~= "number" then
+            if type(slotId) ~= "number" then
                 slotId = OVALE_SLOTNAME[slotId]
             end
             if slotId and self.equippedItems[slotId] == itemId then
                 return slotId
             end
-            local additionalSlotsCount = _select("#", ...)
+            local additionalSlotsCount = select("#", ...)
             if additionalSlotsCount > 0 then
                 for n = 1, additionalSlotsCount, 1 do
-                    slotId = _select(n, ...)
-                    if slotId and _type(slotId) ~= "number" then
+                    slotId = select(n, ...)
+                    if slotId and type(slotId) ~= "number" then
                         slotId = OVALE_SLOTNAME[slotId]
                     end
                     if slotId and self.equippedItems[slotId] == itemId then
@@ -1489,7 +1499,7 @@ local OvaleEquipmentClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging
                 end
             end
         else
-            for slotId, equippedItemId in _pairs(self.equippedItems) do
+            for slotId, equippedItemId in pairs(self.equippedItems) do
                 if equippedItemId == itemId then
                     return slotId
                 end
@@ -1525,16 +1535,16 @@ local OvaleEquipmentClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging
         return self.offHandItemType == "INVTYPE_SHIELD"
     end,
     HasTrinket = function(self, itemId)
-        return self:HasEquippedItem(itemId, _INVSLOT_TRINKET1) or self:HasEquippedItem(itemId, _INVSLOT_TRINKET2)
+        return self:HasEquippedItem(itemId, INVSLOT_TRINKET1) or self:HasEquippedItem(itemId, INVSLOT_TRINKET2)
     end,
     HasTwoHandedWeapon = function(self, slotId)
-        if slotId and _type(slotId) ~= "number" then
+        if slotId and type(slotId) ~= "number" then
             slotId = OVALE_SLOTNAME[slotId]
         end
         if slotId then
-            if slotId == _INVSLOT_MAINHAND then
+            if slotId == INVSLOT_MAINHAND then
                 return self.mainHandItemType == "INVTYPE_2HWEAPON"
-            elseif slotId == _INVSLOT_OFFHAND then
+            elseif slotId == INVSLOT_OFFHAND then
                 return self.offHandItemType == "INVTYPE_2HWEAPON"
             end
         else
@@ -1543,13 +1553,13 @@ local OvaleEquipmentClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging
         return false
     end,
     HasOneHandedWeapon = function(self, slotId)
-        if slotId and _type(slotId) ~= "number" then
+        if slotId and type(slotId) ~= "number" then
             slotId = OVALE_SLOTNAME[slotId]
         end
         if slotId then
-            if slotId == _INVSLOT_MAINHAND then
+            if slotId == INVSLOT_MAINHAND then
                 return self.mainHandItemType == "INVTYPE_WEAPON" or self.mainHandItemType == "INVTYPE_WEAPONMAINHAND"
-            elseif slotId == _INVSLOT_OFFHAND then
+            elseif slotId == INVSLOT_OFFHAND then
                 return self.offHandItemType == "INVTYPE_WEAPON" or self.offHandItemType == "INVTYPE_WEAPONMAINHAND"
             end
         else
@@ -1559,7 +1569,7 @@ local OvaleEquipmentClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging
     end,
     UpdateArmorSetCount = function(self)
         self:StartProfiling("OvaleEquipment_UpdateArmorSetCount")
-        _wipe(self.armorSetCount)
+        wipe(self.armorSetCount)
         for i = 1, #OVALE_ARMORSET_SLOT_IDS, 1 do
             local itemId = self:GetEquippedItem(OVALE_ARMORSET_SLOT_IDS[i])
             if itemId then
@@ -1579,8 +1589,8 @@ local OvaleEquipmentClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging
         self:StartProfiling("OvaleEquipment_UpdateEquippedItems")
         local changed = false
         local item
-        for slotId = _INVSLOT_FIRST_EQUIPPED, _INVSLOT_LAST_EQUIPPED, 1 do
-            item = API_GetInventoryItemID("player", slotId)
+        for slotId = INVSLOT_FIRST_EQUIPPED, INVSLOT_LAST_EQUIPPED, 1 do
+            item = GetInventoryItemID("player", slotId)
             if item ~= self.equippedItems[slotId] then
                 self.equippedItems[slotId] = item
                 changed = true
@@ -1588,13 +1598,13 @@ local OvaleEquipmentClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging
         end
         local changedItemLevels = self:UpdateEquippedItemLevels()
         changed = changed or changedItemLevels
-        self.mainHandItemType = GetEquippedItemType(_INVSLOT_MAINHAND)
-        self.offHandItemType = GetEquippedItemType(_INVSLOT_OFFHAND)
-        self.mainHandWeaponSpeed = self:HasMainHandWeapon() and GetNormalizedWeaponSpeed(_INVSLOT_MAINHAND)
-        self.offHandWeaponSpeed = self:HasOffHandWeapon() and GetNormalizedWeaponSpeed(_INVSLOT_OFFHAND)
+        self.mainHandItemType = GetEquippedItemType(INVSLOT_MAINHAND)
+        self.offHandItemType = GetEquippedItemType(INVSLOT_OFFHAND)
+        self.mainHandWeaponSpeed = self:HasMainHandWeapon() and GetNormalizedWeaponSpeed(INVSLOT_MAINHAND)
+        self.offHandWeaponSpeed = self:HasOffHandWeapon() and GetNormalizedWeaponSpeed(INVSLOT_OFFHAND)
         if changed then
             self:UpdateArmorSetCount()
-            __Ovale.Ovale:needRefresh()
+            Ovale:needRefresh()
             self:SendMessage("Ovale_EquipmentChanged")
         end
         self.ready = true
@@ -1604,7 +1614,7 @@ local OvaleEquipmentClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging
         self:StartProfiling("OvaleEquipment_UpdateEquippedItemLevels")
         local changed = false
         local itemLevel
-        for slotId = _INVSLOT_FIRST_EQUIPPED, _INVSLOT_LAST_EQUIPPED, 1 do
+        for slotId = INVSLOT_FIRST_EQUIPPED, INVSLOT_LAST_EQUIPPED, 1 do
             itemLevel = GetItemLevel(slotId)
             if itemLevel ~= self.equippedItemLevels[slotId] then
                 self.equippedItemLevels[slotId] = itemLevel
@@ -1612,22 +1622,21 @@ local OvaleEquipmentClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging
             end
         end
         if changed then
-            __Ovale.Ovale:needRefresh()
+            Ovale:needRefresh()
             self:SendMessage("Ovale_EquipmentChanged")
         end
         self:StopProfiling("OvaleEquipment_UpdateEquippedItemLevels")
         return changed
     end,
     DebugEquipment = function(self)
-        for slotId = _INVSLOT_FIRST_EQUIPPED, _INVSLOT_LAST_EQUIPPED, 1 do
+        for slotId = INVSLOT_FIRST_EQUIPPED, INVSLOT_LAST_EQUIPPED, 1 do
             self:Print("Slot %d = %s (%d)", slotId, self:GetEquippedItem(slotId), self:GetEquippedItemLevel(slotId))
         end
         self:Print("Main-hand item type: %s", self.mainHandItemType)
         self:Print("Off-hand item type: %s", self.offHandItemType)
-        for k, v in _pairs(self.armorSetCount) do
+        for k, v in pairs(self.armorSetCount) do
             self:Print("Player has %d piece(s) of %s armor set.", v, k)
         end
     end,
 })
 __exports.OvaleEquipment = OvaleEquipmentClass()
-end)

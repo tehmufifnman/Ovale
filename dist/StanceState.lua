@@ -1,38 +1,44 @@
-local __addonName, __addon = ...
-            __addon.require("./StanceState", { "./State", "./Stance", "./DataState" }, function(__exports, __State, __Stance, __DataState)
-local _type = type
-local StanceState = __addon.__class(nil, {
+local __exports = LibStub:NewLibrary("ovale/StanceState", 10000)
+if not __exports then return end
+local __class = LibStub:GetLibrary("tslib").newClass
+local __State = LibStub:GetLibrary("ovale/State")
+local OvaleState = __State.OvaleState
+local __Stance = LibStub:GetLibrary("ovale/Stance")
+local OvaleStance = __Stance.OvaleStance
+local __DataState = LibStub:GetLibrary("ovale/DataState")
+local dataState = __DataState.dataState
+local type = type
+local StanceState = __class(nil, {
     InitializeState = function(self)
         self.stance = nil
     end,
     CleanState = function(self)
     end,
     ResetState = function(self)
-        __Stance.OvaleStance:StartProfiling("OvaleStance_ResetState")
-        self.stance = __Stance.OvaleStance.stance or 0
-        __Stance.OvaleStance:StopProfiling("OvaleStance_ResetState")
+        OvaleStance:StartProfiling("OvaleStance_ResetState")
+        self.stance = OvaleStance.stance or 0
+        OvaleStance:StopProfiling("OvaleStance_ResetState")
     end,
     ApplySpellAfterCast = function(self, spellId, targetGUID, startCast, endCast, isChanneled, spellcast)
-        __Stance.OvaleStance:StartProfiling("OvaleStance_ApplySpellAfterCast")
-        local stance = __DataState.dataState:GetSpellInfoProperty(spellId, endCast, "to_stance", targetGUID)
+        OvaleStance:StartProfiling("OvaleStance_ApplySpellAfterCast")
+        local stance = dataState:GetSpellInfoProperty(spellId, endCast, "to_stance", targetGUID)
         if stance then
-            if _type(stance) == "string" then
-                stance = __Stance.OvaleStance.stanceId[stance]
+            if type(stance) == "string" then
+                stance = OvaleStance.stanceId[stance]
             end
             self.stance = stance
         end
-        __Stance.OvaleStance:StopProfiling("OvaleStance_ApplySpellAfterCast")
+        OvaleStance:StopProfiling("OvaleStance_ApplySpellAfterCast")
     end,
     IsStance = function(self, name)
-        return __Stance.OvaleStance:IsStance(name)
+        return OvaleStance:IsStance(name)
     end,
     RequireStanceHandler = function(self, spellId, atTime, requirement, tokens, index, targetGUID)
-        return __Stance.OvaleStance:RequireStanceHandler(spellId, atTime, requirement, tokens, index, targetGUID)
+        return OvaleStance:RequireStanceHandler(spellId, atTime, requirement, tokens, index, targetGUID)
     end,
     constructor = function(self)
         self.stance = nil
     end
 })
 __exports.stanceState = StanceState()
-__State.OvaleState:RegisterState(__exports.stanceState)
-end)
+OvaleState:RegisterState(__exports.stanceState)

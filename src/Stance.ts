@@ -9,7 +9,7 @@ import { sub } from "@wowts/string";
 import { concat, insert, sort } from "@wowts/table";
 import { GetNumShapeshiftForms, GetShapeshiftForm, GetShapeshiftFormInfo, GetSpellInfo } from "@wowts/wow-mock";
 
-let OvaleStanceBase = Ovale.NewModule("OvaleStance", aceEvent);
+let OvaleStanceBase = OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(Ovale.NewModule("OvaleStance", aceEvent)));
 export let OvaleStance: OvaleStanceClass;
 
 const [druidCatForm] = GetSpellInfo(768);
@@ -63,7 +63,7 @@ let STANCE_NAME: LuaObj<boolean> = {
 let array = {
 }
 
-class OvaleStanceClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(OvaleStanceBase)) {
+class OvaleStanceClass extends OvaleStanceBase {
     ready = false;
     stanceList = {
     }

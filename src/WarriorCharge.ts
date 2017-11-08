@@ -5,7 +5,7 @@ import aceEvent from "@wowts/ace_event-3.0";
 import { GetSpellInfo, GetTime } from "@wowts/wow-mock";
 import { huge } from "@wowts/math";
 
-let OvaleWarriorChargeBase = Ovale.NewModule("OvaleWarriorCharge", aceEvent);
+let OvaleWarriorChargeBase = OvaleDebug.RegisterDebugging(Ovale.NewModule("OvaleWarriorCharge", aceEvent));
 export let OvaleWarriorCharge: OvaleWarriorChargeClass;
 let INFINITY = huge;
 let self_playerGUID = undefined;
@@ -15,7 +15,7 @@ let CHARGED_DURATION = INFINITY;
 let CHARGED_ATTACKS = {
     [100]: GetSpellInfo(100)
 }
-class OvaleWarriorChargeClass extends OvaleDebug.RegisterDebugging(OvaleWarriorChargeBase) {
+class OvaleWarriorChargeClass extends OvaleWarriorChargeBase {
     targetGUID = undefined;
     constructor() {
         super();

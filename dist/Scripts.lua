@@ -1,16 +1,28 @@
-local __addonName, __addon = ...
-            __addon.require("./Scripts", { "AceConfig-3.0", "AceConfigDialog-3.0", "./Options", "./Localization", "./PaperDoll", "./Ovale", "AceEvent-3.0" }, function(__exports, AceConfig, AceConfigDialog, __Options, __Localization, __PaperDoll, __Ovale, aceEvent)
-local OvaleScriptsBase = __Ovale.Ovale:NewModule("OvaleScripts", aceEvent)
+local __exports = LibStub:NewLibrary("ovale/Scripts", 10000)
+if not __exports then return end
+local __class = LibStub:GetLibrary("tslib").newClass
+local AceConfig = LibStub:GetLibrary("AceConfig-3.0", true)
+local AceConfigDialog = LibStub:GetLibrary("AceConfigDialog-3.0", true)
+local __Options = LibStub:GetLibrary("ovale/Options")
+local OvaleOptions = __Options.OvaleOptions
+local __Localization = LibStub:GetLibrary("ovale/Localization")
+local L = __Localization.L
+local __PaperDoll = LibStub:GetLibrary("ovale/PaperDoll")
+local OvalePaperDoll = __PaperDoll.OvalePaperDoll
+local __Ovale = LibStub:GetLibrary("ovale/Ovale")
+local Ovale = __Ovale.Ovale
+local aceEvent = LibStub:GetLibrary("AceEvent-3.0", true)
 local format = string.format
 local gsub = string.gsub
-local _pairs = pairs
-local strlower = string.lower
+local lower = string.lower
+local pairs = pairs
+local OvaleScriptsBase = Ovale:NewModule("OvaleScripts", aceEvent)
 local DEFAULT_NAME = "Ovale"
-local DEFAULT_DESCRIPTION = __Localization.L["Script défaut"]
+local DEFAULT_DESCRIPTION = L["Script défaut"]
 local CUSTOM_NAME = "custom"
-local CUSTOM_DESCRIPTION = __Localization.L["Script personnalisé"]
+local CUSTOM_DESCRIPTION = L["Script personnalisé"]
 local DISABLED_NAME = "Disabled"
-local DISABLED_DESCRIPTION = __Localization.L["Disabled"]
+local DISABLED_DESCRIPTION = L["Disabled"]
 do
     local defaultDB = {
         code = "",
@@ -19,7 +31,7 @@ do
     }
     local actions = {
         code = {
-            name = __Localization.L["Code"],
+            name = L["Code"],
             type = "execute",
             func = function()
                 local appName = __exports.OvaleScripts:GetName()
@@ -29,21 +41,23 @@ do
 
         }
     }
-    for k, v in _pairs(defaultDB) do
-        __Options.OvaleOptions.defaultDB.profile[k] = v
+    for k, v in pairs(defaultDB) do
+        OvaleOptions.defaultDB.profile[k] = v
     end
-    for k, v in _pairs(actions) do
-        __Options.OvaleOptions.options.args.actions.args[k] = v
+    for k, v in pairs(actions) do
+        OvaleOptions.options.args.actions.args[k] = v
     end
-    __Options.OvaleOptions:RegisterOptions(__exports.OvaleScripts)
+    OvaleOptions:RegisterOptions(__exports.OvaleScripts)
 end
-local OvaleScriptsClass = __addon.__class(OvaleScriptsBase, {
+local OvaleScriptsClass = __class(OvaleScriptsBase, {
     constructor = function(self)
         self.script = {}
         OvaleScriptsBase.constructor(self)
+    end,
+    OnInitialize = function(self)
         self:CreateOptions()
         self:RegisterScript(nil, nil, DEFAULT_NAME, DEFAULT_DESCRIPTION, nil, "script")
-        self:RegisterScript(__Ovale.Ovale.playerClass, nil, CUSTOM_NAME, CUSTOM_DESCRIPTION, __Ovale.Ovale.db.profile.code, "script")
+        self:RegisterScript(Ovale.playerClass, nil, CUSTOM_NAME, CUSTOM_DESCRIPTION, Ovale.db.profile.code, "script")
         self:RegisterScript(nil, nil, DISABLED_NAME, DISABLED_DESCRIPTION, nil, "script")
         self:RegisterMessage("Ovale_StanceChanged")
     end,
@@ -54,8 +68,8 @@ local OvaleScriptsClass = __addon.__class(OvaleScriptsBase, {
     end,
     GetDescriptions = function(self, scriptType)
         local descriptionsTable = {}
-        for name, script in _pairs(self.script) do
-            if ( not scriptType or script.type == scriptType) and ( not script.specialization or __PaperDoll.OvalePaperDoll:IsSpecialization(script.specialization)) then
+        for name, script in pairs(self.script) do
+            if ( not scriptType or script.type == scriptType) and ( not script.specialization or OvalePaperDoll:IsSpecialization(script.specialization)) then
                 if name == DEFAULT_NAME then
                     descriptionsTable[name] = script.desc .. " (" .. self:GetScriptName(name) .. ")"
                 else
@@ -66,7 +80,7 @@ local OvaleScriptsClass = __addon.__class(OvaleScriptsBase, {
         return descriptionsTable
     end,
     RegisterScript = function(self, className, specialization, name, description, code, scriptType)
-        if  not className or className == __Ovale.Ovale.playerClass then
+        if  not className or className == Ovale.playerClass then
             self.script[name] = self.script[name] or {}
             local script = self.script[name]
             script.type = scriptType or "script"
@@ -79,9 +93,9 @@ local OvaleScriptsClass = __addon.__class(OvaleScriptsBase, {
         self.script[name] = nil
     end,
     SetScript = function(self, name)
-        local oldSource = __Ovale.Ovale.db.profile.source
+        local oldSource = Ovale.db.profile.source
         if oldSource ~= name then
-            __Ovale.Ovale.db.profile.source = name
+            Ovale.db.profile.source = name
             self:SendMessage("Ovale_ScriptChanged")
         end
     end,
@@ -91,15 +105,15 @@ local OvaleScriptsClass = __addon.__class(OvaleScriptsBase, {
             if specialization == "blood" then
                 name = "icyveins_deathknight_blood"
             elseif specialization == "frost" then
-                name = "simulationcraft_death_knight_frost_t19p"
+                name = "sc_death_knight_frost_t19"
             elseif specialization == "unholy" then
-                name = "simulationcraft_death_knight_unholy_t19p"
+                name = "sc_death_knight_unholy_t19"
             end
         elseif className == "DEMONHUNTER" then
             if specialization == "vengeance" then
                 name = "icyveins_demonhunter_vengeance"
             elseif specialization == "havoc" then
-                name = "simulationcraft_demon_hunter_havoc_t19p"
+                name = "sc_demon_hunter_havoc_t19"
             end
         elseif className == "DRUID" then
             if specialization == "restoration" then
@@ -117,7 +131,7 @@ local OvaleScriptsClass = __addon.__class(OvaleScriptsBase, {
                 short = "sv"
             end
             if short then
-                name = format("simulationcraft_hunter_%s_t19p", short)
+                name = format("sc_hunter_%s_t19", short)
             end
         elseif className == "MONK" then
             if specialization == "mistweaver" then
@@ -147,7 +161,7 @@ local OvaleScriptsClass = __addon.__class(OvaleScriptsBase, {
             end
         end
         if  not name and specialization then
-            name = format("simulationcraft_%s_%s_t19p", strlower(className), specialization)
+            name = format("sc_%s_%s_t19", lower(className), specialization)
         end
         if  not (name and self.script[name]) then
             name = DISABLED_NAME
@@ -155,7 +169,7 @@ local OvaleScriptsClass = __addon.__class(OvaleScriptsBase, {
         return name
     end,
     GetScriptName = function(self, name)
-        return (name == DEFAULT_NAME) and self:GetDefaultScriptName(__Ovale.Ovale.playerClass, __PaperDoll.OvalePaperDoll:GetSpecialization()) or name
+        return (name == DEFAULT_NAME) and self:GetDefaultScriptName(Ovale.playerClass, OvalePaperDoll:GetSpecialization()) or name
     end,
     GetScript = function(self, name)
         name = self:GetScriptName(name)
@@ -165,20 +179,20 @@ local OvaleScriptsClass = __addon.__class(OvaleScriptsBase, {
     end,
     CreateOptions = function(self)
         local options = {
-            name = __Ovale.Ovale:GetName() .. " " .. __Localization.L["Script"],
+            name = Ovale:GetName() .. " " .. L["Script"],
             type = "group",
             args = {
                 source = {
                     order = 10,
                     type = "select",
-                    name = __Localization.L["Script"],
+                    name = L["Script"],
                     width = "double",
                     values = function(info)
-                        local scriptType =  not __Ovale.Ovale.db.profile.showHiddenScripts and "script"
+                        local scriptType =  not Ovale.db.profile.showHiddenScripts and "script"
                         return __exports.OvaleScripts:GetDescriptions(scriptType)
                     end,
                     get = function(info)
-                        return __Ovale.Ovale.db.profile.source
+                        return Ovale.db.profile.source
                     end,
                     set = function(info, v)
                         self:SetScript(v)
@@ -188,57 +202,56 @@ local OvaleScriptsClass = __addon.__class(OvaleScriptsBase, {
                     order = 20,
                     type = "input",
                     multiline = 25,
-                    name = __Localization.L["Script"],
+                    name = L["Script"],
                     width = "full",
                     disabled = function()
-                        return __Ovale.Ovale.db.profile.source ~= CUSTOM_NAME
+                        return Ovale.db.profile.source ~= CUSTOM_NAME
                     end,
                     get = function(info)
-                        local code = __exports.OvaleScripts:GetScript(__Ovale.Ovale.db.profile.source)
+                        local code = __exports.OvaleScripts:GetScript(Ovale.db.profile.source)
                         code = code or ""
                         return gsub(code, "	", "    ")
                     end,
                     set = function(info, v)
-                        __exports.OvaleScripts:RegisterScript(__Ovale.Ovale.playerClass, nil, CUSTOM_NAME, CUSTOM_DESCRIPTION, v, "script")
-                        __Ovale.Ovale.db.profile.code = v
+                        __exports.OvaleScripts:RegisterScript(Ovale.playerClass, nil, CUSTOM_NAME, CUSTOM_DESCRIPTION, v, "script")
+                        Ovale.db.profile.code = v
                         self:SendMessage("Ovale_ScriptChanged")
                     end
                 },
                 copy = {
                     order = 30,
                     type = "execute",
-                    name = __Localization.L["Copier sur Script personnalisé"],
+                    name = L["Copier sur Script personnalisé"],
                     disabled = function()
-                        return __Ovale.Ovale.db.profile.source == CUSTOM_NAME
+                        return Ovale.db.profile.source == CUSTOM_NAME
                     end,
                     confirm = function()
-                        return __Localization.L["Ecraser le Script personnalisé préexistant?"]
+                        return L["Ecraser le Script personnalisé préexistant?"]
                     end,
                     func = function()
-                        local code = __exports.OvaleScripts:GetScript(__Ovale.Ovale.db.profile.source)
-                        __exports.OvaleScripts:RegisterScript(__Ovale.Ovale.playerClass, nil, CUSTOM_NAME, CUSTOM_DESCRIPTION, code, "script")
-                        __Ovale.Ovale.db.profile.source = CUSTOM_NAME
-                        __Ovale.Ovale.db.profile.code = __exports.OvaleScripts:GetScript(CUSTOM_NAME)
+                        local code = __exports.OvaleScripts:GetScript(Ovale.db.profile.source)
+                        __exports.OvaleScripts:RegisterScript(Ovale.playerClass, nil, CUSTOM_NAME, CUSTOM_DESCRIPTION, code, "script")
+                        Ovale.db.profile.source = CUSTOM_NAME
+                        Ovale.db.profile.code = __exports.OvaleScripts:GetScript(CUSTOM_NAME)
                         self:SendMessage("Ovale_ScriptChanged")
                     end
                 },
                 showHiddenScripts = {
                     order = 40,
                     type = "toggle",
-                    name = __Localization.L["Show hidden"],
+                    name = L["Show hidden"],
                     get = function(info)
-                        return __Ovale.Ovale.db.profile.showHiddenScripts
+                        return Ovale.db.profile.showHiddenScripts
                     end,
                     set = function(info, value)
-                        __Ovale.Ovale.db.profile.showHiddenScripts = value
+                        Ovale.db.profile.showHiddenScripts = value
                     end
                 }
             }
         }
         local appName = self:GetName()
         AceConfig:RegisterOptionsTable(appName, options)
-        AceConfigDialog:AddToBlizOptions(appName, __Localization.L["Script"], __Ovale.Ovale:GetName())
+        AceConfigDialog:AddToBlizOptions(appName, L["Script"], Ovale:GetName())
     end,
 })
 __exports.OvaleScripts = OvaleScriptsClass()
-end)

@@ -164,6 +164,9 @@ Define(finality_nightblade 197395)
 	SpellAddTargetDebuff(finality_nightblade finality_nightblade_debuff=1)
 Define(finality_nightblade_debuff 197395)
 	SpellInfo(finality_nightblade_debuff duration=6)
+Define(finality_eviscerate 197393)
+	SpellInfo(finality_eviscerate combo=finisher energy=35)
+Define(finality_eviscerate_buff 197496)
 Define(find_weakness 91023)
 Define(find_weakness_debuff 91021)
 	SpellInfo(find_weakness_debuff duration=10)
@@ -434,6 +437,12 @@ Define(enveloping_shadows_talent 18)
 Define(master_poisoner_talent 1)
 Define(venom_rush_talent 19)
 Define(vigor_talent 9)
+
+#Artifact traits
+Define(loaded_dice_buff 240837)
+
+#Legendaries
+Define(the_first_of_the_dead 151818)
 
 # Non-default tags for OvaleSimulationCraft.
 	SpellInfo(premeditation tag=main)

@@ -6,7 +6,7 @@ import { ipairs, setmetatable, type, unpack, LuaArray, lualength, LuaObj } from 
 import { insert, remove } from "@wowts/table";
 import { GetTime, UnitGUID, UnitName } from "@wowts/wow-mock";
 
-let OvaleGUIDBase = Ovale.NewModule("OvaleGUID", aceEvent);
+let OvaleGUIDBase = OvaleDebug.RegisterDebugging(Ovale.NewModule("OvaleGUID", aceEvent));
 let PET_UNIT = {
 }
 {
@@ -114,7 +114,7 @@ function BinaryRemove<T>(t: LuaArray<T>, value:T, compare) {
 const CompareUnit = function(a, b) {
     return UNIT_AURA_UNIT[a] < UNIT_AURA_UNIT[b];
 }
-class OvaleGUIDClass extends OvaleDebug.RegisterDebugging(OvaleGUIDBase) {
+class OvaleGUIDClass extends OvaleGUIDBase {
 
     unitGUID: LuaObj<string> = {}
     guidUnit: LuaObj<LuaArray<string>> = {}

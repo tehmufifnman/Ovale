@@ -12,12 +12,12 @@ import { lastSpell, SpellCast } from "./LastSpell";
 import { RegisterRequirement, UnregisterRequirement, CheckRequirements } from "./Requirement";
 import { dataState } from "./DataState";
 import aceEvent from "@wowts/ace_event-3.0";
-import { next, pairs, tonumber, type, wipe, lualength } from "@wowts/lua";
+import { next, pairs, tonumber, type, wipe, lualength, LuaObj } from "@wowts/lua";
 import { lower, sub } from "@wowts/string";
 import { concat, insert, sort } from "@wowts/table";
 import { GetTime, UnitAura } from "@wowts/wow-mock";
 import { huge as INFINITY } from "@wowts/math";
-let OvaleAuraBase = Ovale.NewModule("OvaleAura", aceEvent);
+let OvaleAuraBase = OvaleProfiler.RegisterProfiling(OvaleDebug.RegisterDebugging(Ovale.NewModule("OvaleAura", aceEvent)));
 export let OvaleAura: OvaleAuraClass;
 let strlower = lower;
 let strsub = sub;
@@ -33,7 +33,7 @@ let tsort = sort;
 
 let self_playerGUID = undefined;
 let self_petGUID = undefined;
-let self_pool = new OvalePool<Aura>("OvaleAura_pool");
+let self_pool = new OvalePool<Aura | LuaObj<Aura> | LuaObj<LuaObj<Aura>>>("OvaleAura_pool");
 let UNKNOWN_GUID = 0;
 {
     let output = {
@@ -148,14 +148,28 @@ interface Aura {
     enrage: boolean;
     baseTick: number;
     tick: number;
+    guid: string;
+    source: string;
+    lastTickTime: number;
+    value1: number;
+    value2: number;
+    value3: number;
+    direction: number;
+    consumed: boolean;
+    icon: string;
+    stealable: boolean;
+    snapshotTime: number;
+    cooldownEnding: number;
 }
 
-const PutAura = function(auraDB, guid, auraId, casterGUID, aura) {
+type AuraDB = LuaObj<LuaObj<LuaObj<Aura>>>;
+
+const PutAura = function(auraDB: AuraDB, guid, auraId, casterGUID, aura: Aura) {
     if (!auraDB[guid]) {
-        auraDB[guid] = self_pool.Get();
+        auraDB[guid] = <LuaObj<LuaObj<Aura>>> self_pool.Get();
     }
     if (!auraDB[guid][auraId]) {
-        auraDB[guid][auraId] = self_pool.Get();
+        auraDB[guid][auraId] = <LuaObj<Aura>> self_pool.Get();
     }
     if (auraDB[guid][auraId][casterGUID]) {
         self_pool.Release(auraDB[guid][auraId][casterGUID]);
@@ -165,7 +179,7 @@ const PutAura = function(auraDB, guid, auraId, casterGUID, aura) {
     aura.spellId = auraId;
     aura.source = casterGUID;
 }
-const GetAura = function(auraDB, guid, auraId, casterGUID) {
+const GetAura = function(auraDB: AuraDB, guid, auraId, casterGUID) {
     if (auraDB[guid] && auraDB[guid][auraId] && auraDB[guid][auraId][casterGUID]) {
         if (auraId == 215570) {
             let spellcast = lastSpell.LastInFlightSpell();
@@ -179,7 +193,7 @@ const GetAura = function(auraDB, guid, auraId, casterGUID) {
         return auraDB[guid][auraId][casterGUID];
     }
 }
-const GetAuraAnyCaster = function(auraDB, guid, auraId) {
+const GetAuraAnyCaster = function(auraDB: AuraDB, guid, auraId) {
     let auraFound;
     if (auraDB[guid] && auraDB[guid][auraId]) {
         for (const [, aura] of pairs(auraDB[guid][auraId])) {
@@ -190,7 +204,7 @@ const GetAuraAnyCaster = function(auraDB, guid, auraId) {
     }
     return auraFound;
 }
-const GetDebuffType = function(auraDB, guid, debuffType, filter, casterGUID) {
+const GetDebuffType = function(auraDB: AuraDB, guid, debuffType, filter, casterGUID) {
     let auraFound;
     if (auraDB[guid]) {
         for (const [, whoseTable] of pairs(auraDB[guid])) {
@@ -204,7 +218,7 @@ const GetDebuffType = function(auraDB, guid, debuffType, filter, casterGUID) {
     }
     return auraFound;
 }
-const GetDebuffTypeAnyCaster = function(auraDB, guid, debuffType, filter) {
+const GetDebuffTypeAnyCaster = function(auraDB: AuraDB, guid, debuffType, filter) {
     let auraFound;
     if (auraDB[guid]) {
         for (const [, whoseTable] of pairs(auraDB[guid])) {
@@ -219,7 +233,7 @@ const GetDebuffTypeAnyCaster = function(auraDB, guid, debuffType, filter) {
     }
     return auraFound;
 }
-const GetAuraOnGUID = function(auraDB, guid, auraId, filter, mine) {
+const GetAuraOnGUID = function(auraDB: AuraDB, guid, auraId, filter, mine) {
     let auraFound;
     if (DEBUFF_TYPE[auraId]) {
         if (mine) {
@@ -273,7 +287,7 @@ const IsWithinAuraLag = function(time1, time2, factor?) {
     let tolerance = factor * auraLag / 1000;
     return (time1 - time2 < tolerance) && (time2 - time1 < tolerance);
 }
-class OvaleAuraClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.RegisterDebugging(OvaleAuraBase)) {
+class OvaleAuraClass extends OvaleAuraBase {
     aura = {}
     serial = {}
     bypassState = {}
@@ -498,7 +512,7 @@ class OvaleAuraClass extends OvaleProfiler.RegisterProfiling(OvaleDebug.Register
         if (aura) {
             auraIsActive = (aura.stacks > 0 && aura.gain <= atTime && atTime <= aura.ending);
         } else {
-            aura = self_pool.Get();
+            aura =<Aura> self_pool.Get();
             PutAura(this.aura, guid, auraId, casterGUID, aura);
             auraIsActive = false;
         }
@@ -1253,7 +1267,7 @@ class AuraState implements StateModule {
         return this.GetAuraByGUID(guid, auraId, filter, mine);
     }
     AddAuraToGUID(guid, auraId, casterGUID, filter, debuffType, start, ending, snapshot?) {
-        let aura = self_pool.Get();
+        let aura = <Aura> self_pool.Get();
         aura.state = true;
         aura.serial = this.serial;
         aura.lastUpdated = baseState.currentTime;

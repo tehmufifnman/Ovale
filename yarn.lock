@@ -20,9 +20,9 @@
     "@wowts/lua" "^1.0.3"
     "@wowts/tslib" "^1.0.0"
 
-"@wowts/ace_config_dialog-3.0@^1.0.1":
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/@wowts/ace_config_dialog-3.0/-/ace_config_dialog-3.0-1.0.2.tgz#db1d37b8e82fc773bfc231ab542f1e45b7413b79"
+"@wowts/ace_config_dialog-3.0@^1.0.3":
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@wowts/ace_config_dialog-3.0/-/ace_config_dialog-3.0-1.0.3.tgz#c865fdbc6cedcffc74110115e5a182f2dc8aa27f"
   dependencies:
     "@wowts/lua" "^1.0.3"
     "@wowts/tslib" "^1.0.0"

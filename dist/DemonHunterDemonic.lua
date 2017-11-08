@@ -1,11 +1,21 @@
-local __addonName, __addon = ...
-            __addon.require("./DemonHunterDemonic", { "./Ovale", "./Debug", "./Aura", "AceEvent-3.0" }, function(__exports, __Ovale, __Debug, __Aura, aceEvent)
-local OvaleDemonHunterDemonicBase = __Ovale.Ovale:NewModule("OvaleDemonHunterDemonic", aceEvent)
-local API_GetSpecialization = GetSpecialization
-local API_GetSpecializationInfo = GetSpecializationInfo
-local API_GetTime = GetTime
-local API_GetTalentInfoByID = GetTalentInfoByID
-local INFINITY = math.huge
+local __exports = LibStub:NewLibrary("ovale/DemonHunterDemonic", 10000)
+if not __exports then return end
+local __class = LibStub:GetLibrary("tslib").newClass
+local __Ovale = LibStub:GetLibrary("ovale/Ovale")
+local Ovale = __Ovale.Ovale
+local __Debug = LibStub:GetLibrary("ovale/Debug")
+local OvaleDebug = __Debug.OvaleDebug
+local __Aura = LibStub:GetLibrary("ovale/Aura")
+local OvaleAura = __Aura.OvaleAura
+local aceEvent = LibStub:GetLibrary("AceEvent-3.0", true)
+local GetSpecialization = GetSpecialization
+local GetSpecializationInfo = GetSpecializationInfo
+local GetTime = GetTime
+local GetTalentInfoByID = GetTalentInfoByID
+local huge = math.huge
+local select = select
+local OvaleDemonHunterDemonicBase = OvaleDebug:RegisterDebugging(Ovale:NewModule("OvaleDemonHunterDemonic", aceEvent))
+local INFINITY = huge
 local HAVOC_DEMONIC_TALENT_ID = 22547
 local HAVOC_SPEC_ID = 577
 local HAVOC_EYE_BEAM_SPELL_ID = 198013
@@ -13,16 +23,15 @@ local HAVOC_META_BUFF_ID = 162264
 local HIDDEN_BUFF_ID = -HAVOC_DEMONIC_TALENT_ID
 local HIDDEN_BUFF_DURATION = INFINITY
 local HIDDEN_BUFF_EXTENDED_BY_DEMONIC = "Extended by Demonic"
-local OvaleDemonHunterDemonicClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(OvaleDemonHunterDemonicBase), {
-    constructor = function(self)
-        __Debug.OvaleDebug:RegisterDebugging(OvaleDemonHunterDemonicBase).constructor(self)
+local OvaleDemonHunterDemonicClass = __class(OvaleDemonHunterDemonicBase, {
+    OnInitialize = function(self)
         self.playerGUID = nil
-        self.isDemonHunter = __Ovale.Ovale.playerClass == "DEMONHUNTER" and true or false
+        self.isDemonHunter = Ovale.playerClass == "DEMONHUNTER" and true or false
         self.isHavoc = false
         self.hasDemonic = false
         if self.isDemonHunter then
-            self:Debug("playerGUID: (%s)", __Ovale.Ovale.playerGUID)
-            self.playerGUID = __Ovale.Ovale.playerGUID
+            self:Debug("playerGUID: (%s)", Ovale.playerGUID)
+            self.playerGUID = Ovale.playerGUID
             self:RegisterMessage("Ovale_TalentsChanged")
         end
     end,
@@ -30,8 +39,8 @@ local OvaleDemonHunterDemonicClass = __addon.__class(__Debug.OvaleDebug:Register
         self:UnregisterMessage("COMBAT_LOG_EVENT_UNFILTERED")
     end,
     Ovale_TalentsChanged = function(self, event)
-        self.isHavoc = self.isDemonHunter and API_GetSpecializationInfo(API_GetSpecialization()) == HAVOC_SPEC_ID and true or false
-        self.hasDemonic = self.isHavoc and select(10, API_GetTalentInfoByID(HAVOC_DEMONIC_TALENT_ID, HAVOC_SPEC_ID)) and true or false
+        self.isHavoc = self.isDemonHunter and GetSpecializationInfo(GetSpecialization()) == HAVOC_SPEC_ID and true or false
+        self.hasDemonic = self.isHavoc and select(10, GetTalentInfoByID(HAVOC_DEMONIC_TALENT_ID, HAVOC_SPEC_ID)) and true or false
         if self.isHavoc and self.hasDemonic then
             self:Debug("We are a havoc DH with Demonic.")
             self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
@@ -63,22 +72,21 @@ local OvaleDemonHunterDemonicClass = __addon.__class(__Debug.OvaleDebug:Register
         end
     end,
     GainAura = function(self)
-        local now = API_GetTime()
-        local aura_meta = __Aura.OvaleAura:GetAura("player", HAVOC_META_BUFF_ID, "HELPFUL", true)
-        if __Aura.OvaleAura:IsActiveAura(aura_meta, now) then
+        local now = GetTime()
+        local aura_meta = OvaleAura:GetAura("player", HAVOC_META_BUFF_ID, "HELPFUL", true)
+        if OvaleAura:IsActiveAura(aura_meta, now) then
             self:Debug("Adding '%s' (%d) buff to player %s.", HIDDEN_BUFF_EXTENDED_BY_DEMONIC, HIDDEN_BUFF_ID, self.playerGUID)
             local duration = HIDDEN_BUFF_DURATION
             local ending = now + HIDDEN_BUFF_DURATION
-            __Aura.OvaleAura:GainedAuraOnGUID(self.playerGUID, now, HIDDEN_BUFF_ID, self.playerGUID, "HELPFUL", nil, nil, 1, nil, duration, ending, nil, HIDDEN_BUFF_EXTENDED_BY_DEMONIC, nil, nil, nil)
+            OvaleAura:GainedAuraOnGUID(self.playerGUID, now, HIDDEN_BUFF_ID, self.playerGUID, "HELPFUL", nil, nil, 1, nil, duration, ending, nil, HIDDEN_BUFF_EXTENDED_BY_DEMONIC, nil, nil, nil)
         else
             self:Debug("Aura 'Metamorphosis' (%d) is not present.", HAVOC_META_BUFF_ID)
         end
     end,
     DropAura = function(self)
-        local now = API_GetTime()
+        local now = GetTime()
         self:Debug("Removing '%s' (%d) buff on player %s.", HIDDEN_BUFF_EXTENDED_BY_DEMONIC, HIDDEN_BUFF_ID, self.playerGUID)
-        __Aura.OvaleAura:LostAuraOnGUID(self.playerGUID, now, HIDDEN_BUFF_ID, self.playerGUID)
+        OvaleAura:LostAuraOnGUID(self.playerGUID, now, HIDDEN_BUFF_ID, self.playerGUID)
     end,
 })
 __exports.OvaleDemonHunterDemonic = OvaleDemonHunterDemonicClass()
-end)

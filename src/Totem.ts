@@ -10,7 +10,7 @@ import { ipairs, pairs } from "@wowts/lua";
 import { GetTotemInfo, AIR_TOTEM_SLOT, EARTH_TOTEM_SLOT, FIRE_TOTEM_SLOT, MAX_TOTEMS, WATER_TOTEM_SLOT } from "@wowts/wow-mock";
 import { huge } from "@wowts/math";
 
-let OvaleTotemBase = Ovale.NewModule("OvaleTotem", aceEvent);
+let OvaleTotemBase = OvaleProfiler.RegisterProfiling(Ovale.NewModule("OvaleTotem", aceEvent));
 export let OvaleTotem: OvaleTotemClass;
 
 
@@ -31,7 +31,7 @@ let TOTEM_SLOT = {
     spirit_wolf: 1
 }
 let TOTEMIC_RECALL = 36936;
-class OvaleTotemClass extends OvaleProfiler.RegisterProfiling(OvaleTotemBase) {
+class OvaleTotemClass extends OvaleTotemBase {
     totem = {}
     
     constructor() {

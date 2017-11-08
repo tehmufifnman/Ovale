@@ -29,7 +29,8 @@ let CLEU_HEAL_EVENT = {
     SPELL_PERIODIC_HEAL: true
 }
 
-class OvaleHealthClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(OvaleHealthBase)) {
+const OvaleHealthClassBase = OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(OvaleHealthBase));
+class OvaleHealthClass extends OvaleHealthClassBase {
     health = {    }
     maxHealth = {    }
     totalDamage = {    }

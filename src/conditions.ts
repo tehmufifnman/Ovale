@@ -307,6 +307,16 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
     OvaleCondition.RegisterCondition("debuffgain", false, BuffGain);
 }
 {
+    const BuffImproved = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
+        let [auraId, comparator, limit] = [positionalParams[1], positionalParams[2], positionalParams[3]];
+        let [target, filter, mine] = ParseCondition(positionalParams, namedParams, state);
+        // TODO Not implemented
+        return Compare(0, comparator, limit);
+    }
+    OvaleCondition.RegisterCondition("buffimproved", false, BuffImproved);
+    OvaleCondition.RegisterCondition("debuffimproved", false, BuffImproved);
+}
+{
     const BuffPersistentMultiplier = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let [auraId, comparator, limit] = [positionalParams[1], positionalParams[2], positionalParams[3]];
         let [target, filter, mine] = ParseCondition(positionalParams, namedParams, state);
@@ -462,7 +472,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
 {
     const CheckBoxOff = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         for (const [, id] of ipairs(positionalParams)) {
-            if (frame.IsChecked(id)) {
+            if (frame && frame.IsChecked(id)) {
                 return undefined;
             }
         }
@@ -470,7 +480,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
     }
     const CheckBoxOn = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         for (const [, id] of ipairs(positionalParams)) {
-            if (!frame.IsChecked(id)) {
+            if (frame && !frame.IsChecked(id)) {
                 return undefined;
             }
         }
@@ -1205,7 +1215,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
 {
     const List = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let [name, value] = [positionalParams[1], positionalParams[2]];
-        if (name && frame.GetListValue(name) == value) {
+        if (name && frame && frame.GetListValue(name) == value) {
             return [0, INFINITY];
         }
         return undefined;
@@ -1807,6 +1817,33 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
     OvaleCondition.RegisterCondition("charges", true, SpellCharges);
     OvaleCondition.RegisterCondition("spellcharges", true, SpellCharges);
 }
+
+{
+	// Get the number of seconds for a full recharge of the spell.
+	// @name SpellFullRecharge
+	// @paramsig number or boolean
+	// @param id The spell ID.
+	// @param operator Optional. Comparison operator: less, atMost, equal, atLeast, more.
+	// @param number Optional. The number to compare against.
+	// @usage
+	// if SpellFullRecharge(dire_frenzy) < GCD()
+	//     Spell(dire_frenzy)
+	function SpellFullRecharge(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
+        const spellId = positionalParams[1];
+        const comparator = positionalParams[2];
+        const limit = positionalParams[3];
+		const [charges, maxCharges, start, dur] = cooldownState.GetSpellCharges(spellId, atTime);
+		if (charges && charges < maxCharges) {
+			const duration = (maxCharges - charges) * dur;
+			const ending = start + duration;
+			return TestValue(start, ending, ending - start, start, -1, comparator, limit);
+        }
+		return Compare(0, comparator, limit);
+    }
+
+	OvaleCondition.RegisterCondition("spellfullrecharge", true, SpellFullRecharge)
+}
+
 {
     const SpellCooldown = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let comparator, limit;

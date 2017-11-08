@@ -1,11 +1,19 @@
-local __addonName, __addon = ...
-            __addon.require("./HonorAmongThieves", { "./Ovale", "./Aura", "./Data", "AceEvent-3.0" }, function(__exports, __Ovale, __Aura, __Data, aceEvent)
-local OvaleHonorAmongThievesBase = __Ovale.Ovale:NewModule("OvaleHonorAmongThieves", aceEvent)
-local API_GetTime = GetTime
+local __exports = LibStub:NewLibrary("ovale/HonorAmongThieves", 10000)
+if not __exports then return end
+local __class = LibStub:GetLibrary("tslib").newClass
+local __Ovale = LibStub:GetLibrary("ovale/Ovale")
+local Ovale = __Ovale.Ovale
+local __Aura = LibStub:GetLibrary("ovale/Aura")
+local OvaleAura = __Aura.OvaleAura
+local __Data = LibStub:GetLibrary("ovale/Data")
+local OvaleData = __Data.OvaleData
+local aceEvent = LibStub:GetLibrary("AceEvent-3.0", true)
+local GetTime = GetTime
+local OvaleHonorAmongThievesBase = Ovale:NewModule("OvaleHonorAmongThieves", aceEvent)
 local self_playerGUID = nil
 local HONOR_AMONG_THIEVES = 51699
 local MEAN_TIME_TO_HAT = 2.2
-local OvaleHonorAmongThievesClass = __addon.__class(OvaleHonorAmongThievesBase, {
+local OvaleHonorAmongThievesClass = __class(OvaleHonorAmongThievesBase, {
     constructor = function(self)
         self.spellName = "Honor Among Thieves Cooldown"
         self.spellId = HONOR_AMONG_THIEVES
@@ -14,13 +22,13 @@ local OvaleHonorAmongThievesClass = __addon.__class(OvaleHonorAmongThievesBase, 
         self.duration = MEAN_TIME_TO_HAT
         self.stacks = 0
         OvaleHonorAmongThievesBase.constructor(self)
-        if __Ovale.Ovale.playerClass == "ROGUE" then
-            self_playerGUID = __Ovale.Ovale.playerGUID
+        if Ovale.playerClass == "ROGUE" then
+            self_playerGUID = Ovale.playerGUID
             self:RegisterMessage("Ovale_SpecializationChanged")
         end
     end,
     OnDisable = function(self)
-        if __Ovale.Ovale.playerClass == "ROGUE" then
+        if Ovale.playerClass == "ROGUE" then
             self:UnregisterMessage("Ovale_SpecializationChanged")
         end
     end,
@@ -36,16 +44,15 @@ local OvaleHonorAmongThievesClass = __addon.__class(OvaleHonorAmongThievesBase, 
         if sourceGUID == self_playerGUID and destGUID == self_playerGUID and cleuEvent == "SPELL_ENERGIZE" then
             local spellId, powerType = arg12, arg16
             if spellId == HONOR_AMONG_THIEVES and powerType == 4 then
-                local now = API_GetTime()
+                local now = GetTime()
                 self.start = now
-                local duration = __Data.OvaleData:GetSpellInfoProperty(HONOR_AMONG_THIEVES, now, "duration", destGUID) or MEAN_TIME_TO_HAT
+                local duration = OvaleData:GetSpellInfoProperty(HONOR_AMONG_THIEVES, now, "duration", destGUID) or MEAN_TIME_TO_HAT
                 self.duration = duration
                 self.ending = self.start + duration
                 self.stacks = 1
-                __Aura.OvaleAura:GainedAuraOnGUID(self_playerGUID, self.start, self.spellId, self_playerGUID, "HELPFUL", nil, nil, self.stacks, nil, self.duration, self.ending, nil, self.spellName, nil, nil, nil)
+                OvaleAura:GainedAuraOnGUID(self_playerGUID, self.start, self.spellId, self_playerGUID, "HELPFUL", nil, nil, self.stacks, nil, self.duration, self.ending, nil, self.spellName, nil, nil, nil)
             end
         end
     end,
 })
 __exports.OvaleHonorAmongThieves = OvaleHonorAmongThievesClass()
-end)

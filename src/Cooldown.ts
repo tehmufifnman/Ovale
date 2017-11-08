@@ -10,7 +10,7 @@ import aceEvent from "@wowts/ace_event-3.0";
 import { next, pairs } from "@wowts/lua";
 import { GetSpellCooldown, GetTime } from "@wowts/wow-mock";
 
-let OvaleCooldownBase = Ovale.NewModule("OvaleCooldown", aceEvent);
+let OvaleCooldownBase = OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(Ovale.NewModule("OvaleCooldown", aceEvent)));
 export let OvaleCooldown: OvaleCooldownClass;
 let GLOBAL_COOLDOWN = 61304;
 let COOLDOWN_THRESHOLD = 0.10;
@@ -65,7 +65,7 @@ let BASE_GCD = {
     }
 }
 
-class OvaleCooldownClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(OvaleCooldownBase)) {
+class OvaleCooldownClass extends OvaleCooldownBase {
 
     serial = 0;
     sharedCooldown = {}

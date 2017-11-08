@@ -1,12 +1,14 @@
-local __addonName, __addon = ...
-            __addon.require("./TimeSpan", {}, function(__exports)
-local _select = select
+local __exports = LibStub:NewLibrary("ovale/TimeSpan", 10000)
+if not __exports then return end
+local __class = LibStub:GetLibrary("tslib").newClass
+local select = select
+local wipe = wipe
 local format = string.format
-local tconcat = table.concat
-local tinsert = table.insert
-local tremove = table.remove
-local _wipe = wipe
-local INFINITY = math.huge
+local concat = table.concat
+local insert = table.insert
+local remove = table.remove
+local huge = math.huge
+local INFINITY = huge
 local self_pool = {}
 local self_poolSize = 0
 local self_poolUnused = 0
@@ -30,7 +32,7 @@ local CompareIntervals = function(startA, endA, startB, endB)
 end
 
 __exports.newTimeSpan = function()
-    local obj = tremove(self_pool)
+    local obj = remove(self_pool)
     if obj then
         self_poolUnused = self_poolUnused - 1
     else
@@ -50,28 +52,28 @@ __exports.newTimeSpanFromArray = function(a)
     end
 end
 __exports.releaseTimeSpans = function(...)
-    local argc = _select("#", ...)
+    local argc = select("#", ...)
     for i = 1, argc, 1 do
-        local a = _select(i, ...)
-        _wipe(a)
-        tinsert(self_pool, a)
+        local a = select(i, ...)
+        wipe(a)
+        insert(self_pool, a)
     end
     self_poolUnused = self_poolUnused + argc
 end
 __exports.GetPoolInfo = function()
     return self_poolSize, self_poolUnused
 end
-__exports.OvaleTimeSpan = __addon.__class(nil, {
+__exports.OvaleTimeSpan = __class(nil, {
     Release = function(self)
-        _wipe(self)
-        tinsert(self_pool, self)
+        wipe(self)
+        insert(self_pool, self)
         self_poolUnused = self_poolUnused + 1
     end,
     __tostring = function(self)
         if #self == 0 then
             return "empty set"
         else
-            return format("(%s)", tconcat(self, ", "))
+            return format("(%s)", concat(self, ", "))
         end
     end,
     copyFromArray = function(self, A)
@@ -85,9 +87,9 @@ __exports.OvaleTimeSpan = __addon.__class(nil, {
         return self
     end,
     Copy = function(self, ...)
-        local count = _select("#", ...)
+        local count = select("#", ...)
         for i = 1, count, 1 do
-            self[i] = _select(i, ...)
+            self[i] = select(i, ...)
         end
         for i = count + 1, #self, 1 do
             self[i] = nil
@@ -401,4 +403,3 @@ __exports.OvaleTimeSpan = __addon.__class(nil, {
 })
 __exports.UNIVERSE = __exports.newFromArgs(0, INFINITY)
 __exports.EMPTY_SET = __exports.newTimeSpan()
-end)

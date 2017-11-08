@@ -83,7 +83,9 @@ class OvaleDebugClass extends OvaleDebugBase {
         OvaleOptions.defaultDB.global = OvaleOptions.defaultDB.global || {}
         OvaleOptions.defaultDB.global.debug = {}
         OvaleOptions.RegisterOptions(this);
+    }
 
+    OnInitialize() {
         let appName = this.GetName();
         AceConfig.RegisterOptionsTable(appName, this.options);
         AceConfigDialog.AddToBlizOptions(appName, L["Debug"], Ovale.GetName());

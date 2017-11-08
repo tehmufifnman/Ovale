@@ -1,41 +1,109 @@
-local __addonName, __addon = ...
-            __addon.require("./conditions", { "LibBabble-CreatureType-3.0", "LibRangeCheck-2.0", "./BestAction", "./Compile", "./Condition", "./CooldownState", "./DamageTaken", "./Data", "./Equipment", "./Future", "./GUID", "./Health", "./Power", "./Runes", "./SpellBook", "./SpellDamage", "./Artifact", "./BossMod", "./Ovale", "./State", "./PaperDoll", "./Aura", "./ComboPoints", "./WildImps", "./Enemies", "./Totem", "./DemonHunterSigils", "./DemonHunterSoulFragments", "./Frame", "./LastSpell", "./DataState", "./StanceState", "./SpellBookState", "./FutureState" }, function(__exports, LibBabbleCreatureType, LibRangeCheck, __BestAction, __Compile, __Condition, __CooldownState, __DamageTaken, __Data, __Equipment, __Future, __GUID, __Health, __Power, __Runes, __SpellBook, __SpellDamage, __Artifact, __BossMod, __Ovale, __State, __PaperDoll, __Aura, __ComboPoints, __WildImps, __Enemies, __Totem, __DemonHunterSigils, __DemonHunterSoulFragments, __Frame, __LastSpell, __DataState, __StanceState, __SpellBookState, __FutureState)
-local _ipairs = ipairs
-local _pairs = pairs
-local _type = type
-local API_GetBuildInfo = GetBuildInfo
-local API_GetItemCooldown = GetItemCooldown
-local API_GetItemCount = GetItemCount
-local API_GetNumTrackingTypes = GetNumTrackingTypes
-local API_GetTime = GetTime
-local API_GetTrackingInfo = GetTrackingInfo
-local API_GetUnitSpeed = GetUnitSpeed
-local API_GetWeaponEnchantInfo = GetWeaponEnchantInfo
-local API_HasFullControl = HasFullControl
-local API_IsStealthed = IsStealthed
-local API_UnitCastingInfo = UnitCastingInfo
-local API_UnitChannelInfo = UnitChannelInfo
-local API_UnitClass = UnitClass
-local API_UnitClassification = UnitClassification
-local API_UnitCreatureFamily = UnitCreatureFamily
-local API_UnitCreatureType = UnitCreatureType
-local API_UnitDetailedThreatSituation = UnitDetailedThreatSituation
-local API_UnitExists = UnitExists
-local API_UnitInRaid = UnitInRaid
-local API_UnitIsDead = UnitIsDead
-local API_UnitIsFriend = UnitIsFriend
-local API_UnitIsPVP = UnitIsPVP
-local API_UnitIsUnit = UnitIsUnit
-local API_UnitLevel = UnitLevel
-local API_UnitName = UnitName
-local API_UnitPower = UnitPower
-local API_UnitPowerMax = UnitPowerMax
-local API_UnitRace = UnitRace
-local API_UnitStagger = UnitStagger
-local INFINITY = math.huge
+local LibBabbleCreatureType = LibStub:GetLibrary("LibBabble-creatureType-3.0", true)
+local LibRangeCheck = LibStub:GetLibrary("LibRangeCheck-2.0", true)
+local __BestAction = LibStub:GetLibrary("ovale/BestAction")
+local OvaleBestAction = __BestAction.OvaleBestAction
+local __Compile = LibStub:GetLibrary("ovale/Compile")
+local OvaleCompile = __Compile.OvaleCompile
+local __Condition = LibStub:GetLibrary("ovale/Condition")
+local OvaleCondition = __Condition.OvaleCondition
+local TestValue = __Condition.TestValue
+local Compare = __Condition.Compare
+local TestBoolean = __Condition.TestBoolean
+local ParseCondition = __Condition.ParseCondition
+local __CooldownState = LibStub:GetLibrary("ovale/CooldownState")
+local cooldownState = __CooldownState.cooldownState
+local __DamageTaken = LibStub:GetLibrary("ovale/DamageTaken")
+local OvaleDamageTaken = __DamageTaken.OvaleDamageTaken
+local __Data = LibStub:GetLibrary("ovale/Data")
+local OvaleData = __Data.OvaleData
+local __Equipment = LibStub:GetLibrary("ovale/Equipment")
+local OvaleEquipment = __Equipment.OvaleEquipment
+local __Future = LibStub:GetLibrary("ovale/Future")
+local OvaleFuture = __Future.OvaleFuture
+local __GUID = LibStub:GetLibrary("ovale/GUID")
+local OvaleGUID = __GUID.OvaleGUID
+local __Health = LibStub:GetLibrary("ovale/Health")
+local OvaleHealth = __Health.OvaleHealth
+local __Power = LibStub:GetLibrary("ovale/Power")
+local OvalePower = __Power.OvalePower
+local powerState = __Power.powerState
+local __Runes = LibStub:GetLibrary("ovale/Runes")
+local runesState = __Runes.runesState
+local __SpellBook = LibStub:GetLibrary("ovale/SpellBook")
+local OvaleSpellBook = __SpellBook.OvaleSpellBook
+local __SpellDamage = LibStub:GetLibrary("ovale/SpellDamage")
+local OvaleSpellDamage = __SpellDamage.OvaleSpellDamage
+local __Artifact = LibStub:GetLibrary("ovale/Artifact")
+local OvaleArtifact = __Artifact.OvaleArtifact
+local __BossMod = LibStub:GetLibrary("ovale/BossMod")
+local OvaleBossMod = __BossMod.OvaleBossMod
+local __Ovale = LibStub:GetLibrary("ovale/Ovale")
+local Ovale = __Ovale.Ovale
+local __PaperDoll = LibStub:GetLibrary("ovale/PaperDoll")
+local paperDollState = __PaperDoll.paperDollState
+local __Aura = LibStub:GetLibrary("ovale/Aura")
+local auraState = __Aura.auraState
+local __ComboPoints = LibStub:GetLibrary("ovale/ComboPoints")
+local comboPointsState = __ComboPoints.comboPointsState
+local __WildImps = LibStub:GetLibrary("ovale/WildImps")
+local wildImpsState = __WildImps.wildImpsState
+local __Enemies = LibStub:GetLibrary("ovale/Enemies")
+local EnemiesState = __Enemies.EnemiesState
+local __Totem = LibStub:GetLibrary("ovale/Totem")
+local totemState = __Totem.totemState
+local __DemonHunterSigils = LibStub:GetLibrary("ovale/DemonHunterSigils")
+local sigilState = __DemonHunterSigils.sigilState
+local __DemonHunterSoulFragments = LibStub:GetLibrary("ovale/DemonHunterSoulFragments")
+local demonHunterSoulFragmentsState = __DemonHunterSoulFragments.demonHunterSoulFragmentsState
+local __Frame = LibStub:GetLibrary("ovale/Frame")
+local frame = __Frame.frame
+local __LastSpell = LibStub:GetLibrary("ovale/LastSpell")
+local lastSpell = __LastSpell.lastSpell
+local __DataState = LibStub:GetLibrary("ovale/DataState")
+local dataState = __DataState.dataState
+local __StanceState = LibStub:GetLibrary("ovale/StanceState")
+local stanceState = __StanceState.stanceState
+local __SpellBookState = LibStub:GetLibrary("ovale/SpellBookState")
+local spellBookState = __SpellBookState.spellBookState
+local __FutureState = LibStub:GetLibrary("ovale/FutureState")
+local futureState = __FutureState.futureState
+local ipairs = ipairs
+local pairs = pairs
+local type = type
+local GetBuildInfo = GetBuildInfo
+local GetItemCooldown = GetItemCooldown
+local GetItemCount = GetItemCount
+local GetNumTrackingTypes = GetNumTrackingTypes
+local GetTime = GetTime
+local GetTrackingInfo = GetTrackingInfo
+local GetUnitSpeed = GetUnitSpeed
+local GetWeaponEnchantInfo = GetWeaponEnchantInfo
+local HasFullControl = HasFullControl
+local IsStealthed = IsStealthed
+local UnitCastingInfo = UnitCastingInfo
+local UnitChannelInfo = UnitChannelInfo
+local UnitClass = UnitClass
+local UnitClassification = UnitClassification
+local UnitCreatureFamily = UnitCreatureFamily
+local UnitCreatureType = UnitCreatureType
+local UnitDetailedThreatSituation = UnitDetailedThreatSituation
+local UnitExists = UnitExists
+local UnitInRaid = UnitInRaid
+local UnitIsDead = UnitIsDead
+local UnitIsFriend = UnitIsFriend
+local UnitIsPVP = UnitIsPVP
+local UnitIsUnit = UnitIsUnit
+local UnitLevel = UnitLevel
+local UnitName = UnitName
+local UnitPower = UnitPower
+local UnitPowerMax = UnitPowerMax
+local UnitRace = UnitRace
+local UnitStagger = UnitStagger
+local huge = math.huge
+local INFINITY = huge
 local BossArmorDamageReduction = function(target, state)
     local armor = 24835
-    local constant = 4037.5 * __PaperDoll.paperDollState.level - 317117.5
+    local constant = 4037.5 * paperDollState.level - 317117.5
     if constant < 0 then
         constant = 0
     end
@@ -43,12 +111,12 @@ local BossArmorDamageReduction = function(target, state)
 end
 
 local ComputeParameter = function(spellId, paramName, state, atTime)
-    local si = __Data.OvaleData:GetSpellInfo(spellId)
+    local si = OvaleData:GetSpellInfo(spellId)
     if si and si[paramName] then
         local name = si[paramName]
-        local node = __Compile.OvaleCompile:GetFunctionNode(name)
+        local node = OvaleCompile:GetFunctionNode(name)
         if node then
-            local _, element = __BestAction.OvaleBestAction:Compute(node.child[1], state, atTime)
+            local _, element = OvaleBestAction:Compute(node.child[1], state, atTime)
             if element and element.type == "value" then
                 local value = element.value + (state.currentTime - element.origin) * element.rate
                 return value
@@ -62,70 +130,70 @@ end
 
 local GetHastedTime = function(seconds, haste, state)
     seconds = seconds or 0
-    local multiplier = __PaperDoll.paperDollState:GetHasteMultiplier(haste)
+    local multiplier = paperDollState:GetHasteMultiplier(haste)
     return seconds / multiplier
 end
 
 do
     local ArmorSetBonus = function(positionalParams, namedParams, state, atTime)
         local armorSet, count = positionalParams[1], positionalParams[2]
-        local value = (__Equipment.OvaleEquipment:GetArmorSetCount(armorSet) >= count) and 1 or 0
+        local value = (OvaleEquipment:GetArmorSetCount(armorSet) >= count) and 1 or 0
         return 0, INFINITY, value, 0, 0
     end
 
-    __Condition.OvaleCondition:RegisterCondition("armorsetbonus", false, ArmorSetBonus)
+    OvaleCondition:RegisterCondition("armorsetbonus", false, ArmorSetBonus)
 end
 do
     local ArmorSetParts = function(positionalParams, namedParams, state, atTime)
         local armorSet, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local value = __Equipment.OvaleEquipment:GetArmorSetCount(armorSet)
-        return __Condition.Compare(value, comparator, limit)
+        local value = OvaleEquipment:GetArmorSetCount(armorSet)
+        return Compare(value, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("armorsetparts", false, ArmorSetParts)
+    OvaleCondition:RegisterCondition("armorsetparts", false, ArmorSetParts)
 end
 do
     local ArtifactTraitRank = function(positionalParams, namedParams, state, atTime)
         local spellId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local value = __Artifact.OvaleArtifact:TraitRank(spellId)
-        return __Condition.Compare(value, comparator, limit)
+        local value = OvaleArtifact:TraitRank(spellId)
+        return Compare(value, comparator, limit)
     end
 
     local HasArtifactTrait = function(positionalParams, namedParams, state, atTime)
         local spellId, yesno = positionalParams[1], positionalParams[2]
-        local value = __Artifact.OvaleArtifact:HasTrait(spellId)
-        return __Condition.TestBoolean(value, yesno)
+        local value = OvaleArtifact:HasTrait(spellId)
+        return TestBoolean(value, yesno)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("hasartifacttrait", false, HasArtifactTrait)
-    __Condition.OvaleCondition:RegisterCondition("artifacttraitrank", false, ArtifactTraitRank)
+    OvaleCondition:RegisterCondition("hasartifacttrait", false, HasArtifactTrait)
+    OvaleCondition:RegisterCondition("artifacttraitrank", false, ArtifactTraitRank)
 end
 do
     local BaseDuration = function(positionalParams, namedParams, state, atTime)
         local auraId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
         local value
-        if (__Data.OvaleData.buffSpellList[auraId]) then
-            local spellList = __Data.OvaleData.buffSpellList[auraId]
-            for id in _pairs(spellList) do
-                value = __Data.OvaleData:GetBaseDuration(id, state)
-                if value ~= math.huge then
+        if (OvaleData.buffSpellList[auraId]) then
+            local spellList = OvaleData.buffSpellList[auraId]
+            for id in pairs(spellList) do
+                value = OvaleData:GetBaseDuration(id, state)
+                if value ~= huge then
                     break
                 end
             end
         else
-            value = __Data.OvaleData:GetBaseDuration(auraId, state)
+            value = OvaleData:GetBaseDuration(auraId, state)
         end
-        return __Condition.Compare(value, comparator, limit)
+        return Compare(value, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("baseduration", false, BaseDuration)
-    __Condition.OvaleCondition:RegisterCondition("buffdurationifapplied", false, BaseDuration)
-    __Condition.OvaleCondition:RegisterCondition("debuffdurationifapplied", false, BaseDuration)
+    OvaleCondition:RegisterCondition("baseduration", false, BaseDuration)
+    OvaleCondition:RegisterCondition("buffdurationifapplied", false, BaseDuration)
+    OvaleCondition:RegisterCondition("debuffdurationifapplied", false, BaseDuration)
 end
 do
     local BuffAmount = function(positionalParams, namedParams, state, atTime)
         local auraId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local target, filter, mine = __Condition.ParseCondition(positionalParams, namedParams, state)
+        local target, filter, mine = ParseCondition(positionalParams, namedParams, state)
         local value = namedParams.value or 1
         local statName = "value1"
         if value == 1 then
@@ -135,75 +203,75 @@ do
         elseif value == 3 then
             statName = "value3"
         end
-        local aura = __Aura.auraState:GetAura(target, auraId, filter, mine)
-        if __Aura.auraState:IsActiveAura(aura, atTime) then
+        local aura = auraState:GetAura(target, auraId, filter, mine)
+        if auraState:IsActiveAura(aura, atTime) then
             local gain, start, ending = aura.gain, aura.start, aura.ending
             local value = aura[statName] or 0
-            return __Condition.TestValue(gain, ending, value, start, 0, comparator, limit)
+            return TestValue(gain, ending, value, start, 0, comparator, limit)
         end
-        return __Condition.Compare(0, comparator, limit)
+        return Compare(0, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("buffamount", false, BuffAmount)
-    __Condition.OvaleCondition:RegisterCondition("debuffamount", false, BuffAmount)
-    __Condition.OvaleCondition:RegisterCondition("tickvalue", false, BuffAmount)
+    OvaleCondition:RegisterCondition("buffamount", false, BuffAmount)
+    OvaleCondition:RegisterCondition("debuffamount", false, BuffAmount)
+    OvaleCondition:RegisterCondition("tickvalue", false, BuffAmount)
 end
 do
     local BuffComboPoints = function(positionalParams, namedParams, state, atTime)
         local auraId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local target, filter, mine = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local aura = __Aura.auraState:GetAura(target, auraId, filter, mine)
-        if __Aura.auraState:IsActiveAura(aura, atTime) then
+        local target, filter, mine = ParseCondition(positionalParams, namedParams, state)
+        local aura = auraState:GetAura(target, auraId, filter, mine)
+        if auraState:IsActiveAura(aura, atTime) then
             local gain, start, ending = aura.gain, aura.start, aura.ending
             local value = aura and aura.combo or 0
-            return __Condition.TestValue(gain, ending, value, start, 0, comparator, limit)
+            return TestValue(gain, ending, value, start, 0, comparator, limit)
         end
-        return __Condition.Compare(0, comparator, limit)
+        return Compare(0, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("buffcombopoints", false, BuffComboPoints)
-    __Condition.OvaleCondition:RegisterCondition("debuffcombopoints", false, BuffComboPoints)
+    OvaleCondition:RegisterCondition("buffcombopoints", false, BuffComboPoints)
+    OvaleCondition:RegisterCondition("debuffcombopoints", false, BuffComboPoints)
 end
 do
     local BuffCooldown = function(positionalParams, namedParams, state, atTime)
         local auraId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local target, filter, mine = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local aura = __Aura.auraState:GetAura(target, auraId, filter, mine)
+        local target, filter, mine = ParseCondition(positionalParams, namedParams, state)
+        local aura = auraState:GetAura(target, auraId, filter, mine)
         if aura then
             local gain, cooldownEnding = aura.gain, aura.cooldownEnding
             cooldownEnding = aura.cooldownEnding or 0
-            return __Condition.TestValue(gain, INFINITY, 0, cooldownEnding, -1, comparator, limit)
+            return TestValue(gain, INFINITY, 0, cooldownEnding, -1, comparator, limit)
         end
-        return __Condition.Compare(0, comparator, limit)
+        return Compare(0, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("buffcooldown", false, BuffCooldown)
-    __Condition.OvaleCondition:RegisterCondition("debuffcooldown", false, BuffCooldown)
+    OvaleCondition:RegisterCondition("buffcooldown", false, BuffCooldown)
+    OvaleCondition:RegisterCondition("debuffcooldown", false, BuffCooldown)
 end
 do
     local BuffCount = function(positionalParams, namedParams, state, atTime)
         local auraId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local target, filter, mine = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local spellList = __Data.OvaleData.buffSpellList[auraId]
+        local target, filter, mine = ParseCondition(positionalParams, namedParams, state)
+        local spellList = OvaleData.buffSpellList[auraId]
         local count = 0
-        for id in _pairs(spellList) do
-            local aura = __Aura.auraState:GetAura(target, id, filter, mine)
-            if __Aura.auraState:IsActiveAura(aura, atTime) then
+        for id in pairs(spellList) do
+            local aura = auraState:GetAura(target, id, filter, mine)
+            if auraState:IsActiveAura(aura, atTime) then
                 count = count + 1
             end
         end
-        return __Condition.Compare(count, comparator, limit)
+        return Compare(count, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("buffcount", false, BuffCount)
+    OvaleCondition:RegisterCondition("buffcount", false, BuffCount)
 end
 do
     local BuffCooldownDuration = function(positionalParams, namedParams, state, atTime)
         local auraId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
         local minCooldown = INFINITY
-        if __Data.OvaleData.buffSpellList[auraId] then
-            for id in _pairs(__Data.OvaleData.buffSpellList[auraId]) do
-                local si = __Data.OvaleData.spellInfo[id]
+        if OvaleData.buffSpellList[auraId] then
+            for id in pairs(OvaleData.buffSpellList[auraId]) do
+                local si = OvaleData.spellInfo[id]
                 local cd = si and si.buff_cd
                 if cd and minCooldown > cd then
                     minCooldown = cd
@@ -212,67 +280,67 @@ do
         else
             minCooldown = 0
         end
-        return __Condition.Compare(minCooldown, comparator, limit)
+        return Compare(minCooldown, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("buffcooldownduration", false, BuffCooldownDuration)
-    __Condition.OvaleCondition:RegisterCondition("debuffcooldownduration", false, BuffCooldownDuration)
+    OvaleCondition:RegisterCondition("buffcooldownduration", false, BuffCooldownDuration)
+    OvaleCondition:RegisterCondition("debuffcooldownduration", false, BuffCooldownDuration)
 end
 do
     local BuffCountOnAny = function(positionalParams, namedParams, state, atTime)
         local auraId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local _, filter, mine = __Condition.ParseCondition(positionalParams, namedParams, state)
+        local _, filter, mine = ParseCondition(positionalParams, namedParams, state)
         local excludeUnitId = (namedParams.excludeTarget == 1) and state.defaultTarget or nil
         local fractional = (namedParams.count == 0) and true or false
-        local count, _, startChangeCount, endingChangeCount, startFirst, endingLast = __Aura.auraState:AuraCount(auraId, filter, mine, namedParams.stacks, atTime, excludeUnitId)
+        local count, _, startChangeCount, endingChangeCount, startFirst, endingLast = auraState:AuraCount(auraId, filter, mine, namedParams.stacks, atTime, excludeUnitId)
         if count > 0 and startChangeCount < INFINITY and fractional then
             local origin = startChangeCount
             local rate = -1 / (endingChangeCount - startChangeCount)
             local start, ending = startFirst, endingLast
-            return __Condition.TestValue(start, ending, count, origin, rate, comparator, limit)
+            return TestValue(start, ending, count, origin, rate, comparator, limit)
         end
-        return __Condition.Compare(count, comparator, limit)
+        return Compare(count, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("buffcountonany", false, BuffCountOnAny)
-    __Condition.OvaleCondition:RegisterCondition("debuffcountonany", false, BuffCountOnAny)
+    OvaleCondition:RegisterCondition("buffcountonany", false, BuffCountOnAny)
+    OvaleCondition:RegisterCondition("debuffcountonany", false, BuffCountOnAny)
 end
 do
     local BuffDirection = function(positionalParams, namedParams, state, atTime)
         local auraId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local target, filter, mine = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local aura = __Aura.auraState:GetAura(target, auraId, filter, mine)
+        local target, filter, mine = ParseCondition(positionalParams, namedParams, state)
+        local aura = auraState:GetAura(target, auraId, filter, mine)
         if aura then
             local gain, _, _, direction = aura.gain, aura.start, aura.ending, aura.direction
-            return __Condition.TestValue(gain, INFINITY, direction, gain, 0, comparator, limit)
+            return TestValue(gain, INFINITY, direction, gain, 0, comparator, limit)
         end
-        return __Condition.Compare(0, comparator, limit)
+        return Compare(0, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("buffdirection", false, BuffDirection)
-    __Condition.OvaleCondition:RegisterCondition("debuffdirection", false, BuffDirection)
+    OvaleCondition:RegisterCondition("buffdirection", false, BuffDirection)
+    OvaleCondition:RegisterCondition("debuffdirection", false, BuffDirection)
 end
 do
     local BuffDuration = function(positionalParams, namedParams, state, atTime)
         local auraId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local target, filter, mine = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local aura = __Aura.auraState:GetAura(target, auraId, filter, mine)
-        if __Aura.auraState:IsActiveAura(aura, atTime) then
+        local target, filter, mine = ParseCondition(positionalParams, namedParams, state)
+        local aura = auraState:GetAura(target, auraId, filter, mine)
+        if auraState:IsActiveAura(aura, atTime) then
             local gain, start, ending = aura.gain, aura.start, aura.ending
             local value = ending - start
-            return __Condition.TestValue(gain, ending, value, start, 0, comparator, limit)
+            return TestValue(gain, ending, value, start, 0, comparator, limit)
         end
-        return __Condition.Compare(0, comparator, limit)
+        return Compare(0, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("buffduration", false, BuffDuration)
-    __Condition.OvaleCondition:RegisterCondition("debuffduration", false, BuffDuration)
+    OvaleCondition:RegisterCondition("buffduration", false, BuffDuration)
+    OvaleCondition:RegisterCondition("debuffduration", false, BuffDuration)
 end
 do
     local BuffExpires = function(positionalParams, namedParams, state, atTime)
         local auraId, seconds = positionalParams[1], positionalParams[2]
-        local target, filter, mine = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local aura = __Aura.auraState:GetAura(target, auraId, filter, mine)
+        local target, filter, mine = ParseCondition(positionalParams, namedParams, state)
+        local aura = auraState:GetAura(target, auraId, filter, mine)
         if aura then
             local gain, _, ending = aura.gain, aura.start, aura.ending
             seconds = GetHastedTime(seconds, namedParams.haste, state)
@@ -285,12 +353,12 @@ do
         return 0, INFINITY
     end
 
-    __Condition.OvaleCondition:RegisterCondition("buffexpires", false, BuffExpires)
-    __Condition.OvaleCondition:RegisterCondition("debuffexpires", false, BuffExpires)
+    OvaleCondition:RegisterCondition("buffexpires", false, BuffExpires)
+    OvaleCondition:RegisterCondition("debuffexpires", false, BuffExpires)
     local BuffPresent = function(positionalParams, namedParams, state, atTime)
         local auraId, seconds = positionalParams[1], positionalParams[2]
-        local target, filter, mine = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local aura = __Aura.auraState:GetAura(target, auraId, filter, mine)
+        local target, filter, mine = ParseCondition(positionalParams, namedParams, state)
+        local aura = auraState:GetAura(target, auraId, filter, mine)
         if aura then
             local gain, _, ending = aura.gain, aura.start, aura.ending
             seconds = GetHastedTime(seconds, namedParams.haste, state)
@@ -303,156 +371,166 @@ do
         return nil
     end
 
-    __Condition.OvaleCondition:RegisterCondition("buffpresent", false, BuffPresent)
-    __Condition.OvaleCondition:RegisterCondition("debuffpresent", false, BuffPresent)
+    OvaleCondition:RegisterCondition("buffpresent", false, BuffPresent)
+    OvaleCondition:RegisterCondition("debuffpresent", false, BuffPresent)
 end
 do
     local BuffGain = function(positionalParams, namedParams, state, atTime)
         local auraId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local target, filter, mine = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local aura = __Aura.auraState:GetAura(target, auraId, filter, mine)
+        local target, filter, mine = ParseCondition(positionalParams, namedParams, state)
+        local aura = auraState:GetAura(target, auraId, filter, mine)
         if aura then
             local gain = aura.gain or 0
-            return __Condition.TestValue(gain, INFINITY, 0, gain, 1, comparator, limit)
+            return TestValue(gain, INFINITY, 0, gain, 1, comparator, limit)
         end
-        return __Condition.Compare(0, comparator, limit)
+        return Compare(0, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("buffgain", false, BuffGain)
-    __Condition.OvaleCondition:RegisterCondition("debuffgain", false, BuffGain)
+    OvaleCondition:RegisterCondition("buffgain", false, BuffGain)
+    OvaleCondition:RegisterCondition("debuffgain", false, BuffGain)
+end
+do
+    local BuffImproved = function(positionalParams, namedParams, state, atTime)
+        local auraId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
+        local target, filter, mine = ParseCondition(positionalParams, namedParams, state)
+        return Compare(0, comparator, limit)
+    end
+
+    OvaleCondition:RegisterCondition("buffimproved", false, BuffImproved)
+    OvaleCondition:RegisterCondition("debuffimproved", false, BuffImproved)
 end
 do
     local BuffPersistentMultiplier = function(positionalParams, namedParams, state, atTime)
         local auraId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local target, filter, mine = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local aura = __Aura.auraState:GetAura(target, auraId, filter, mine)
-        if __Aura.auraState:IsActiveAura(aura, atTime) then
+        local target, filter, mine = ParseCondition(positionalParams, namedParams, state)
+        local aura = auraState:GetAura(target, auraId, filter, mine)
+        if auraState:IsActiveAura(aura, atTime) then
             local gain, start, ending = aura.gain, aura.start, aura.ending
             local value = aura.damageMultiplier or 1
-            return __Condition.TestValue(gain, ending, value, start, 0, comparator, limit)
+            return TestValue(gain, ending, value, start, 0, comparator, limit)
         end
-        return __Condition.Compare(1, comparator, limit)
+        return Compare(1, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("buffpersistentmultiplier", false, BuffPersistentMultiplier)
-    __Condition.OvaleCondition:RegisterCondition("debuffpersistentmultiplier", false, BuffPersistentMultiplier)
+    OvaleCondition:RegisterCondition("buffpersistentmultiplier", false, BuffPersistentMultiplier)
+    OvaleCondition:RegisterCondition("debuffpersistentmultiplier", false, BuffPersistentMultiplier)
 end
 do
     local BuffRemaining = function(positionalParams, namedParams, state, atTime)
         local auraId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local target, filter, mine = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local aura = __Aura.auraState:GetAura(target, auraId, filter, mine)
+        local target, filter, mine = ParseCondition(positionalParams, namedParams, state)
+        local aura = auraState:GetAura(target, auraId, filter, mine)
         if aura then
             local gain, _, ending = aura.gain, aura.start, aura.ending
-            return __Condition.TestValue(gain, INFINITY, 0, ending, -1, comparator, limit)
+            return TestValue(gain, INFINITY, 0, ending, -1, comparator, limit)
         end
-        return __Condition.Compare(0, comparator, limit)
+        return Compare(0, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("buffremaining", false, BuffRemaining)
-    __Condition.OvaleCondition:RegisterCondition("debuffremaining", false, BuffRemaining)
-    __Condition.OvaleCondition:RegisterCondition("buffremains", false, BuffRemaining)
-    __Condition.OvaleCondition:RegisterCondition("debuffremains", false, BuffRemaining)
+    OvaleCondition:RegisterCondition("buffremaining", false, BuffRemaining)
+    OvaleCondition:RegisterCondition("debuffremaining", false, BuffRemaining)
+    OvaleCondition:RegisterCondition("buffremains", false, BuffRemaining)
+    OvaleCondition:RegisterCondition("debuffremains", false, BuffRemaining)
 end
 do
     local BuffRemainingOnAny = function(positionalParams, namedParams, state, atTime)
         local auraId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local _, filter, mine = __Condition.ParseCondition(positionalParams, namedParams, state)
+        local _, filter, mine = ParseCondition(positionalParams, namedParams, state)
         local excludeUnitId = (namedParams.excludeTarget == 1) and state.defaultTarget or nil
-        local count, _, _, _, startFirst, endingLast = __Aura.auraState:AuraCount(auraId, filter, mine, namedParams.stacks, atTime, excludeUnitId)
+        local count, _, _, _, startFirst, endingLast = auraState:AuraCount(auraId, filter, mine, namedParams.stacks, atTime, excludeUnitId)
         if count > 0 then
             local start, ending = startFirst, endingLast
-            return __Condition.TestValue(start, INFINITY, 0, ending, -1, comparator, limit)
+            return TestValue(start, INFINITY, 0, ending, -1, comparator, limit)
         end
-        return __Condition.Compare(0, comparator, limit)
+        return Compare(0, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("buffremainingonany", false, BuffRemainingOnAny)
-    __Condition.OvaleCondition:RegisterCondition("debuffremainingonany", false, BuffRemainingOnAny)
-    __Condition.OvaleCondition:RegisterCondition("buffremainsonany", false, BuffRemainingOnAny)
-    __Condition.OvaleCondition:RegisterCondition("debuffremainsonany", false, BuffRemainingOnAny)
+    OvaleCondition:RegisterCondition("buffremainingonany", false, BuffRemainingOnAny)
+    OvaleCondition:RegisterCondition("debuffremainingonany", false, BuffRemainingOnAny)
+    OvaleCondition:RegisterCondition("buffremainsonany", false, BuffRemainingOnAny)
+    OvaleCondition:RegisterCondition("debuffremainsonany", false, BuffRemainingOnAny)
 end
 do
     local BuffStacks = function(positionalParams, namedParams, state, atTime)
         local auraId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local target, filter, mine = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local aura = __Aura.auraState:GetAura(target, auraId, filter, mine)
-        if __Aura.auraState:IsActiveAura(aura, atTime) then
+        local target, filter, mine = ParseCondition(positionalParams, namedParams, state)
+        local aura = auraState:GetAura(target, auraId, filter, mine)
+        if auraState:IsActiveAura(aura, atTime) then
             local gain, start, ending = aura.gain, aura.start, aura.ending
             local value = aura.stacks or 0
-            return __Condition.TestValue(gain, ending, value, start, 0, comparator, limit)
+            return TestValue(gain, ending, value, start, 0, comparator, limit)
         end
-        return __Condition.Compare(0, comparator, limit)
+        return Compare(0, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("buffstacks", false, BuffStacks)
-    __Condition.OvaleCondition:RegisterCondition("debuffstacks", false, BuffStacks)
+    OvaleCondition:RegisterCondition("buffstacks", false, BuffStacks)
+    OvaleCondition:RegisterCondition("debuffstacks", false, BuffStacks)
 end
 do
     local BuffStacksOnAny = function(positionalParams, namedParams, state, atTime)
         local auraId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local _, filter, mine = __Condition.ParseCondition(positionalParams, namedParams, state)
+        local _, filter, mine = ParseCondition(positionalParams, namedParams, state)
         local excludeUnitId = (namedParams.excludeTarget == 1) and state.defaultTarget or nil
-        local count, stacks, _, endingChangeCount, startFirst = __Aura.auraState:AuraCount(auraId, filter, mine, 1, atTime, excludeUnitId)
+        local count, stacks, _, endingChangeCount, startFirst = auraState:AuraCount(auraId, filter, mine, 1, atTime, excludeUnitId)
         if count > 0 then
             local start, ending = startFirst, endingChangeCount
-            return __Condition.TestValue(start, ending, stacks, start, 0, comparator, limit)
+            return TestValue(start, ending, stacks, start, 0, comparator, limit)
         end
-        return __Condition.Compare(count, comparator, limit)
+        return Compare(count, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("buffstacksonany", false, BuffStacksOnAny)
-    __Condition.OvaleCondition:RegisterCondition("debuffstacksonany", false, BuffStacksOnAny)
+    OvaleCondition:RegisterCondition("buffstacksonany", false, BuffStacksOnAny)
+    OvaleCondition:RegisterCondition("debuffstacksonany", false, BuffStacksOnAny)
 end
 do
     local BuffStealable = function(positionalParams, namedParams, state, atTime)
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state)
-        return __Aura.auraState:GetAuraWithProperty(target, "stealable", "HELPFUL", atTime)
+        local target = ParseCondition(positionalParams, namedParams, state)
+        return auraState:GetAuraWithProperty(target, "stealable", "HELPFUL", atTime)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("buffstealable", false, BuffStealable)
+    OvaleCondition:RegisterCondition("buffstealable", false, BuffStealable)
 end
 do
     local CanCast = function(positionalParams, namedParams, state, atTime)
         local spellId = positionalParams[1]
-        local start, duration = __CooldownState.cooldownState:GetSpellCooldown(spellId)
+        local start, duration = cooldownState:GetSpellCooldown(spellId)
         return start + duration, INFINITY
     end
 
-    __Condition.OvaleCondition:RegisterCondition("cancast", true, CanCast)
+    OvaleCondition:RegisterCondition("cancast", true, CanCast)
 end
 do
     local CastTime = function(positionalParams, namedParams, state, atTime)
         local spellId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local castTime = __SpellBook.OvaleSpellBook:GetCastTime(spellId) or 0
-        return __Condition.Compare(castTime, comparator, limit)
+        local castTime = OvaleSpellBook:GetCastTime(spellId) or 0
+        return Compare(castTime, comparator, limit)
     end
 
     local ExecuteTime = function(positionalParams, namedParams, state, atTime)
         local spellId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local castTime = __SpellBook.OvaleSpellBook:GetCastTime(spellId) or 0
-        local gcd = __FutureState.futureState:GetGCD()
+        local castTime = OvaleSpellBook:GetCastTime(spellId) or 0
+        local gcd = futureState:GetGCD()
         local t = (castTime > gcd) and castTime or gcd
-        return __Condition.Compare(t, comparator, limit)
+        return Compare(t, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("casttime", true, CastTime)
-    __Condition.OvaleCondition:RegisterCondition("executetime", true, ExecuteTime)
+    OvaleCondition:RegisterCondition("casttime", true, CastTime)
+    OvaleCondition:RegisterCondition("executetime", true, ExecuteTime)
 end
 do
     local Casting = function(positionalParams, namedParams, state, atTime)
         local spellId = positionalParams[1]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state)
+        local target = ParseCondition(positionalParams, namedParams, state)
         local start, ending, castSpellId, castSpellName
         if target == "player" then
-            start = __FutureState.futureState.startCast
-            ending = __FutureState.futureState.endCast
-            castSpellId = __FutureState.futureState.currentSpellId
-            castSpellName = __SpellBook.OvaleSpellBook:GetSpellName(castSpellId)
+            start = futureState.startCast
+            ending = futureState.endCast
+            castSpellId = futureState.currentSpellId
+            castSpellName = OvaleSpellBook:GetSpellName(castSpellId)
         else
-            local spellName, _1, _2, _3, startTime, endTime = API_UnitCastingInfo(target)
+            local spellName, _1, _2, _3, startTime, endTime = UnitCastingInfo(target)
             if  not spellName then
-                spellName, _1, _2, _3, startTime, endTime = API_UnitChannelInfo(target)
+                spellName, _1, _2, _3, startTime, endTime = UnitChannelInfo(target)
             end
             if spellName then
                 castSpellName = spellName
@@ -463,31 +541,31 @@ do
         if castSpellId or castSpellName then
             if  not spellId then
                 return start, ending
-            elseif __Data.OvaleData.buffSpellList[spellId] then
-                for id in _pairs(__Data.OvaleData.buffSpellList[spellId]) do
-                    if id == castSpellId or __SpellBook.OvaleSpellBook:GetSpellName(id) == castSpellName then
+            elseif OvaleData.buffSpellList[spellId] then
+                for id in pairs(OvaleData.buffSpellList[spellId]) do
+                    if id == castSpellId or OvaleSpellBook:GetSpellName(id) == castSpellName then
                         return start, ending
                     end
                 end
-            elseif spellId == "harmful" and __SpellBook.OvaleSpellBook:IsHarmfulSpell(spellId) then
+            elseif spellId == "harmful" and OvaleSpellBook:IsHarmfulSpell(spellId) then
                 return start, ending
-            elseif spellId == "helpful" and __SpellBook.OvaleSpellBook:IsHelpfulSpell(spellId) then
+            elseif spellId == "helpful" and OvaleSpellBook:IsHelpfulSpell(spellId) then
                 return start, ending
             elseif spellId == castSpellId then
                 return start, ending
-            elseif _type(spellId) == "number" and __SpellBook.OvaleSpellBook:GetSpellName(spellId) == castSpellName then
+            elseif type(spellId) == "number" and OvaleSpellBook:GetSpellName(spellId) == castSpellName then
                 return start, ending
             end
         end
         return nil
     end
 
-    __Condition.OvaleCondition:RegisterCondition("casting", false, Casting)
+    OvaleCondition:RegisterCondition("casting", false, Casting)
 end
 do
     local CheckBoxOff = function(positionalParams, namedParams, state, atTime)
-        for _, id in _ipairs(positionalParams) do
-            if __Frame.frame:IsChecked(id) then
+        for _, id in ipairs(positionalParams) do
+            if frame and frame:IsChecked(id) then
                 return nil
             end
         end
@@ -495,44 +573,44 @@ do
     end
 
     local CheckBoxOn = function(positionalParams, namedParams, state, atTime)
-        for _, id in _ipairs(positionalParams) do
-            if  not __Frame.frame:IsChecked(id) then
+        for _, id in ipairs(positionalParams) do
+            if frame and  not frame:IsChecked(id) then
                 return nil
             end
         end
         return 0, INFINITY
     end
 
-    __Condition.OvaleCondition:RegisterCondition("checkboxoff", false, CheckBoxOff)
-    __Condition.OvaleCondition:RegisterCondition("checkboxon", false, CheckBoxOn)
+    OvaleCondition:RegisterCondition("checkboxoff", false, CheckBoxOff)
+    OvaleCondition:RegisterCondition("checkboxon", false, CheckBoxOn)
 end
 do
     local Class = function(positionalParams, namedParams, state, atTime)
         local className, yesno = positionalParams[1], positionalParams[2]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local _, classToken = API_UnitClass(target)
+        local target = ParseCondition(positionalParams, namedParams, state)
+        local _, classToken = UnitClass(target)
         local boolean = (classToken == className)
-        return __Condition.TestBoolean(boolean, yesno)
+        return TestBoolean(boolean, yesno)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("class", false, Class)
+    OvaleCondition:RegisterCondition("class", false, Class)
 end
 do
     local IMBUED_BUFF_ID = 214336
     local Classification = function(positionalParams, namedParams, state, atTime)
         local classification, yesno = positionalParams[1], positionalParams[2]
         local targetClassification
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state)
-        if API_UnitLevel(target) < 0 then
+        local target = ParseCondition(positionalParams, namedParams, state)
+        if UnitLevel(target) < 0 then
             targetClassification = "worldboss"
-        elseif API_UnitExists("boss1") and __GUID.OvaleGUID:UnitGUID(target) == __GUID.OvaleGUID:UnitGUID("boss1") then
+        elseif UnitExists("boss1") and OvaleGUID:UnitGUID(target) == OvaleGUID:UnitGUID("boss1") then
             targetClassification = "worldboss"
         else
-            local aura = __Aura.auraState:GetAura(target, IMBUED_BUFF_ID, "debuff", false)
-            if __Aura.auraState:IsActiveAura(aura, atTime) then
+            local aura = auraState:GetAura(target, IMBUED_BUFF_ID, "debuff", false)
+            if auraState:IsActiveAura(aura, atTime) then
                 targetClassification = "worldboss"
             else
-                targetClassification = API_UnitClassification(target)
+                targetClassification = UnitClassification(target)
                 if targetClassification == "rareelite" then
                     targetClassification = "elite"
                 elseif targetClassification == "rare" then
@@ -541,48 +619,48 @@ do
             end
         end
         local boolean = (targetClassification == classification)
-        return __Condition.TestBoolean(boolean, yesno)
+        return TestBoolean(boolean, yesno)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("classification", false, Classification)
+    OvaleCondition:RegisterCondition("classification", false, Classification)
 end
 do
     local ComboPoints = function(positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
-        local value = __ComboPoints.comboPointsState.combo
-        return __Condition.Compare(value, comparator, limit)
+        local value = comboPointsState.combo
+        return Compare(value, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("combopoints", false, ComboPoints)
+    OvaleCondition:RegisterCondition("combopoints", false, ComboPoints)
 end
 do
     local Counter = function(positionalParams, namedParams, state, atTime)
         local counter, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local value = __FutureState.futureState:GetCounterValue(counter)
-        return __Condition.Compare(value, comparator, limit)
+        local value = futureState:GetCounterValue(counter)
+        return Compare(value, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("counter", false, Counter)
+    OvaleCondition:RegisterCondition("counter", false, Counter)
 end
 do
     local CreatureFamily = function(positionalParams, namedParams, state, atTime)
         local name, yesno = positionalParams[1], positionalParams[2]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local family = API_UnitCreatureFamily(target)
+        local target = ParseCondition(positionalParams, namedParams, state)
+        local family = UnitCreatureFamily(target)
         local lookupTable = LibBabbleCreatureType and LibBabbleCreatureType:GetLookupTable()
         local boolean = (lookupTable and family == lookupTable[name])
-        return __Condition.TestBoolean(boolean, yesno)
+        return TestBoolean(boolean, yesno)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("creaturefamily", false, CreatureFamily)
+    OvaleCondition:RegisterCondition("creaturefamily", false, CreatureFamily)
 end
 do
     local CreatureType = function(positionalParams, namedParams, state, atTime)
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local creatureType = API_UnitCreatureType(target)
+        local target = ParseCondition(positionalParams, namedParams, state)
+        local creatureType = UnitCreatureType(target)
         local lookupTable = LibBabbleCreatureType and LibBabbleCreatureType:GetLookupTable()
         if lookupTable then
-            for _, name in _ipairs(positionalParams) do
+            for _, name in ipairs(positionalParams) do
                 if creatureType == lookupTable[name] then
                     return 0, INFINITY
                 end
@@ -591,56 +669,56 @@ do
         return nil
     end
 
-    __Condition.OvaleCondition:RegisterCondition("creaturetype", false, CreatureType)
+    OvaleCondition:RegisterCondition("creaturetype", false, CreatureType)
 end
 do
     local AMPLIFICATION = 146051
     local INCREASED_CRIT_EFFECT_3_PERCENT = 44797
     local CritDamage = function(positionalParams, namedParams, state, atTime)
         local spellId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state, "target")
+        local target = ParseCondition(positionalParams, namedParams, state, "target")
         local value = ComputeParameter(spellId, "damage", state, atTime) or 0
-        local si = __Data.OvaleData.spellInfo[spellId]
+        local si = OvaleData.spellInfo[spellId]
         if si and si.physical == 1 then
             value = value * (1 - BossArmorDamageReduction(target, state))
         end
         local critMultiplier = 2
         do
-            local aura = __Aura.auraState:GetAura("player", AMPLIFICATION, "HELPFUL")
-            if __Aura.auraState:IsActiveAura(aura, atTime) then
+            local aura = auraState:GetAura("player", AMPLIFICATION, "HELPFUL")
+            if auraState:IsActiveAura(aura, atTime) then
                 critMultiplier = critMultiplier + aura.value1
             end
         end
         do
-            local aura = __Aura.auraState:GetAura("player", INCREASED_CRIT_EFFECT_3_PERCENT, "HELPFUL")
-            if __Aura.auraState:IsActiveAura(aura, atTime) then
+            local aura = auraState:GetAura("player", INCREASED_CRIT_EFFECT_3_PERCENT, "HELPFUL")
+            if auraState:IsActiveAura(aura, atTime) then
                 critMultiplier = critMultiplier * aura.value1
             end
         end
         value = critMultiplier * value
-        return __Condition.Compare(value, comparator, limit)
+        return Compare(value, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("critdamage", false, CritDamage)
+    OvaleCondition:RegisterCondition("critdamage", false, CritDamage)
     local Damage = function(positionalParams, namedParams, state, atTime)
         local spellId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state, "target")
+        local target = ParseCondition(positionalParams, namedParams, state, "target")
         local value = ComputeParameter(spellId, "damage", state, atTime) or 0
-        local si = __Data.OvaleData.spellInfo[spellId]
+        local si = OvaleData.spellInfo[spellId]
         if si and si.physical == 1 then
             value = value * (1 - BossArmorDamageReduction(target, state))
         end
-        return __Condition.Compare(value, comparator, limit)
+        return Compare(value, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("damage", false, Damage)
+    OvaleCondition:RegisterCondition("damage", false, Damage)
 end
 do
     local DamageTaken = function(positionalParams, namedParams, state, atTime)
         local interval, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
         local value = 0
         if interval > 0 then
-            local total, totalMagic = __DamageTaken.OvaleDamageTaken:GetRecentDamage(interval)
+            local total, totalMagic = OvaleDamageTaken:GetRecentDamage(interval)
             if namedParams.magic == 1 then
                 value = totalMagic
             elseif namedParams.physical == 1 then
@@ -649,34 +727,34 @@ do
                 value = total
             end
         end
-        return __Condition.Compare(value, comparator, limit)
+        return Compare(value, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("damagetaken", false, DamageTaken)
-    __Condition.OvaleCondition:RegisterCondition("incomingdamage", false, DamageTaken)
+    OvaleCondition:RegisterCondition("damagetaken", false, DamageTaken)
+    OvaleCondition:RegisterCondition("incomingdamage", false, DamageTaken)
 end
 do
     local Demons = function(positionalParams, namedParams, state, atTime)
         local creatureId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local value = __WildImps.wildImpsState:GetDemonsCount(creatureId, atTime)
-        return __Condition.Compare(value, comparator, limit)
+        local value = wildImpsState:GetDemonsCount(creatureId, atTime)
+        return Compare(value, comparator, limit)
     end
 
     local NotDeDemons = function(positionalParams, namedParams, state, atTime)
         local creatureId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local value = __WildImps.wildImpsState:GetNotDemonicEmpoweredDemonsCount(creatureId, atTime)
-        return __Condition.Compare(value, comparator, limit)
+        local value = wildImpsState:GetNotDemonicEmpoweredDemonsCount(creatureId, atTime)
+        return Compare(value, comparator, limit)
     end
 
     local DemonDuration = function(positionalParams, namedParams, state, atTime)
         local creatureId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local value = __WildImps.wildImpsState:GetRemainingDemonDuration(creatureId, atTime)
-        return __Condition.Compare(value, comparator, limit)
+        local value = wildImpsState:GetRemainingDemonDuration(creatureId, atTime)
+        return Compare(value, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("demons", false, Demons)
-    __Condition.OvaleCondition:RegisterCondition("notdedemons", false, NotDeDemons)
-    __Condition.OvaleCondition:RegisterCondition("demonduration", false, DemonDuration)
+    OvaleCondition:RegisterCondition("demons", false, Demons)
+    OvaleCondition:RegisterCondition("notdedemons", false, NotDeDemons)
+    OvaleCondition:RegisterCondition("demonduration", false, DemonDuration)
 end
 do
     local NECROTIC_PLAGUE_TALENT = 19
@@ -685,35 +763,35 @@ do
     local FROST_FEVER_DEBUFF = 55095
     local GetDiseases = function(target, state)
         local npAura, bpAura, ffAura
-        local talented = (__SpellBook.OvaleSpellBook:GetTalentPoints(NECROTIC_PLAGUE_TALENT) > 0)
+        local talented = (OvaleSpellBook:GetTalentPoints(NECROTIC_PLAGUE_TALENT) > 0)
         if talented then
-            npAura = __Aura.auraState:GetAura(target, NECROTIC_PLAGUE_DEBUFF, "HARMFUL", true)
+            npAura = auraState:GetAura(target, NECROTIC_PLAGUE_DEBUFF, "HARMFUL", true)
         else
-            bpAura = __Aura.auraState:GetAura(target, BLOOD_PLAGUE_DEBUFF, "HARMFUL", true)
-            ffAura = __Aura.auraState:GetAura(target, FROST_FEVER_DEBUFF, "HARMFUL", true)
+            bpAura = auraState:GetAura(target, BLOOD_PLAGUE_DEBUFF, "HARMFUL", true)
+            ffAura = auraState:GetAura(target, FROST_FEVER_DEBUFF, "HARMFUL", true)
         end
         return talented, npAura, bpAura, ffAura
     end
 
     local DiseasesRemaining = function(positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local target, _ = __Condition.ParseCondition(positionalParams, namedParams, state)
+        local target, _ = ParseCondition(positionalParams, namedParams, state)
         local talented, npAura, bpAura, ffAura = GetDiseases(target, state)
         local aura
-        if talented and __Aura.auraState:IsActiveAura(npAura, atTime) then
+        if talented and auraState:IsActiveAura(npAura, atTime) then
             aura = npAura
-        elseif  not talented and __Aura.auraState:IsActiveAura(bpAura, atTime) and __Aura.auraState:IsActiveAura(ffAura, atTime) then
+        elseif  not talented and auraState:IsActiveAura(bpAura, atTime) and auraState:IsActiveAura(ffAura, atTime) then
             aura = (bpAura.ending < ffAura.ending) and bpAura or ffAura
         end
         if aura then
             local gain, _, ending = aura.gain, aura.start, aura.ending
-            return __Condition.TestValue(gain, INFINITY, 0, ending, -1, comparator, limit)
+            return TestValue(gain, INFINITY, 0, ending, -1, comparator, limit)
         end
-        return __Condition.Compare(0, comparator, limit)
+        return Compare(0, comparator, limit)
     end
 
     local DiseasesTicking = function(positionalParams, namedParams, state, atTime)
-        local target, _ = __Condition.ParseCondition(positionalParams, namedParams, state)
+        local target, _ = ParseCondition(positionalParams, namedParams, state)
         local talented, npAura, bpAura, ffAura = GetDiseases(target, state)
         local gain, start, ending
         if talented and npAura then
@@ -730,7 +808,7 @@ do
     end
 
     local DiseasesAnyTicking = function(positionalParams, namedParams, state, atTime)
-        local target, _ = __Condition.ParseCondition(positionalParams, namedParams, state)
+        local target, _ = ParseCondition(positionalParams, namedParams, state)
         local talented, npAura, bpAura, ffAura = GetDiseases(target, state)
         local aura
         if talented and npAura then
@@ -750,102 +828,102 @@ do
         return nil
     end
 
-    __Condition.OvaleCondition:RegisterCondition("diseasesremaining", false, DiseasesRemaining)
-    __Condition.OvaleCondition:RegisterCondition("diseasesticking", false, DiseasesTicking)
-    __Condition.OvaleCondition:RegisterCondition("diseasesanyticking", false, DiseasesAnyTicking)
+    OvaleCondition:RegisterCondition("diseasesremaining", false, DiseasesRemaining)
+    OvaleCondition:RegisterCondition("diseasesticking", false, DiseasesTicking)
+    OvaleCondition:RegisterCondition("diseasesanyticking", false, DiseasesAnyTicking)
 end
 do
     local Distance = function(positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state)
+        local target = ParseCondition(positionalParams, namedParams, state)
         local value = LibRangeCheck and LibRangeCheck:GetRange(target) or 0
-        return __Condition.Compare(value, comparator, limit)
+        return Compare(value, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("distance", false, Distance)
+    OvaleCondition:RegisterCondition("distance", false, Distance)
 end
 do
     local Enemies = function(positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
-        local value = __Enemies.EnemiesState.enemies
+        local value = EnemiesState.enemies
         if  not value then
-            local useTagged = __Ovale.Ovale.db.profile.apparence.taggedEnemies
+            local useTagged = Ovale.db.profile.apparence.taggedEnemies
             if namedParams.tagged == 0 then
                 useTagged = false
             elseif namedParams.tagged == 1 then
                 useTagged = true
             end
-            value = useTagged and __Enemies.EnemiesState.taggedEnemies or __Enemies.EnemiesState.activeEnemies
+            value = useTagged and EnemiesState.taggedEnemies or EnemiesState.activeEnemies
         end
         if value < 1 then
             value = 1
         end
-        return __Condition.Compare(value, comparator, limit)
+        return Compare(value, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("enemies", false, Enemies)
+    OvaleCondition:RegisterCondition("enemies", false, Enemies)
 end
 do
     local EnergyRegenRate = function(positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
-        local value = __Power.powerState.powerRate.energy
-        return __Condition.Compare(value, comparator, limit)
+        local value = powerState.powerRate.energy
+        return Compare(value, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("energyregen", false, EnergyRegenRate)
-    __Condition.OvaleCondition:RegisterCondition("energyregenrate", false, EnergyRegenRate)
+    OvaleCondition:RegisterCondition("energyregen", false, EnergyRegenRate)
+    OvaleCondition:RegisterCondition("energyregenrate", false, EnergyRegenRate)
 end
 do
     local EnrageRemaining = function(positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local start, ending = __Aura.auraState:GetAuraWithProperty(target, "enrage", "HELPFUL", atTime)
+        local target = ParseCondition(positionalParams, namedParams, state)
+        local start, ending = auraState:GetAuraWithProperty(target, "enrage", "HELPFUL", atTime)
         if start and ending then
-            return __Condition.TestValue(start, INFINITY, 0, ending, -1, comparator, limit)
+            return TestValue(start, INFINITY, 0, ending, -1, comparator, limit)
         end
-        return __Condition.Compare(0, comparator, limit)
+        return Compare(0, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("enrageremaining", false, EnrageRemaining)
+    OvaleCondition:RegisterCondition("enrageremaining", false, EnrageRemaining)
 end
 do
     local Exists = function(positionalParams, namedParams, state, atTime)
         local yesno = positionalParams[1]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local boolean = API_UnitExists(target)
-        return __Condition.TestBoolean(boolean, yesno)
+        local target = ParseCondition(positionalParams, namedParams, state)
+        local boolean = UnitExists(target)
+        return TestBoolean(boolean, yesno)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("exists", false, Exists)
+    OvaleCondition:RegisterCondition("exists", false, Exists)
 end
 do
     local False = function(positionalParams, namedParams, state, atTime)
         return nil
     end
 
-    __Condition.OvaleCondition:RegisterCondition("false", false, False)
+    OvaleCondition:RegisterCondition("false", false, False)
 end
 do
     local FocusRegenRate = function(positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
-        local value = __Power.powerState.powerRate.focus
-        return __Condition.Compare(value, comparator, limit)
+        local value = powerState.powerRate.focus
+        return Compare(value, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("focusregen", false, FocusRegenRate)
-    __Condition.OvaleCondition:RegisterCondition("focusregenrate", false, FocusRegenRate)
+    OvaleCondition:RegisterCondition("focusregen", false, FocusRegenRate)
+    OvaleCondition:RegisterCondition("focusregenrate", false, FocusRegenRate)
 end
 do
     local STEADY_FOCUS = 177668
     local FocusCastingRegen = function(positionalParams, namedParams, state, atTime)
         local spellId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local regenRate = __Power.powerState.powerRate.focus
+        local regenRate = powerState.powerRate.focus
         local power = 0
-        local castTime = __SpellBook.OvaleSpellBook:GetCastTime(spellId) or 0
-        local gcd = __FutureState.futureState:GetGCD()
+        local castTime = OvaleSpellBook:GetCastTime(spellId) or 0
+        local gcd = futureState:GetGCD()
         local castSeconds = (castTime > gcd) and castTime or gcd
         power = power + regenRate * castSeconds
-        local aura = __Aura.auraState:GetAura("player", STEADY_FOCUS, "HELPFUL", true)
+        local aura = auraState:GetAura("player", STEADY_FOCUS, "HELPFUL", true)
         if aura then
             local seconds = aura.ending - state.currentTime
             if seconds <= 0 then
@@ -855,63 +933,63 @@ do
             end
             power = power + regenRate * 1.5 * seconds
         end
-        return __Condition.Compare(power, comparator, limit)
+        return Compare(power, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("focuscastingregen", false, FocusCastingRegen)
+    OvaleCondition:RegisterCondition("focuscastingregen", false, FocusCastingRegen)
 end
 do
     local GCD = function(positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
-        local value = __FutureState.futureState:GetGCD()
-        return __Condition.Compare(value, comparator, limit)
+        local value = futureState:GetGCD()
+        return Compare(value, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("gcd", false, GCD)
+    OvaleCondition:RegisterCondition("gcd", false, GCD)
 end
 do
     local GCDRemaining = function(positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state, "target")
-        if __FutureState.futureState.lastSpellId then
-            local duration = __FutureState.futureState:GetGCD(__FutureState.futureState.lastSpellId, atTime, __GUID.OvaleGUID:UnitGUID(target))
-            local spellcast = __LastSpell.lastSpell:LastInFlightSpell()
+        local target = ParseCondition(positionalParams, namedParams, state, "target")
+        if futureState.lastSpellId then
+            local duration = futureState:GetGCD(futureState.lastSpellId, atTime, OvaleGUID:UnitGUID(target))
+            local spellcast = lastSpell:LastInFlightSpell()
             local start = (spellcast and spellcast.start) or 0
             local ending = start + duration
             if atTime < ending then
-                return __Condition.TestValue(start, INFINITY, 0, ending, -1, comparator, limit)
+                return TestValue(start, INFINITY, 0, ending, -1, comparator, limit)
             end
         end
-        return __Condition.Compare(0, comparator, limit)
+        return Compare(0, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("gcdremaining", false, GCDRemaining)
+    OvaleCondition:RegisterCondition("gcdremaining", false, GCDRemaining)
 end
 do
     local GetState = function(positionalParams, namedParams, state, atTime)
         local name, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
         local value = state:GetState(name)
-        return __Condition.Compare(value, comparator, limit)
+        return Compare(value, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("getstate", false, GetState)
+    OvaleCondition:RegisterCondition("getstate", false, GetState)
 end
 do
     local GetStateDuration = function(positionalParams, namedParams, state, atTime)
         local name, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
         local value = state:GetStateDuration(name)
-        return __Condition.Compare(value, comparator, limit)
+        return Compare(value, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("getstateduration", false, GetStateDuration)
+    OvaleCondition:RegisterCondition("getstateduration", false, GetStateDuration)
 end
 do
     local Glyph = function(positionalParams, namedParams, state, atTime)
         local _, yesno = positionalParams[1], positionalParams[2]
-        return __Condition.TestBoolean(false, yesno)
+        return TestBoolean(false, yesno)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("glyph", false, Glyph)
+    OvaleCondition:RegisterCondition("glyph", false, Glyph)
 end
 do
     local HasEquippedItem = function(positionalParams, namedParams, state, atTime)
@@ -919,65 +997,65 @@ do
         local ilevel, slot = namedParams.ilevel, namedParams.slot
         local boolean = false
         local slotId
-        if _type(itemId) == "number" then
-            slotId = __Equipment.OvaleEquipment:HasEquippedItem(itemId, slot)
+        if type(itemId) == "number" then
+            slotId = OvaleEquipment:HasEquippedItem(itemId, slot)
             if slotId then
-                if  not ilevel or (ilevel and ilevel == __Equipment.OvaleEquipment:GetEquippedItemLevel(slotId)) then
+                if  not ilevel or (ilevel and ilevel == OvaleEquipment:GetEquippedItemLevel(slotId)) then
                     boolean = true
                 end
             end
-        elseif __Data.OvaleData.itemList[itemId] then
-            for _, v in _pairs(__Data.OvaleData.itemList[itemId]) do
-                slotId = __Equipment.OvaleEquipment:HasEquippedItem(v, slot)
+        elseif OvaleData.itemList[itemId] then
+            for _, v in pairs(OvaleData.itemList[itemId]) do
+                slotId = OvaleEquipment:HasEquippedItem(v, slot)
                 if slotId then
-                    if  not ilevel or (ilevel and ilevel == __Equipment.OvaleEquipment:GetEquippedItemLevel(slotId)) then
+                    if  not ilevel or (ilevel and ilevel == OvaleEquipment:GetEquippedItemLevel(slotId)) then
                         boolean = true
                         break
                     end
                 end
             end
         end
-        return __Condition.TestBoolean(boolean, yesno)
+        return TestBoolean(boolean, yesno)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("hasequippeditem", false, HasEquippedItem)
+    OvaleCondition:RegisterCondition("hasequippeditem", false, HasEquippedItem)
 end
 do
-    local HasFullControl = function(positionalParams, namedParams, state, atTime)
+    local HasFullControlCondition = function(positionalParams, namedParams, state, atTime)
         local yesno = positionalParams[1]
-        local boolean = API_HasFullControl()
-        return __Condition.TestBoolean(boolean, yesno)
+        local boolean = HasFullControl()
+        return TestBoolean(boolean, yesno)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("hasfullcontrol", false, HasFullControl)
+    OvaleCondition:RegisterCondition("hasfullcontrol", false, HasFullControlCondition)
 end
 do
     local HasShield = function(positionalParams, namedParams, state, atTime)
         local yesno = positionalParams[1]
-        local boolean = __Equipment.OvaleEquipment:HasShield()
-        return __Condition.TestBoolean(boolean, yesno)
+        local boolean = OvaleEquipment:HasShield()
+        return TestBoolean(boolean, yesno)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("hasshield", false, HasShield)
+    OvaleCondition:RegisterCondition("hasshield", false, HasShield)
 end
 do
     local HasTrinket = function(positionalParams, namedParams, state, atTime)
         local trinketId, yesno = positionalParams[1], positionalParams[2]
         local boolean = false
-        if _type(trinketId) == "number" then
-            boolean = __Equipment.OvaleEquipment:HasTrinket(trinketId)
-        elseif __Data.OvaleData.itemList[trinketId] then
-            for _, v in _pairs(__Data.OvaleData.itemList[trinketId]) do
-                boolean = __Equipment.OvaleEquipment:HasTrinket(v)
+        if type(trinketId) == "number" then
+            boolean = OvaleEquipment:HasTrinket(trinketId)
+        elseif OvaleData.itemList[trinketId] then
+            for _, v in pairs(OvaleData.itemList[trinketId]) do
+                boolean = OvaleEquipment:HasTrinket(v)
                 if boolean then
                     break
                 end
             end
         end
-        return __Condition.TestBoolean(boolean, yesno)
+        return TestBoolean(boolean, yesno)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("hastrinket", false, HasTrinket)
+    OvaleCondition:RegisterCondition("hastrinket", false, HasTrinket)
 end
 do
     local HasWeapon = function(positionalParams, namedParams, state, atTime)
@@ -990,441 +1068,441 @@ do
             weaponType = 2
         end
         if hand == "offhand" or hand == "off" then
-            boolean = __Equipment.OvaleEquipment:HasOffHandWeapon(weaponType)
+            boolean = OvaleEquipment:HasOffHandWeapon(weaponType)
         elseif hand == "mainhand" or hand == "main" then
-            boolean = __Equipment.OvaleEquipment:HasMainHandWeapon(weaponType)
+            boolean = OvaleEquipment:HasMainHandWeapon(weaponType)
         end
-        return __Condition.TestBoolean(boolean, yesno)
+        return TestBoolean(boolean, yesno)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("hasweapon", false, HasWeapon)
+    OvaleCondition:RegisterCondition("hasweapon", false, HasWeapon)
 end
 do
     local Health = function(positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local health = __Health.OvaleHealth:UnitHealth(target) or 0
+        local target = ParseCondition(positionalParams, namedParams, state)
+        local health = OvaleHealth:UnitHealth(target) or 0
         if health > 0 then
-            local now = API_GetTime()
-            local timeToDie = __Health.OvaleHealth:UnitTimeToDie(target)
+            local now = GetTime()
+            local timeToDie = OvaleHealth:UnitTimeToDie(target)
             local value, origin, rate = health, now, -1 * health / timeToDie
             local start, ending = now, INFINITY
-            return __Condition.TestValue(start, ending, value, origin, rate, comparator, limit)
+            return TestValue(start, ending, value, origin, rate, comparator, limit)
         end
-        return __Condition.Compare(0, comparator, limit)
+        return Compare(0, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("health", false, Health)
-    __Condition.OvaleCondition:RegisterCondition("life", false, Health)
+    OvaleCondition:RegisterCondition("health", false, Health)
+    OvaleCondition:RegisterCondition("life", false, Health)
     local HealthMissing = function(positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local health = __Health.OvaleHealth:UnitHealth(target) or 0
-        local maxHealth = __Health.OvaleHealth:UnitHealthMax(target) or 1
+        local target = ParseCondition(positionalParams, namedParams, state)
+        local health = OvaleHealth:UnitHealth(target) or 0
+        local maxHealth = OvaleHealth:UnitHealthMax(target) or 1
         if health > 0 then
-            local now = API_GetTime()
+            local now = GetTime()
             local missing = maxHealth - health
-            local timeToDie = __Health.OvaleHealth:UnitTimeToDie(target)
+            local timeToDie = OvaleHealth:UnitTimeToDie(target)
             local value, origin, rate = missing, now, health / timeToDie
             local start, ending = now, INFINITY
-            return __Condition.TestValue(start, ending, value, origin, rate, comparator, limit)
+            return TestValue(start, ending, value, origin, rate, comparator, limit)
         end
-        return __Condition.Compare(maxHealth, comparator, limit)
+        return Compare(maxHealth, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("healthmissing", false, HealthMissing)
-    __Condition.OvaleCondition:RegisterCondition("lifemissing", false, HealthMissing)
+    OvaleCondition:RegisterCondition("healthmissing", false, HealthMissing)
+    OvaleCondition:RegisterCondition("lifemissing", false, HealthMissing)
     local HealthPercent = function(positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local health = __Health.OvaleHealth:UnitHealth(target) or 0
+        local target = ParseCondition(positionalParams, namedParams, state)
+        local health = OvaleHealth:UnitHealth(target) or 0
         if health > 0 then
-            local now = API_GetTime()
-            local maxHealth = __Health.OvaleHealth:UnitHealthMax(target) or 1
+            local now = GetTime()
+            local maxHealth = OvaleHealth:UnitHealthMax(target) or 1
             local healthPercent = health / maxHealth * 100
-            local timeToDie = __Health.OvaleHealth:UnitTimeToDie(target)
+            local timeToDie = OvaleHealth:UnitTimeToDie(target)
             local value, origin, rate = healthPercent, now, -1 * healthPercent / timeToDie
             local start, ending = now, INFINITY
-            return __Condition.TestValue(start, ending, value, origin, rate, comparator, limit)
+            return TestValue(start, ending, value, origin, rate, comparator, limit)
         end
-        return __Condition.Compare(0, comparator, limit)
+        return Compare(0, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("healthpercent", false, HealthPercent)
-    __Condition.OvaleCondition:RegisterCondition("lifepercent", false, HealthPercent)
+    OvaleCondition:RegisterCondition("healthpercent", false, HealthPercent)
+    OvaleCondition:RegisterCondition("lifepercent", false, HealthPercent)
     local MaxHealth = function(positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local value = __Health.OvaleHealth:UnitHealthMax(target)
-        return __Condition.Compare(value, comparator, limit)
+        local target = ParseCondition(positionalParams, namedParams, state)
+        local value = OvaleHealth:UnitHealthMax(target)
+        return Compare(value, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("maxhealth", false, MaxHealth)
+    OvaleCondition:RegisterCondition("maxhealth", false, MaxHealth)
     local TimeToDie = function(positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local now = API_GetTime()
-        local timeToDie = __Health.OvaleHealth:UnitTimeToDie(target)
+        local target = ParseCondition(positionalParams, namedParams, state)
+        local now = GetTime()
+        local timeToDie = OvaleHealth:UnitTimeToDie(target)
         local value, origin, rate = timeToDie, now, -1
         local start, ending = now, now + timeToDie
-        return __Condition.TestValue(start, ending, value, origin, rate, comparator, limit)
+        return TestValue(start, ending, value, origin, rate, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("deadin", false, TimeToDie)
-    __Condition.OvaleCondition:RegisterCondition("timetodie", false, TimeToDie)
+    OvaleCondition:RegisterCondition("deadin", false, TimeToDie)
+    OvaleCondition:RegisterCondition("timetodie", false, TimeToDie)
     local TimeToHealthPercent = function(positionalParams, namedParams, state, atTime)
         local percent, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local health = __Health.OvaleHealth:UnitHealth(target) or 0
+        local target = ParseCondition(positionalParams, namedParams, state)
+        local health = OvaleHealth:UnitHealth(target) or 0
         if health > 0 then
-            local maxHealth = __Health.OvaleHealth:UnitHealthMax(target) or 1
+            local maxHealth = OvaleHealth:UnitHealthMax(target) or 1
             local healthPercent = health / maxHealth * 100
             if healthPercent >= percent then
-                local now = API_GetTime()
-                local timeToDie = __Health.OvaleHealth:UnitTimeToDie(target)
+                local now = GetTime()
+                local timeToDie = OvaleHealth:UnitTimeToDie(target)
                 local t = timeToDie * (healthPercent - percent) / healthPercent
                 local value, origin, rate = t, now, -1
                 local start, ending = now, now + t
-                return __Condition.TestValue(start, ending, value, origin, rate, comparator, limit)
+                return TestValue(start, ending, value, origin, rate, comparator, limit)
             end
         end
-        return __Condition.Compare(0, comparator, limit)
+        return Compare(0, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("timetohealthpercent", false, TimeToHealthPercent)
-    __Condition.OvaleCondition:RegisterCondition("timetolifepercent", false, TimeToHealthPercent)
+    OvaleCondition:RegisterCondition("timetohealthpercent", false, TimeToHealthPercent)
+    OvaleCondition:RegisterCondition("timetolifepercent", false, TimeToHealthPercent)
 end
 do
     local InCombat = function(positionalParams, namedParams, state, atTime)
         local yesno = positionalParams[1]
         local boolean = state.inCombat
-        return __Condition.TestBoolean(boolean, yesno)
+        return TestBoolean(boolean, yesno)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("incombat", false, InCombat)
+    OvaleCondition:RegisterCondition("incombat", false, InCombat)
 end
 do
     local InFlightToTarget = function(positionalParams, namedParams, state, atTime)
         local spellId, yesno = positionalParams[1], positionalParams[2]
-        local boolean = (__FutureState.futureState.currentSpellId == spellId) or __Future.OvaleFuture:InFlight(spellId)
-        return __Condition.TestBoolean(boolean, yesno)
+        local boolean = (futureState.currentSpellId == spellId) or OvaleFuture:InFlight(spellId)
+        return TestBoolean(boolean, yesno)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("inflighttotarget", false, InFlightToTarget)
+    OvaleCondition:RegisterCondition("inflighttotarget", false, InFlightToTarget)
 end
 do
     local InRange = function(positionalParams, namedParams, state, atTime)
         local spellId, yesno = positionalParams[1], positionalParams[2]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local boolean = (__SpellBook.OvaleSpellBook:IsSpellInRange(spellId, target) == 1)
-        return __Condition.TestBoolean(boolean, yesno)
+        local target = ParseCondition(positionalParams, namedParams, state)
+        local boolean = (OvaleSpellBook:IsSpellInRange(spellId, target) == 1)
+        return TestBoolean(boolean, yesno)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("inrange", false, InRange)
+    OvaleCondition:RegisterCondition("inrange", false, InRange)
 end
 do
     local IsAggroed = function(positionalParams, namedParams, state, atTime)
         local yesno = positionalParams[1]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local boolean = API_UnitDetailedThreatSituation("player", target)
-        return __Condition.TestBoolean(boolean, yesno)
+        local target = ParseCondition(positionalParams, namedParams, state)
+        local boolean = UnitDetailedThreatSituation("player", target)
+        return TestBoolean(boolean, yesno)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("isaggroed", false, IsAggroed)
+    OvaleCondition:RegisterCondition("isaggroed", false, IsAggroed)
 end
 do
     local IsDead = function(positionalParams, namedParams, state, atTime)
         local yesno = positionalParams[1]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local boolean = API_UnitIsDead(target)
-        return __Condition.TestBoolean(boolean, yesno)
+        local target = ParseCondition(positionalParams, namedParams, state)
+        local boolean = UnitIsDead(target)
+        return TestBoolean(boolean, yesno)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("isdead", false, IsDead)
+    OvaleCondition:RegisterCondition("isdead", false, IsDead)
 end
 do
     local IsEnraged = function(positionalParams, namedParams, state, atTime)
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state)
-        return __Aura.auraState:GetAuraWithProperty(target, "enrage", "HELPFUL", atTime)
+        local target = ParseCondition(positionalParams, namedParams, state)
+        return auraState:GetAuraWithProperty(target, "enrage", "HELPFUL", atTime)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("isenraged", false, IsEnraged)
+    OvaleCondition:RegisterCondition("isenraged", false, IsEnraged)
 end
 do
     local IsFeared = function(positionalParams, namedParams, state, atTime)
         local yesno = positionalParams[1]
-        local aura = __Aura.auraState:GetAura("player", "fear_debuff", "HARMFUL")
-        local boolean =  not API_HasFullControl() and __Aura.auraState:IsActiveAura(aura, atTime)
-        return __Condition.TestBoolean(boolean, yesno)
+        local aura = auraState:GetAura("player", "fear_debuff", "HARMFUL")
+        local boolean =  not HasFullControl() and auraState:IsActiveAura(aura, atTime)
+        return TestBoolean(boolean, yesno)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("isfeared", false, IsFeared)
+    OvaleCondition:RegisterCondition("isfeared", false, IsFeared)
 end
 do
     local IsFriend = function(positionalParams, namedParams, state, atTime)
         local yesno = positionalParams[1]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local boolean = API_UnitIsFriend("player", target)
-        return __Condition.TestBoolean(boolean == 1, yesno)
+        local target = ParseCondition(positionalParams, namedParams, state)
+        local boolean = UnitIsFriend("player", target)
+        return TestBoolean(boolean == 1, yesno)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("isfriend", false, IsFriend)
+    OvaleCondition:RegisterCondition("isfriend", false, IsFriend)
 end
 do
     local IsIncapacitated = function(positionalParams, namedParams, state, atTime)
         local yesno = positionalParams[1]
-        local aura = __Aura.auraState:GetAura("player", "incapacitate_debuff", "HARMFUL")
-        local boolean =  not API_HasFullControl() and __Aura.auraState:IsActiveAura(aura, atTime)
-        return __Condition.TestBoolean(boolean, yesno)
+        local aura = auraState:GetAura("player", "incapacitate_debuff", "HARMFUL")
+        local boolean =  not HasFullControl() and auraState:IsActiveAura(aura, atTime)
+        return TestBoolean(boolean, yesno)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("isincapacitated", false, IsIncapacitated)
+    OvaleCondition:RegisterCondition("isincapacitated", false, IsIncapacitated)
 end
 do
     local IsInterruptible = function(positionalParams, namedParams, state, atTime)
         local yesno = positionalParams[1]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local name, _1, _2, _3, _4, _5, _6, _, notInterruptible = API_UnitCastingInfo(target)
+        local target = ParseCondition(positionalParams, namedParams, state)
+        local name, _1, _2, _3, _4, _5, _6, _, notInterruptible = UnitCastingInfo(target)
         if  not name then
-            name, _1, _2, _3, _4, _5, _6, notInterruptible = API_UnitChannelInfo(target)
+            name, _1, _2, _3, _4, _5, _6, notInterruptible = UnitChannelInfo(target)
         end
         local boolean = notInterruptible ~= nil and  not notInterruptible
-        return __Condition.TestBoolean(boolean, yesno)
+        return TestBoolean(boolean, yesno)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("isinterruptible", false, IsInterruptible)
+    OvaleCondition:RegisterCondition("isinterruptible", false, IsInterruptible)
 end
 do
     local IsPVP = function(positionalParams, namedParams, state, atTime)
         local yesno = positionalParams[1]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local boolean = API_UnitIsPVP(target)
-        return __Condition.TestBoolean(boolean, yesno)
+        local target = ParseCondition(positionalParams, namedParams, state)
+        local boolean = UnitIsPVP(target)
+        return TestBoolean(boolean, yesno)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("ispvp", false, IsPVP)
+    OvaleCondition:RegisterCondition("ispvp", false, IsPVP)
 end
 do
     local IsRooted = function(positionalParams, namedParams, state, atTime)
         local yesno = positionalParams[1]
-        local aura = __Aura.auraState:GetAura("player", "root_debuff", "HARMFUL")
-        local boolean = __Aura.auraState:IsActiveAura(aura, atTime)
-        return __Condition.TestBoolean(boolean, yesno)
+        local aura = auraState:GetAura("player", "root_debuff", "HARMFUL")
+        local boolean = auraState:IsActiveAura(aura, atTime)
+        return TestBoolean(boolean, yesno)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("isrooted", false, IsRooted)
+    OvaleCondition:RegisterCondition("isrooted", false, IsRooted)
 end
 do
     local IsStunned = function(positionalParams, namedParams, state, atTime)
         local yesno = positionalParams[1]
-        local aura = __Aura.auraState:GetAura("player", "stun_debuff", "HARMFUL")
-        local boolean =  not API_HasFullControl() and __Aura.auraState:IsActiveAura(aura, atTime)
-        return __Condition.TestBoolean(boolean, yesno)
+        local aura = auraState:GetAura("player", "stun_debuff", "HARMFUL")
+        local boolean =  not HasFullControl() and auraState:IsActiveAura(aura, atTime)
+        return TestBoolean(boolean, yesno)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("isstunned", false, IsStunned)
+    OvaleCondition:RegisterCondition("isstunned", false, IsStunned)
 end
 do
     local ItemCharges = function(positionalParams, namedParams, state, atTime)
         local itemId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local value = API_GetItemCount(itemId, false, true)
-        return __Condition.Compare(value, comparator, limit)
+        local value = GetItemCount(itemId, false, true)
+        return Compare(value, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("itemcharges", false, ItemCharges)
+    OvaleCondition:RegisterCondition("itemcharges", false, ItemCharges)
 end
 do
     local ItemCooldown = function(positionalParams, namedParams, state, atTime)
         local itemId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        if itemId and _type(itemId) ~= "number" then
-            itemId = __Equipment.OvaleEquipment:GetEquippedItem(itemId)
+        if itemId and type(itemId) ~= "number" then
+            itemId = OvaleEquipment:GetEquippedItem(itemId)
         end
         if itemId then
-            local start, duration = API_GetItemCooldown(itemId)
+            local start, duration = GetItemCooldown(itemId)
             if start > 0 and duration > 0 then
-                return __Condition.TestValue(start, start + duration, duration, start, -1, comparator, limit)
+                return TestValue(start, start + duration, duration, start, -1, comparator, limit)
             end
         end
-        return __Condition.Compare(0, comparator, limit)
+        return Compare(0, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("itemcooldown", false, ItemCooldown)
+    OvaleCondition:RegisterCondition("itemcooldown", false, ItemCooldown)
 end
 do
     local ItemCount = function(positionalParams, namedParams, state, atTime)
         local itemId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local value = API_GetItemCount(itemId)
-        return __Condition.Compare(value, comparator, limit)
+        local value = GetItemCount(itemId)
+        return Compare(value, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("itemcount", false, ItemCount)
+    OvaleCondition:RegisterCondition("itemcount", false, ItemCount)
 end
 do
     local LastDamage = function(positionalParams, namedParams, state, atTime)
         local spellId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local value = __SpellDamage.OvaleSpellDamage:Get(spellId)
+        local value = OvaleSpellDamage:Get(spellId)
         if value then
-            return __Condition.Compare(value, comparator, limit)
+            return Compare(value, comparator, limit)
         end
         return nil
     end
 
-    __Condition.OvaleCondition:RegisterCondition("lastdamage", false, LastDamage)
-    __Condition.OvaleCondition:RegisterCondition("lastspelldamage", false, LastDamage)
+    OvaleCondition:RegisterCondition("lastdamage", false, LastDamage)
+    OvaleCondition:RegisterCondition("lastspelldamage", false, LastDamage)
 end
 do
     local Level = function(positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state)
+        local target = ParseCondition(positionalParams, namedParams, state)
         local value
         if target == "player" then
-            value = __PaperDoll.paperDollState.level
+            value = paperDollState.level
         else
-            value = API_UnitLevel(target)
+            value = UnitLevel(target)
         end
-        return __Condition.Compare(value, comparator, limit)
+        return Compare(value, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("level", false, Level)
+    OvaleCondition:RegisterCondition("level", false, Level)
 end
 do
     local List = function(positionalParams, namedParams, state, atTime)
         local name, value = positionalParams[1], positionalParams[2]
-        if name and __Frame.frame:GetListValue(name) == value then
+        if name and frame and frame:GetListValue(name) == value then
             return 0, INFINITY
         end
         return nil
     end
 
-    __Condition.OvaleCondition:RegisterCondition("list", false, List)
+    OvaleCondition:RegisterCondition("list", false, List)
 end
 do
     local Name = function(positionalParams, namedParams, state, atTime)
         local name, yesno = positionalParams[1], positionalParams[2]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state)
-        if _type(name) == "number" then
-            name = __SpellBook.OvaleSpellBook:GetSpellName(name)
+        local target = ParseCondition(positionalParams, namedParams, state)
+        if type(name) == "number" then
+            name = OvaleSpellBook:GetSpellName(name)
         end
-        local targetName = API_UnitName(target)
+        local targetName = UnitName(target)
         local boolean = (name == targetName)
-        return __Condition.TestBoolean(boolean, yesno)
+        return TestBoolean(boolean, yesno)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("name", false, Name)
+    OvaleCondition:RegisterCondition("name", false, Name)
 end
 do
     local PTR = function(positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
-        local _, _, _, uiVersion = API_GetBuildInfo()
+        local _, _, _, uiVersion = GetBuildInfo()
         local value = (uiVersion > 70200) and 1 or 0
-        return __Condition.Compare(value, comparator, limit)
+        return Compare(value, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("ptr", false, PTR)
+    OvaleCondition:RegisterCondition("ptr", false, PTR)
 end
 do
     local PersistentMultiplier = function(positionalParams, namedParams, state, atTime)
         local spellId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state, "target")
-        local value = __FutureState.futureState:GetDamageMultiplier(spellId, __GUID.OvaleGUID:UnitGUID(target), atTime)
-        return __Condition.Compare(value, comparator, limit)
+        local target = ParseCondition(positionalParams, namedParams, state, "target")
+        local value = futureState:GetDamageMultiplier(spellId, OvaleGUID:UnitGUID(target), atTime)
+        return Compare(value, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("persistentmultiplier", false, PersistentMultiplier)
+    OvaleCondition:RegisterCondition("persistentmultiplier", false, PersistentMultiplier)
 end
 do
     local PetPresent = function(positionalParams, namedParams, state, atTime)
         local yesno = positionalParams[1]
         local name = namedParams.name
         local target = "pet"
-        local boolean = API_UnitExists(target) and  not API_UnitIsDead(target) and (name == nil or name == API_UnitName(target))
-        return __Condition.TestBoolean(boolean, yesno)
+        local boolean = UnitExists(target) and  not UnitIsDead(target) and (name == nil or name == UnitName(target))
+        return TestBoolean(boolean, yesno)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("petpresent", false, PetPresent)
+    OvaleCondition:RegisterCondition("petpresent", false, PetPresent)
 end
 do
     local MaxPower = function(powerType, positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state)
+        local target = ParseCondition(positionalParams, namedParams, state)
         local value
         if target == "player" then
-            value = __Power.OvalePower.maxPower[powerType]
+            value = OvalePower.maxPower[powerType]
         else
-            local powerInfo = __Power.OvalePower.POWER_INFO[powerType]
-            value = API_UnitPowerMax(target, powerInfo.id, powerInfo.segments)
+            local powerInfo = OvalePower.POWER_INFO[powerType]
+            value = UnitPowerMax(target, powerInfo.id, powerInfo.segments)
         end
-        return __Condition.Compare(value, comparator, limit)
+        return Compare(value, comparator, limit)
     end
 
     local Power = function(powerType, positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state)
+        local target = ParseCondition(positionalParams, namedParams, state)
         if target == "player" then
-            local value, origin, rate = __Power.powerState[powerType], state.currentTime, __Power.powerState.powerRate[powerType]
+            local value, origin, rate = powerState[powerType], state.currentTime, powerState.powerRate[powerType]
             local start, ending = state.currentTime, INFINITY
-            return __Condition.TestValue(start, ending, value, origin, rate, comparator, limit)
+            return TestValue(start, ending, value, origin, rate, comparator, limit)
         else
-            local powerInfo = __Power.OvalePower.POWER_INFO[powerType]
-            local value = API_UnitPower(target, powerInfo.id)
-            return __Condition.Compare(value, comparator, limit)
+            local powerInfo = OvalePower.POWER_INFO[powerType]
+            local value = UnitPower(target, powerInfo.id)
+            return Compare(value, comparator, limit)
         end
     end
 
     local PowerDeficit = function(powerType, positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state)
+        local target = ParseCondition(positionalParams, namedParams, state)
         if target == "player" then
-            local powerMax = __Power.OvalePower.maxPower[powerType] or 0
+            local powerMax = OvalePower.maxPower[powerType] or 0
             if powerMax > 0 then
-                local value, origin, rate = powerMax - __Power.powerState[powerType], state.currentTime, -1 * __Power.powerState.powerRate[powerType]
+                local value, origin, rate = powerMax - powerState[powerType], state.currentTime, -1 * powerState.powerRate[powerType]
                 local start, ending = state.currentTime, INFINITY
-                return __Condition.TestValue(start, ending, value, origin, rate, comparator, limit)
+                return TestValue(start, ending, value, origin, rate, comparator, limit)
             end
         else
-            local powerInfo = __Power.OvalePower.POWER_INFO[powerType]
-            local powerMax = API_UnitPowerMax(target, powerInfo.id, powerInfo.segments) or 0
+            local powerInfo = OvalePower.POWER_INFO[powerType]
+            local powerMax = UnitPowerMax(target, powerInfo.id, powerInfo.segments) or 0
             if powerMax > 0 then
-                local power = API_UnitPower(target, powerInfo.id)
+                local power = UnitPower(target, powerInfo.id)
                 local value = powerMax - power
-                return __Condition.Compare(value, comparator, limit)
+                return Compare(value, comparator, limit)
             end
         end
-        return __Condition.Compare(0, comparator, limit)
+        return Compare(0, comparator, limit)
     end
 
     local PowerPercent = function(powerType, positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state)
+        local target = ParseCondition(positionalParams, namedParams, state)
         if target == "player" then
-            local powerMax = __Power.OvalePower.maxPower[powerType] or 0
+            local powerMax = OvalePower.maxPower[powerType] or 0
             if powerMax > 0 then
                 local conversion = 100 / powerMax
-                local value, origin, rate = __Power.powerState[powerType] * conversion, state.currentTime, __Power.powerState.powerRate[powerType] * conversion
+                local value, origin, rate = powerState[powerType] * conversion, state.currentTime, powerState.powerRate[powerType] * conversion
                 if rate > 0 and value >= 100 or rate < 0 and value == 0 then
                     rate = 0
                 end
                 local start, ending = state.currentTime, INFINITY
-                return __Condition.TestValue(start, ending, value, origin, rate, comparator, limit)
+                return TestValue(start, ending, value, origin, rate, comparator, limit)
             end
         else
-            local powerInfo = __Power.OvalePower.POWER_INFO[powerType]
-            local powerMax = API_UnitPowerMax(target, powerInfo.id, powerInfo.segments) or 0
+            local powerInfo = OvalePower.POWER_INFO[powerType]
+            local powerMax = UnitPowerMax(target, powerInfo.id, powerInfo.segments) or 0
             if powerMax > 0 then
                 local conversion = 100 / powerMax
-                local value = API_UnitPower(target, powerInfo.id) * conversion
-                return __Condition.Compare(value, comparator, limit)
+                local value = UnitPower(target, powerInfo.id) * conversion
+                return Compare(value, comparator, limit)
             end
         end
-        return __Condition.Compare(0, comparator, limit)
+        return Compare(0, comparator, limit)
     end
 
     local PrimaryResource = function(positionalParams, namedParams, state, atTime)
         local spellId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
         local primaryPowerType
-        local si = __Data.OvaleData:GetSpellInfo(spellId)
+        local si = OvaleData:GetSpellInfo(spellId)
         if si then
-            for powerType in _pairs(__Power.OvalePower.PRIMARY_POWER) do
+            for powerType in pairs(OvalePower.PRIMARY_POWER) do
                 if si[powerType] then
                     primaryPowerType = powerType
                     break
@@ -1432,20 +1510,20 @@ do
             end
         end
         if  not primaryPowerType then
-            local _, powerType = __Power.OvalePower:GetSpellCost(spellId)
+            local _, powerType = OvalePower:GetSpellCost(spellId)
             if powerType then
                 primaryPowerType = powerType
             end
         end
         if primaryPowerType then
-            local value, origin, rate = __Power.powerState[primaryPowerType], state.currentTime, __Power.powerState.powerRate[primaryPowerType]
+            local value, origin, rate = powerState[primaryPowerType], state.currentTime, powerState.powerRate[primaryPowerType]
             local start, ending = state.currentTime, INFINITY
-            return __Condition.TestValue(start, ending, value, origin, rate, comparator, limit)
+            return TestValue(start, ending, value, origin, rate, comparator, limit)
         end
-        return __Condition.Compare(0, comparator, limit)
+        return Compare(0, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("primaryresource", true, PrimaryResource)
+    OvaleCondition:RegisterCondition("primaryresource", true, PrimaryResource)
     local AlternatePower = function(positionalParams, namedParams, state, atTime)
         return Power("alternate", positionalParams, namedParams, state, atTime)
     end
@@ -1510,22 +1588,22 @@ do
         return Power("arcanecharges", positionalParams, namedParams, state, atTime)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("alternatepower", false, AlternatePower)
-    __Condition.OvaleCondition:RegisterCondition("arcanecharges", false, ArcaneCharges)
-    __Condition.OvaleCondition:RegisterCondition("astralpower", false, AstralPower)
-    __Condition.OvaleCondition:RegisterCondition("chi", false, Chi)
-    __Condition.OvaleCondition:RegisterCondition("energy", false, Energy)
-    __Condition.OvaleCondition:RegisterCondition("focus", false, Focus)
-    __Condition.OvaleCondition:RegisterCondition("fury", false, Fury)
-    __Condition.OvaleCondition:RegisterCondition("holypower", false, HolyPower)
-    __Condition.OvaleCondition:RegisterCondition("insanity", false, Insanity)
-    __Condition.OvaleCondition:RegisterCondition("maelstrom", false, Maelstrom)
-    __Condition.OvaleCondition:RegisterCondition("mana", false, Mana)
-    __Condition.OvaleCondition:RegisterCondition("pain", false, Pain)
-    __Condition.OvaleCondition:RegisterCondition("rage", false, Rage)
-    __Condition.OvaleCondition:RegisterCondition("runicpower", false, RunicPower)
-    __Condition.OvaleCondition:RegisterCondition("shadoworbs", false, ShadowOrbs)
-    __Condition.OvaleCondition:RegisterCondition("soulshards", false, SoulShards)
+    OvaleCondition:RegisterCondition("alternatepower", false, AlternatePower)
+    OvaleCondition:RegisterCondition("arcanecharges", false, ArcaneCharges)
+    OvaleCondition:RegisterCondition("astralpower", false, AstralPower)
+    OvaleCondition:RegisterCondition("chi", false, Chi)
+    OvaleCondition:RegisterCondition("energy", false, Energy)
+    OvaleCondition:RegisterCondition("focus", false, Focus)
+    OvaleCondition:RegisterCondition("fury", false, Fury)
+    OvaleCondition:RegisterCondition("holypower", false, HolyPower)
+    OvaleCondition:RegisterCondition("insanity", false, Insanity)
+    OvaleCondition:RegisterCondition("maelstrom", false, Maelstrom)
+    OvaleCondition:RegisterCondition("mana", false, Mana)
+    OvaleCondition:RegisterCondition("pain", false, Pain)
+    OvaleCondition:RegisterCondition("rage", false, Rage)
+    OvaleCondition:RegisterCondition("runicpower", false, RunicPower)
+    OvaleCondition:RegisterCondition("shadoworbs", false, ShadowOrbs)
+    OvaleCondition:RegisterCondition("soulshards", false, SoulShards)
     local AlternatePowerDeficit = function(positionalParams, namedParams, state, atTime)
         return PowerDeficit("alternatepower", positionalParams, namedParams, state, atTime)
     end
@@ -1582,25 +1660,25 @@ do
         return PowerDeficit("soulshards", positionalParams, namedParams, state, atTime)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("alternatepowerdeficit", false, AlternatePowerDeficit)
-    __Condition.OvaleCondition:RegisterCondition("astralpowerdeficit", false, AstralPowerDeficit)
-    __Condition.OvaleCondition:RegisterCondition("chideficit", false, ChiDeficit)
-    __Condition.OvaleCondition:RegisterCondition("combopointsdeficit", false, ComboPointsDeficit)
-    __Condition.OvaleCondition:RegisterCondition("energydeficit", false, EnergyDeficit)
-    __Condition.OvaleCondition:RegisterCondition("focusdeficit", false, FocusDeficit)
-    __Condition.OvaleCondition:RegisterCondition("furydeficit", false, FuryDeficit)
-    __Condition.OvaleCondition:RegisterCondition("holypowerdeficit", false, HolyPowerDeficit)
-    __Condition.OvaleCondition:RegisterCondition("manadeficit", false, ManaDeficit)
-    __Condition.OvaleCondition:RegisterCondition("paindeficit", false, PainDeficit)
-    __Condition.OvaleCondition:RegisterCondition("ragedeficit", false, RageDeficit)
-    __Condition.OvaleCondition:RegisterCondition("runicpowerdeficit", false, RunicPowerDeficit)
-    __Condition.OvaleCondition:RegisterCondition("shadoworbsdeficit", false, ShadowOrbsDeficit)
-    __Condition.OvaleCondition:RegisterCondition("soulshardsdeficit", false, SoulShardsDeficit)
+    OvaleCondition:RegisterCondition("alternatepowerdeficit", false, AlternatePowerDeficit)
+    OvaleCondition:RegisterCondition("astralpowerdeficit", false, AstralPowerDeficit)
+    OvaleCondition:RegisterCondition("chideficit", false, ChiDeficit)
+    OvaleCondition:RegisterCondition("combopointsdeficit", false, ComboPointsDeficit)
+    OvaleCondition:RegisterCondition("energydeficit", false, EnergyDeficit)
+    OvaleCondition:RegisterCondition("focusdeficit", false, FocusDeficit)
+    OvaleCondition:RegisterCondition("furydeficit", false, FuryDeficit)
+    OvaleCondition:RegisterCondition("holypowerdeficit", false, HolyPowerDeficit)
+    OvaleCondition:RegisterCondition("manadeficit", false, ManaDeficit)
+    OvaleCondition:RegisterCondition("paindeficit", false, PainDeficit)
+    OvaleCondition:RegisterCondition("ragedeficit", false, RageDeficit)
+    OvaleCondition:RegisterCondition("runicpowerdeficit", false, RunicPowerDeficit)
+    OvaleCondition:RegisterCondition("shadoworbsdeficit", false, ShadowOrbsDeficit)
+    OvaleCondition:RegisterCondition("soulshardsdeficit", false, SoulShardsDeficit)
     local ManaPercent = function(positionalParams, namedParams, state, atTime)
         return PowerPercent("mana", positionalParams, namedParams, state, atTime)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("manapercent", false, ManaPercent)
+    OvaleCondition:RegisterCondition("manapercent", false, ManaPercent)
     local MaxAlternatePower = function(positionalParams, namedParams, state, atTime)
         return MaxPower("alternate", positionalParams, namedParams, state, atTime)
     end
@@ -1653,27 +1731,27 @@ do
         return MaxPower("soulshards", positionalParams, namedParams, state, atTime)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("maxalternatepower", false, MaxAlternatePower)
-    __Condition.OvaleCondition:RegisterCondition("maxchi", false, MaxChi)
-    __Condition.OvaleCondition:RegisterCondition("maxcombopoints", false, MaxComboPoints)
-    __Condition.OvaleCondition:RegisterCondition("maxenergy", false, MaxEnergy)
-    __Condition.OvaleCondition:RegisterCondition("maxfocus", false, MaxFocus)
-    __Condition.OvaleCondition:RegisterCondition("maxfury", false, MaxFury)
-    __Condition.OvaleCondition:RegisterCondition("maxholypower", false, MaxHolyPower)
-    __Condition.OvaleCondition:RegisterCondition("maxmana", false, MaxMana)
-    __Condition.OvaleCondition:RegisterCondition("maxpain", false, MaxPain)
-    __Condition.OvaleCondition:RegisterCondition("maxrage", false, MaxRage)
-    __Condition.OvaleCondition:RegisterCondition("maxrunicpower", false, MaxRunicPower)
-    __Condition.OvaleCondition:RegisterCondition("maxshadoworbs", false, MaxShadowOrbs)
-    __Condition.OvaleCondition:RegisterCondition("maxsoulshards", false, MaxSoulShards)
+    OvaleCondition:RegisterCondition("maxalternatepower", false, MaxAlternatePower)
+    OvaleCondition:RegisterCondition("maxchi", false, MaxChi)
+    OvaleCondition:RegisterCondition("maxcombopoints", false, MaxComboPoints)
+    OvaleCondition:RegisterCondition("maxenergy", false, MaxEnergy)
+    OvaleCondition:RegisterCondition("maxfocus", false, MaxFocus)
+    OvaleCondition:RegisterCondition("maxfury", false, MaxFury)
+    OvaleCondition:RegisterCondition("maxholypower", false, MaxHolyPower)
+    OvaleCondition:RegisterCondition("maxmana", false, MaxMana)
+    OvaleCondition:RegisterCondition("maxpain", false, MaxPain)
+    OvaleCondition:RegisterCondition("maxrage", false, MaxRage)
+    OvaleCondition:RegisterCondition("maxrunicpower", false, MaxRunicPower)
+    OvaleCondition:RegisterCondition("maxshadoworbs", false, MaxShadowOrbs)
+    OvaleCondition:RegisterCondition("maxsoulshards", false, MaxSoulShards)
 end
 do
     local PowerCost = function(powerType, positionalParams, namedParams, state, atTime)
         local spellId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state, "target")
+        local target = ParseCondition(positionalParams, namedParams, state, "target")
         local maxCost = (namedParams.max == 1)
-        local value = __Power.powerState:PowerCost(spellId, powerType, atTime, target, maxCost) or 0
-        return __Condition.Compare(value, comparator, limit)
+        local value = powerState:PowerCost(spellId, powerType, atTime, target, maxCost) or 0
+        return Compare(value, comparator, limit)
     end
 
     local EnergyCost = function(positionalParams, namedParams, state, atTime)
@@ -1701,26 +1779,26 @@ do
     end
 
     local MainPowerCost = function(positionalParams, namedParams, state, atTime)
-        return PowerCost(__Power.OvalePower.powerType, positionalParams, namedParams, state, atTime)
+        return PowerCost(OvalePower.powerType, positionalParams, namedParams, state, atTime)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("powercost", true, MainPowerCost)
-    __Condition.OvaleCondition:RegisterCondition("astralpowercost", true, AstralPowerCost)
-    __Condition.OvaleCondition:RegisterCondition("energycost", true, EnergyCost)
-    __Condition.OvaleCondition:RegisterCondition("focuscost", true, FocusCost)
-    __Condition.OvaleCondition:RegisterCondition("manacost", true, ManaCost)
-    __Condition.OvaleCondition:RegisterCondition("ragecost", true, RageCost)
-    __Condition.OvaleCondition:RegisterCondition("runicpowercost", true, RunicPowerCost)
+    OvaleCondition:RegisterCondition("powercost", true, MainPowerCost)
+    OvaleCondition:RegisterCondition("astralpowercost", true, AstralPowerCost)
+    OvaleCondition:RegisterCondition("energycost", true, EnergyCost)
+    OvaleCondition:RegisterCondition("focuscost", true, FocusCost)
+    OvaleCondition:RegisterCondition("manacost", true, ManaCost)
+    OvaleCondition:RegisterCondition("ragecost", true, RageCost)
+    OvaleCondition:RegisterCondition("runicpowercost", true, RunicPowerCost)
 end
 do
     local Present = function(positionalParams, namedParams, state, atTime)
         local yesno = positionalParams[1]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local boolean = API_UnitExists(target) and  not API_UnitIsDead(target)
-        return __Condition.TestBoolean(boolean, yesno)
+        local target = ParseCondition(positionalParams, namedParams, state)
+        local boolean = UnitExists(target) and  not UnitIsDead(target)
+        return TestBoolean(boolean, yesno)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("present", false, Present)
+    OvaleCondition:RegisterCondition("present", false, Present)
 end
 do
     local PreviousGCDSpell = function(positionalParams, namedParams, state, atTime)
@@ -1728,135 +1806,135 @@ do
         local count = namedParams.count
         local boolean
         if count and count > 1 then
-            boolean = (spellId == __FutureState.futureState.lastGCDSpellIds[#__FutureState.futureState.lastGCDSpellIds - count + 2])
+            boolean = (spellId == futureState.lastGCDSpellIds[#futureState.lastGCDSpellIds - count + 2])
         else
-            boolean = (spellId == __FutureState.futureState.lastGCDSpellId)
+            boolean = (spellId == futureState.lastGCDSpellId)
         end
-        return __Condition.TestBoolean(boolean, yesno)
+        return TestBoolean(boolean, yesno)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("previousgcdspell", true, PreviousGCDSpell)
+    OvaleCondition:RegisterCondition("previousgcdspell", true, PreviousGCDSpell)
 end
 do
     local PreviousOffGCDSpell = function(positionalParams, namedParams, state, atTime)
         local spellId, yesno = positionalParams[1], positionalParams[2]
-        local boolean = (spellId == __FutureState.futureState.lastOffGCDSpellId)
-        return __Condition.TestBoolean(boolean, yesno)
+        local boolean = (spellId == futureState.lastOffGCDSpellId)
+        return TestBoolean(boolean, yesno)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("previousoffgcdspell", true, PreviousOffGCDSpell)
+    OvaleCondition:RegisterCondition("previousoffgcdspell", true, PreviousOffGCDSpell)
 end
 do
     local PreviousSpell = function(positionalParams, namedParams, state, atTime)
         local spellId, yesno = positionalParams[1], positionalParams[2]
-        local boolean = (spellId == __FutureState.futureState.lastSpellId)
-        return __Condition.TestBoolean(boolean, yesno)
+        local boolean = (spellId == futureState.lastSpellId)
+        return TestBoolean(boolean, yesno)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("previousspell", true, PreviousSpell)
+    OvaleCondition:RegisterCondition("previousspell", true, PreviousSpell)
 end
 do
     local RelativeLevel = function(positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state)
+        local target = ParseCondition(positionalParams, namedParams, state)
         local value, level
         if target == "player" then
-            level = __PaperDoll.paperDollState.level
+            level = paperDollState.level
         else
-            level = API_UnitLevel(target)
+            level = UnitLevel(target)
         end
         if level < 0 then
             value = 3
         else
-            value = level - __PaperDoll.paperDollState.level
+            value = level - paperDollState.level
         end
-        return __Condition.Compare(value, comparator, limit)
+        return Compare(value, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("relativelevel", false, RelativeLevel)
+    OvaleCondition:RegisterCondition("relativelevel", false, RelativeLevel)
 end
 do
     local Refreshable = function(positionalParams, namedParams, state, atTime)
         local auraId = positionalParams[1]
-        local target, filter, mine = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local aura = __Aura.auraState:GetAura(target, auraId, filter, mine)
+        local target, filter, mine = ParseCondition(positionalParams, namedParams, state)
+        local aura = auraState:GetAura(target, auraId, filter, mine)
         if aura then
-            local baseDuration = __Data.OvaleData:GetBaseDuration(auraId)
+            local baseDuration = OvaleData:GetBaseDuration(auraId)
             local extensionDuration = 0.3 * baseDuration
             return aura.ending - extensionDuration, INFINITY
         end
         return 0, INFINITY
     end
 
-    __Condition.OvaleCondition:RegisterCondition("refreshable", false, Refreshable)
-    __Condition.OvaleCondition:RegisterCondition("debuffrefreshable", false, Refreshable)
-    __Condition.OvaleCondition:RegisterCondition("buffrefreshable", false, Refreshable)
+    OvaleCondition:RegisterCondition("refreshable", false, Refreshable)
+    OvaleCondition:RegisterCondition("debuffrefreshable", false, Refreshable)
+    OvaleCondition:RegisterCondition("buffrefreshable", false, Refreshable)
 end
 do
     local RemainingCastTime = function(positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local _, _, _, _, startTime, endTime = API_UnitCastingInfo(target)
+        local target = ParseCondition(positionalParams, namedParams, state)
+        local _, _, _, _, startTime, endTime = UnitCastingInfo(target)
         if startTime and endTime then
             startTime = startTime / 1000
             endTime = endTime / 1000
-            return __Condition.TestValue(startTime, endTime, 0, endTime, -1, comparator, limit)
+            return TestValue(startTime, endTime, 0, endTime, -1, comparator, limit)
         end
         return nil
     end
 
-    __Condition.OvaleCondition:RegisterCondition("remainingcasttime", false, RemainingCastTime)
+    OvaleCondition:RegisterCondition("remainingcasttime", false, RemainingCastTime)
 end
 do
     local Rune = function(positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
-        local count, startCooldown, endCooldown = __Runes.runesState:RuneCount(atTime)
+        local count, startCooldown, endCooldown = runesState:RuneCount(atTime)
         if startCooldown < INFINITY then
             local origin = startCooldown
             local rate = 1 / (endCooldown - startCooldown)
             local start, ending = startCooldown, INFINITY
-            return __Condition.TestValue(start, ending, count, origin, rate, comparator, limit)
+            return TestValue(start, ending, count, origin, rate, comparator, limit)
         end
-        return __Condition.Compare(count, comparator, limit)
+        return Compare(count, comparator, limit)
     end
 
     local RuneCount = function(positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
-        local count, startCooldown, endCooldown = __Runes.runesState:RuneCount(atTime)
+        local count, startCooldown, endCooldown = runesState:RuneCount(atTime)
         if startCooldown < INFINITY then
             local start, ending = startCooldown, endCooldown
-            return __Condition.TestValue(start, ending, count, start, 0, comparator, limit)
+            return TestValue(start, ending, count, start, 0, comparator, limit)
         end
-        return __Condition.Compare(count, comparator, limit)
+        return Compare(count, comparator, limit)
     end
 
     local TimeToRunes = function(positionalParams, namedParams, state, atTime)
         local runes, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local seconds = __Runes.runesState:GetRunesCooldown(atTime, runes)
+        local seconds = runesState:GetRunesCooldown(atTime, runes)
         if seconds < 0 then
             seconds = 0
         end
-        return __Condition.Compare(seconds, comparator, limit)
+        return Compare(seconds, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("rune", false, Rune)
-    __Condition.OvaleCondition:RegisterCondition("runecount", false, RuneCount)
-    __Condition.OvaleCondition:RegisterCondition("timetorunes", false, TimeToRunes)
+    OvaleCondition:RegisterCondition("rune", false, Rune)
+    OvaleCondition:RegisterCondition("runecount", false, RuneCount)
+    OvaleCondition:RegisterCondition("timetorunes", false, TimeToRunes)
 end
 do
     local Snapshot = function(statName, defaultValue, positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
-        local value = __PaperDoll.paperDollState[statName] or defaultValue
-        return __Condition.Compare(value, comparator, limit)
+        local value = paperDollState[statName] or defaultValue
+        return Compare(value, comparator, limit)
     end
 
     local SnapshotCritChance = function(statName, defaultValue, positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
-        local value = __PaperDoll.paperDollState[statName] or defaultValue
+        local value = paperDollState[statName] or defaultValue
         if namedParams.unlimited ~= 1 and value > 100 then
             value = 100
         end
-        return __Condition.Compare(value, comparator, limit)
+        return Compare(value, comparator, limit)
     end
 
     local Agility = function(positionalParams, namedParams, state, atTime)
@@ -1927,77 +2005,92 @@ do
         return Snapshot("strength", 0, positionalParams, namedParams, state, atTime)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("agility", false, Agility)
-    __Condition.OvaleCondition:RegisterCondition("attackpower", false, AttackPower)
-    __Condition.OvaleCondition:RegisterCondition("critrating", false, CritRating)
-    __Condition.OvaleCondition:RegisterCondition("hasterating", false, HasteRating)
-    __Condition.OvaleCondition:RegisterCondition("intellect", false, Intellect)
-    __Condition.OvaleCondition:RegisterCondition("mastery", false, MasteryEffect)
-    __Condition.OvaleCondition:RegisterCondition("masteryeffect", false, MasteryEffect)
-    __Condition.OvaleCondition:RegisterCondition("masteryrating", false, MasteryRating)
-    __Condition.OvaleCondition:RegisterCondition("meleecritchance", false, MeleeCritChance)
-    __Condition.OvaleCondition:RegisterCondition("meleehaste", false, MeleeHaste)
-    __Condition.OvaleCondition:RegisterCondition("multistrikechance", false, MultistrikeChance)
-    __Condition.OvaleCondition:RegisterCondition("rangedcritchance", false, RangedCritChance)
-    __Condition.OvaleCondition:RegisterCondition("spellcritchance", false, SpellCritChance)
-    __Condition.OvaleCondition:RegisterCondition("spellhaste", false, SpellHaste)
-    __Condition.OvaleCondition:RegisterCondition("spellpower", false, Spellpower)
-    __Condition.OvaleCondition:RegisterCondition("spirit", false, Spirit)
-    __Condition.OvaleCondition:RegisterCondition("stamina", false, Stamina)
-    __Condition.OvaleCondition:RegisterCondition("strength", false, Strength)
+    OvaleCondition:RegisterCondition("agility", false, Agility)
+    OvaleCondition:RegisterCondition("attackpower", false, AttackPower)
+    OvaleCondition:RegisterCondition("critrating", false, CritRating)
+    OvaleCondition:RegisterCondition("hasterating", false, HasteRating)
+    OvaleCondition:RegisterCondition("intellect", false, Intellect)
+    OvaleCondition:RegisterCondition("mastery", false, MasteryEffect)
+    OvaleCondition:RegisterCondition("masteryeffect", false, MasteryEffect)
+    OvaleCondition:RegisterCondition("masteryrating", false, MasteryRating)
+    OvaleCondition:RegisterCondition("meleecritchance", false, MeleeCritChance)
+    OvaleCondition:RegisterCondition("meleehaste", false, MeleeHaste)
+    OvaleCondition:RegisterCondition("multistrikechance", false, MultistrikeChance)
+    OvaleCondition:RegisterCondition("rangedcritchance", false, RangedCritChance)
+    OvaleCondition:RegisterCondition("spellcritchance", false, SpellCritChance)
+    OvaleCondition:RegisterCondition("spellhaste", false, SpellHaste)
+    OvaleCondition:RegisterCondition("spellpower", false, Spellpower)
+    OvaleCondition:RegisterCondition("spirit", false, Spirit)
+    OvaleCondition:RegisterCondition("stamina", false, Stamina)
+    OvaleCondition:RegisterCondition("strength", false, Strength)
 end
 do
     local Speed = function(positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local value = API_GetUnitSpeed(target) * 100 / 7
-        return __Condition.Compare(value, comparator, limit)
+        local target = ParseCondition(positionalParams, namedParams, state)
+        local value = GetUnitSpeed(target) * 100 / 7
+        return Compare(value, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("speed", false, Speed)
+    OvaleCondition:RegisterCondition("speed", false, Speed)
 end
 do
     local SpellChargeCooldown = function(positionalParams, namedParams, state, atTime)
         local spellId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local charges, maxCharges, start, duration = __CooldownState.cooldownState:GetSpellCharges(spellId, atTime)
+        local charges, maxCharges, start, duration = cooldownState:GetSpellCharges(spellId, atTime)
         if charges and charges < maxCharges then
-            return __Condition.TestValue(start, start + duration, duration, start, -1, comparator, limit)
+            return TestValue(start, start + duration, duration, start, -1, comparator, limit)
         end
-        return __Condition.Compare(0, comparator, limit)
+        return Compare(0, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("spellchargecooldown", true, SpellChargeCooldown)
+    OvaleCondition:RegisterCondition("spellchargecooldown", true, SpellChargeCooldown)
 end
 do
     local SpellCharges = function(positionalParams, namedParams, state, atTime)
         local spellId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local charges, maxCharges, start, duration = __CooldownState.cooldownState:GetSpellCharges(spellId, atTime)
+        local charges, maxCharges, start, duration = cooldownState:GetSpellCharges(spellId, atTime)
         if  not charges then
             return nil
         end
         charges = charges or 0
         maxCharges = maxCharges or 1
         if namedParams.count == 0 and charges < maxCharges then
-            return __Condition.TestValue(state.currentTime, INFINITY, charges + 1, start + duration, 1 / duration, comparator, limit)
+            return TestValue(state.currentTime, INFINITY, charges + 1, start + duration, 1 / duration, comparator, limit)
         end
-        return __Condition.Compare(charges, comparator, limit)
+        return Compare(charges, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("charges", true, SpellCharges)
-    __Condition.OvaleCondition:RegisterCondition("spellcharges", true, SpellCharges)
+    OvaleCondition:RegisterCondition("charges", true, SpellCharges)
+    OvaleCondition:RegisterCondition("spellcharges", true, SpellCharges)
+end
+do
+local function SpellFullRecharge(positionalParams, namedParams, state, atTime)
+        local spellId = positionalParams[1]
+        local comparator = positionalParams[2]
+        local limit = positionalParams[3]
+        local charges, maxCharges, start, dur = cooldownState:GetSpellCharges(spellId, atTime)
+        if charges and charges < maxCharges then
+            local duration = (maxCharges - charges) * dur
+            local ending = start + duration
+            return TestValue(start, ending, ending - start, start, -1, comparator, limit)
+        end
+        return Compare(0, comparator, limit)
+    end
+    OvaleCondition:RegisterCondition("spellfullrecharge", true, SpellFullRecharge)
 end
 do
     local SpellCooldown = function(positionalParams, namedParams, state, atTime)
         local comparator, limit
         local usable = (namedParams.usable == 1)
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state, "target")
+        local target = ParseCondition(positionalParams, namedParams, state, "target")
         local earliest = INFINITY
-        for i, spellId in _ipairs(positionalParams) do
-            if __Condition.OvaleCondition.COMPARATOR[spellId] then
+        for i, spellId in ipairs(positionalParams) do
+            if OvaleCondition.COMPARATOR[spellId] then
                 comparator, limit = spellId, positionalParams[i + 1]
                 break
-            elseif  not usable or __SpellBookState.spellBookState:IsUsableSpell(spellId, atTime, __GUID.OvaleGUID:UnitGUID(target)) then
-                local start, duration = __CooldownState.cooldownState:GetSpellCooldown(spellId)
+            elseif  not usable or spellBookState:IsUsableSpell(spellId, atTime, OvaleGUID:UnitGUID(target)) then
+                local start, duration = cooldownState:GetSpellCooldown(spellId)
                 local t = 0
                 if start > 0 and duration > 0 then
                     t = start + duration
@@ -2008,104 +2101,104 @@ do
             end
         end
         if earliest == INFINITY then
-            return __Condition.Compare(0, comparator, limit)
+            return Compare(0, comparator, limit)
         elseif earliest > 0 then
-            return __Condition.TestValue(0, earliest, 0, earliest, -1, comparator, limit)
+            return TestValue(0, earliest, 0, earliest, -1, comparator, limit)
         end
-        return __Condition.Compare(0, comparator, limit)
+        return Compare(0, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("spellcooldown", true, SpellCooldown)
+    OvaleCondition:RegisterCondition("spellcooldown", true, SpellCooldown)
 end
 do
     local SpellCooldownDuration = function(positionalParams, namedParams, state, atTime)
         local spellId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state, "target")
-        local duration = __CooldownState.cooldownState:GetSpellCooldownDuration(spellId, atTime, target)
-        return __Condition.Compare(duration, comparator, limit)
+        local target = ParseCondition(positionalParams, namedParams, state, "target")
+        local duration = cooldownState:GetSpellCooldownDuration(spellId, atTime, target)
+        return Compare(duration, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("spellcooldownduration", true, SpellCooldownDuration)
+    OvaleCondition:RegisterCondition("spellcooldownduration", true, SpellCooldownDuration)
 end
 do
     local SpellRechargeDuration = function(positionalParams, namedParams, state, atTime)
         local spellId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state, "target")
-        local cd = __CooldownState.cooldownState:GetCD(spellId)
-        local duration = cd.chargeDuration or __CooldownState.cooldownState:GetSpellCooldownDuration(spellId, atTime, target)
-        return __Condition.Compare(duration, comparator, limit)
+        local target = ParseCondition(positionalParams, namedParams, state, "target")
+        local cd = cooldownState:GetCD(spellId)
+        local duration = cd.chargeDuration or cooldownState:GetSpellCooldownDuration(spellId, atTime, target)
+        return Compare(duration, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("spellrechargeduration", true, SpellRechargeDuration)
+    OvaleCondition:RegisterCondition("spellrechargeduration", true, SpellRechargeDuration)
 end
 do
     local SpellData = function(positionalParams, namedParams, state, atTime)
         local spellId, key, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3], positionalParams[4]
-        local si = __Data.OvaleData.spellInfo[spellId]
+        local si = OvaleData.spellInfo[spellId]
         if si then
             local value = si[key]
             if value then
-                return __Condition.Compare(value, comparator, limit)
+                return Compare(value, comparator, limit)
             end
         end
         return nil
     end
 
-    __Condition.OvaleCondition:RegisterCondition("spelldata", false, SpellData)
+    OvaleCondition:RegisterCondition("spelldata", false, SpellData)
 end
 do
     local SpellInfoProperty = function(positionalParams, namedParams, state, atTime)
         local spellId, key, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3], positionalParams[4]
-        local value = __DataState.dataState:GetSpellInfoProperty(spellId, atTime, key)
+        local value = dataState:GetSpellInfoProperty(spellId, atTime, key)
         if value then
-            return __Condition.Compare(value, comparator, limit)
+            return Compare(value, comparator, limit)
         end
         return nil
     end
 
-    __Condition.OvaleCondition:RegisterCondition("spellinfoproperty", false, SpellInfoProperty)
+    OvaleCondition:RegisterCondition("spellinfoproperty", false, SpellInfoProperty)
 end
 do
     local SpellCount = function(positionalParams, namedParams, state, atTime)
         local spellId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local spellCount = __SpellBook.OvaleSpellBook:GetSpellCount(spellId)
-        return __Condition.Compare(spellCount, comparator, limit)
+        local spellCount = OvaleSpellBook:GetSpellCount(spellId)
+        return Compare(spellCount, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("spellcount", true, SpellCount)
+    OvaleCondition:RegisterCondition("spellcount", true, SpellCount)
 end
 do
     local SpellKnown = function(positionalParams, namedParams, state, atTime)
         local spellId, yesno = positionalParams[1], positionalParams[2]
-        local boolean = __SpellBook.OvaleSpellBook:IsKnownSpell(spellId)
-        return __Condition.TestBoolean(boolean, yesno)
+        local boolean = OvaleSpellBook:IsKnownSpell(spellId)
+        return TestBoolean(boolean, yesno)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("spellknown", true, SpellKnown)
+    OvaleCondition:RegisterCondition("spellknown", true, SpellKnown)
 end
 do
     local SpellMaxCharges = function(positionalParams, namedParams, state, atTime)
         local spellId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local _, maxCharges, _ = __CooldownState.cooldownState:GetSpellCharges(spellId, atTime)
+        local _, maxCharges, _ = cooldownState:GetSpellCharges(spellId, atTime)
         if  not maxCharges then
             return nil
         end
         maxCharges = maxCharges or 1
-        return __Condition.Compare(maxCharges, comparator, limit)
+        return Compare(maxCharges, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("spellmaxcharges", true, SpellMaxCharges)
+    OvaleCondition:RegisterCondition("spellmaxcharges", true, SpellMaxCharges)
 end
 do
     local SpellUsable = function(positionalParams, namedParams, state, atTime)
         local spellId, yesno = positionalParams[1], positionalParams[2]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state, "target")
-        local isUsable, noMana = __SpellBookState.spellBookState:IsUsableSpell(spellId, atTime, __GUID.OvaleGUID:UnitGUID(target))
+        local target = ParseCondition(positionalParams, namedParams, state, "target")
+        local isUsable, noMana = spellBookState:IsUsableSpell(spellId, atTime, OvaleGUID:UnitGUID(target))
         local boolean = isUsable or noMana
-        return __Condition.TestBoolean(boolean, yesno)
+        return TestBoolean(boolean, yesno)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("spellusable", true, SpellUsable)
+    OvaleCondition:RegisterCondition("spellusable", true, SpellUsable)
 end
 do
     local LIGHT_STAGGER = 124275
@@ -2113,44 +2206,44 @@ do
     local HEAVY_STAGGER = 124273
     local StaggerRemaining = function(positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local aura = __Aura.auraState:GetAura(target, HEAVY_STAGGER, "HARMFUL")
-        if  not __Aura.auraState:IsActiveAura(aura, atTime) then
-            aura = __Aura.auraState:GetAura(target, MODERATE_STAGGER, "HARMFUL")
+        local target = ParseCondition(positionalParams, namedParams, state)
+        local aura = auraState:GetAura(target, HEAVY_STAGGER, "HARMFUL")
+        if  not auraState:IsActiveAura(aura, atTime) then
+            aura = auraState:GetAura(target, MODERATE_STAGGER, "HARMFUL")
         end
-        if  not __Aura.auraState:IsActiveAura(aura, atTime) then
-            aura = __Aura.auraState:GetAura(target, LIGHT_STAGGER, "HARMFUL")
+        if  not auraState:IsActiveAura(aura, atTime) then
+            aura = auraState:GetAura(target, LIGHT_STAGGER, "HARMFUL")
         end
-        if __Aura.auraState:IsActiveAura(aura, atTime) then
+        if auraState:IsActiveAura(aura, atTime) then
             local gain, start, ending = aura.gain, aura.start, aura.ending
-            local stagger = API_UnitStagger(target)
+            local stagger = UnitStagger(target)
             local rate = -1 * stagger / (ending - start)
-            return __Condition.TestValue(gain, ending, 0, ending, rate, comparator, limit)
+            return TestValue(gain, ending, 0, ending, rate, comparator, limit)
         end
-        return __Condition.Compare(0, comparator, limit)
+        return Compare(0, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("staggerremaining", false, StaggerRemaining)
-    __Condition.OvaleCondition:RegisterCondition("staggerremains", false, StaggerRemaining)
+    OvaleCondition:RegisterCondition("staggerremaining", false, StaggerRemaining)
+    OvaleCondition:RegisterCondition("staggerremains", false, StaggerRemaining)
 end
 do
     local Stance = function(positionalParams, namedParams, state, atTime)
         local stance, yesno = positionalParams[1], positionalParams[2]
-        local boolean = __StanceState.stanceState:IsStance(stance)
-        return __Condition.TestBoolean(boolean, yesno)
+        local boolean = stanceState:IsStance(stance)
+        return TestBoolean(boolean, yesno)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("stance", false, Stance)
+    OvaleCondition:RegisterCondition("stance", false, Stance)
 end
 do
     local Stealthed = function(positionalParams, namedParams, state, atTime)
         local yesno = positionalParams[1]
-        local boolean = __Aura.auraState:GetAura("player", "stealthed_buff") or API_IsStealthed()
-        return __Condition.TestBoolean(boolean, yesno)
+        local boolean = auraState:GetAura("player", "stealthed_buff") or IsStealthed()
+        return TestBoolean(boolean, yesno)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("isstealthed", false, Stealthed)
-    __Condition.OvaleCondition:RegisterCondition("stealthed", false, Stealthed)
+    OvaleCondition:RegisterCondition("isstealthed", false, Stealthed)
+    OvaleCondition:RegisterCondition("stealthed", false, Stealthed)
 end
 do
     local LastSwing = function(positionalParams, namedParams, state, atTime)
@@ -2164,8 +2257,8 @@ do
             comparator, limit = positionalParams[1], positionalParams[2]
             start = 0
         end
-        __Ovale.Ovale:OneTimeMessage("Warning: 'LastSwing()' is not implemented.")
-        return __Condition.TestValue(start, INFINITY, 0, start, 1, comparator, limit)
+        Ovale:OneTimeMessage("Warning: 'LastSwing()' is not implemented.")
+        return TestValue(start, INFINITY, 0, start, 1, comparator, limit)
     end
 
     local NextSwing = function(positionalParams, namedParams, state, atTime)
@@ -2179,145 +2272,145 @@ do
             comparator, limit = positionalParams[1], positionalParams[2]
             ending = 0
         end
-        __Ovale.Ovale:OneTimeMessage("Warning: 'NextSwing()' is not implemented.")
-        return __Condition.TestValue(0, ending, 0, ending, -1, comparator, limit)
+        Ovale:OneTimeMessage("Warning: 'NextSwing()' is not implemented.")
+        return TestValue(0, ending, 0, ending, -1, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("lastswing", false, LastSwing)
-    __Condition.OvaleCondition:RegisterCondition("nextswing", false, NextSwing)
+    OvaleCondition:RegisterCondition("lastswing", false, LastSwing)
+    OvaleCondition:RegisterCondition("nextswing", false, NextSwing)
 end
 do
     local Talent = function(positionalParams, namedParams, state, atTime)
         local talentId, yesno = positionalParams[1], positionalParams[2]
-        local boolean = (__SpellBook.OvaleSpellBook:GetTalentPoints(talentId) > 0)
-        return __Condition.TestBoolean(boolean, yesno)
+        local boolean = (OvaleSpellBook:GetTalentPoints(talentId) > 0)
+        return TestBoolean(boolean, yesno)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("talent", false, Talent)
+    OvaleCondition:RegisterCondition("talent", false, Talent)
 end
 do
     local TalentPoints = function(positionalParams, namedParams, state, atTime)
         local talent, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local value = __SpellBook.OvaleSpellBook:GetTalentPoints(talent)
-        return __Condition.Compare(value, comparator, limit)
+        local value = OvaleSpellBook:GetTalentPoints(talent)
+        return Compare(value, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("talentpoints", false, TalentPoints)
+    OvaleCondition:RegisterCondition("talentpoints", false, TalentPoints)
 end
 do
     local TargetIsPlayer = function(positionalParams, namedParams, state, atTime)
         local yesno = positionalParams[1]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local boolean = API_UnitIsUnit("player", target .. "target")
-        return __Condition.TestBoolean(boolean, yesno)
+        local target = ParseCondition(positionalParams, namedParams, state)
+        local boolean = UnitIsUnit("player", target .. "target")
+        return TestBoolean(boolean, yesno)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("istargetingplayer", false, TargetIsPlayer)
-    __Condition.OvaleCondition:RegisterCondition("targetisplayer", false, TargetIsPlayer)
+    OvaleCondition:RegisterCondition("istargetingplayer", false, TargetIsPlayer)
+    OvaleCondition:RegisterCondition("targetisplayer", false, TargetIsPlayer)
 end
 do
     local Threat = function(positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state, "target")
-        local _, _, value = API_UnitDetailedThreatSituation("player", target)
-        return __Condition.Compare(value, comparator, limit)
+        local target = ParseCondition(positionalParams, namedParams, state, "target")
+        local _, _, value = UnitDetailedThreatSituation("player", target)
+        return Compare(value, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("threat", false, Threat)
+    OvaleCondition:RegisterCondition("threat", false, Threat)
 end
 do
     local TickTime = function(positionalParams, namedParams, state, atTime)
         local auraId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local target, filter, mine = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local aura = __Aura.auraState:GetAura(target, auraId, filter, mine)
+        local target, filter, mine = ParseCondition(positionalParams, namedParams, state)
+        local aura = auraState:GetAura(target, auraId, filter, mine)
         local tickTime
-        if __Aura.auraState:IsActiveAura(aura, atTime) then
+        if auraState:IsActiveAura(aura, atTime) then
             tickTime = aura.tick
         else
-            tickTime = __Data.OvaleData:GetTickLength(auraId, state)
+            tickTime = OvaleData:GetTickLength(auraId, state)
         end
         if tickTime and tickTime > 0 then
-            return __Condition.Compare(tickTime, comparator, limit)
+            return Compare(tickTime, comparator, limit)
         end
-        return __Condition.Compare(INFINITY, comparator, limit)
+        return Compare(INFINITY, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("ticktime", false, TickTime)
+    OvaleCondition:RegisterCondition("ticktime", false, TickTime)
 end
 do
     local TicksRemaining = function(positionalParams, namedParams, state, atTime)
         local auraId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local target, filter, mine = __Condition.ParseCondition(positionalParams, namedParams, state)
-        local aura = __Aura.auraState:GetAura(target, auraId, filter, mine)
+        local target, filter, mine = ParseCondition(positionalParams, namedParams, state)
+        local aura = auraState:GetAura(target, auraId, filter, mine)
         if aura then
             local gain, _, ending, tick = aura.gain, aura.start, aura.ending, aura.tick
             if tick and tick > 0 then
-                return __Condition.TestValue(gain, INFINITY, 1, ending, -1 / tick, comparator, limit)
+                return TestValue(gain, INFINITY, 1, ending, -1 / tick, comparator, limit)
             end
         end
-        return __Condition.Compare(0, comparator, limit)
+        return Compare(0, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("ticksremaining", false, TicksRemaining)
-    __Condition.OvaleCondition:RegisterCondition("ticksremain", false, TicksRemaining)
+    OvaleCondition:RegisterCondition("ticksremaining", false, TicksRemaining)
+    OvaleCondition:RegisterCondition("ticksremain", false, TicksRemaining)
 end
 do
     local TimeInCombat = function(positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
         if state.inCombat then
-            local start = __FutureState.futureState.combatStartTime
-            return __Condition.TestValue(start, INFINITY, 0, start, 1, comparator, limit)
+            local start = futureState.combatStartTime
+            return TestValue(start, INFINITY, 0, start, 1, comparator, limit)
         end
-        return __Condition.Compare(0, comparator, limit)
+        return Compare(0, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("timeincombat", false, TimeInCombat)
+    OvaleCondition:RegisterCondition("timeincombat", false, TimeInCombat)
 end
 do
     local TimeSincePreviousSpell = function(positionalParams, namedParams, state, atTime)
         local spellId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local t = __FutureState.futureState:TimeOfLastCast(spellId)
-        return __Condition.TestValue(0, INFINITY, 0, t, 1, comparator, limit)
+        local t = futureState:TimeOfLastCast(spellId)
+        return TestValue(0, INFINITY, 0, t, 1, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("timesincepreviousspell", false, TimeSincePreviousSpell)
+    OvaleCondition:RegisterCondition("timesincepreviousspell", false, TimeSincePreviousSpell)
 end
 do
     local TimeToBloodlust = function(positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
         local value = 3600
-        return __Condition.Compare(value, comparator, limit)
+        return Compare(value, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("timetobloodlust", false, TimeToBloodlust)
+    OvaleCondition:RegisterCondition("timetobloodlust", false, TimeToBloodlust)
 end
 do
     local TimeToEclipse = function(positionalParams, namedParams, state, atTime)
         local _, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
         local value = 3600 * 24 * 7
-        __Ovale.Ovale:OneTimeMessage("Warning: 'TimeToEclipse()' is not implemented.")
-        return __Condition.TestValue(0, INFINITY, value, atTime, -1, comparator, limit)
+        Ovale:OneTimeMessage("Warning: 'TimeToEclipse()' is not implemented.")
+        return TestValue(0, INFINITY, value, atTime, -1, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("timetoeclipse", false, TimeToEclipse)
+    OvaleCondition:RegisterCondition("timetoeclipse", false, TimeToEclipse)
 end
 do
     local TimeToPower = function(powerType, level, comparator, limit, state, atTime)
         level = level or 0
-        local power = __Power.powerState[powerType] or 0
-        local powerRegen = __Power.powerState.powerRate[powerType] or 1
+        local power = powerState[powerType] or 0
+        local powerRegen = powerState.powerRate[powerType] or 1
         if powerRegen == 0 then
             if power == level then
-                return __Condition.Compare(0, comparator, limit)
+                return Compare(0, comparator, limit)
             end
-            return __Condition.Compare(INFINITY, comparator, limit)
+            return Compare(INFINITY, comparator, limit)
         else
             local t = (level - power) / powerRegen
             if t > 0 then
                 local ending = state.currentTime + t
-                return __Condition.TestValue(0, ending, 0, ending, -1, comparator, limit)
+                return TestValue(0, ending, 0, ending, -1, comparator, limit)
             end
-            return __Condition.Compare(0, comparator, limit)
+            return Compare(0, comparator, limit)
         end
     end
 
@@ -2329,7 +2422,7 @@ do
     local TimeToMaxEnergy = function(positionalParams, namedParams, state, atTime)
         local powerType = "energy"
         local comparator, limit = positionalParams[1], positionalParams[2]
-        local level = __Power.OvalePower.maxPower[powerType] or 0
+        local level = OvalePower.maxPower[powerType] or 0
         return TimeToPower(powerType, level, comparator, limit, state, atTime)
     end
 
@@ -2341,30 +2434,30 @@ do
     local TimeToMaxFocus = function(positionalParams, namedParams, state, atTime)
         local powerType = "focus"
         local comparator, limit = positionalParams[1], positionalParams[2]
-        local level = __Power.OvalePower.maxPower[powerType] or 0
+        local level = OvalePower.maxPower[powerType] or 0
         return TimeToPower(powerType, level, comparator, limit, state, atTime)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("timetoenergy", false, TimeToEnergy)
-    __Condition.OvaleCondition:RegisterCondition("timetofocus", false, TimeToFocus)
-    __Condition.OvaleCondition:RegisterCondition("timetomaxenergy", false, TimeToMaxEnergy)
-    __Condition.OvaleCondition:RegisterCondition("timetomaxfocus", false, TimeToMaxFocus)
+    OvaleCondition:RegisterCondition("timetoenergy", false, TimeToEnergy)
+    OvaleCondition:RegisterCondition("timetofocus", false, TimeToFocus)
+    OvaleCondition:RegisterCondition("timetomaxenergy", false, TimeToMaxEnergy)
+    OvaleCondition:RegisterCondition("timetomaxfocus", false, TimeToMaxFocus)
 end
 do
     local TimeToPowerFor = function(powerType, positionalParams, namedParams, state, atTime)
         local spellId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state, "target")
+        local target = ParseCondition(positionalParams, namedParams, state, "target")
         if  not powerType then
-            local _, pt = __Power.OvalePower:GetSpellCost(spellId)
+            local _, pt = OvalePower:GetSpellCost(spellId)
             powerType = pt
         end
-        local seconds = __Power.powerState:TimeToPower(spellId, atTime, __GUID.OvaleGUID:UnitGUID(target), powerType)
+        local seconds = powerState:TimeToPower(spellId, atTime, OvaleGUID:UnitGUID(target), powerType)
         if seconds == 0 then
-            return __Condition.Compare(0, comparator, limit)
+            return Compare(0, comparator, limit)
         elseif seconds < INFINITY then
-            return __Condition.TestValue(0, state.currentTime + seconds, seconds, state.currentTime, -1, comparator, limit)
+            return TestValue(0, state.currentTime + seconds, seconds, state.currentTime, -1, comparator, limit)
         else
-            return __Condition.Compare(INFINITY, comparator, limit)
+            return Compare(INFINITY, comparator, limit)
         end
     end
 
@@ -2376,46 +2469,46 @@ do
         return TimeToPowerFor("focus", positionalParams, namedParams, state, atTime)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("timetoenergyfor", true, TimeToEnergyFor)
-    __Condition.OvaleCondition:RegisterCondition("timetofocusfor", true, TimeToFocusFor)
+    OvaleCondition:RegisterCondition("timetoenergyfor", true, TimeToEnergyFor)
+    OvaleCondition:RegisterCondition("timetofocusfor", true, TimeToFocusFor)
 end
 do
     local TimeToSpell = function(positionalParams, namedParams, state, atTime)
         local spellId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local target = __Condition.ParseCondition(positionalParams, namedParams, state, "target")
-        local seconds = __SpellBookState.spellBookState:GetTimeToSpell(spellId, atTime, __GUID.OvaleGUID:UnitGUID(target))
+        local target = ParseCondition(positionalParams, namedParams, state, "target")
+        local seconds = spellBookState:GetTimeToSpell(spellId, atTime, OvaleGUID:UnitGUID(target))
         if seconds == 0 then
-            return __Condition.Compare(0, comparator, limit)
+            return Compare(0, comparator, limit)
         elseif seconds < INFINITY then
-            return __Condition.TestValue(0, state.currentTime + seconds, seconds, state.currentTime, -1, comparator, limit)
+            return TestValue(0, state.currentTime + seconds, seconds, state.currentTime, -1, comparator, limit)
         else
-            return __Condition.Compare(INFINITY, comparator, limit)
+            return Compare(INFINITY, comparator, limit)
         end
     end
 
-    __Condition.OvaleCondition:RegisterCondition("timetospell", true, TimeToSpell)
+    OvaleCondition:RegisterCondition("timetospell", true, TimeToSpell)
 end
 do
     local TimeWithHaste = function(positionalParams, namedParams, state, atTime)
         local seconds, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
         local haste = namedParams.haste or "spell"
         local value = GetHastedTime(seconds, haste, state)
-        return __Condition.Compare(value, comparator, limit)
+        return Compare(value, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("timewithhaste", false, TimeWithHaste)
+    OvaleCondition:RegisterCondition("timewithhaste", false, TimeWithHaste)
 end
 do
     local TotemExpires = function(positionalParams, namedParams, state, atTime)
         local id, seconds = positionalParams[1], positionalParams[2]
         seconds = seconds or 0
-        if _type(id) == "string" then
-            local _, _, startTime, duration = __Totem.totemState:GetTotemInfo(id)
+        if type(id) == "string" then
+            local _, _, startTime, duration = totemState:GetTotemInfo(id)
             if startTime then
                 return startTime + duration - seconds, INFINITY
             end
         else
-            local count, _, ending = __Totem.totemState:GetTotemCount(id, atTime)
+            local count, _, ending = totemState:GetTotemCount(id, atTime)
             if count > 0 then
                 return ending - seconds, INFINITY
             end
@@ -2425,13 +2518,13 @@ do
 
     local TotemPresent = function(positionalParams, namedParams, state, atTime)
         local id = positionalParams[1]
-        if _type(id) == "string" then
-            local _, _, startTime, duration = __Totem.totemState:GetTotemInfo(id)
+        if type(id) == "string" then
+            local _, _, startTime, duration = totemState:GetTotemInfo(id)
             if startTime and duration > 0 then
                 return startTime, startTime + duration
             end
         else
-            local count, start, ending = __Totem.totemState:GetTotemCount(id, atTime)
+            local count, start, ending = totemState:GetTotemCount(id, atTime)
             if count > 0 then
                 return start, ending
             end
@@ -2439,50 +2532,50 @@ do
         return nil
     end
 
-    __Condition.OvaleCondition:RegisterCondition("totemexpires", false, TotemExpires)
-    __Condition.OvaleCondition:RegisterCondition("totempresent", false, TotemPresent)
+    OvaleCondition:RegisterCondition("totemexpires", false, TotemExpires)
+    OvaleCondition:RegisterCondition("totempresent", false, TotemPresent)
     local TotemRemaining = function(positionalParams, namedParams, state, atTime)
         local id, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        if _type(id) == "string" then
-            local _, _, startTime, duration = __Totem.totemState:GetTotemInfo(id)
+        if type(id) == "string" then
+            local _, _, startTime, duration = totemState:GetTotemInfo(id)
             if startTime and duration > 0 then
                 local start, ending = startTime, startTime + duration
-                return __Condition.TestValue(start, ending, 0, ending, -1, comparator, limit)
+                return TestValue(start, ending, 0, ending, -1, comparator, limit)
             end
         else
-            local count, start, ending = __Totem.totemState:GetTotemCount(id, atTime)
+            local count, start, ending = totemState:GetTotemCount(id, atTime)
             if count > 0 then
-                return __Condition.TestValue(start, ending, 0, ending, -1, comparator, limit)
+                return TestValue(start, ending, 0, ending, -1, comparator, limit)
             end
         end
-        return __Condition.Compare(0, comparator, limit)
+        return Compare(0, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("totemremaining", false, TotemRemaining)
-    __Condition.OvaleCondition:RegisterCondition("totemremains", false, TotemRemaining)
+    OvaleCondition:RegisterCondition("totemremaining", false, TotemRemaining)
+    OvaleCondition:RegisterCondition("totemremains", false, TotemRemaining)
 end
 do
     local Tracking = function(positionalParams, namedParams, state, atTime)
         local spellId, yesno = positionalParams[1], positionalParams[2]
-        local spellName = __SpellBook.OvaleSpellBook:GetSpellName(spellId)
-        local numTrackingTypes = API_GetNumTrackingTypes()
+        local spellName = OvaleSpellBook:GetSpellName(spellId)
+        local numTrackingTypes = GetNumTrackingTypes()
         local boolean = false
         for i = 1, numTrackingTypes, 1 do
-            local name, _, active = API_GetTrackingInfo(i)
+            local name, _, active = GetTrackingInfo(i)
             if name and name == spellName then
                 boolean = (active == 1)
                 break
             end
         end
-        return __Condition.TestBoolean(boolean, yesno)
+        return TestBoolean(boolean, yesno)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("tracking", false, Tracking)
+    OvaleCondition:RegisterCondition("tracking", false, Tracking)
 end
 do
     local TravelTime = function(positionalParams, namedParams, state, atTime)
         local spellId, comparator, limit = positionalParams[1], positionalParams[2], positionalParams[3]
-        local si = spellId and __Data.OvaleData.spellInfo[spellId]
+        local si = spellId and OvaleData.spellInfo[spellId]
         local travelTime = 0
         if si then
             travelTime = si.travel_time or si.max_travel_time or 0
@@ -2493,18 +2586,18 @@ do
                 travelTime = estimatedTravelTime
             end
         end
-        return __Condition.Compare(travelTime, comparator, limit)
+        return Compare(travelTime, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("traveltime", true, TravelTime)
-    __Condition.OvaleCondition:RegisterCondition("maxtraveltime", true, TravelTime)
+    OvaleCondition:RegisterCondition("traveltime", true, TravelTime)
+    OvaleCondition:RegisterCondition("maxtraveltime", true, TravelTime)
 end
 do
     local True = function(positionalParams, namedParams, state, atTime)
         return 0, INFINITY
     end
 
-    __Condition.OvaleCondition:RegisterCondition("true", false, True)
+    OvaleCondition:RegisterCondition("true", false, True)
 end
 do
     local WeaponDamage = function(positionalParams, namedParams, state, atTime)
@@ -2513,25 +2606,25 @@ do
         local value = 0
         if hand == "offhand" or hand == "off" then
             comparator, limit = positionalParams[2], positionalParams[3]
-            value = __PaperDoll.paperDollState.offHandWeaponDamage
+            value = paperDollState.offHandWeaponDamage
         elseif hand == "mainhand" or hand == "main" then
             comparator, limit = positionalParams[2], positionalParams[3]
-            value = __PaperDoll.paperDollState.mainHandWeaponDamage
+            value = paperDollState.mainHandWeaponDamage
         else
             comparator, limit = positionalParams[1], positionalParams[2]
-            value = __PaperDoll.paperDollState.mainHandWeaponDamage
+            value = paperDollState.mainHandWeaponDamage
         end
-        return __Condition.Compare(value, comparator, limit)
+        return Compare(value, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("weapondamage", false, WeaponDamage)
+    OvaleCondition:RegisterCondition("weapondamage", false, WeaponDamage)
 end
 do
     local WeaponEnchantExpires = function(positionalParams, namedParams, state, atTime)
         local hand, seconds = positionalParams[1], positionalParams[2]
         seconds = seconds or 0
-        local hasMainHandEnchant, mainHandExpiration, _, hasOffHandEnchant, offHandExpiration = API_GetWeaponEnchantInfo()
-        local now = API_GetTime()
+        local hasMainHandEnchant, mainHandExpiration, _, hasOffHandEnchant, offHandExpiration = GetWeaponEnchantInfo()
+        local now = GetTime()
         if hand == "mainhand" or hand == "main" then
             if hasMainHandEnchant then
                 mainHandExpiration = mainHandExpiration / 1000
@@ -2546,56 +2639,55 @@ do
         return 0, INFINITY
     end
 
-    __Condition.OvaleCondition:RegisterCondition("weaponenchantexpires", false, WeaponEnchantExpires)
+    OvaleCondition:RegisterCondition("weaponenchantexpires", false, WeaponEnchantExpires)
 end
 do
     local SigilCharging = function(positionalParams, namedParams, state, atTime)
         local charging = false
-        for _, v in _ipairs(positionalParams) do
-            charging = charging or __DemonHunterSigils.sigilState:IsSigilCharging(v, atTime)
+        for _, v in ipairs(positionalParams) do
+            charging = charging or sigilState:IsSigilCharging(v, atTime)
         end
-        return __Condition.TestBoolean(charging, "yes")
+        return TestBoolean(charging, "yes")
     end
 
-    __Condition.OvaleCondition:RegisterCondition("sigilcharging", false, SigilCharging)
+    OvaleCondition:RegisterCondition("sigilcharging", false, SigilCharging)
 end
 do
     local IsBossFight = function(positionalParams, namedParams, state, atTime)
-        local bossEngaged = state.inCombat and __BossMod.OvaleBossMod:IsBossEngaged(state)
-        return __Condition.TestBoolean(bossEngaged, "yes")
+        local bossEngaged = state.inCombat and OvaleBossMod:IsBossEngaged(state)
+        return TestBoolean(bossEngaged, "yes")
     end
 
-    __Condition.OvaleCondition:RegisterCondition("isbossfight", false, IsBossFight)
+    OvaleCondition:RegisterCondition("isbossfight", false, IsBossFight)
 end
 do
     local Race = function(positionalParams, namedParams, state, atTime)
         local isRace = false
         local target = namedParams.target or "player"
-        local _, targetRaceId = API_UnitRace(target)
-        for _, v in _ipairs(positionalParams) do
+        local _, targetRaceId = UnitRace(target)
+        for _, v in ipairs(positionalParams) do
             isRace = isRace or (v == targetRaceId)
         end
-        return __Condition.TestBoolean(isRace, "yes")
+        return TestBoolean(isRace, "yes")
     end
 
-    __Condition.OvaleCondition:RegisterCondition("race", false, Race)
+    OvaleCondition:RegisterCondition("race", false, Race)
 end
 do
-    local UnitInRaid = function(positionalParams, namedParams, state, atTime)
+    local UnitInRaidCond = function(positionalParams, namedParams, state, atTime)
         local target = namedParams.target or "player"
-        local raidIndex = API_UnitInRaid(target)
-        return __Condition.TestBoolean(raidIndex ~= nil, "yes")
+        local raidIndex = UnitInRaid(target)
+        return TestBoolean(raidIndex ~= nil, "yes")
     end
 
-    __Condition.OvaleCondition:RegisterCondition("unitinraid", false, UnitInRaid)
+    OvaleCondition:RegisterCondition("unitinraid", false, UnitInRaidCond)
 end
 do
     local SoulFragments = function(positionalParams, namedParams, state, atTime)
         local comparator, limit = positionalParams[1], positionalParams[2]
-        local value = __DemonHunterSoulFragments.demonHunterSoulFragmentsState:SoulFragments(atTime)
-        return __Condition.Compare(value, comparator, limit)
+        local value = demonHunterSoulFragmentsState:SoulFragments(atTime)
+        return Compare(value, comparator, limit)
     end
 
-    __Condition.OvaleCondition:RegisterCondition("soulfragments", false, SoulFragments)
+    OvaleCondition:RegisterCondition("soulfragments", false, SoulFragments)
 end
-end)

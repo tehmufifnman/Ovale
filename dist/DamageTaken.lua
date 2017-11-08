@@ -1,23 +1,36 @@
-local __addonName, __addon = ...
-            __addon.require("./DamageTaken", { "./Debug", "./Pool", "./Profiler", "./Queue", "./Ovale", "AceEvent-3.0" }, function(__exports, __Debug, __Pool, __Profiler, __Queue, __Ovale, aceEvent)
-local OvaleDamageTakenBase = __Ovale.Ovale:NewModule("OvaleDamageTaken", aceEvent)
-local bit_band = bit.band
-local bit_bor = bit.bor
-local strsub = string.sub
-local API_GetTime = GetTime
-local _SCHOOL_MASK_ARCANE = SCHOOL_MASK_ARCANE
-local _SCHOOL_MASK_FIRE = SCHOOL_MASK_FIRE
-local _SCHOOL_MASK_FROST = SCHOOL_MASK_FROST
-local _SCHOOL_MASK_HOLY = SCHOOL_MASK_HOLY
-local _SCHOOL_MASK_NATURE = SCHOOL_MASK_NATURE
-local _SCHOOL_MASK_SHADOW = SCHOOL_MASK_SHADOW
-local self_pool = __Pool.OvalePool("OvaleDamageTaken_pool")
+local __exports = LibStub:NewLibrary("ovale/DamageTaken", 10000)
+if not __exports then return end
+local __class = LibStub:GetLibrary("tslib").newClass
+local __Debug = LibStub:GetLibrary("ovale/Debug")
+local OvaleDebug = __Debug.OvaleDebug
+local __Pool = LibStub:GetLibrary("ovale/Pool")
+local OvalePool = __Pool.OvalePool
+local __Profiler = LibStub:GetLibrary("ovale/Profiler")
+local OvaleProfiler = __Profiler.OvaleProfiler
+local __Queue = LibStub:GetLibrary("ovale/Queue")
+local OvaleQueue = __Queue.OvaleQueue
+local __Ovale = LibStub:GetLibrary("ovale/Ovale")
+local Ovale = __Ovale.Ovale
+local RegisterPrinter = __Ovale.RegisterPrinter
+local aceEvent = LibStub:GetLibrary("AceEvent-3.0", true)
+local band = bit.band
+local bor = bit.bor
+local sub = string.sub
+local GetTime = GetTime
+local SCHOOL_MASK_ARCANE = SCHOOL_MASK_ARCANE
+local SCHOOL_MASK_FIRE = SCHOOL_MASK_FIRE
+local SCHOOL_MASK_FROST = SCHOOL_MASK_FROST
+local SCHOOL_MASK_HOLY = SCHOOL_MASK_HOLY
+local SCHOOL_MASK_NATURE = SCHOOL_MASK_NATURE
+local SCHOOL_MASK_SHADOW = SCHOOL_MASK_SHADOW
+local OvaleDamageTakenBase = RegisterPrinter(OvaleProfiler:RegisterProfiling(OvaleDebug:RegisterDebugging(Ovale:NewModule("OvaleDamageTaken", aceEvent))))
+local self_pool = OvalePool("OvaleDamageTaken_pool")
 local DAMAGE_TAKEN_WINDOW = 20
-local SCHOOL_MASK_MAGIC = bit_bor(_SCHOOL_MASK_ARCANE, _SCHOOL_MASK_FIRE, _SCHOOL_MASK_FROST, _SCHOOL_MASK_HOLY, _SCHOOL_MASK_NATURE, _SCHOOL_MASK_SHADOW)
-local OvaleDamageTakenClass = __addon.__class(__Ovale.RegisterPrinter(__Profiler.OvaleProfiler:RegisterProfiling(__Debug.OvaleDebug:RegisterDebugging(OvaleDamageTakenBase))), {
+local SCHOOL_MASK_MAGIC = bor(SCHOOL_MASK_ARCANE, SCHOOL_MASK_FIRE, SCHOOL_MASK_FROST, SCHOOL_MASK_HOLY, SCHOOL_MASK_NATURE, SCHOOL_MASK_SHADOW)
+local OvaleDamageTakenClass = __class(OvaleDamageTakenBase, {
     constructor = function(self)
-        self.damageEvent = __Queue.OvaleQueue("OvaleDamageTaken_damageEvent")
-        __Ovale.RegisterPrinter(__Profiler.OvaleProfiler:RegisterProfiling(__Debug.OvaleDebug:RegisterDebugging(OvaleDamageTakenBase))).constructor(self)
+        self.damageEvent = OvaleQueue("OvaleDamageTaken_damageEvent")
+        OvaleDamageTakenBase.constructor(self)
         self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
         self:RegisterEvent("PLAYER_REGEN_ENABLED")
     end,
@@ -28,17 +41,17 @@ local OvaleDamageTakenClass = __addon.__class(__Ovale.RegisterPrinter(__Profiler
     end,
     COMBAT_LOG_EVENT_UNFILTERED = function(self, event, timestamp, cleuEvent, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, ...)
         local arg12, arg13, arg14, arg15, _, _, _, _, _, _, _, _, _ = ...
-        if destGUID == __Ovale.Ovale.playerGUID and strsub(cleuEvent, -7) == "_DAMAGE" then
+        if destGUID == Ovale.playerGUID and sub(cleuEvent, -7) == "_DAMAGE" then
             self:StartProfiling("OvaleDamageTaken_COMBAT_LOG_EVENT_UNFILTERED")
-            local now = API_GetTime()
-            local eventPrefix = strsub(cleuEvent, 1, 6)
+            local now = GetTime()
+            local eventPrefix = sub(cleuEvent, 1, 6)
             if eventPrefix == "SWING_" then
                 local amount = arg12
                 self:Debug("%s caused %d damage.", cleuEvent, amount)
                 self:AddDamageTaken(now, amount)
             elseif eventPrefix == "RANGE_" or eventPrefix == "SPELL_" then
                 local spellName, spellSchool, amount = arg13, arg14, arg15
-                local isMagicDamage = (bit_band(spellSchool, SCHOOL_MASK_MAGIC) > 0)
+                local isMagicDamage = (band(spellSchool, SCHOOL_MASK_MAGIC) > 0)
                 if isMagicDamage then
                     self:Debug("%s (%s) caused %d magic damage.", cleuEvent, spellName, amount)
                 else
@@ -60,11 +73,11 @@ local OvaleDamageTakenClass = __addon.__class(__Ovale.RegisterPrinter(__Profiler
         event.magic = isMagicDamage
         self.damageEvent:InsertFront(event)
         self:RemoveExpiredEvents(timestamp)
-        __Ovale.Ovale:needRefresh()
+        Ovale:needRefresh()
         self:StopProfiling("OvaleDamageTaken_AddDamageTaken")
     end,
     GetRecentDamage = function(self, interval)
-        local now = API_GetTime()
+        local now = GetTime()
         local lowerBound = now - interval
         self:RemoveExpiredEvents(now)
         local total, totalMagic = 0, 0
@@ -94,7 +107,7 @@ local OvaleDamageTakenClass = __addon.__class(__Ovale.RegisterPrinter(__Profiler
                 end
                 self.damageEvent:RemoveBack()
                 self_pool:Release(event)
-                __Ovale.Ovale:needRefresh()
+                Ovale:needRefresh()
             end
         end
         self:StopProfiling("OvaleDamageTaken_RemoveExpiredEvents")
@@ -109,4 +122,3 @@ local OvaleDamageTakenClass = __addon.__class(__Ovale.RegisterPrinter(__Profiler
     end,
 })
 __exports.OvaleDamageTaken = OvaleDamageTakenClass()
-end)

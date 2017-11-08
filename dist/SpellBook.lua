@@ -1,46 +1,59 @@
-local __addonName, __addon = ...
-            __addon.require("./SpellBook", { "./Localization", "./Debug", "./Profiler", "./Ovale", "./Requirement", "AceEvent-3.0" }, function(__exports, __Localization, __Debug, __Profiler, __Ovale, __Requirement, aceEvent)
-local _ipairs = ipairs
-local _pairs = pairs
-local strmatch = string.match
-local tconcat = table.concat
-local tinsert = table.insert
-local _tonumber = tonumber
-local _tostring = tostring
-local tsort = table.sort
-local _wipe = wipe
-local _gsub = string.gsub
-local API_GetActiveSpecGroup = GetActiveSpecGroup
-local API_GetFlyoutInfo = GetFlyoutInfo
-local API_GetFlyoutSlotInfo = GetFlyoutSlotInfo
-local API_GetSpellBookItemInfo = GetSpellBookItemInfo
-local API_GetSpellInfo = GetSpellInfo
-local API_GetSpellCount = GetSpellCount
-local API_GetSpellLink = GetSpellLink
-local API_GetSpellTabInfo = GetSpellTabInfo
-local API_GetSpellTexture = GetSpellTexture
-local API_GetTalentInfo = GetTalentInfo
-local API_HasPetSpells = HasPetSpells
-local API_IsHarmfulSpell = IsHarmfulSpell
-local API_IsHelpfulSpell = IsHelpfulSpell
-local API_IsSpellInRange = IsSpellInRange
-local API_IsUsableSpell = IsUsableSpell
-local API_UnitIsFriend = UnitIsFriend
-local _BOOKTYPE_PET = BOOKTYPE_PET
-local _BOOKTYPE_SPELL = BOOKTYPE_SPELL
-local _MAX_TALENT_TIERS = MAX_TALENT_TIERS
-local _NUM_TALENT_COLUMNS = NUM_TALENT_COLUMNS
-local MAX_NUM_TALENTS = _NUM_TALENT_COLUMNS * _MAX_TALENT_TIERS
+local __exports = LibStub:NewLibrary("ovale/SpellBook", 10000)
+if not __exports then return end
+local __class = LibStub:GetLibrary("tslib").newClass
+local __Localization = LibStub:GetLibrary("ovale/Localization")
+local L = __Localization.L
+local __Debug = LibStub:GetLibrary("ovale/Debug")
+local OvaleDebug = __Debug.OvaleDebug
+local __Profiler = LibStub:GetLibrary("ovale/Profiler")
+local OvaleProfiler = __Profiler.OvaleProfiler
+local __Ovale = LibStub:GetLibrary("ovale/Ovale")
+local Ovale = __Ovale.Ovale
+local __Requirement = LibStub:GetLibrary("ovale/Requirement")
+local RegisterRequirement = __Requirement.RegisterRequirement
+local UnregisterRequirement = __Requirement.UnregisterRequirement
+local aceEvent = LibStub:GetLibrary("AceEvent-3.0", true)
+local ipairs = ipairs
+local pairs = pairs
+local tonumber = tonumber
+local tostring = tostring
+local wipe = wipe
+local match = string.match
+local gsub = string.gsub
+local concat = table.concat
+local insert = table.insert
+local sort = table.sort
+local GetActiveSpecGroup = GetActiveSpecGroup
+local GetFlyoutInfo = GetFlyoutInfo
+local GetFlyoutSlotInfo = GetFlyoutSlotInfo
+local GetSpellBookItemInfo = GetSpellBookItemInfo
+local GetSpellInfo = GetSpellInfo
+local GetSpellCount = GetSpellCount
+local GetSpellLink = GetSpellLink
+local GetSpellTabInfo = GetSpellTabInfo
+local GetSpellTexture = GetSpellTexture
+local GetTalentInfo = GetTalentInfo
+local HasPetSpells = HasPetSpells
+local IsHarmfulSpell = IsHarmfulSpell
+local IsHelpfulSpell = IsHelpfulSpell
+local IsSpellInRange = IsSpellInRange
+local IsUsableSpell = IsUsableSpell
+local UnitIsFriend = UnitIsFriend
+local BOOKTYPE_PET = BOOKTYPE_PET
+local BOOKTYPE_SPELL = BOOKTYPE_SPELL
+local MAX_TALENT_TIERS = MAX_TALENT_TIERS
+local NUM_TALENT_COLUMNS = NUM_TALENT_COLUMNS
+local MAX_NUM_TALENTS = NUM_TALENT_COLUMNS * MAX_TALENT_TIERS
 local WARRIOR_INCERCEPT_SPELLID = 198304
 local WARRIOR_HEROICTHROW_SPELLID = 57755
 do
     local debugOptions = {
         spellbook = {
-            name = __Localization.L["Spellbook"],
+            name = L["Spellbook"],
             type = "group",
             args = {
                 spellbook = {
-                    name = __Localization.L["Spellbook"],
+                    name = L["Spellbook"],
                     type = "input",
                     multiline = 25,
                     width = "full",
@@ -52,11 +65,11 @@ do
             }
         },
         talent = {
-            name = __Localization.L["Talents"],
+            name = L["Talents"],
             type = "group",
             args = {
                 talent = {
-                    name = __Localization.L["Talents"],
+                    name = L["Talents"],
                     type = "input",
                     multiline = 25,
                     width = "full",
@@ -68,35 +81,35 @@ do
             }
         }
     }
-    for k, v in _pairs(debugOptions) do
-        __Debug.OvaleDebug.options.args[k] = v
+    for k, v in pairs(debugOptions) do
+        OvaleDebug.options.args[k] = v
     end
 end
 local ParseHyperlink = function(hyperlink)
-    local color, linkType, linkData, text = strmatch(hyperlink, "|?c?f?f?(%x*)|?H?([^:]*):?(%d*):?%d?|?h?%[?([^%[%]]*)%]?|?h?|?r?")
+    local color, linkType, linkData, text = match(hyperlink, "|?c?f?f?(%x*)|?H?([^:]*):?(%d*):?%d?|?h?%[?([^%[%]]*)%]?|?h?|?r?")
     return color, linkType, linkData, text
 end
 
 local OutputTableValues = function(output, tbl)
     local array = {}
-    for k, v in _pairs(tbl) do
-        tinsert(array, _tostring(v) .. ": " .. _tostring(k))
+    for k, v in pairs(tbl) do
+        insert(array, tostring(v) .. ": " .. tostring(k))
     end
-    tsort(array)
-    for _, v in _ipairs(array) do
+    sort(array)
+    for _, v in ipairs(array) do
         output[#output + 1] = v
     end
 end
 
 local output = {}
-local OvaleSpellBookBase = __Profiler.OvaleProfiler:RegisterProfiling(__Debug.OvaleDebug:RegisterDebugging(__Ovale.Ovale:NewModule("OvaleSpellBook", aceEvent)))
-local OvaleSpellBookClass = __addon.__class(OvaleSpellBookBase, {
+local OvaleSpellBookBase = OvaleProfiler:RegisterProfiling(OvaleDebug:RegisterDebugging(Ovale:NewModule("OvaleSpellBook", aceEvent)))
+local OvaleSpellBookClass = __class(OvaleSpellBookBase, {
     constructor = function(self)
         self.ready = false
         self.spell = {}
         self.spellbookId = {
-            [_BOOKTYPE_PET] = {},
-            [_BOOKTYPE_SPELL] = {}
+            [BOOKTYPE_PET] = {},
+            [BOOKTYPE_SPELL] = {}
         }
         self.isHarmful = {}
         self.isHelpful = {}
@@ -110,12 +123,12 @@ local OvaleSpellBookClass = __addon.__class(OvaleSpellBookBase, {
         self:RegisterEvent("PLAYER_TALENT_UPDATE", "UpdateTalents")
         self:RegisterEvent("SPELLS_CHANGED", "UpdateSpells")
         self:RegisterEvent("UNIT_PET")
-        __Requirement.RegisterRequirement("spellcount_min", "RequireSpellCountHandler", self)
-        __Requirement.RegisterRequirement("spellcount_max", "RequireSpellCountHandler", self)
+        RegisterRequirement("spellcount_min", "RequireSpellCountHandler", self)
+        RegisterRequirement("spellcount_max", "RequireSpellCountHandler", self)
     end,
     OnDisable = function(self)
-        __Requirement.UnregisterRequirement("spellcount_max")
-        __Requirement.UnregisterRequirement("spellcount_min")
+        UnregisterRequirement("spellcount_max")
+        UnregisterRequirement("spellcount_min")
         self:UnregisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
         self:UnregisterEvent("CHARACTER_POINTS_CHANGED")
         self:UnregisterEvent("PLAYER_ENTERING_WORLD")
@@ -135,12 +148,12 @@ local OvaleSpellBookClass = __addon.__class(OvaleSpellBookBase, {
     end,
     UpdateTalents = function(self)
         self:Debug("Updating talents.")
-        _wipe(self.talent)
-        _wipe(self.talentPoints)
-        local activeTalentGroup = API_GetActiveSpecGroup()
-        for i = 1, _MAX_TALENT_TIERS, 1 do
-            for j = 1, _NUM_TALENT_COLUMNS, 1 do
-                local talentId, name, _, selected, _, _, _, _, _, _, selectedByLegendary = API_GetTalentInfo(i, j, activeTalentGroup)
+        wipe(self.talent)
+        wipe(self.talentPoints)
+        local activeTalentGroup = GetActiveSpecGroup()
+        for i = 1, MAX_TALENT_TIERS, 1 do
+            for j = 1, NUM_TALENT_COLUMNS, 1 do
+                local talentId, name, _, selected, _, _, _, _, _, _, selectedByLegendary = GetTalentInfo(i, j, activeTalentGroup)
                 if talentId then
                     local combinedSelected = selected or selectedByLegendary
                     local index = 3 * (i - 1) + j
@@ -156,44 +169,44 @@ local OvaleSpellBookClass = __addon.__class(OvaleSpellBookBase, {
                 end
             end
         end
-        __Ovale.Ovale:needRefresh()
+        Ovale:needRefresh()
         self:SendMessage("Ovale_TalentsChanged")
     end,
     UpdateSpells = function(self)
-        _wipe(self.spell)
-        _wipe(self.spellbookId[_BOOKTYPE_PET])
-        _wipe(self.spellbookId[_BOOKTYPE_SPELL])
-        _wipe(self.isHarmful)
-        _wipe(self.isHelpful)
-        _wipe(self.texture)
+        wipe(self.spell)
+        wipe(self.spellbookId[BOOKTYPE_PET])
+        wipe(self.spellbookId[BOOKTYPE_SPELL])
+        wipe(self.isHarmful)
+        wipe(self.isHelpful)
+        wipe(self.texture)
         for tab = 1, 2, 1 do
-            local name, _, offset, numSpells = API_GetSpellTabInfo(tab)
+            local name, _, offset, numSpells = GetSpellTabInfo(tab)
             if name then
-                self:ScanSpellBook(_BOOKTYPE_SPELL, numSpells, offset)
+                self:ScanSpellBook(BOOKTYPE_SPELL, numSpells, offset)
             end
         end
-        local numPetSpells = API_HasPetSpells()
+        local numPetSpells = HasPetSpells()
         if numPetSpells then
-            self:ScanSpellBook(_BOOKTYPE_PET, numPetSpells)
+            self:ScanSpellBook(BOOKTYPE_PET, numPetSpells)
         end
-        __Ovale.Ovale:needRefresh()
+        Ovale:needRefresh()
         self:SendMessage("Ovale_SpellsChanged")
     end,
     ScanSpellBook = function(self, bookType, numSpells, offset)
         offset = offset or 0
         self:Debug("Updating '%s' spellbook starting at offset %d.", bookType, offset)
         for index = offset + 1, offset + numSpells, 1 do
-            local skillType, spellId = API_GetSpellBookItemInfo(index, bookType)
+            local skillType, spellId = GetSpellBookItemInfo(index, bookType)
             if skillType == "SPELL" or skillType == "PETACTION" then
-                local spellLink = API_GetSpellLink(index, bookType)
+                local spellLink = GetSpellLink(index, bookType)
                 if spellLink then
                     local _, _, linkData, spellName = ParseHyperlink(spellLink)
-                    local id = _tonumber(linkData)
-                    self:Debug("    %s (%d) is at offset %d (%s).", spellName, id, index, _gsub(spellLink, "|", "_"))
+                    local id = tonumber(linkData)
+                    self:Debug("    %s (%d) is at offset %d (%s).", spellName, id, index, gsub(spellLink, "|", "_"))
                     self.spell[id] = spellName
-                    self.isHarmful[id] = API_IsHarmfulSpell(index, bookType)
-                    self.isHelpful[id] = API_IsHelpfulSpell(index, bookType)
-                    self.texture[id] = API_GetSpellTexture(index, bookType)
+                    self.isHarmful[id] = IsHarmfulSpell(index, bookType)
+                    self.isHelpful[id] = IsHelpfulSpell(index, bookType)
+                    self.texture[id] = GetSpellTexture(index, bookType)
                     self.spellbookId[bookType][id] = index
                     if spellId and id ~= spellId then
                         self:Debug("    %s (%d) is at offset %d.", spellName, spellId, index)
@@ -206,16 +219,16 @@ local OvaleSpellBookClass = __addon.__class(OvaleSpellBookBase, {
                 end
             elseif skillType == "FLYOUT" then
                 local flyoutId = spellId
-                local _, _, numSlots, isKnown = API_GetFlyoutInfo(flyoutId)
+                local _, _, numSlots, isKnown = GetFlyoutInfo(flyoutId)
                 if numSlots > 0 and isKnown then
                     for flyoutIndex = 1, numSlots, 1 do
-                        local id, overrideId, isKnown, spellName = API_GetFlyoutSlotInfo(flyoutId, flyoutIndex)
+                        local id, overrideId, isKnown, spellName = GetFlyoutSlotInfo(flyoutId, flyoutIndex)
                         if isKnown then
                             self:Debug("    %s (%d) is at offset %d.", spellName, id, index)
                             self.spell[id] = spellName
-                            self.isHarmful[id] = API_IsHarmfulSpell(spellName)
-                            self.isHelpful[id] = API_IsHelpfulSpell(spellName)
-                            self.texture[id] = API_GetSpellTexture(index, bookType)
+                            self.isHarmful[id] = IsHarmfulSpell(spellName)
+                            self.isHelpful[id] = IsHelpfulSpell(spellName)
+                            self.texture[id] = GetSpellTexture(index, bookType)
                             self.spellbookId[bookType][id] = nil
                             if id ~= overrideId then
                                 self:Debug("    %s (%d) is at offset %d.", spellName, overrideId, index)
@@ -252,20 +265,20 @@ local OvaleSpellBookClass = __addon.__class(OvaleSpellBookBase, {
     GetSpellInfo = function(self, spellId)
         local index, bookType = self:GetSpellBookIndex(spellId)
         if index and bookType then
-            return API_GetSpellInfo(index, bookType)
+            return GetSpellInfo(index, bookType)
         else
-            return API_GetSpellInfo(spellId)
+            return GetSpellInfo(spellId)
         end
     end,
     GetSpellCount = function(self, spellId)
         local index, bookType = self:GetSpellBookIndex(spellId)
         if index and bookType then
-            local spellCount = API_GetSpellCount(index, bookType)
+            local spellCount = GetSpellCount(index, bookType)
             self:Debug("GetSpellCount: index=%s bookType=%s for spellId=%s ==> spellCount=%s", index, bookType, spellId, spellCount)
             return spellCount
         else
             local spellName = __exports.OvaleSpellBook:GetSpellName(spellId)
-            local spellCount = API_GetSpellCount(spellName)
+            local spellCount = GetSpellCount(spellName)
             self:Debug("GetSpellCount: spellName=%s for spellId=%s ==> spellCount=%s", spellName, spellId, spellCount)
             return spellCount
         end
@@ -307,59 +320,60 @@ local OvaleSpellBookClass = __addon.__class(OvaleSpellBookBase, {
         return (talentId and self.talentPoints[talentId]) and true or false
     end,
     GetSpellBookIndex = function(self, spellId)
-        local bookType = _BOOKTYPE_SPELL
+        local bookType = BOOKTYPE_SPELL
         while true do
             local index = self.spellbookId[bookType][spellId]
             if index then
                 return index, bookType
-            elseif bookType == _BOOKTYPE_SPELL then
-                bookType = _BOOKTYPE_PET
+            elseif bookType == BOOKTYPE_SPELL then
+                bookType = BOOKTYPE_PET
             else
                 break
             end
         end
+        return nil, nil
     end,
     IsPetSpell = function(self, spellId)
         local _, bookType = self:GetSpellBookIndex(spellId)
-        return bookType == _BOOKTYPE_PET
+        return bookType == BOOKTYPE_PET
     end,
     IsSpellInRange = function(self, spellId, unitId)
         local index, bookType = self:GetSpellBookIndex(spellId)
         local returnValue = nil
         if index and bookType then
-            returnValue = API_IsSpellInRange(index, bookType, unitId)
+            returnValue = IsSpellInRange(index, bookType, unitId)
         elseif self:IsKnownSpell(spellId) then
             local name = self:GetSpellName(spellId)
-            returnValue = API_IsSpellInRange(name, unitId)
+            returnValue = IsSpellInRange(name, unitId)
         end
         if (returnValue == 1 and spellId == WARRIOR_INCERCEPT_SPELLID) then
-            return (API_UnitIsFriend("player", unitId) == 1 or __exports.OvaleSpellBook:IsSpellInRange(WARRIOR_HEROICTHROW_SPELLID, unitId) == 1) and 1 or 0
+            return (UnitIsFriend("player", unitId) == 1 or __exports.OvaleSpellBook:IsSpellInRange(WARRIOR_HEROICTHROW_SPELLID, unitId) == 1) and 1 or 0
         end
         return returnValue
     end,
     IsUsableSpell = function(self, spellId)
         local index, bookType = self:GetSpellBookIndex(spellId)
         if index and bookType then
-            return API_IsUsableSpell(index, bookType)
+            return IsUsableSpell(index, bookType)
         elseif self:IsKnownSpell(spellId) then
             local name = self:GetSpellName(spellId)
-            return API_IsUsableSpell(name)
+            return IsUsableSpell(name)
         end
     end,
     DebugSpells = function(self)
-        _wipe(output)
+        wipe(output)
         OutputTableValues(output, self.spell)
         local total = 0
-        for _ in _pairs(self.spell) do
+        for _ in pairs(self.spell) do
             total = total + 1
         end
         output[#output + 1] = "Total spells: " .. total
-        return tconcat(output, "\n")
+        return concat(output, "\n")
     end,
     DebugTalents = function(self)
-        _wipe(output)
+        wipe(output)
         OutputTableValues(output, self.talent)
-        return tconcat(output, "\n")
+        return concat(output, "\n")
     end,
     RequireSpellCountHandler = function(self, spellId, atTime, requirement, tokens, index, targetGUID)
         local verified = false
@@ -369,14 +383,13 @@ local OvaleSpellBookClass = __addon.__class(OvaleSpellBookBase, {
             index = index + 1
         end
         if count then
-            count = _tonumber(count) or 1
+            count = tonumber(count) or 1
             local actualCount = __exports.OvaleSpellBook:GetSpellCount(spellId)
             verified = (requirement == "spellcount_min" and count <= actualCount) or (requirement == "spellcount_max" and count >= actualCount)
         else
-            __Ovale.Ovale:OneTimeMessage("Warning: requirement '%s' is missing a count argument.", requirement)
+            Ovale:OneTimeMessage("Warning: requirement '%s' is missing a count argument.", requirement)
         end
         return verified, requirement, index
     end,
 })
 __exports.OvaleSpellBook = OvaleSpellBookClass()
-end)

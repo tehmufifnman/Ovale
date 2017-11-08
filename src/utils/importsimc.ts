@@ -1,5 +1,5 @@
 import { format, gmatch, gsub, find, len, lower, sub, upper } from "@wowts/string";
-import * as fs from "fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync } from "fs";
 import { Ovale } from "../Ovale";
 import { OvaleOptions } from "../Options";
 import { OvaleAST } from "../AST";
@@ -42,13 +42,13 @@ function Canonicalize(s: string) {
     return s;
 }
 
-if (!fs.existsSync(outputDirectory)) fs.mkdirSync(outputDirectory);
+if (!existsSync(outputDirectory)) mkdirSync(outputDirectory);
 
 {
     for (const simcClass of SIMC_CLASS) {
         let output: string[] = []
         let fileName = outputDirectory + "/ovale_" + simcClass + ".ts";
-        const file = fs.readFileSync(fileName, { encoding: "utf8" });
+        const file = readFileSync(fileName, { encoding: "utf8" });
         const lines = file.split("\n");
         let passthrough = true;
         for (const line of lines) {
@@ -62,12 +62,12 @@ if (!fs.existsSync(outputDirectory)) fs.mkdirSync(outputDirectory);
                 break;
             }
         }
-        fs.writeFileSync(fileName, output.join("\n"));
+        writeFileSync(fileName, output.join("\n"));
     }
 }
 let files:string[] = []
 {
-    let dir = fs.readdirSync(profilesDirectory);
+    let dir = readdirSync(profilesDirectory);
     for (const name of dir) {
         files.push(name);
     }
@@ -75,70 +75,71 @@ let files:string[] = []
 }
 
 for (const filename of files) {
-    if (filename.startsWith("generate")) continue;
-    let output: string[] = []
-    let inputName = profilesDirectory + "/" + filename;
-    let simc = fs.readFileSync(inputName, { encoding: "utf8" });
-    if (simc.indexOf("optimal_raid=") < 0) {
-        let source: string, className: string, specialization: string;
-        for (const line of simc.match(/[^\r\n]+/g)) {
-            if (!source) {
-                if (line.substring(0, 3) == "### ") {
-                    source = line.substring(4);
-                }
-            }
-            if (!className) {
-                for (const simcClass of SIMC_CLASS) {
-                    let length = simcClass.length;
-                    if (line.substring(0, length + 1) == simcClass + "=") {
-                        className = simcClass.toUpperCase();
+    if (!filename.startsWith("generate")) {
+        let output: string[] = []
+        let inputName = profilesDirectory + "/" + filename;
+        let simc = readFileSync(inputName, { encoding: "utf8" });
+        if (simc.indexOf("optimal_raid=") < 0) {
+            let source: string, className: string, specialization: string;
+            for (const line of simc.match(/[^\r\n]+/g)) {
+                if (!source) {
+                    if (line.substring(0, 3) == "### ") {
+                        source = line.substring(4);
                     }
                 }
-            }
-            if (!specialization) {
-                if (line.substring(0, 5) == "spec=") {
-                    specialization = line.substring(5);
+                if (!className) {
+                    for (const simcClass of SIMC_CLASS) {
+                        let length = simcClass.length;
+                        if (line.substring(0, length + 1) == simcClass + "=") {
+                            className = simcClass.toUpperCase();
+                        }
+                    }
+                }
+                if (!specialization) {
+                    if (line.substring(0, 5) == "spec=") {
+                        specialization = line.substring(5);
+                    }
+                }
+                if (className && specialization) {
+                    break;
                 }
             }
-            if (className && specialization) {
-                break;
+            let config = {
+                class: className,
+                specialization: specialization
             }
-        }
-        let config = {
-            class: className,
-            specialization: specialization
-        }
-        console.log(filename);
-        Ovale.playerGUID = "player";
-        Ovale.playerClass = className;
-        eventDispatcher.DispatchEvent("ADDON_LOADED", "Ovale");
-        OvaleEquipment.UpdateEquippedItems();
-        OvaleSpellBook.Update();
-        OvaleStance.UpdateStances();
-        registerScripts();
+            console.log(filename);
+            Ovale.playerGUID = "player";
+            Ovale.playerClass = className;
+            eventDispatcher.DispatchEvent("ADDON_LOADED", "Ovale");
+            OvaleEquipment.UpdateEquippedItems();
+            OvaleSpellBook.Update();
+            OvaleStance.UpdateStances();
+            registerScripts();
 
-        let profile = OvaleSimulationCraft.ParseProfile(simc);
-        let profileName = profile.annotation.name.substring(1, profile.annotation.name.length - 2);
-        let name: string, desc: string;
-        if (source) {
-            desc = format("%s: %s", source, profileName);
-        } else {
-            desc = profileName;
+            let profile = OvaleSimulationCraft.ParseProfile(simc);
+            let profileName = profile.annotation.name.substring(1, profile.annotation.name.length - 2);
+            let name: string, desc: string;
+            if (source) {
+                desc = format("%s: %s", source, profileName);
+            } else {
+                desc = profileName;
+            }
+            name = Canonicalize(desc);
+            output.push("");
+            output.push("{");
+            output.push(format('	const name = "sc_%s"', name));
+            output.push(format('	const desc = "[7.0] Simulationcraft: %s"', desc));
+            output.push("	const code = `");
+            output.push(OvaleSimulationCraft.Emit(profile, true));
+            output.push("`");
+            output.push(format('	OvaleScripts.RegisterScript("%s", "%s", name, desc, code, "%s")', profile.annotation.class, profile.annotation.specialization, "script"));
+            output.push("}");
+            output.push("");
+            let outputFileName = "ovale_" + className.toLowerCase() + ".ts";
+            console.log("Appending to " + outputFileName + ": " + name);
+            let outputName = outputDirectory + "/" + outputFileName;
+            writeFileSync(outputName, output.join("\n"), { flag: 'a' });
         }
-        name = Canonicalize(desc);
-        output.push("");
-        output.push("{");
-        output.push(format('	const name = "%s"', name));
-        output.push(format('	const desc = "[7.0] %s"', desc));
-        output.push("	const code = `");
-        output.push(OvaleSimulationCraft.Emit(profile, true));
-        output.push("`");
-        output.push(format('	OvaleScripts.RegisterScript("%s", "%s", name, desc, code, "%s")', profile.annotation.class, profile.annotation.specialization, "script"));
-        output.push("}");
-        output.push("");
-        let outputFileName = "ovale_" + className.toLowerCase() + ".ts";
-        console.log("Appending to " + outputFileName + ": " + name);
-        let outputName = outputDirectory + "/" + outputFileName;
-        fs.writeFileSync(outputName, output.join("\n"), { flag: 'a' });
     }
 }

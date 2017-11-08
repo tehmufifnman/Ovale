@@ -7,7 +7,7 @@ import { self_requirement, CheckRequirements } from "./Requirement";
 import { type, pairs, tonumber, wipe, truthy, LuaArray, LuaObj } from "@wowts/lua";
 import { find } from "@wowts/string";
 import { huge, floor, ceil } from "@wowts/math";
-let OvaleDataBase = Ovale.NewModule("OvaleData");
+let OvaleDataBase = OvaleDebug.RegisterDebugging(Ovale.NewModule("OvaleData"));
 let INFINITY = huge;
 
 let BLOODELF_CLASSES: LuaObj<boolean> = {
@@ -80,7 +80,7 @@ let STAT_USE_NAMES: LuaArray<string> = {
     5: "trinket_stack_proc"
 }
 
-class OvaleDataClass extends OvaleDebug.RegisterDebugging(OvaleDataBase) {
+class OvaleDataClass extends OvaleDataBase {
     STAT_NAMES = STAT_NAMES;
     STAT_SHORTNAME = STAT_SHORTNAME;
     STAT_USE_NAMES = STAT_USE_NAMES;

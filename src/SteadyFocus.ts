@@ -8,7 +8,7 @@ import aceEvent from "@wowts/ace_event-3.0";
 import { GetTime } from "@wowts/wow-mock";
 import { huge } from "@wowts/math";
 
-let OvaleSteadyFocusBase = Ovale.NewModule("OvaleSteadyFocus", aceEvent);
+let OvaleSteadyFocusBase = OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(Ovale.NewModule("OvaleSteadyFocus", aceEvent)));
 export let OvaleSteadyFocus: OvaleSteadyFocusClass;
 
 let INFINITY = huge;
@@ -37,7 +37,7 @@ let RANGED_ATTACKS = {
     [121414]: "Glaive Toss"
 }
 
-class OvaleSteadyFocusClass extends OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(OvaleSteadyFocusBase)) {
+class OvaleSteadyFocusClass extends OvaleSteadyFocusBase {
     hasSteadyFocus = undefined;
     spellName = "Pre-Steady Focus";
     spellId = PRE_STEADY_FOCUS;

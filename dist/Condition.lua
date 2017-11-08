@@ -1,14 +1,20 @@
-local __addonName, __addon = ...
-            __addon.require("./Condition", { "./State", "./Ovale", "./Debug" }, function(__exports, __State, __Ovale, __Debug)
-local OvaleConditionBase = __Ovale.Ovale:NewModule("OvaleCondition")
-local _next = next
-local INFINITY = math.huge
+local __exports = LibStub:NewLibrary("ovale/Condition", 10000)
+if not __exports then return end
+local __class = LibStub:GetLibrary("tslib").newClass
+local __Ovale = LibStub:GetLibrary("ovale/Ovale")
+local Ovale = __Ovale.Ovale
+local __Debug = LibStub:GetLibrary("ovale/Debug")
+local OvaleDebug = __Debug.OvaleDebug
+local next = next
+local huge = math.huge
+local OvaleConditionBase = OvaleDebug:RegisterDebugging(Ovale:NewModule("OvaleCondition"))
+local INFINITY = huge
 local self_condition = {}
 local self_spellBookCondition = {}
 do
     self_spellBookCondition["spell"] = true
 end
-local OvaleConditionClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(OvaleConditionBase), {
+local OvaleConditionClass = __class(OvaleConditionBase, {
     RegisterCondition = function(self, name, isSpellBookCondition, func)
         self_condition[name] = func
         if isSpellBookCondition then
@@ -28,9 +34,10 @@ local OvaleConditionClass = __addon.__class(__Debug.OvaleDebug:RegisterDebugging
         return self_condition[name](positionalParams, namedParams, state, atTime)
     end,
     HasAny = function(self)
-        return _next(self_condition) ~= nil
+        return next(self_condition) ~= nil
     end,
-    constructor = function(self)
+    constructor = function(self, ...)
+        OvaleConditionBase.constructor(self, ...)
         self.COMPARATOR = {
             atLeast = true,
             atMost = true,
@@ -111,4 +118,3 @@ end
 __exports.Compare = function(value, comparator, limit)
     return __exports.TestValue(0, INFINITY, value, 0, 0, comparator, limit)
 end
-end)

@@ -1,16 +1,51 @@
-local __addonName, __addon = ...
-            __addon.require("./Compile", { "./Debug", "./Profiler", "./Artifact", "./AST", "./Condition", "./Cooldown", "./Data", "./Equipment", "./PaperDoll", "./Power", "./Score", "./SpellBook", "./Stance", "./Ovale", "./Controls", "AceEvent-3.0" }, function(__exports, __Debug, __Profiler, __Artifact, __AST, __Condition, __Cooldown, __Data, __Equipment, __PaperDoll, __Power, __Score, __SpellBook, __Stance, __Ovale, __Controls, aceEvent)
-local OvaleCompileBase = __Ovale.Ovale:NewModule("OvaleCompile", aceEvent)
-local _ipairs = ipairs
-local _pairs = pairs
-local _tonumber = tonumber
-local _tostring = tostring
-local _type = type
-local strfind = string.find
-local strmatch = string.match
-local strsub = string.sub
-local _wipe = wipe
-local API_GetSpellInfo = GetSpellInfo
+local __exports = LibStub:NewLibrary("ovale/Compile", 10000)
+if not __exports then return end
+local __class = LibStub:GetLibrary("tslib").newClass
+local __Debug = LibStub:GetLibrary("ovale/Debug")
+local OvaleDebug = __Debug.OvaleDebug
+local __Profiler = LibStub:GetLibrary("ovale/Profiler")
+local OvaleProfiler = __Profiler.OvaleProfiler
+local __Artifact = LibStub:GetLibrary("ovale/Artifact")
+local OvaleArtifact = __Artifact.OvaleArtifact
+local __AST = LibStub:GetLibrary("ovale/AST")
+local OvaleAST = __AST.OvaleAST
+local __Condition = LibStub:GetLibrary("ovale/Condition")
+local OvaleCondition = __Condition.OvaleCondition
+local __Cooldown = LibStub:GetLibrary("ovale/Cooldown")
+local OvaleCooldown = __Cooldown.OvaleCooldown
+local __Data = LibStub:GetLibrary("ovale/Data")
+local OvaleData = __Data.OvaleData
+local __Equipment = LibStub:GetLibrary("ovale/Equipment")
+local OvaleEquipment = __Equipment.OvaleEquipment
+local __PaperDoll = LibStub:GetLibrary("ovale/PaperDoll")
+local OvalePaperDoll = __PaperDoll.OvalePaperDoll
+local __Power = LibStub:GetLibrary("ovale/Power")
+local OvalePower = __Power.OvalePower
+local __Score = LibStub:GetLibrary("ovale/Score")
+local OvaleScore = __Score.OvaleScore
+local __SpellBook = LibStub:GetLibrary("ovale/SpellBook")
+local OvaleSpellBook = __SpellBook.OvaleSpellBook
+local __Stance = LibStub:GetLibrary("ovale/Stance")
+local OvaleStance = __Stance.OvaleStance
+local __Ovale = LibStub:GetLibrary("ovale/Ovale")
+local RegisterPrinter = __Ovale.RegisterPrinter
+local Ovale = __Ovale.Ovale
+local __Controls = LibStub:GetLibrary("ovale/Controls")
+local checkBoxes = __Controls.checkBoxes
+local lists = __Controls.lists
+local ResetControls = __Controls.ResetControls
+local aceEvent = LibStub:GetLibrary("AceEvent-3.0", true)
+local ipairs = ipairs
+local pairs = pairs
+local tonumber = tonumber
+local tostring = tostring
+local type = type
+local wipe = wipe
+local find = string.find
+local match = string.match
+local sub = string.sub
+local GetSpellInfo = GetSpellInfo
+local OvaleCompileBase = Ovale:NewModule("OvaleCompile", aceEvent)
 local self_compileOnStances = false
 local self_canEvaluate = false
 local self_serial = 0
@@ -18,8 +53,8 @@ local self_timesEvaluated = 0
 local self_icon = {}
 local NUMBER_PATTERN = "^%-?%d+%.?%d*$"
 local HasTalent = function(talentId)
-    if __SpellBook.OvaleSpellBook:IsKnownTalent(talentId) then
-        return __SpellBook.OvaleSpellBook:GetTalentPoints(talentId) > 0
+    if OvaleSpellBook:IsKnownTalent(talentId) then
+        return OvaleSpellBook:GetTalentPoints(talentId) > 0
     else
         __exports.OvaleCompile:Print("Warning: unknown talent ID '%s'", talentId)
         return false
@@ -27,40 +62,40 @@ local HasTalent = function(talentId)
 end
 
 local RequireValue = function(value)
-    local required = (strsub(_tostring(value), 1, 1) ~= "!")
+    local required = (sub(tostring(value), 1, 1) ~= "!")
     if  not required then
-        value = strsub(value, 2)
-        if strmatch(value, NUMBER_PATTERN) then
-            value = _tonumber(value)
+        value = sub(value, 2)
+        if match(value, NUMBER_PATTERN) then
+            value = tonumber(value)
         end
     end
     return value, required
 end
 
 local TestConditionLevel = function(value)
-    return __PaperDoll.OvalePaperDoll.level >= value
+    return OvalePaperDoll.level >= value
 end
 
 local TestConditionMaxLevel = function(value)
-    return __PaperDoll.OvalePaperDoll.level <= value
+    return OvalePaperDoll.level <= value
 end
 
 local TestConditionSpecialization = function(value)
     local spec, required = RequireValue(value)
-    local isSpec = __PaperDoll.OvalePaperDoll:IsSpecialization(spec)
+    local isSpec = OvalePaperDoll:IsSpecialization(spec)
     return (required and isSpec) or ( not required and  not isSpec)
 end
 
 local TestConditionStance = function(value)
     self_compileOnStances = true
     local stance, required = RequireValue(value)
-    local isStance = __Stance.OvaleStance:IsStance(stance)
+    local isStance = OvaleStance:IsStance(stance)
     return (required and isStance) or ( not required and  not isStance)
 end
 
 local TestConditionSpell = function(value)
     local spell, required = RequireValue(value)
-    local hasSpell = __SpellBook.OvaleSpellBook:IsKnownSpell(spell)
+    local hasSpell = OvaleSpellBook:IsKnownSpell(spell)
     return (required and hasSpell) or ( not required and  not hasSpell)
 end
 
@@ -72,13 +107,13 @@ end
 
 local TestConditionEquipped = function(value)
     local item, required = RequireValue(value)
-    local hasItemEquipped = __Equipment.OvaleEquipment:HasEquippedItem(item)
+    local hasItemEquipped = OvaleEquipment:HasEquippedItem(item)
     return (required and hasItemEquipped) or ( not required and  not hasItemEquipped)
 end
 
 local TestConditionTrait = function(value)
     local trait, required = RequireValue(value)
-    local hasTrait = __Artifact.OvaleArtifact:HasTrait(trait)
+    local hasTrait = OvaleArtifact:HasTrait(trait)
     return (required and hasTrait) or ( not required and  not hasTrait)
 end
 
@@ -96,10 +131,10 @@ local TEST_CONDITION_DISPATCH = {
 local TestConditions = function(positionalParams, namedParams)
     __exports.OvaleCompile:StartProfiling("OvaleCompile_TestConditions")
     local boolean = true
-    for param, dispatch in _pairs(TEST_CONDITION_DISPATCH) do
+    for param, dispatch in pairs(TEST_CONDITION_DISPATCH) do
         local value = namedParams[param]
-        if _type(value) == "table" then
-            for _, v in _ipairs(value) do
+        if type(value) == "table" then
+            for _, v in ipairs(value) do
                 boolean = dispatch(v)
                 if  not boolean then
                     break
@@ -113,16 +148,16 @@ local TestConditions = function(positionalParams, namedParams)
         end
     end
     if boolean and namedParams.itemset and namedParams.itemcount then
-        local equippedCount = __Equipment.OvaleEquipment:GetArmorSetCount(namedParams.itemset)
+        local equippedCount = OvaleEquipment:GetArmorSetCount(namedParams.itemset)
         boolean = (equippedCount >= namedParams.itemcount)
     end
     if boolean and namedParams.checkbox then
-        local profile = __Ovale.Ovale.db.profile
-        for _, checkbox in _ipairs(namedParams.checkbox) do
+        local profile = Ovale.db.profile
+        for _, checkbox in ipairs(namedParams.checkbox) do
             local name, required = RequireValue(checkbox)
-            local control = __Controls.checkBoxes[name] or {}
+            local control = checkBoxes[name] or {}
             control.triggerEvaluation = true
-            __Controls.checkBoxes[name] = control
+            checkBoxes[name] = control
             local isChecked = profile.check[name]
             boolean = (required and isChecked) or ( not required and  not isChecked)
             if  not boolean then
@@ -131,15 +166,15 @@ local TestConditions = function(positionalParams, namedParams)
         end
     end
     if boolean and namedParams.listitem then
-        local profile = __Ovale.Ovale.db.profile
-        for name, listitem in _pairs(namedParams.listitem) do
+        local profile = Ovale.db.profile
+        for name, listitem in pairs(namedParams.listitem) do
             local item, required = RequireValue(listitem)
-            local control = __Controls.lists[name] or {
+            local control = lists[name] or {
                 items = {},
                 default = nil
             }
             control.triggerEvaluation = true
-            __Controls.lists[name] = control
+            lists[name] = control
             local isSelected = (profile.list[name] == item)
             boolean = (required and isSelected) or ( not required and  not isSelected)
             if  not boolean then
@@ -155,20 +190,20 @@ local EvaluateAddCheckBox = function(node)
     local ok = true
     local name, positionalParams, namedParams = node.name, node.positionalParams, node.namedParams
     if TestConditions(positionalParams, namedParams) then
-        local checkBox = __Controls.checkBoxes[name]
+        local checkBox = checkBoxes[name]
         if  not checkBox then
             self_serial = self_serial + 1
             __exports.OvaleCompile:Debug("New checkbox '%s': advance age to %d.", name, self_serial)
         end
         checkBox = checkBox or {}
         checkBox.text = node.description.value
-        for _, v in _ipairs(positionalParams) do
+        for _, v in ipairs(positionalParams) do
             if v == "default" then
                 checkBox.checked = true
                 break
             end
         end
-        __Controls.checkBoxes[name] = checkBox
+        checkBoxes[name] = checkBox
     end
     return ok
 end
@@ -186,7 +221,7 @@ local EvaluateAddListItem = function(node)
     local ok = true
     local name, item, positionalParams, namedParams = node.name, node.item, node.positionalParams, node.namedParams
     if TestConditions(positionalParams, namedParams) then
-        local list = __Controls.lists[name]
+        local list = lists[name]
         if  not (list and list.items and list.items[item]) then
             self_serial = self_serial + 1
             __exports.OvaleCompile:Debug("New list '%s': advance age to %d.", name, self_serial)
@@ -196,13 +231,13 @@ local EvaluateAddListItem = function(node)
             default = nil
         }
         list.items[item] = node.description.value
-        for _, v in _ipairs(positionalParams) do
+        for _, v in ipairs(positionalParams) do
             if v == "default" then
                 list.default = item
                 break
             end
         end
-        __Controls.lists[name] = list
+        lists[name] = list
     end
     return ok
 end
@@ -211,24 +246,24 @@ local EvaluateItemInfo = function(node)
     local ok = true
     local itemId, positionalParams, namedParams = node.itemId, node.positionalParams, node.namedParams
     if itemId and TestConditions(positionalParams, namedParams) then
-        local ii = __Data.OvaleData:ItemInfo(itemId)
-        for k, v in _pairs(namedParams) do
+        local ii = OvaleData:ItemInfo(itemId)
+        for k, v in pairs(namedParams) do
             if k == "proc" then
-                local buff = _tonumber(namedParams.buff)
+                local buff = tonumber(namedParams.buff)
                 if buff then
-                    local name = "item_proc_" + namedParams.proc
-                    local list = __Data.OvaleData.buffSpellList[name] or {}
+                    local name = "item_proc_" .. namedParams.proc
+                    local list = OvaleData.buffSpellList[name] or {}
                     list[buff] = true
-                    __Data.OvaleData.buffSpellList[name] = list
+                    OvaleData.buffSpellList[name] = list
                 else
                     ok = false
                     break
                 end
-            elseif  not __AST.OvaleAST.PARAMETER_KEYWORD[k] then
+            elseif  not OvaleAST.PARAMETER_KEYWORD[k] then
                 ii[k] = v
             end
         end
-        __Data.OvaleData.itemInfo[itemId] = ii
+        OvaleData.itemInfo[itemId] = ii
     end
     return ok
 end
@@ -239,10 +274,10 @@ local EvaluateItemRequire = function(node)
     if TestConditions(positionalParams, namedParams) then
         local property = node.property
         local count = 0
-        local ii = __Data.OvaleData:ItemInfo(itemId)
+        local ii = OvaleData:ItemInfo(itemId)
         local tbl = ii.require[property] or {}
-        for k, v in _pairs(namedParams) do
-            if  not __AST.OvaleAST.PARAMETER_KEYWORD[k] then
+        for k, v in pairs(namedParams) do
+            if  not OvaleAST.PARAMETER_KEYWORD[k] then
                 tbl[k] = v
                 count = count + 1
             end
@@ -263,9 +298,9 @@ local EvaluateList = function(node)
     else
         listDB = "buffSpellList"
     end
-    local list = __Data.OvaleData[listDB][name] or {}
-    for _, _id in _pairs(positionalParams) do
-        local id = _tonumber(_id)
+    local list = OvaleData[listDB][name] or {}
+    for _, _id in pairs(positionalParams) do
+        local id = tonumber(_id)
         if id then
             list[id] = true
         else
@@ -273,17 +308,17 @@ local EvaluateList = function(node)
             break
         end
     end
-    __Data.OvaleData[listDB][name] = list
+    OvaleData[listDB][name] = list
     return ok
 end
 
 local EvaluateScoreSpells = function(node)
     local ok = true
     local positionalParams = node.positionalParams, node.namedParams
-    for _, _spellId in _ipairs(positionalParams) do
-        local spellId = _tonumber(_spellId)
+    for _, _spellId in ipairs(positionalParams) do
+        local spellId = tonumber(_spellId)
         if spellId then
-            __Score.OvaleScore:AddSpell(_tonumber(spellId))
+            OvaleScore:AddSpell(tonumber(spellId))
         else
             ok = false
             break
@@ -301,22 +336,22 @@ local EvaluateSpellAuraList = function(node)
     end
     if TestConditions(positionalParams, namedParams) then
         local keyword = node.keyword
-        local si = __Data.OvaleData:SpellInfo(spellId)
+        local si = OvaleData:SpellInfo(spellId)
         local auraTable
-        if strfind(keyword, "^SpellDamage") then
+        if find(keyword, "^SpellDamage") then
             auraTable = si.aura.damage
-        elseif strfind(keyword, "^SpellAddPet") then
+        elseif find(keyword, "^SpellAddPet") then
             auraTable = si.aura.pet
-        elseif strfind(keyword, "^SpellAddTarget") then
+        elseif find(keyword, "^SpellAddTarget") then
             auraTable = si.aura.target
         else
             auraTable = si.aura.player
         end
-        local filter = strfind(node.keyword, "Debuff") and "HARMFUL" or "HELPFUL"
+        local filter = find(node.keyword, "Debuff") and "HARMFUL" or "HELPFUL"
         local tbl = auraTable[filter] or {}
         local count = 0
-        for k, v in _pairs(namedParams) do
-            if  not __AST.OvaleAST.PARAMETER_KEYWORD[k] then
+        for k, v in pairs(namedParams) do
+            if  not OvaleAST.PARAMETER_KEYWORD[k] then
                 tbl[k] = v
                 count = count + 1
             end
@@ -330,21 +365,21 @@ end
 
 local EvaluateSpellInfo = function(node)
     local addpower = {}
-    for powertype in _pairs(__Power.OvalePower.POWER_INFO) do
+    for powertype in pairs(OvalePower.POWER_INFO) do
         local key = "add" .. powertype
         addpower[key] = powertype
     end
     local ok = true
     local spellId, positionalParams, namedParams = node.spellId, node.positionalParams, node.namedParams
     if spellId and TestConditions(positionalParams, namedParams) then
-        local si = __Data.OvaleData:SpellInfo(spellId)
-        for k, v in _pairs(namedParams) do
+        local si = OvaleData:SpellInfo(spellId)
+        for k, v in pairs(namedParams) do
             if k == "addduration" then
-                local value = _tonumber(v)
+                local value = tonumber(v)
                 if value then
                     local realValue = value
                     if namedParams.pertrait ~= nil then
-                        realValue = value * __Artifact.OvaleArtifact:TraitRank(namedParams.pertrait)
+                        realValue = value * OvaleArtifact:TraitRank(namedParams.pertrait)
                     end
                     local addDuration = si.addduration or 0
                     si.addduration = addDuration + realValue
@@ -353,7 +388,7 @@ local EvaluateSpellInfo = function(node)
                     break
                 end
             elseif k == "addcd" then
-                local value = _tonumber(v)
+                local value = tonumber(v)
                 if value then
                     local addCd = si.addcd or 0
                     si.addcd = addCd + value
@@ -362,24 +397,24 @@ local EvaluateSpellInfo = function(node)
                     break
                 end
             elseif k == "addlist" then
-                local list = __Data.OvaleData.buffSpellList[v] or {}
+                local list = OvaleData.buffSpellList[v] or {}
                 list[spellId] = true
-                __Data.OvaleData.buffSpellList[v] = list
+                OvaleData.buffSpellList[v] = list
             elseif k == "dummy_replace" then
-                local spellName = API_GetSpellInfo(v) or v
-                __SpellBook.OvaleSpellBook:AddSpell(spellId, spellName)
+                local spellName = GetSpellInfo(v) or v
+                OvaleSpellBook:AddSpell(spellId, spellName)
             elseif k == "learn" and v == 1 then
-                local spellName = API_GetSpellInfo(spellId)
-                __SpellBook.OvaleSpellBook:AddSpell(spellId, spellName)
+                local spellName = GetSpellInfo(spellId)
+                OvaleSpellBook:AddSpell(spellId, spellName)
             elseif k == "sharedcd" then
                 si[k] = v
-                __Cooldown.OvaleCooldown:AddSharedCooldown(v, spellId)
+                OvaleCooldown:AddSharedCooldown(v, spellId)
             elseif addpower[k] ~= nil then
-                local value = _tonumber(v)
+                local value = tonumber(v)
                 if value then
                     local realValue = value
                     if namedParams.pertrait ~= nil then
-                        realValue = value * __Artifact.OvaleArtifact:TraitRank(namedParams.pertrait)
+                        realValue = value * OvaleArtifact:TraitRank(namedParams.pertrait)
                     end
                     local power = si[k] or 0
                     si[k] = power + realValue
@@ -387,7 +422,7 @@ local EvaluateSpellInfo = function(node)
                     ok = false
                     break
                 end
-            elseif  not __AST.OvaleAST.PARAMETER_KEYWORD[k] then
+            elseif  not OvaleAST.PARAMETER_KEYWORD[k] then
                 si[k] = v
             end
         end
@@ -401,10 +436,10 @@ local EvaluateSpellRequire = function(node)
     if TestConditions(positionalParams, namedParams) then
         local property = node.property
         local count = 0
-        local si = __Data.OvaleData:SpellInfo(spellId)
+        local si = OvaleData:SpellInfo(spellId)
         local tbl = si.require[property] or {}
-        for k, v in _pairs(namedParams) do
-            if  not __AST.OvaleAST.PARAMETER_KEYWORD[k] then
+        for k, v in pairs(namedParams) do
+            if  not OvaleAST.PARAMETER_KEYWORD[k] then
                 tbl[k] = v
                 count = count + 1
             end
@@ -418,20 +453,20 @@ end
 
 local AddMissingVariantSpells = function(annotation)
     if annotation.functionReference then
-        for _, node in _ipairs(annotation.functionReference) do
+        for _, node in ipairs(annotation.functionReference) do
             local positionalParams = node.positionalParams, node.namedParams
             local spellId = positionalParams[1]
-            if spellId and __Condition.OvaleCondition:IsSpellBookCondition(node.func) then
-                if  not __SpellBook.OvaleSpellBook:IsKnownSpell(spellId) and  not __Cooldown.OvaleCooldown:IsSharedCooldown(spellId) then
+            if spellId and OvaleCondition:IsSpellBookCondition(node.func) then
+                if  not OvaleSpellBook:IsKnownSpell(spellId) and  not OvaleCooldown:IsSharedCooldown(spellId) then
                     local spellName
-                    if _type(spellId) == "number" then
-                        spellName = __SpellBook.OvaleSpellBook:GetSpellName(spellId)
+                    if type(spellId) == "number" then
+                        spellName = OvaleSpellBook:GetSpellName(spellId)
                     end
                     if spellName then
-                        local name = API_GetSpellInfo(spellName)
+                        local name = GetSpellInfo(spellName)
                         if spellName == name then
                             __exports.OvaleCompile:Debug("Learning spell %s with ID %d.", spellName, spellId)
-                            __SpellBook.OvaleSpellBook:AddSpell(spellId, spellName)
+                            OvaleSpellBook:AddSpell(spellId, spellName)
                         end
                     else
                         local functionCall = node.name
@@ -448,32 +483,32 @@ end
 
 local AddToBuffList = function(buffId, statName, isStacking)
     if statName then
-        for _, useName in _pairs(__Data.OvaleData.STAT_USE_NAMES) do
-            if isStacking or  not strfind(useName, "_stacking_") then
+        for _, useName in pairs(OvaleData.STAT_USE_NAMES) do
+            if isStacking or  not find(useName, "_stacking_") then
                 local name = useName .. "_" .. statName .. "_buff"
-                local list = __Data.OvaleData.buffSpellList[name] or {}
+                local list = OvaleData.buffSpellList[name] or {}
                 list[buffId] = true
-                __Data.OvaleData.buffSpellList[name] = list
-                local shortStatName = __Data.OvaleData.STAT_SHORTNAME[statName]
+                OvaleData.buffSpellList[name] = list
+                local shortStatName = OvaleData.STAT_SHORTNAME[statName]
                 if shortStatName then
                     name = useName .. "_" .. shortStatName .. "_buff"
-                    list = __Data.OvaleData.buffSpellList[name] or {}
+                    list = OvaleData.buffSpellList[name] or {}
                     list[buffId] = true
-                    __Data.OvaleData.buffSpellList[name] = list
+                    OvaleData.buffSpellList[name] = list
                 end
                 name = useName .. "_any_buff"
-                list = __Data.OvaleData.buffSpellList[name] or {}
+                list = OvaleData.buffSpellList[name] or {}
                 list[buffId] = true
-                __Data.OvaleData.buffSpellList[name] = list
+                OvaleData.buffSpellList[name] = list
             end
         end
     else
-        local si = __Data.OvaleData.spellInfo[buffId]
+        local si = OvaleData.spellInfo[buffId]
         isStacking = si and (si.stacking == 1 or si.max_stacks)
         if si and si.stat then
             local stat = si.stat
-            if _type(stat) == "table" then
-                for _, name in _ipairs(stat) do
+            if type(stat) == "table" then
+                for _, name in ipairs(stat) do
                     AddToBuffList(buffId, name, isStacking)
                 end
             else
@@ -487,14 +522,14 @@ local UpdateTrinketInfo = nil
 do
     local trinket = {}
     UpdateTrinketInfo = function()
-        trinket[1], trinket[2] = __Equipment.OvaleEquipment:GetEquippedTrinkets()
+        trinket[1], trinket[2] = OvaleEquipment:GetEquippedTrinkets()
         for i = 1, 2, 1 do
             local itemId = trinket[i]
-            local ii = itemId and __Data.OvaleData:ItemInfo(itemId)
+            local ii = itemId and OvaleData:ItemInfo(itemId)
             local buffId = ii and ii.buff
             if buffId then
-                if _type(buffId) == "table" then
-                    for _, id in _ipairs(buffId) do
+                if type(buffId) == "table" then
+                    for _, id in ipairs(buffId) do
                         AddToBuffList(id)
                     end
                 else
@@ -505,12 +540,9 @@ do
     end
 
 end
-local OvaleCompileClassBase = __Ovale.RegisterPrinter(__Debug.OvaleDebug:RegisterDebugging(__Profiler.OvaleProfiler:RegisterProfiling(OvaleCompileBase)))
-local OvaleCompileClass = __addon.__class(OvaleCompileClassBase, {
-    constructor = function(self)
-        self.serial = nil
-        self.ast = nil
-        OvaleCompileClassBase.constructor(self)
+local OvaleCompileClassBase = RegisterPrinter(OvaleDebug:RegisterDebugging(OvaleProfiler:RegisterProfiling(OvaleCompileBase)))
+local OvaleCompileClass = __class(OvaleCompileClassBase, {
+    OnInitialize = function(self)
         self:RegisterMessage("Ovale_CheckBoxValueChanged", "ScriptControlChanged")
         self:RegisterMessage("Ovale_EquipmentChanged", "EventHandler")
         self:RegisterMessage("Ovale_ListValueChanged", "ScriptControlChanged")
@@ -532,7 +564,7 @@ local OvaleCompileClass = __addon.__class(OvaleCompileClassBase, {
         self:UnregisterMessage("Ovale_TalentsChanged")
     end,
     Ovale_ScriptChanged = function(self, event)
-        self:CompileScript(__Ovale.Ovale.db.profile.source)
+        self:CompileScript(Ovale.db.profile.source)
         self:EventHandler(event)
     end,
     Ovale_StanceChanged = function(self, event)
@@ -546,9 +578,9 @@ local OvaleCompileClass = __addon.__class(OvaleCompileClassBase, {
         else
             local control
             if event == "Ovale_CheckBoxValueChanged" then
-                control = __Controls.checkBoxes[name]
+                control = checkBoxes[name]
             elseif event == "Ovale_ListValueChanged" then
-                control = __Controls.checkBoxes[name]
+                control = checkBoxes[name]
             end
             if control and control.triggerEvaluation then
                 self:EventHandler(event)
@@ -558,23 +590,23 @@ local OvaleCompileClass = __addon.__class(OvaleCompileClassBase, {
     EventHandler = function(self, event)
         self_serial = self_serial + 1
         self:Debug("%s: advance age to %d.", event, self_serial)
-        __Ovale.Ovale:needRefresh()
+        Ovale:needRefresh()
     end,
     CompileScript = function(self, name)
-        __Debug.OvaleDebug:ResetTrace()
+        OvaleDebug:ResetTrace()
         self:Debug("Compiling script '%s'.", name)
         if self.ast then
-            __AST.OvaleAST:Release(self.ast)
+            OvaleAST:Release(self.ast)
             self.ast = nil
         end
-        if __Condition.OvaleCondition:HasAny() then
-            self.ast = __AST.OvaleAST:ParseScript(name)
+        if OvaleCondition:HasAny() then
+            self.ast = OvaleAST:ParseScript(name)
         end
-        __Controls.ResetControls()
+        ResetControls()
     end,
     EvaluateScript = function(self, ast, forceEvaluation)
         self:StartProfiling("OvaleCompile_EvaluateScript")
-        if _type(ast) ~= "table" then
+        if type(ast) ~= "table" then
             forceEvaluation = ast
             ast = self.ast
         end
@@ -584,12 +616,12 @@ local OvaleCompileClass = __addon.__class(OvaleCompileClassBase, {
             changed = true
             local ok = true
             self_compileOnStances = false
-            _wipe(self_icon)
-            __Data.OvaleData:Reset()
-            __Cooldown.OvaleCooldown:ResetSharedCooldowns()
+            wipe(self_icon)
+            OvaleData:Reset()
+            OvaleCooldown:ResetSharedCooldowns()
             self_timesEvaluated = self_timesEvaluated + 1
             self.serial = self_serial
-            for _, node in _ipairs(ast.child) do
+            for _, node in ipairs(ast.child) do
                 local nodeType = node.type
                 if nodeType == "checkbox" then
                     ok = EvaluateAddCheckBox(node)
@@ -638,6 +670,10 @@ local OvaleCompileClass = __addon.__class(OvaleCompileClassBase, {
     DebugCompile = function(self)
         self:Print("Total number of times the script was evaluated: %d", self_timesEvaluated)
     end,
+    constructor = function(self, ...)
+        OvaleCompileClassBase.constructor(self, ...)
+        self.serial = nil
+        self.ast = nil
+    end
 })
 __exports.OvaleCompile = OvaleCompileClass()
-end)

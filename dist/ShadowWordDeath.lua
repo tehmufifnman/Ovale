@@ -1,13 +1,19 @@
-local __addonName, __addon = ...
-            __addon.require("./ShadowWordDeath", { "./Ovale", "./Aura", "AceEvent-3.0" }, function(__exports, __Ovale, __Aura, aceEvent)
-local OvaleShadowWordDeathBase = __Ovale.Ovale:NewModule("OvaleShadowWordDeath", aceEvent)
-local API_GetTime = GetTime
+local __exports = LibStub:NewLibrary("ovale/ShadowWordDeath", 10000)
+if not __exports then return end
+local __class = LibStub:GetLibrary("tslib").newClass
+local __Ovale = LibStub:GetLibrary("ovale/Ovale")
+local Ovale = __Ovale.Ovale
+local __Aura = LibStub:GetLibrary("ovale/Aura")
+local OvaleAura = __Aura.OvaleAura
+local aceEvent = LibStub:GetLibrary("AceEvent-3.0", true)
+local GetTime = GetTime
+local OvaleShadowWordDeathBase = Ovale:NewModule("OvaleShadowWordDeath", aceEvent)
 local self_playerGUID = nil
 local SHADOW_WORD_DEATH = {
     [32379] = true,
     [129176] = true
 }
-local OvaleShadowWordDeathClass = __addon.__class(OvaleShadowWordDeathBase, {
+local OvaleShadowWordDeathClass = __class(OvaleShadowWordDeathBase, {
     constructor = function(self)
         self.spellName = "Shadow Word: Death Reset Cooldown"
         self.spellId = 125927
@@ -16,13 +22,13 @@ local OvaleShadowWordDeathClass = __addon.__class(OvaleShadowWordDeathBase, {
         self.duration = 9
         self.stacks = 0
         OvaleShadowWordDeathBase.constructor(self)
-        if __Ovale.Ovale.playerClass == "PRIEST" then
-            self_playerGUID = __Ovale.Ovale.playerGUID
+        if Ovale.playerClass == "PRIEST" then
+            self_playerGUID = Ovale.playerGUID
             self:RegisterMessage("Ovale_SpecializationChanged")
         end
     end,
     OnDisable = function(self)
-        if __Ovale.Ovale.playerClass == "PRIEST" then
+        if Ovale.playerClass == "PRIEST" then
             self:UnregisterMessage("Ovale_SpecializationChanged")
         end
     end,
@@ -39,15 +45,14 @@ local OvaleShadowWordDeathClass = __addon.__class(OvaleShadowWordDeathBase, {
             if cleuEvent == "SPELL_DAMAGE" then
                 local spellId, overkill = arg12, arg16
                 if SHADOW_WORD_DEATH[spellId] and  not (overkill and overkill > 0) then
-                    local now = API_GetTime()
+                    local now = GetTime()
                     self.start = now
                     self.ending = now + self.duration
                     self.stacks = 1
-                    __Aura.OvaleAura:GainedAuraOnGUID(self_playerGUID, self.start, self.spellId, self_playerGUID, "HELPFUL", nil, nil, self.stacks, nil, self.duration, self.ending, nil, self.spellName, nil, nil, nil)
+                    OvaleAura:GainedAuraOnGUID(self_playerGUID, self.start, self.spellId, self_playerGUID, "HELPFUL", nil, nil, self.stacks, nil, self.duration, self.ending, nil, self.spellName, nil, nil, nil)
                 end
             end
         end
     end,
 })
 __exports.OvaleShadowWordDeath = OvaleShadowWordDeathClass()
-end)

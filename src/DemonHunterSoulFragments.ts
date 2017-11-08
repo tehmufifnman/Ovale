@@ -7,7 +7,7 @@ import { GetTime, GetSpellCount } from "@wowts/wow-mock";
 import { LuaArray, type, pairs } from "@wowts/lua";
 
 
-let OvaleDemonHunterSoulFragmentsBase = Ovale.NewModule("OvaleDemonHunterSoulFragments", aceEvent);
+let OvaleDemonHunterSoulFragmentsBase = OvaleDebug.RegisterDebugging(Ovale.NewModule("OvaleDemonHunterSoulFragments", aceEvent));
 export let OvaleDemonHunterSoulFragments: OvaleDemonHunterSoulFragmentsClass;
 
 let SOUL_FRAGMENTS_BUFF_ID = 228477;
@@ -24,7 +24,7 @@ interface SoulFragments {
     fragments: number;
 }
 
-class OvaleDemonHunterSoulFragmentsClass extends OvaleDebug.RegisterDebugging(OvaleDemonHunterSoulFragmentsBase) {
+class OvaleDemonHunterSoulFragmentsClass extends OvaleDemonHunterSoulFragmentsBase {
     last_checked: number;
     soul_fragments: LuaArray<SoulFragments>;
     last_soul_fragment_count:SoulFragments;

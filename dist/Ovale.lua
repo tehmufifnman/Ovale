@@ -1,53 +1,61 @@
-local __addonName, __addon = ...
-            __addon.require("./Ovale", { "./Localization", "./TsAddon", "AceEvent-3.0" }, function(__exports, __Localization, __TsAddon, aceEvent)
-local _assert = assert
+local __exports = LibStub:NewLibrary("ovale/Ovale", 10000)
+if not __exports then return end
+local __class = LibStub:GetLibrary("tslib").newClass
+local __Localization = LibStub:GetLibrary("ovale/Localization")
+local L = __Localization.L
+local __tsaddon = LibStub:GetLibrary("tsaddon", true)
+local NewAddon = __tsaddon.NewAddon
+local aceEvent = LibStub:GetLibrary("AceEvent-3.0", true)
+local assert = assert
+local ipairs = ipairs
+local pairs = pairs
+local select = select
+local strjoin = strjoin
+local tostring = tostring
+local tostringall = tostringall
+local wipe = wipe
+local _G = _G
 local format = string.format
-local _ipairs = ipairs
-local _pairs = pairs
-local _select = select
-local strfind = string.find
-local _strjoin = strjoin
-local strlen = string.len
-local _tostring = tostring
-local _tostringall = tostringall
-local _wipe = wipe
-local API_UnitClass = UnitClass
-local API_UnitGUID = UnitGUID
-local INFINITY = math.huge
+local find = string.find
+local len = string.len
+local UnitClass = UnitClass
+local UnitGUID = UnitGUID
+local DEFAULT_CHAT_FRAME = DEFAULT_CHAT_FRAME
+local huge = math.huge
 local self_oneTimeMessage = {}
 local MAX_REFRESH_INTERVALS = 500
 local self_refreshIntervals = {}
 local self_refreshIndex = 1
 __exports.MakeString = function(s, ...)
-    if s and strlen(s) > 0 then
+    if s and len(s) > 0 then
         if ... then
-            if strfind(s, "%%%.%d") or strfind(s, "%%[%w]") then
-                s = format(s, _tostringall(...))
+            if find(s, "%%%.%d") or find(s, "%%[%w]") then
+                s = format(s, tostringall(...))
             else
-                s = _strjoin(" ", s, _tostringall(...))
+                s = strjoin(" ", s, tostringall(...))
             end
         end
     else
-        s = _tostring(nil)
+        s = tostring(nil)
     end
     return s
 end
 __exports.RegisterPrinter = function(base)
-    return __addon.__class(base, {
+    return __class(base, {
         GetMethod = function(self, methodName, subModule)
             local func, arg = self[methodName], self
             if  not func then
                 func, arg = subModule[methodName], subModule
             end
-            _assert(func ~= nil)
+            assert(func ~= nil)
             return func, arg
         end,
     })
 end
-local OvaleBase = __TsAddon.NewAddon("Ovale", aceEvent)
-local OvaleClass = __addon.__class(OvaleBase, {
+local OvaleBase = NewAddon("Ovale", aceEvent)
+local OvaleClass = __class(OvaleBase, {
     constructor = function(self)
-        self.playerClass = _select(2, API_UnitClass("player"))
+        self.playerClass = select(2, UnitClass("player"))
         self.playerGUID = nil
         self.db = nil
         self.refreshNeeded = {}
@@ -55,7 +63,7 @@ local OvaleClass = __addon.__class(OvaleBase, {
         self.MSG_PREFIX = "Ovale"
         OvaleBase.constructor(self)
         _G["BINDING_HEADER_OVALE"] = "Ovale"
-        local toggleCheckBox = __Localization.L["Inverser la boîte à cocher "]
+        local toggleCheckBox = L["Inverser la boîte à cocher "]
         _G["BINDING_NAME_OVALE_CHECKBOX0"] = toggleCheckBox .. "(1)"
         _G["BINDING_NAME_OVALE_CHECKBOX1"] = toggleCheckBox .. "(2)"
         _G["BINDING_NAME_OVALE_CHECKBOX2"] = toggleCheckBox .. "(3)"
@@ -64,8 +72,8 @@ local OvaleClass = __addon.__class(OvaleBase, {
         self:RegisterEvent("PLAYER_ENTERING_WORLD")
     end,
     PLAYER_ENTERING_WORLD = function(self)
-        self.playerGUID = API_UnitGUID("player")
-        _wipe(self_refreshIntervals)
+        self.playerGUID = UnitGUID("player")
+        wipe(self_refreshIntervals)
         self_refreshIndex = 1
         self:ClearOneTimeMessages()
     end,
@@ -75,14 +83,14 @@ local OvaleClass = __addon.__class(OvaleBase, {
         end
     end,
     AddRefreshInterval = function(self, milliseconds)
-        if milliseconds < INFINITY then
+        if milliseconds < huge then
             self_refreshIntervals[self_refreshIndex] = milliseconds
             self_refreshIndex = (self_refreshIndex < MAX_REFRESH_INTERVALS) and (self_refreshIndex + 1) or 1
         end
     end,
     GetRefreshIntervalStatistics = function(self)
-        local sumRefresh, minRefresh, maxRefresh, count = 0, INFINITY, 0, 0
-        for _, v in _ipairs(self_refreshIntervals) do
+        local sumRefresh, minRefresh, maxRefresh, count = 0, huge, 0, 0
+        for _, v in ipairs(self_refreshIntervals) do
             if v > 0 then
                 if minRefresh > v then
                     minRefresh = v
@@ -104,16 +112,19 @@ local OvaleClass = __addon.__class(OvaleBase, {
         end
     end,
     ClearOneTimeMessages = function(self)
-        _wipe(self_oneTimeMessage)
+        wipe(self_oneTimeMessage)
     end,
     PrintOneTimeMessages = function(self)
-        for s in _pairs(self_oneTimeMessage) do
+        for s in pairs(self_oneTimeMessage) do
             if self_oneTimeMessage[s] ~= "printed" then
                 self:Print(s)
                 self_oneTimeMessage[s] = "printed"
             end
         end
     end,
+    Print = function(self, ...)
+        local s = __exports.MakeString(...)
+        DEFAULT_CHAT_FRAME:AddMessage(format("|cff33ff99%s|r: %s", self:GetName(), s))
+    end,
 })
 __exports.Ovale = OvaleClass()
-end)

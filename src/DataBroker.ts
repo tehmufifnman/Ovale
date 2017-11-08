@@ -106,8 +106,7 @@ const OnTooltipShow = function(tooltip: UIGameTooltip) {
 }
 class OvaleDataBrokerClass extends OvaleDataBrokerBase {
     broker = undefined;
-    constructor() {
-        super();
+    OnInitialize() {    
         if (LibDataBroker) {
             let broker = {
                 type: "data source",
@@ -121,7 +120,7 @@ class OvaleDataBrokerClass extends OvaleDataBrokerBase {
                 LibDBIcon.Register(Ovale.GetName(), this.broker, Ovale.db.profile.apparence.minimap);
             }
         }
-    
+   
         if (this.broker) {
             this.RegisterMessage("Ovale_ProfileChanged", "UpdateIcon");
             this.RegisterMessage("Ovale_ScriptChanged");
@@ -129,6 +128,7 @@ class OvaleDataBrokerClass extends OvaleDataBrokerBase {
             this.UpdateIcon();
         }
     }
+
     OnDisable() {
         if (this.broker) {
             this.UnregisterMessage("Ovale_ProfileChanged");

@@ -1,6 +1,16 @@
-local __addonName, __addon = ...
-            __addon.require("./BanditsGuile", { "./Debug", "./Ovale", "./Aura", "AceEvent-3.0" }, function(__exports, __Debug, __Ovale, __Aura, aceEvent)
-local OvaleBanditsGuileBase = __Ovale.Ovale:NewModule("OvaleBanditsGuile", aceEvent)
+local __exports = LibStub:NewLibrary("ovale/BanditsGuile", 10000)
+if not __exports then return end
+local __class = LibStub:GetLibrary("tslib").newClass
+local __Debug = LibStub:GetLibrary("ovale/Debug")
+local OvaleDebug = __Debug.OvaleDebug
+local __Ovale = LibStub:GetLibrary("ovale/Ovale")
+local Ovale = __Ovale.Ovale
+local __Aura = LibStub:GetLibrary("ovale/Aura")
+local OvaleAura = __Aura.OvaleAura
+local aceEvent = LibStub:GetLibrary("AceEvent-3.0", true)
+local GetSpellInfo = GetSpellInfo
+local GetTime = GetTime
+local OvaleBanditsGuileBase = OvaleDebug:RegisterDebugging(Ovale:NewModule("OvaleBanditsGuile", aceEvent))
 local API_GetSpellInfo = GetSpellInfo
 local API_GetTime = GetTime
 local self_playerGUID = nil
@@ -16,7 +26,7 @@ local BANDITS_GUILE = 84654
 local BANDITS_GUILE_ATTACK = {
     [1752] = API_GetSpellInfo(1752)
 }
-local OvaleBanditsGuile = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(OvaleBanditsGuileBase), {
+local OvaleBanditsGuile = __class(OvaleBanditsGuileBase, {
     constructor = function(self)
         self.spellName = "Bandit's Guile"
         self.spellId = BANDITS_GUILE
@@ -24,14 +34,14 @@ local OvaleBanditsGuile = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(O
         self.ending = 0
         self.duration = 15
         self.stacks = 0
-        __Debug.OvaleDebug:RegisterDebugging(OvaleBanditsGuileBase).constructor(self)
-        if __Ovale.Ovale.playerClass == "ROGUE" then
-            self_playerGUID = __Ovale.Ovale.playerGUID
+        OvaleBanditsGuileBase.constructor(self)
+        if Ovale.playerClass == "ROGUE" then
+            self_playerGUID = Ovale.playerGUID
             self:RegisterMessage("Ovale_SpecializationChanged")
         end
     end,
     OnDisable = function(self)
-        if __Ovale.Ovale.playerClass == "ROGUE" then
+        if Ovale.playerClass == "ROGUE" then
             self:UnregisterMessage("Ovale_SpecializationChanged")
         end
     end,
@@ -72,7 +82,7 @@ local OvaleBanditsGuile = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(O
         if target == self_playerGUID then
             local auraName = INSIGHT_BUFF[auraId]
             if auraName then
-                local playerAura = __Aura.OvaleAura:GetAura("player", auraId, "HELPFUL", true)
+                local playerAura = OvaleAura:GetAura("player", auraId, "HELPFUL", true)
                 self.start, self.ending = playerAura.start, playerAura.ending
                 if auraId == SHALLOW_INSIGHT then
                     self.stacks = 4
@@ -90,7 +100,7 @@ local OvaleBanditsGuile = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(O
         if target == self_playerGUID then
             local auraName = INSIGHT_BUFF[auraId]
             if auraName then
-                local playerAura = __Aura.OvaleAura:GetAura("player", auraId, "HELPFUL", true)
+                local playerAura = OvaleAura:GetAura("player", auraId, "HELPFUL", true)
                 self.start, self.ending = playerAura.start, playerAura.ending
                 self.stacks = self.stacks + 1
                 self:Debug(event, auraName, self.stacks)
@@ -104,19 +114,18 @@ local OvaleBanditsGuile = __addon.__class(__Debug.OvaleDebug:RegisterDebugging(O
                 self.ending = timestamp
                 self.stacks = 0
                 self:Debug(event, INSIGHT_BUFF[auraId], self.stacks)
-                __Aura.OvaleAura:LostAuraOnGUID(self_playerGUID, timestamp, self.spellId, self_playerGUID)
+                OvaleAura:LostAuraOnGUID(self_playerGUID, timestamp, self.spellId, self_playerGUID)
             end
         end
     end,
     GainedAura = function(self, atTime)
-        __Aura.OvaleAura:GainedAuraOnGUID(self_playerGUID, atTime, self.spellId, self_playerGUID, "HELPFUL", nil, nil, self.stacks, nil, self.duration, self.ending, nil, self.spellName, nil, nil, nil)
+        OvaleAura:GainedAuraOnGUID(self_playerGUID, atTime, self.spellId, self_playerGUID, "HELPFUL", nil, nil, self.stacks, nil, self.duration, self.ending, nil, self.spellName, nil, nil, nil)
     end,
     DebugBanditsGuile = function(self)
-        local playerAura = __Aura.OvaleAura:GetAuraByGUID(self_playerGUID, self.spellId, "HELPFUL", true)
+        local playerAura = OvaleAura:GetAuraByGUID(self_playerGUID, self.spellId, "HELPFUL", true)
         if playerAura then
             self:Print("Player has Bandit's Guile aura with start=%s, end=%s, stacks=%d.", playerAura.start, playerAura.ending, playerAura.stacks)
         end
     end,
 })
 __exports.banditsGuile = OvaleBanditsGuile()
-end)

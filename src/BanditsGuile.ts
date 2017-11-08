@@ -4,7 +4,7 @@ import { OvaleAura } from "./Aura";
 import aceEvent from "@wowts/ace_event-3.0";
 import { GetSpellInfo, GetTime } from "@wowts/wow-mock";
 
-let OvaleBanditsGuileBase = Ovale.NewModule("OvaleBanditsGuile", aceEvent);
+let OvaleBanditsGuileBase = OvaleDebug.RegisterDebugging(Ovale.NewModule("OvaleBanditsGuile", aceEvent));
 let API_GetSpellInfo = GetSpellInfo;
 let API_GetTime = GetTime;
 let self_playerGUID = undefined;
@@ -21,7 +21,7 @@ let BANDITS_GUILE_ATTACK = {
     [1752]: API_GetSpellInfo(1752)
 }
 
-class OvaleBanditsGuile extends OvaleDebug.RegisterDebugging(OvaleBanditsGuileBase) {
+class OvaleBanditsGuile extends OvaleBanditsGuileBase {
     spellName = "Bandit's Guile";
     spellId = BANDITS_GUILE;
     start = 0;
