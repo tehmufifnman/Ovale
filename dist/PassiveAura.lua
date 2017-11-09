@@ -135,8 +135,7 @@ local READINESS_ROLE = {
     }
 }
 local OvalePassiveAuraClass = __class(OvalePassiveAuraBase, {
-    constructor = function(self)
-        OvalePassiveAuraBase.constructor(self)
+    OnInitialize = function(self)
         self_playerGUID = Ovale.playerGUID
         self:RegisterMessage("Ovale_EquipmentChanged")
         self:RegisterMessage("Ovale_SpecializationChanged")

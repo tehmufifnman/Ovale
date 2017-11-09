@@ -69,9 +69,8 @@ local OvaleClass = __class(OvaleBase, {
         _G["BINDING_NAME_OVALE_CHECKBOX2"] = toggleCheckBox .. "(3)"
         _G["BINDING_NAME_OVALE_CHECKBOX3"] = toggleCheckBox .. "(4)"
         _G["BINDING_NAME_OVALE_CHECKBOX4"] = toggleCheckBox .. "(5)"
-        self:RegisterEvent("PLAYER_ENTERING_WORLD")
     end,
-    PLAYER_ENTERING_WORLD = function(self)
+    OnInitialize = function(self)
         self.playerGUID = UnitGUID("player")
         wipe(self_refreshIntervals)
         self_refreshIndex = 1

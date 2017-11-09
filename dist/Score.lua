@@ -23,13 +23,7 @@ local MSG_PREFIX = Ovale.MSG_PREFIX
 local self_playerGUID = nil
 local self_name = nil
 local OvaleScoreClass = __class(OvaleScoreBase, {
-    constructor = function(self)
-        self.damageMeter = {}
-        self.damageMeterMethod = {}
-        self.score = 0
-        self.maxScore = 0
-        self.scoredSpell = {}
-        OvaleScoreBase.constructor(self)
+    OnInitialize = function(self)
         self_playerGUID = Ovale.playerGUID
         self_name = UnitName("player")
         self:RegisterEvent("CHAT_MSG_ADDON")
@@ -129,5 +123,13 @@ local OvaleScoreClass = __class(OvaleScoreBase, {
             end
         end
     end,
+    constructor = function(self, ...)
+        OvaleScoreBase.constructor(self, ...)
+        self.damageMeter = {}
+        self.damageMeterMethod = {}
+        self.score = 0
+        self.maxScore = 0
+        self.scoredSpell = {}
+    end
 })
 __exports.OvaleScore = OvaleScoreClass()

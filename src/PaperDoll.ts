@@ -4,7 +4,7 @@ import { Ovale } from "./Ovale";
 import { OvaleEquipment } from "./Equipment";
 import { OvaleStance } from "./Stance";
 import { OvaleState, StateModule } from "./State";
-import { lastSpell, SpellCast, PaperDollSnapshot } from "./LastSpell";
+import { lastSpell, SpellCast, PaperDollSnapshot, SpellCastModule } from "./LastSpell";
 import aceEvent from "@wowts/ace_event-3.0";
 import { pairs, tonumber, type } from "@wowts/lua";
 import { GetCombatRating, GetCritChance, GetMastery, GetMasteryEffect, GetMeleeHaste, GetMultistrike, GetMultistrikeEffect, GetRangedCritChance, GetRangedHaste, GetSpecialization, GetSpellBonusDamage, GetSpellBonusHealing, GetSpellCritChance, GetTime, UnitAttackPower, UnitAttackSpeed, UnitDamage, UnitLevel, UnitRangedAttackPower, UnitSpellHaste, UnitStat, CR_CRIT_MELEE, CR_HASTE_MELEE } from "@wowts/wow-mock";
@@ -95,7 +95,7 @@ let OVALE_SPECIALIZATION_NAME = {
     }
 }
 
-class OvalePaperDollClass extends OvalePaperDollBase implements PaperDollSnapshot {
+class OvalePaperDollClass extends OvalePaperDollBase implements PaperDollSnapshot, SpellCastModule {
     class = Ovale.playerClass;
     level = UnitLevel("player");
     specialization = undefined;
@@ -419,7 +419,7 @@ class OvalePaperDollClass extends OvalePaperDollBase implements PaperDollSnapsho
         snapshot = snapshot || this;
         return 1 + snapshot.spellHaste / 100;
     }
-    GetHasteMultiplier(haste, snapshot:PaperDollSnapshot) {
+    GetHasteMultiplier(haste: string, snapshot:PaperDollSnapshot) {
         snapshot = snapshot || this;
         let multiplier = 1;
         if (haste == "melee") {
@@ -442,7 +442,7 @@ class OvalePaperDollClass extends OvalePaperDollBase implements PaperDollSnapsho
     }
     SaveSpellcastInfo = (module: OvalePaperDollClass, spellcast: SpellCast, atTime: number, state: PaperDollState) => {
         let paperDollModule = state || this;
-        this.UpdateSnapshot(paperDollModule, spellcast, true);
+        this.UpdateSnapshot(spellcast, paperDollModule, true);
     }
 }
 class PaperDollState implements StateModule {
@@ -512,7 +512,7 @@ class PaperDollState implements StateModule {
         this.class = OvalePaperDoll.class;
         this.level = OvalePaperDoll.level;
         this.specialization = OvalePaperDoll.specialization;
-        this.UpdateSnapshot(OvalePaperDoll, this, true);
+        this.UpdateSnapshot(this, OvalePaperDoll, true);
     }
 
     GetMasteryMultiplier(snapshot:PaperDollSnapshot) {
@@ -532,7 +532,7 @@ class PaperDollState implements StateModule {
     }
     UpdateSnapshot(target:PaperDollSnapshot, snapshot?:PaperDollSnapshot, updateAllStats?: boolean) {
         if (!snapshot) {
-            OvalePaperDoll.UpdateSnapshot(this, target);
+            OvalePaperDoll.UpdateSnapshot(target, this, updateAllStats);
         }
         else {
             OvalePaperDoll.UpdateSnapshot(target, snapshot, updateAllStats);

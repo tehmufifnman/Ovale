@@ -52,7 +52,6 @@ local insert = table.insert
 local remove = table.remove
 local sort = table.sort
 local RAID_CLASS_COLORS = RAID_CLASS_COLORS
-local nan = math.nan
 local OvaleSimulationCraftBase = OvaleDebug:RegisterDebugging(Ovale:NewModule("OvaleSimulationCraft"))
 local KEYWORD = {}
 local MODIFIER_KEYWORD = {
@@ -3374,7 +3373,7 @@ EmitOperandPreviousSpell = function(operand, parseNode, nodeList, annotation, ac
     if token == "prev" or token == "prev_gcd" or token == "prev_off_gcd" then
         local name = tokenIterator()
         local howMany = 1
-        if tonumber(name) ~= nan then
+        if tonumber(name) then
             howMany = tonumber(name)
             name = tokenIterator()
         end

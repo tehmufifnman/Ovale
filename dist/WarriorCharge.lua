@@ -21,9 +21,7 @@ local CHARGED_ATTACKS = {
     [100] = GetSpellInfo(100)
 }
 local OvaleWarriorChargeClass = __class(OvaleWarriorChargeBase, {
-    constructor = function(self)
-        self.targetGUID = nil
-        OvaleWarriorChargeBase.constructor(self)
+    OnInitialize = function(self)
         if Ovale.playerClass == "WARRIOR" then
             self_playerGUID = Ovale.playerGUID
             self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
@@ -53,5 +51,9 @@ local OvaleWarriorChargeClass = __class(OvaleWarriorChargeBase, {
             end
         end
     end,
+    constructor = function(self, ...)
+        OvaleWarriorChargeBase.constructor(self, ...)
+        self.targetGUID = nil
+    end
 })
 __exports.OvaleWarriorCharge = OvaleWarriorChargeClass()

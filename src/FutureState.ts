@@ -1,6 +1,6 @@
 import { OvaleFuture } from "./Future";
 import { OvaleCooldown } from "./Cooldown";
-import { lastSpell, self_pool } from "./LastSpell";
+import { lastSpell, self_pool, SpellCast } from "./LastSpell";
 import { OvaleSpellBook } from "./SpellBook";
 import { OvaleGUID } from "./GUID";
 import { OvaleState, baseState } from "./State";
@@ -168,7 +168,7 @@ class FutureState {
         }
         this.lastGCDSpellId = spellId;
     }
-    ApplySpell(spellId, targetGUID, startCast, endCast?, channel?, spellcast?) {
+    ApplySpell(spellId:number, targetGUID:string, startCast:number, endCast?:number, channel?: boolean, spellcast?: SpellCast) {
         OvaleFuture.StartProfiling("OvaleFuture_state_ApplySpell");
         if (spellId) {
             if (!targetGUID) {

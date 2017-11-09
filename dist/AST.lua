@@ -207,9 +207,6 @@ local function INDENT(key)
     end
     return ret
 end
-__exports.isNumberNode = function(node)
-    return node.type == "number"
-end
 __exports.isStringNode = function(node)
     return node.type == "string"
 end
@@ -424,8 +421,6 @@ local OvaleASTClass = __class(OvaleASTBase, {
             elseif node.type == "variable" then
                 value = node.name
             elseif __exports.isStringNode(node) then
-                value = node.value
-            elseif __exports.isNumberNode(node) then
                 value = node.value
             else
                 return parameterValue
@@ -916,9 +911,9 @@ local OvaleASTClass = __class(OvaleASTBase, {
                     targetNode.previousType = node.type
                     targetNode.type = "string"
                     targetNode.value = value
-                elseif __exports.isNumberNode(node) then
+                elseif __exports.isValueNode(node) then
                     local value = node.value
-                    targetNode.previousType = "number"
+                    targetNode.previousType = "value"
                     targetNode.type = "string"
                     targetNode.value = tostring(value)
                 elseif node.type == "function" then
@@ -1336,7 +1331,7 @@ local OvaleASTClass = __class(OvaleASTBase, {
         self.UnparseList = function(node)
             return format("%s(%s %s)", node.keyword, node.name, self:UnparseParameters(node.rawPositionalParams, node.rawNamedParams))
         end
-        self.UnparseNumber = function(node)
+        self.UnparseValue = function(node)
             return tostring(node.value)
         end
         self.UnparseScoreSpells = function(node)
@@ -1417,7 +1412,6 @@ local OvaleASTClass = __class(OvaleASTBase, {
             ["list"] = self.UnparseList,
             ["list_item"] = self.UnparseAddListItem,
             ["logical"] = self.UnparseExpression,
-            ["number"] = self.UnparseNumber,
             ["score_spells"] = self.UnparseScoreSpells,
             ["script"] = self.UnparseScript,
             ["spell_aura_list"] = self.UnparseSpellAuraList,
@@ -1426,7 +1420,7 @@ local OvaleASTClass = __class(OvaleASTBase, {
             ["state"] = self.UnparseFunction,
             ["string"] = self.UnparseString,
             ["unless"] = self.UnparseUnless,
-            ["value"] = self.UnparseNumber,
+            ["value"] = self.UnparseValue,
             ["variable"] = self.UnparseVariable
         }
         self.ParseAddCheckBox = function(tokenStream, nodeList, annotation)

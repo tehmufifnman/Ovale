@@ -689,7 +689,7 @@ class OvaleFutureClass extends OvaleFutureBase {
             } else {
                 this.Debug("    Updating to snapshot from %s for spell %s with no target queued at %s.", atTime, spellcast.spellName, spellcast.queued);
             }
-            OvalePaperDoll.UpdateSnapshot(OvalePaperDoll, spellcast, true);
+            OvalePaperDoll.UpdateSnapshot(spellcast, OvalePaperDoll, true);
             if (spellcast.spellId) {
                 spellcast.damageMultiplier = this.GetDamageMultiplier(spellcast.spellId, spellcast.target, atTime);
                 if (spellcast.damageMultiplier != 1) {

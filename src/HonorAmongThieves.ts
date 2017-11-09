@@ -17,8 +17,7 @@ class OvaleHonorAmongThievesClass extends OvaleHonorAmongThievesBase {
     duration = MEAN_TIME_TO_HAT;
     stacks = 0;
 
-    constructor() {
-        super();
+    OnInitialize() {
         if (Ovale.playerClass == "ROGUE") {
             self_playerGUID = Ovale.playerGUID;
             this.RegisterMessage("Ovale_SpecializationChanged");

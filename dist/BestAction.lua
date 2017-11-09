@@ -63,6 +63,8 @@ local IsCurrentAction = IsCurrentAction
 local IsItemInRange = IsItemInRange
 local IsUsableAction = IsUsableAction
 local IsUsableItem = IsUsableItem
+local __AST = LibStub:GetLibrary("ovale/AST")
+local isValueNode = __AST.isValueNode
 local OvaleBestActionBase = OvaleDebug:RegisterDebugging(OvaleProfiler:RegisterProfiling(Ovale:NewModule("OvaleBestAction", aceEvent)))
 local INFINITY = huge
 local self_serial = 0
@@ -84,7 +86,7 @@ local function SetValue(node, value, origin, rate)
 end
 local AsValue = function(atTime, timeSpan, node)
     local value, origin, rate
-    if node and node.type == "value" then
+    if node and isValueNode(node) then
         value, origin, rate = node.value, node.origin, node.rate
     elseif timeSpan and timeSpan:HasTime(atTime) then
         value, origin, rate, timeSpan = 1, 0, 0, UNIVERSE
@@ -437,10 +439,10 @@ local OvaleBestActionClass = __class(OvaleBestActionBase, {
         self.ComputeCompare = function(element, state, atTime)
             self:StartProfiling("OvaleBestAction_Compute")
             local timeSpan = GetTimeSpan(element)
-            local rawTimeSpanA = self:Compute(element.child[1], state, atTime)
-            local a, b, c, timeSpanA = AsValue(atTime, rawTimeSpanA)
-            local rawTimeSpanB = self:Compute(element.child[2], state, atTime)
-            local x, y, z, timeSpanB = AsValue(atTime, rawTimeSpanB)
+            local rawTimeSpanA, elementA = self:Compute(element.child[1], state, atTime)
+            local a, b, c, timeSpanA = AsValue(atTime, rawTimeSpanA, elementA)
+            local rawTimeSpanB, elementB = self:Compute(element.child[2], state, atTime)
+            local x, y, z, timeSpanB = AsValue(atTime, rawTimeSpanB, elementB)
             timeSpanA:Intersect(timeSpanB, timeSpan)
             if timeSpan:Measure() == 0 then
                 state:Log("[%d]    compare '%s' returns %s with zero measure", element.nodeId, element.operator, timeSpan)
@@ -788,7 +790,7 @@ local OvaleBestActionClass = __class(OvaleBestActionBase, {
                 else
                     state:Log("[%d] Runtime error: unable to compute node of type '%s'.", element.nodeId, element.type)
                 end
-                if result and result.type == "value" then
+                if result and isValueNode(result) then
                     state:Log("[%d] <<< '%s' returns %s with value = %s, %s, %s", element.nodeId, element.type, timeSpan, result.value, result.origin, result.rate)
                 elseif result and result.nodeId then
                     state:Log("[%d] <<< '%s' returns [%d] %s", element.nodeId, element.type, result.nodeId, timeSpan)
@@ -802,7 +804,7 @@ local OvaleBestActionClass = __class(OvaleBestActionBase, {
     end,
     ComputeBool = function(self, element, state, atTime)
         local timeSpan, newElement = self:Compute(element, state, atTime)
-        if newElement and newElement.type == "value" and newElement.value == 0 and newElement.rate == 0 then
+        if newElement and isValueNode(newElement) and newElement.value == 0 and newElement.rate == 0 then
             return EMPTY_SET
         else
             return timeSpan

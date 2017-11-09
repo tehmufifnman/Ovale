@@ -278,11 +278,7 @@ local IsWithinAuraLag = function(time1, time2, factor)
 end
 
 local OvaleAuraClass = __class(OvaleAuraBase, {
-    constructor = function(self)
-        self.aura = {}
-        self.serial = {}
-        self.bypassState = {}
-        OvaleAuraBase.constructor(self)
+    OnInitialize = function(self)
         self_playerGUID = Ovale.playerGUID
         self_petGUID = OvaleGUID.petGUID
         self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
@@ -784,6 +780,12 @@ local OvaleAuraClass = __class(OvaleAuraBase, {
         end
         return verified, requirement, index
     end,
+    constructor = function(self, ...)
+        OvaleAuraBase.constructor(self, ...)
+        self.aura = {}
+        self.serial = {}
+        self.bypassState = {}
+    end
 })
 __exports.OvaleAura = OvaleAuraClass()
 local array = {}

@@ -70,6 +70,7 @@ Define(astral_healing_potion 152615)
 Define(ancient_healing_potion 127834)
 Define(aged_healing_potion 136569)
 Define(healthstone 5512)
+Define(umbral_glaive_storm 242553)
 
 ###
 ### Trinkets & OnUse Rings

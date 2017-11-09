@@ -21,8 +21,7 @@ class OvaleScoreClass extends OvaleScoreBase {
     maxScore = 0;
     scoredSpell = {}
     
-    constructor() {
-        super();
+    OnInitialize() {
         self_playerGUID = Ovale.playerGUID;
         self_name = UnitName("player");
         this.RegisterEvent("CHAT_MSG_ADDON");

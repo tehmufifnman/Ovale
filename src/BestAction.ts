@@ -20,36 +20,42 @@ import aceEvent from "@wowts/ace_event-3.0";
 import { abs, huge, floor } from "@wowts/math";
 import { assert, ipairs, loadstring, pairs, tonumber, type, wipe, LuaObj, LuaArray, lualength } from "@wowts/lua";
 import { GetActionCooldown, GetActionTexture, GetItemIcon, GetItemCooldown, GetItemSpell, GetSpellTexture, IsActionInRange, IsCurrentAction, IsItemInRange, IsUsableAction, IsUsableItem } from "@wowts/wow-mock";
+import { AstNode, isValueNode, ValueNode } from "./AST";
 
 let OvaleBestActionBase = OvaleDebug.RegisterDebugging(OvaleProfiler.RegisterProfiling(Ovale.NewModule("OvaleBestAction", aceEvent)));
 let INFINITY = huge;
 
 let self_serial = 0;
 let self_timeSpan: LuaObj<OvaleTimeSpan> = {}
-let self_valuePool = new OvalePool<Element>("OvaleBestAction_valuePool");
-let self_value: LuaObj<Element> = {}
+let self_valuePool = new OvalePool<ValueNode>("OvaleBestAction_valuePool");
+let self_value: LuaObj<ValueNode> = {}
 
-interface Element {
-    serial: number;
-    timeSpan: OvaleTimeSpan;
-    asString?: string;
-    type: string;
-    result: Element;
-    nodeId: number;
-    offgcd: boolean;
 
-    // ?
-    rate: number;
-    value: number;
-    origin: number;
-    postOrder?: LuaArray<Element>;
-    child: LuaArray<Element>;
-    operator: string;
-    positionalParams: LuaArray<Element>;
-    castTime: number;
+interface Element extends AstNode {
+    serial?: number;
+    timeSpan?: OvaleTimeSpan;
+    result?: Element;
+
+    actionTexture?: string;
+    actionInRange?:boolean;
+    actionCooldownDuration?:number;
+    actionCooldownStart?:number;
+    actionUsable?:boolean;
+    actionShortcut?:string;
+    actionIsCurrent?:boolean;
+    actionEnable?:boolean;
+    actionType?:string;
+    actionId?:string;
+    actionTarget?:string;
+    actionResourceExtend?:string;
+    actionCharges?:number;
+    castTime?:number;
+    offgcd?:boolean;
+    func?:string;
+    lua?:string;
 }
 
-type ComputerFunction = (element, state: BaseState, atTime:number) => [OvaleTimeSpan, Element];
+type ComputerFunction = (element: Element, state: BaseState, atTime:number) => [OvaleTimeSpan, Element];
 
 export let OvaleBestAction:OvaleBestActionClass = undefined;
 
@@ -65,10 +71,10 @@ function SetValue(node, value?, origin?, rate?): Element {
     result.rate = rate || 0;
     return result;
 }
-const AsValue = function(atTime: number, timeSpan: OvaleTimeSpan, node?):[number, number, number, OvaleTimeSpan] {
+const AsValue = function(atTime: number, timeSpan: OvaleTimeSpan, node?: AstNode):[number, number, number, OvaleTimeSpan] {
     let value: number, origin: number, rate: number;
-    if (node && node.type == "value") {
-        [value, origin, rate] = [node.value, node.origin, node.rate];
+    if (node && isValueNode(node)) {
+        [value, origin, rate] = [<number>node.value, node.origin, node.rate];
     } else if (timeSpan && timeSpan.HasTime(atTime)) {
         [value, origin, rate, timeSpan] = [1, 0, 0, UNIVERSE];
     } else {
@@ -355,7 +361,7 @@ class OvaleBestActionClass extends OvaleBestActionBase {
                 } else {
                     state.Log("[%d] Runtime error: unable to compute node of type '%s'.", element.nodeId, element.type);
                 }
-                if (result && result.type == "value") {
+                if (result && isValueNode(result)) {
                     state.Log("[%d] <<< '%s' returns %s with value = %s, %s, %s", element.nodeId, element.type, timeSpan, result.value, result.origin, result.rate);
                 } else if (result && result.nodeId) {
                     state.Log("[%d] <<< '%s' returns [%d] %s", element.nodeId, element.type, result.nodeId, timeSpan);
@@ -369,7 +375,7 @@ class OvaleBestActionClass extends OvaleBestActionBase {
     }
     ComputeBool(element, state: BaseState, atTime) {
         let [timeSpan, newElement] = this.Compute(element, state, atTime);
-        if (newElement && newElement.type == "value" && newElement.value == 0 && newElement.rate == 0) {
+        if (newElement && isValueNode(newElement) && newElement.value == 0 && newElement.rate == 0) {
             return EMPTY_SET;
         } else {
             return timeSpan;
@@ -554,10 +560,10 @@ class OvaleBestActionClass extends OvaleBestActionBase {
     ComputeCompare: ComputerFunction = (element, state: BaseState, atTime) => {
         this.StartProfiling("OvaleBestAction_Compute");
         let timeSpan = GetTimeSpan(element);
-        const [rawTimeSpanA] = this.Compute(element.child[1], state, atTime);
-        let [a, b, c, timeSpanA] = AsValue(atTime, rawTimeSpanA);
-        const [rawTimeSpanB] = this.Compute(element.child[2], state, atTime);
-        let [x, y, z, timeSpanB] = AsValue(atTime, rawTimeSpanB);
+        const [rawTimeSpanA, elementA] = this.Compute(element.child[1], state, atTime);
+        let [a, b, c, timeSpanA] = AsValue(atTime, rawTimeSpanA, elementA);
+        const [rawTimeSpanB, elementB] = this.Compute(element.child[2], state, atTime);
+        let [x, y, z, timeSpanB] = AsValue(atTime, rawTimeSpanB, elementB);
         timeSpanA.Intersect(timeSpanB, timeSpan);
         if (timeSpan.Measure() == 0) {
             state.Log("[%d]    compare '%s' returns %s with zero measure", element.nodeId, element.operator, timeSpan);
@@ -766,7 +772,7 @@ class OvaleBestActionClass extends OvaleBestActionBase {
         this.StopProfiling("OvaleBestAction_Compute");
         return [timeSpan, result];
     }
-    ComputeValue: ComputerFunction = (element, state: BaseState, atTime):[OvaleTimeSpan, any] => {
+    ComputeValue: ComputerFunction = (element:ValueNode, state: BaseState, atTime):[OvaleTimeSpan, any] => {
         this.StartProfiling("OvaleBestAction_Compute");
         state.Log("[%d]    value is %s", element.nodeId, element.value);
         let timeSpan = GetTimeSpan(element, UNIVERSE);

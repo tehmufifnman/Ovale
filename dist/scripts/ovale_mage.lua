@@ -707,11 +707,11 @@ AddFunction FireRopphaseMainActions
   #pyroblast,if=buff.kaelthas_ultimate_ability.react&execute_time<buff.kaelthas_ultimate_ability.remains
   if BuffPresent(kaelthas_ultimate_ability_buff) and ExecuteTime(pyroblast) < BuffRemaining(kaelthas_ultimate_ability_buff) Spell(pyroblast)
   #fire_blast,if=!prev_off_gcd.fire_blast&buff.heating_up.up&firestarter.active&charges_fractional>1.7
-  if not PreviousOffGCDSpell(undefined) and BuffPresent(heating_up_buff) and HasTalent(firestarter_talent) and target.HealthPercent() >= 90 and Charges(fire_blast count=0) > 1 Spell(fire_blast)
+  if not PreviousOffGCDSpell(fire_blast) and BuffPresent(heating_up_buff) and HasTalent(firestarter_talent) and target.HealthPercent() >= 90 and Charges(fire_blast count=0) > 1 Spell(fire_blast)
   #phoenixs_flames,if=!prev_gcd.1.phoenixs_flames&charges_fractional>2.7&firestarter.active
   if not PreviousGCDSpell(phoenixs_flames) and Charges(phoenixs_flames count=0) > 2 and HasTalent(firestarter_talent) and target.HealthPercent() >= 90 Spell(phoenixs_flames)
   #fire_blast,if=!prev_off_gcd.fire_blast&!firestarter.active
-  if not PreviousOffGCDSpell(undefined) and not { HasTalent(firestarter_talent) and target.HealthPercent() >= 90 } Spell(fire_blast)
+  if not PreviousOffGCDSpell(fire_blast) and not { HasTalent(firestarter_talent) and target.HealthPercent() >= 90 } Spell(fire_blast)
   #phoenixs_flames,if=!prev_gcd.1.phoenixs_flames
   if not PreviousGCDSpell(phoenixs_flames) Spell(phoenixs_flames)
   #scorch,if=target.health.pct<=30&equipped.132454
@@ -738,7 +738,7 @@ AddFunction FireRopphaseShortCdActions
   #call_action_list,name=active_talents
   FireActivetalentsShortCdActions()
 
-  unless FireActivetalentsShortCdPostConditions() or BuffPresent(kaelthas_ultimate_ability_buff) and ExecuteTime(pyroblast) < BuffRemaining(kaelthas_ultimate_ability_buff) and Spell(pyroblast) or not PreviousOffGCDSpell(undefined) and BuffPresent(heating_up_buff) and HasTalent(firestarter_talent) and target.HealthPercent() >= 90 and Charges(fire_blast count=0) > 1 and Spell(fire_blast) or not PreviousGCDSpell(phoenixs_flames) and Charges(phoenixs_flames count=0) > 2 and HasTalent(firestarter_talent) and target.HealthPercent() >= 90 and Spell(phoenixs_flames) or not PreviousOffGCDSpell(undefined) and not { HasTalent(firestarter_talent) and target.HealthPercent() >= 90 } and Spell(fire_blast) or not PreviousGCDSpell(phoenixs_flames) and Spell(phoenixs_flames) or target.HealthPercent() <= 30 and HasEquippedItem(132454) and Spell(scorch)
+  unless FireActivetalentsShortCdPostConditions() or BuffPresent(kaelthas_ultimate_ability_buff) and ExecuteTime(pyroblast) < BuffRemaining(kaelthas_ultimate_ability_buff) and Spell(pyroblast) or not PreviousOffGCDSpell(fire_blast) and BuffPresent(heating_up_buff) and HasTalent(firestarter_talent) and target.HealthPercent() >= 90 and Charges(fire_blast count=0) > 1 and Spell(fire_blast) or not PreviousGCDSpell(phoenixs_flames) and Charges(phoenixs_flames count=0) > 2 and HasTalent(firestarter_talent) and target.HealthPercent() >= 90 and Spell(phoenixs_flames) or not PreviousOffGCDSpell(fire_blast) and not { HasTalent(firestarter_talent) and target.HealthPercent() >= 90 } and Spell(fire_blast) or not PreviousGCDSpell(phoenixs_flames) and Spell(phoenixs_flames) or target.HealthPercent() <= 30 and HasEquippedItem(132454) and Spell(scorch)
   {
    #dragons_breath,if=active_enemies>2
    if Enemies() > 2 Spell(dragons_breath)
@@ -748,7 +748,7 @@ AddFunction FireRopphaseShortCdActions
 
 AddFunction FireRopphaseShortCdPostConditions
 {
- { Talent(flame_patch_talent) and Enemies() > 1 or Enemies() > 3 } and BuffPresent(hot_streak_buff) and Spell(flamestrike) or BuffPresent(hot_streak_buff) and Spell(pyroblast) or FireActivetalentsShortCdPostConditions() or BuffPresent(kaelthas_ultimate_ability_buff) and ExecuteTime(pyroblast) < BuffRemaining(kaelthas_ultimate_ability_buff) and Spell(pyroblast) or not PreviousOffGCDSpell(undefined) and BuffPresent(heating_up_buff) and HasTalent(firestarter_talent) and target.HealthPercent() >= 90 and Charges(fire_blast count=0) > 1 and Spell(fire_blast) or not PreviousGCDSpell(phoenixs_flames) and Charges(phoenixs_flames count=0) > 2 and HasTalent(firestarter_talent) and target.HealthPercent() >= 90 and Spell(phoenixs_flames) or not PreviousOffGCDSpell(undefined) and not { HasTalent(firestarter_talent) and target.HealthPercent() >= 90 } and Spell(fire_blast) or not PreviousGCDSpell(phoenixs_flames) and Spell(phoenixs_flames) or target.HealthPercent() <= 30 and HasEquippedItem(132454) and Spell(scorch) or { Talent(flame_patch_talent) and Enemies() > 2 or Enemies() > 5 } and Spell(flamestrike) or Spell(fireball)
+ { Talent(flame_patch_talent) and Enemies() > 1 or Enemies() > 3 } and BuffPresent(hot_streak_buff) and Spell(flamestrike) or BuffPresent(hot_streak_buff) and Spell(pyroblast) or FireActivetalentsShortCdPostConditions() or BuffPresent(kaelthas_ultimate_ability_buff) and ExecuteTime(pyroblast) < BuffRemaining(kaelthas_ultimate_ability_buff) and Spell(pyroblast) or not PreviousOffGCDSpell(fire_blast) and BuffPresent(heating_up_buff) and HasTalent(firestarter_talent) and target.HealthPercent() >= 90 and Charges(fire_blast count=0) > 1 and Spell(fire_blast) or not PreviousGCDSpell(phoenixs_flames) and Charges(phoenixs_flames count=0) > 2 and HasTalent(firestarter_talent) and target.HealthPercent() >= 90 and Spell(phoenixs_flames) or not PreviousOffGCDSpell(fire_blast) and not { HasTalent(firestarter_talent) and target.HealthPercent() >= 90 } and Spell(fire_blast) or not PreviousGCDSpell(phoenixs_flames) and Spell(phoenixs_flames) or target.HealthPercent() <= 30 and HasEquippedItem(132454) and Spell(scorch) or { Talent(flame_patch_talent) and Enemies() > 2 or Enemies() > 5 } and Spell(flamestrike) or Spell(fireball)
 }
 
 AddFunction FireRopphaseCdActions
@@ -762,7 +762,7 @@ AddFunction FireRopphaseCdActions
 
 AddFunction FireRopphaseCdPostConditions
 {
- Spell(rune_of_power) or { Talent(flame_patch_talent) and Enemies() > 1 or Enemies() > 3 } and BuffPresent(hot_streak_buff) and Spell(flamestrike) or BuffPresent(hot_streak_buff) and Spell(pyroblast) or FireActivetalentsCdPostConditions() or BuffPresent(kaelthas_ultimate_ability_buff) and ExecuteTime(pyroblast) < BuffRemaining(kaelthas_ultimate_ability_buff) and Spell(pyroblast) or not PreviousOffGCDSpell(undefined) and BuffPresent(heating_up_buff) and HasTalent(firestarter_talent) and target.HealthPercent() >= 90 and Charges(fire_blast count=0) > 1 and Spell(fire_blast) or not PreviousGCDSpell(phoenixs_flames) and Charges(phoenixs_flames count=0) > 2 and HasTalent(firestarter_talent) and target.HealthPercent() >= 90 and Spell(phoenixs_flames) or not PreviousOffGCDSpell(undefined) and not { HasTalent(firestarter_talent) and target.HealthPercent() >= 90 } and Spell(fire_blast) or not PreviousGCDSpell(phoenixs_flames) and Spell(phoenixs_flames) or target.HealthPercent() <= 30 and HasEquippedItem(132454) and Spell(scorch) or Enemies() > 2 and Spell(dragons_breath) or { Talent(flame_patch_talent) and Enemies() > 2 or Enemies() > 5 } and Spell(flamestrike) or Spell(fireball)
+ Spell(rune_of_power) or { Talent(flame_patch_talent) and Enemies() > 1 or Enemies() > 3 } and BuffPresent(hot_streak_buff) and Spell(flamestrike) or BuffPresent(hot_streak_buff) and Spell(pyroblast) or FireActivetalentsCdPostConditions() or BuffPresent(kaelthas_ultimate_ability_buff) and ExecuteTime(pyroblast) < BuffRemaining(kaelthas_ultimate_ability_buff) and Spell(pyroblast) or not PreviousOffGCDSpell(fire_blast) and BuffPresent(heating_up_buff) and HasTalent(firestarter_talent) and target.HealthPercent() >= 90 and Charges(fire_blast count=0) > 1 and Spell(fire_blast) or not PreviousGCDSpell(phoenixs_flames) and Charges(phoenixs_flames count=0) > 2 and HasTalent(firestarter_talent) and target.HealthPercent() >= 90 and Spell(phoenixs_flames) or not PreviousOffGCDSpell(fire_blast) and not { HasTalent(firestarter_talent) and target.HealthPercent() >= 90 } and Spell(fire_blast) or not PreviousGCDSpell(phoenixs_flames) and Spell(phoenixs_flames) or target.HealthPercent() <= 30 and HasEquippedItem(132454) and Spell(scorch) or Enemies() > 2 and Spell(dragons_breath) or { Talent(flame_patch_talent) and Enemies() > 2 or Enemies() > 5 } and Spell(flamestrike) or Spell(fireball)
 }
 
 ### actions.precombat
@@ -1131,7 +1131,7 @@ Include(ovale_mage_spells)
 
 AddFunction fof_react
 {
- if HasEquippedItem(lady_vashjs_grasp) and BuffPresent(icy_veins_buff) and time_until_fof() > 9 or PreviousOffGCDSpell(undefined) or DebuffRemaining(frozen_orb_debuff) > 8 BuffPresent(fingers_of_frost_buff)
+ if HasEquippedItem(lady_vashjs_grasp) and BuffPresent(icy_veins_buff) and time_until_fof() > 9 or PreviousOffGCDSpell(freeze) or DebuffRemaining(frozen_orb_debuff) > 8 BuffPresent(fingers_of_frost_buff)
  BuffPresent(fingers_of_frost_buff)
 }
 
@@ -1142,7 +1142,7 @@ AddFunction time_until_fof
 
 AddFunction iv_start
 {
- if PreviousOffGCDSpell(undefined) TimeInCombat()
+ if PreviousOffGCDSpell(icy_veins) TimeInCombat()
 }
 
 AddCheckBox(opt_interrupt L(interrupt) default specialization=frost)
@@ -1198,7 +1198,7 @@ AddFunction FrostSingleMainActions
  #ice_nova,if=debuff.winters_chill.up
  if target.DebuffPresent(winters_chill_debuff) Spell(ice_nova)
  #frostbolt,if=prev_off_gcd.water_jet
- if PreviousOffGCDSpell(undefined) Spell(frostbolt)
+ if PreviousOffGCDSpell(water_elemental_water_jet) Spell(frostbolt)
  #water_jet,if=prev_gcd.1.frostbolt&buff.fingers_of_frost.stack<3&buff.brain_freeze.react=0
  if PreviousGCDSpell(frostbolt) and BuffStacks(fingers_of_frost_buff) < 3 and BuffStacks(brain_freeze_buff) == 0 Spell(water_elemental_water_jet)
  #ray_of_frost,if=buff.icy_veins.up|cooldown.icy_veins.remains>action.ray_of_frost.cooldown&buff.rune_of_power.down
@@ -1233,7 +1233,7 @@ AddFunction FrostSingleMainPostConditions
 
 AddFunction FrostSingleShortCdActions
 {
- unless target.DebuffPresent(winters_chill_debuff) and Spell(ice_nova) or PreviousOffGCDSpell(undefined) and Spell(frostbolt) or PreviousGCDSpell(frostbolt) and BuffStacks(fingers_of_frost_buff) < 3 and BuffStacks(brain_freeze_buff) == 0 and Spell(water_elemental_water_jet) or { BuffPresent(icy_veins_buff) or SpellCooldown(icy_veins) > SpellCooldown(ray_of_frost) and BuffExpires(rune_of_power_buff) } and Spell(ray_of_frost) or { PreviousGCDSpell(ebonbolt) or BuffPresent(brain_freeze_buff) and { PreviousGCDSpell(glacial_spike) or PreviousGCDSpell(frostbolt) and { not Talent(glacial_spike_talent) or BuffStacks(icicles_buff) <= 3 or SpellCooldown(frozen_orb) <= 10 and ArmorSetBonus(T20 2) } } } and Spell(flurry)
+ unless target.DebuffPresent(winters_chill_debuff) and Spell(ice_nova) or PreviousOffGCDSpell(water_elemental_water_jet) and Spell(frostbolt) or PreviousGCDSpell(frostbolt) and BuffStacks(fingers_of_frost_buff) < 3 and BuffStacks(brain_freeze_buff) == 0 and Spell(water_elemental_water_jet) or { BuffPresent(icy_veins_buff) or SpellCooldown(icy_veins) > SpellCooldown(ray_of_frost) and BuffExpires(rune_of_power_buff) } and Spell(ray_of_frost) or { PreviousGCDSpell(ebonbolt) or BuffPresent(brain_freeze_buff) and { PreviousGCDSpell(glacial_spike) or PreviousGCDSpell(frostbolt) and { not Talent(glacial_spike_talent) or BuffStacks(icicles_buff) <= 3 or SpellCooldown(frozen_orb) <= 10 and ArmorSetBonus(T20 2) } } } and Spell(flurry)
  {
   #frozen_orb,if=set_bonus.tier20_2pc&variable.fof_react<3
   if ArmorSetBonus(T20 2) and fof_react() < 3 Spell(frozen_orb)
@@ -1260,7 +1260,7 @@ AddFunction FrostSingleShortCdActions
 
 AddFunction FrostSingleShortCdPostConditions
 {
- target.DebuffPresent(winters_chill_debuff) and Spell(ice_nova) or PreviousOffGCDSpell(undefined) and Spell(frostbolt) or PreviousGCDSpell(frostbolt) and BuffStacks(fingers_of_frost_buff) < 3 and BuffStacks(brain_freeze_buff) == 0 and Spell(water_elemental_water_jet) or { BuffPresent(icy_veins_buff) or SpellCooldown(icy_veins) > SpellCooldown(ray_of_frost) and BuffExpires(rune_of_power_buff) } and Spell(ray_of_frost) or { PreviousGCDSpell(ebonbolt) or BuffPresent(brain_freeze_buff) and { PreviousGCDSpell(glacial_spike) or PreviousGCDSpell(frostbolt) and { not Talent(glacial_spike_talent) or BuffStacks(icicles_buff) <= 3 or SpellCooldown(frozen_orb) <= 10 and ArmorSetBonus(T20 2) } } } and Spell(flurry) or CastTime(blizzard) == 0 and Enemies() > 1 and fof_react() < 3 and Spell(blizzard) or fof_react() and Spell(ice_lance) or Spell(ebonbolt) or Spell(ice_nova) or { Enemies() > 1 or BuffStacks(zannesu_journey_buff) == 5 and BuffRemaining(zannesu_journey_buff) > CastTime(blizzard) } and Spell(blizzard) or BuffRemaining(frozen_mass_buff) > ExecuteTime(frostbolt) + ExecuteTime(glacial_spike) + TravelTime(glacial_spike) and BuffStacks(brain_freeze_buff) == 0 and Talent(glacial_spike_talent) and Spell(frostbolt) or { SpellCooldown(frozen_orb) > 10 or not ArmorSetBonus(T20 2) } and Spell(glacial_spike) or Spell(frostbolt) or Spell(blizzard) or Spell(ice_lance)
+ target.DebuffPresent(winters_chill_debuff) and Spell(ice_nova) or PreviousOffGCDSpell(water_elemental_water_jet) and Spell(frostbolt) or PreviousGCDSpell(frostbolt) and BuffStacks(fingers_of_frost_buff) < 3 and BuffStacks(brain_freeze_buff) == 0 and Spell(water_elemental_water_jet) or { BuffPresent(icy_veins_buff) or SpellCooldown(icy_veins) > SpellCooldown(ray_of_frost) and BuffExpires(rune_of_power_buff) } and Spell(ray_of_frost) or { PreviousGCDSpell(ebonbolt) or BuffPresent(brain_freeze_buff) and { PreviousGCDSpell(glacial_spike) or PreviousGCDSpell(frostbolt) and { not Talent(glacial_spike_talent) or BuffStacks(icicles_buff) <= 3 or SpellCooldown(frozen_orb) <= 10 and ArmorSetBonus(T20 2) } } } and Spell(flurry) or CastTime(blizzard) == 0 and Enemies() > 1 and fof_react() < 3 and Spell(blizzard) or fof_react() and Spell(ice_lance) or Spell(ebonbolt) or Spell(ice_nova) or { Enemies() > 1 or BuffStacks(zannesu_journey_buff) == 5 and BuffRemaining(zannesu_journey_buff) > CastTime(blizzard) } and Spell(blizzard) or BuffRemaining(frozen_mass_buff) > ExecuteTime(frostbolt) + ExecuteTime(glacial_spike) + TravelTime(glacial_spike) and BuffStacks(brain_freeze_buff) == 0 and Talent(glacial_spike_talent) and Spell(frostbolt) or { SpellCooldown(frozen_orb) > 10 or not ArmorSetBonus(T20 2) } and Spell(glacial_spike) or Spell(frostbolt) or Spell(blizzard) or Spell(ice_lance)
 }
 
 AddFunction FrostSingleCdActions
@@ -1269,7 +1269,7 @@ AddFunction FrostSingleCdActions
 
 AddFunction FrostSingleCdPostConditions
 {
- target.DebuffPresent(winters_chill_debuff) and Spell(ice_nova) or PreviousOffGCDSpell(undefined) and Spell(frostbolt) or PreviousGCDSpell(frostbolt) and BuffStacks(fingers_of_frost_buff) < 3 and BuffStacks(brain_freeze_buff) == 0 and Spell(water_elemental_water_jet) or { BuffPresent(icy_veins_buff) or SpellCooldown(icy_veins) > SpellCooldown(ray_of_frost) and BuffExpires(rune_of_power_buff) } and Spell(ray_of_frost) or { PreviousGCDSpell(ebonbolt) or BuffPresent(brain_freeze_buff) and { PreviousGCDSpell(glacial_spike) or PreviousGCDSpell(frostbolt) and { not Talent(glacial_spike_talent) or BuffStacks(icicles_buff) <= 3 or SpellCooldown(frozen_orb) <= 10 and ArmorSetBonus(T20 2) } } } and Spell(flurry) or ArmorSetBonus(T20 2) and fof_react() < 3 and Spell(frozen_orb) or CastTime(blizzard) == 0 and Enemies() > 1 and fof_react() < 3 and Spell(blizzard) or target.DebuffRemaining(frost_bomb_debuff) < TravelTime(ice_lance) and fof_react() and Spell(frost_bomb) or fof_react() and Spell(ice_lance) or Spell(ebonbolt) or Spell(frozen_orb) or Spell(ice_nova) or Spell(comet_storm) or { Enemies() > 1 or BuffStacks(zannesu_journey_buff) == 5 and BuffRemaining(zannesu_journey_buff) > CastTime(blizzard) } and Spell(blizzard) or BuffRemaining(frozen_mass_buff) > ExecuteTime(frostbolt) + ExecuteTime(glacial_spike) + TravelTime(glacial_spike) and BuffStacks(brain_freeze_buff) == 0 and Talent(glacial_spike_talent) and Spell(frostbolt) or { SpellCooldown(frozen_orb) > 10 or not ArmorSetBonus(T20 2) } and Spell(glacial_spike) or Spell(frostbolt) or Spell(blizzard) or Spell(ice_lance)
+ target.DebuffPresent(winters_chill_debuff) and Spell(ice_nova) or PreviousOffGCDSpell(water_elemental_water_jet) and Spell(frostbolt) or PreviousGCDSpell(frostbolt) and BuffStacks(fingers_of_frost_buff) < 3 and BuffStacks(brain_freeze_buff) == 0 and Spell(water_elemental_water_jet) or { BuffPresent(icy_veins_buff) or SpellCooldown(icy_veins) > SpellCooldown(ray_of_frost) and BuffExpires(rune_of_power_buff) } and Spell(ray_of_frost) or { PreviousGCDSpell(ebonbolt) or BuffPresent(brain_freeze_buff) and { PreviousGCDSpell(glacial_spike) or PreviousGCDSpell(frostbolt) and { not Talent(glacial_spike_talent) or BuffStacks(icicles_buff) <= 3 or SpellCooldown(frozen_orb) <= 10 and ArmorSetBonus(T20 2) } } } and Spell(flurry) or ArmorSetBonus(T20 2) and fof_react() < 3 and Spell(frozen_orb) or CastTime(blizzard) == 0 and Enemies() > 1 and fof_react() < 3 and Spell(blizzard) or target.DebuffRemaining(frost_bomb_debuff) < TravelTime(ice_lance) and fof_react() and Spell(frost_bomb) or fof_react() and Spell(ice_lance) or Spell(ebonbolt) or Spell(frozen_orb) or Spell(ice_nova) or Spell(comet_storm) or { Enemies() > 1 or BuffStacks(zannesu_journey_buff) == 5 and BuffRemaining(zannesu_journey_buff) > CastTime(blizzard) } and Spell(blizzard) or BuffRemaining(frozen_mass_buff) > ExecuteTime(frostbolt) + ExecuteTime(glacial_spike) + TravelTime(glacial_spike) and BuffStacks(brain_freeze_buff) == 0 and Talent(glacial_spike_talent) and Spell(frostbolt) or { SpellCooldown(frozen_orb) > 10 or not ArmorSetBonus(T20 2) } and Spell(glacial_spike) or Spell(frostbolt) or Spell(blizzard) or Spell(ice_lance)
 }
 
 ### actions.precombat
@@ -1397,7 +1397,7 @@ AddFunction FrostCooldownsCdPostConditions
 AddFunction FrostAoeMainActions
 {
  #frostbolt,if=prev_off_gcd.water_jet
- if PreviousOffGCDSpell(undefined) Spell(frostbolt)
+ if PreviousOffGCDSpell(water_elemental_water_jet) Spell(frostbolt)
  #blizzard
  Spell(blizzard)
  #ice_nova
@@ -1424,7 +1424,7 @@ AddFunction FrostAoeMainPostConditions
 
 AddFunction FrostAoeShortCdActions
 {
- unless PreviousOffGCDSpell(undefined) and Spell(frostbolt)
+ unless PreviousOffGCDSpell(water_elemental_water_jet) and Spell(frostbolt)
  {
   #frozen_orb
   Spell(frozen_orb)
@@ -1451,7 +1451,7 @@ AddFunction FrostAoeShortCdActions
 
 AddFunction FrostAoeShortCdPostConditions
 {
- PreviousOffGCDSpell(undefined) and Spell(frostbolt) or Spell(blizzard) or Spell(ice_nova) or PreviousGCDSpell(frostbolt) and BuffStacks(fingers_of_frost_buff) < 3 and BuffStacks(brain_freeze_buff) == 0 and Spell(water_elemental_water_jet) or { PreviousGCDSpell(ebonbolt) or BuffPresent(brain_freeze_buff) and { PreviousGCDSpell(glacial_spike) or PreviousGCDSpell(frostbolt) } } and Spell(flurry) or fof_react() and Spell(ice_lance) or Spell(ebonbolt) or Spell(glacial_spike) or Spell(frostbolt) or Spell(ice_lance)
+ PreviousOffGCDSpell(water_elemental_water_jet) and Spell(frostbolt) or Spell(blizzard) or Spell(ice_nova) or PreviousGCDSpell(frostbolt) and BuffStacks(fingers_of_frost_buff) < 3 and BuffStacks(brain_freeze_buff) == 0 and Spell(water_elemental_water_jet) or { PreviousGCDSpell(ebonbolt) or BuffPresent(brain_freeze_buff) and { PreviousGCDSpell(glacial_spike) or PreviousGCDSpell(frostbolt) } } and Spell(flurry) or fof_react() and Spell(ice_lance) or Spell(ebonbolt) or Spell(glacial_spike) or Spell(frostbolt) or Spell(ice_lance)
 }
 
 AddFunction FrostAoeCdActions
@@ -1460,7 +1460,7 @@ AddFunction FrostAoeCdActions
 
 AddFunction FrostAoeCdPostConditions
 {
- PreviousOffGCDSpell(undefined) and Spell(frostbolt) or Spell(frozen_orb) or Spell(blizzard) or Spell(comet_storm) or Spell(ice_nova) or PreviousGCDSpell(frostbolt) and BuffStacks(fingers_of_frost_buff) < 3 and BuffStacks(brain_freeze_buff) == 0 and Spell(water_elemental_water_jet) or { PreviousGCDSpell(ebonbolt) or BuffPresent(brain_freeze_buff) and { PreviousGCDSpell(glacial_spike) or PreviousGCDSpell(frostbolt) } } and Spell(flurry) or target.DebuffRemaining(frost_bomb_debuff) < TravelTime(ice_lance) and fof_react() and Spell(frost_bomb) or fof_react() and Spell(ice_lance) or Spell(ebonbolt) or Spell(glacial_spike) or Spell(frostbolt) or Spell(cone_of_cold) or Spell(ice_lance)
+ PreviousOffGCDSpell(water_elemental_water_jet) and Spell(frostbolt) or Spell(frozen_orb) or Spell(blizzard) or Spell(comet_storm) or Spell(ice_nova) or PreviousGCDSpell(frostbolt) and BuffStacks(fingers_of_frost_buff) < 3 and BuffStacks(brain_freeze_buff) == 0 and Spell(water_elemental_water_jet) or { PreviousGCDSpell(ebonbolt) or BuffPresent(brain_freeze_buff) and { PreviousGCDSpell(glacial_spike) or PreviousGCDSpell(frostbolt) } } and Spell(flurry) or target.DebuffRemaining(frost_bomb_debuff) < TravelTime(ice_lance) and fof_react() and Spell(frost_bomb) or fof_react() and Spell(ice_lance) or Spell(ebonbolt) or Spell(glacial_spike) or Spell(frostbolt) or Spell(cone_of_cold) or Spell(ice_lance)
 }
 
 ### actions.default
@@ -1639,9 +1639,11 @@ AddIcon checkbox=opt_mage_frost_aoe help=cd specialization=frost
 }
 
 ### Required symbols
+# icy_veins
 # fingers_of_frost_buff
 # lady_vashjs_grasp
 # icy_veins_buff
+# freeze
 # frozen_orb_debuff
 # ice_nova
 # winters_chill_debuff
@@ -1649,7 +1651,6 @@ AddIcon checkbox=opt_mage_frost_aoe help=cd specialization=frost
 # water_elemental_water_jet
 # brain_freeze_buff
 # ray_of_frost
-# icy_veins
 # rune_of_power_buff
 # flurry
 # ebonbolt

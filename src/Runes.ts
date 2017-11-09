@@ -27,8 +27,7 @@ const IsActiveRune = function(rune: Rune, atTime) {
 class OvaleRunesClass extends OvaleRunesBase {
     rune:LuaArray<Rune> = {}
     
-    constructor() {
-        super();
+    OnInitialize() {
         if (Ovale.playerClass == "DEATHKNIGHT") {
             for (let slot = 1; slot <= RUNE_SLOTS; slot += 1) {
                 this.rune[slot] = {}

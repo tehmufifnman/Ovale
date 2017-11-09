@@ -14,14 +14,7 @@ local self_playerGUID = nil
 local HONOR_AMONG_THIEVES = 51699
 local MEAN_TIME_TO_HAT = 2.2
 local OvaleHonorAmongThievesClass = __class(OvaleHonorAmongThievesBase, {
-    constructor = function(self)
-        self.spellName = "Honor Among Thieves Cooldown"
-        self.spellId = HONOR_AMONG_THIEVES
-        self.start = 0
-        self.ending = 0
-        self.duration = MEAN_TIME_TO_HAT
-        self.stacks = 0
-        OvaleHonorAmongThievesBase.constructor(self)
+    OnInitialize = function(self)
         if Ovale.playerClass == "ROGUE" then
             self_playerGUID = Ovale.playerGUID
             self:RegisterMessage("Ovale_SpecializationChanged")
@@ -54,5 +47,14 @@ local OvaleHonorAmongThievesClass = __class(OvaleHonorAmongThievesBase, {
             end
         end
     end,
+    constructor = function(self, ...)
+        OvaleHonorAmongThievesBase.constructor(self, ...)
+        self.spellName = "Honor Among Thieves Cooldown"
+        self.spellId = HONOR_AMONG_THIEVES
+        self.start = 0
+        self.ending = 0
+        self.duration = MEAN_TIME_TO_HAT
+        self.stacks = 0
+    end
 })
 __exports.OvaleHonorAmongThieves = OvaleHonorAmongThievesClass()

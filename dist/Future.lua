@@ -703,7 +703,7 @@ local OvaleFutureClass = __class(OvaleFutureBase, {
             else
                 self:Debug("    Updating to snapshot from %s for spell %s with no target queued at %s.", atTime, spellcast.spellName, spellcast.queued)
             end
-            OvalePaperDoll:UpdateSnapshot(OvalePaperDoll, spellcast, true)
+            OvalePaperDoll:UpdateSnapshot(spellcast, OvalePaperDoll, true)
             if spellcast.spellId then
                 spellcast.damageMultiplier = self:GetDamageMultiplier(spellcast.spellId, spellcast.target, atTime)
                 if spellcast.damageMultiplier ~= 1 then

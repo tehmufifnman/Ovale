@@ -1119,8 +1119,8 @@ AddFunction FuryDefaultCdActions
     if BuffRemaining(battle_cry_buff) > 6 or SpellCooldown(battle_cry) < 10 or target.TimeToDie() < SpellCooldown(battle_cry) + 10 Spell(avatar)
     #use_item,name=umbral_moonglaives,if=equipped.umbral_moonglaives&(cooldown.battle_cry.remains>gcd&cooldown.battle_cry.remains<2|cooldown.battle_cry.remains=0)
     if HasEquippedItem(umbral_moonglaives) and { SpellCooldown(battle_cry) > GCD() and SpellCooldown(battle_cry) < 2 or not SpellCooldown(battle_cry) > 0 } FuryUseItemActions()
-    #battle_cry,if=gcd.remains=0&talent.reckless_abandon.enabled&(equipped.umbral_moonglaives&(prev_off_gcd.umbral_moonglaives|(trinket.cooldown.remains>3&trinket.cooldown.remains<90))|!equipped.umbral_moonglaives)
-    if not 0 > 0 and Talent(reckless_abandon_talent) and { HasEquippedItem(umbral_moonglaives) and { PreviousOffGCDSpell(undefined) or { ItemCooldown(Trinket0Slot) and ItemCooldown(Trinket1Slot) } > 3 and { ItemCooldown(Trinket0Slot) and ItemCooldown(Trinket1Slot) } < 90 } or not HasEquippedItem(umbral_moonglaives) } Spell(battle_cry)
+    #battle_cry,if=gcd.remains=0&talent.reckless_abandon.enabled&(equipped.umbral_moonglaives&(prev_off_gcd.umbral_glaive_storm|(trinket.cooldown.remains>3&trinket.cooldown.remains<90))|!equipped.umbral_moonglaives)
+    if not 0 > 0 and Talent(reckless_abandon_talent) and { HasEquippedItem(umbral_moonglaives) and { PreviousOffGCDSpell(umbral_glaive_storm) or { ItemCooldown(Trinket0Slot) and ItemCooldown(Trinket1Slot) } > 3 and { ItemCooldown(Trinket0Slot) and ItemCooldown(Trinket1Slot) } < 90 } or not HasEquippedItem(umbral_moonglaives) } Spell(battle_cry)
     #battle_cry,if=gcd.remains=0&talent.bladestorm.enabled&(raid_event.adds.in>90|!raid_event.adds.exists|spell_targets.bladestorm_mh>desired_targets)
     if not 0 > 0 and Talent(bladestorm_talent) and { 600 > 90 or not False(raid_event_adds_exists) or Enemies() > Enemies(tagged=1) } Spell(battle_cry)
     #battle_cry,if=gcd.remains=0&buff.dragon_roar.up&(cooldown.bloodthirst.remains=0|buff.enrage.remains>cooldown.bloodthirst.remains)
@@ -1268,6 +1268,7 @@ AddIcon checkbox=opt_warrior_fury_aoe help=cd specialization=fury
 # kazzalax_fujiedas_fury
 # avatar
 # umbral_moonglaives
+# umbral_glaive_storm
 # bladestorm_talent
 # dragon_roar_buff
 # bloodbath

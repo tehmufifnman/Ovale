@@ -19,8 +19,7 @@ class OvaleShadowWordDeathClass extends OvaleShadowWordDeathBase {
     duration = 9;
     stacks = 0;
 
-    constructor() {
-        super();
+    OnInitialize() {
         if (Ovale.playerClass == "PRIEST") {
             self_playerGUID = Ovale.playerGUID;
             this.RegisterMessage("Ovale_SpecializationChanged");

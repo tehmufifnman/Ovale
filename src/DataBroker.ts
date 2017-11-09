@@ -6,7 +6,7 @@ import { OvaleOptions } from "./Options";
 import { Ovale } from "./Ovale";
 import { OvaleScripts } from "./Scripts";
 import { OvaleVersion } from "./Version";
-import { frame } from "./Frame";
+import { OvaleFrameModule } from "./Frame";
 import aceEvent from "@wowts/ace_event-3.0";
 import { pairs, LuaArray } from "@wowts/lua";
 import { insert } from "@wowts/table";
@@ -87,7 +87,7 @@ const OnClick = function(fr, button) {
         self_menuFrame = self_menuFrame || CreateFrame("Frame", "OvaleDataBroker_MenuFrame", UIParent, "UIDropDownMenuTemplate");
         EasyMenu(menu, self_menuFrame, "cursor", 0, 0, "MENU");
     } else if (button == "MiddleButton") {
-        frame.ToggleOptions();
+        OvaleFrameModule.frame.ToggleOptions();
     } else if (button == "RightButton") {
         if (IsShiftKeyDown()) {
             OvaleDebug.DoTrace(true);

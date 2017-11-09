@@ -16,7 +16,7 @@ local OvaleScripts = __Scripts.OvaleScripts
 local __Version = LibStub:GetLibrary("ovale/Version")
 local OvaleVersion = __Version.OvaleVersion
 local __Frame = LibStub:GetLibrary("ovale/Frame")
-local frame = __Frame.frame
+local OvaleFrameModule = __Frame.OvaleFrameModule
 local aceEvent = LibStub:GetLibrary("AceEvent-3.0", true)
 local pairs = pairs
 local insert = table.insert
@@ -92,7 +92,7 @@ local OnClick = function(fr, button)
         self_menuFrame = self_menuFrame or CreateFrame("Frame", "OvaleDataBroker_MenuFrame", UIParent, "UIDropDownMenuTemplate")
         EasyMenu(menu, self_menuFrame, "cursor", 0, 0, "MENU")
     elseif button == "MiddleButton" then
-        frame:ToggleOptions()
+        OvaleFrameModule.frame:ToggleOptions()
     elseif button == "RightButton" then
         if IsShiftKeyDown() then
             OvaleDebug:DoTrace(true)

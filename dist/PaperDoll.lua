@@ -186,7 +186,7 @@ local OvalePaperDollClass = __class(OvalePaperDollBase, {
         end
         self.SaveSpellcastInfo = function(module, spellcast, atTime, state)
             local paperDollModule = state or self
-            self:UpdateSnapshot(paperDollModule, spellcast, true)
+            self:UpdateSnapshot(spellcast, paperDollModule, true)
         end
         OvalePaperDollBase.constructor(self)
         self:RegisterEvent("COMBAT_RATING_UPDATE")
@@ -504,7 +504,7 @@ local PaperDollState = __class(nil, {
         self.class = __exports.OvalePaperDoll.class
         self.level = __exports.OvalePaperDoll.level
         self.specialization = __exports.OvalePaperDoll.specialization
-        self:UpdateSnapshot(__exports.OvalePaperDoll, self, true)
+        self:UpdateSnapshot(self, __exports.OvalePaperDoll, true)
     end,
     GetMasteryMultiplier = function(self, snapshot)
         return __exports.OvalePaperDoll:GetMasteryMultiplier(snapshot)
@@ -523,7 +523,7 @@ local PaperDollState = __class(nil, {
     end,
     UpdateSnapshot = function(self, target, snapshot, updateAllStats)
         if  not snapshot then
-            __exports.OvalePaperDoll:UpdateSnapshot(self, target)
+            __exports.OvalePaperDoll:UpdateSnapshot(target, self, updateAllStats)
         else
             __exports.OvalePaperDoll:UpdateSnapshot(target, snapshot, updateAllStats)
         end

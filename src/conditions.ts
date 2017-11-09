@@ -26,7 +26,7 @@ import { EnemiesState } from "./Enemies";
 import { totemState } from "./Totem";
 import { sigilState } from "./DemonHunterSigils";
 import { demonHunterSoulFragmentsState } from "./DemonHunterSoulFragments";
-import { frame } from "./Frame";
+import { OvaleFrameModule } from "./Frame";
 import { lastSpell } from "./LastSpell";
 import { dataState } from "./DataState";
 import { stanceState } from "./StanceState";
@@ -35,6 +35,7 @@ import { futureState } from "./FutureState";
 import { ipairs, pairs, type, LuaArray, LuaObj, lualength } from "@wowts/lua";
 import { GetBuildInfo, GetItemCooldown, GetItemCount, GetNumTrackingTypes, GetTime, GetTrackingInfo, GetUnitSpeed, GetWeaponEnchantInfo, HasFullControl, IsStealthed, UnitCastingInfo, UnitChannelInfo, UnitClass, UnitClassification, UnitCreatureFamily, UnitCreatureType, UnitDetailedThreatSituation, UnitExists, UnitInRaid, UnitIsDead, UnitIsFriend, UnitIsPVP, UnitIsUnit, UnitLevel, UnitName, UnitPower, UnitPowerMax, UnitRace, UnitStagger } from "@wowts/wow-mock";
 import { huge } from "@wowts/math";
+import { isValueNode } from "./AST";
 let INFINITY = huge;
 
 const BossArmorDamageReduction = function(target, state: BaseState) {
@@ -52,8 +53,8 @@ const ComputeParameter = function(spellId, paramName, state: BaseState, atTime) 
         let node = OvaleCompile.GetFunctionNode(name);
         if (node) {
             let [, element] = OvaleBestAction.Compute(node.child[1], state, atTime);
-            if (element && element.type == "value") {
-                let value = element.value + (state.currentTime - element.origin) * element.rate;
+            if (element && isValueNode(element)) {
+                let value = <number>element.value + (state.currentTime - element.origin) * element.rate;
                 return value;
             }
         } else {
@@ -472,7 +473,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
 {
     const CheckBoxOff = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         for (const [, id] of ipairs(positionalParams)) {
-            if (frame && frame.IsChecked(id)) {
+            if (OvaleFrameModule.frame && OvaleFrameModule.frame.IsChecked(id)) {
                 return undefined;
             }
         }
@@ -480,7 +481,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
     }
     const CheckBoxOn = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         for (const [, id] of ipairs(positionalParams)) {
-            if (frame && !frame.IsChecked(id)) {
+            if (OvaleFrameModule.frame && !OvaleFrameModule.frame.IsChecked(id)) {
                 return undefined;
             }
         }
@@ -1215,7 +1216,7 @@ const GetHastedTime = function(seconds, haste, state: BaseState) {
 {
     const List = function(positionalParams: LuaArray<any>, namedParams: LuaObj<any>, state: BaseState, atTime: number) {
         let [name, value] = [positionalParams[1], positionalParams[2]];
-        if (name && frame && frame.GetListValue(name) == value) {
+        if (name && OvaleFrameModule.frame && OvaleFrameModule.frame.GetListValue(name) == value) {
             return [0, INFINITY];
         }
         return undefined;

@@ -483,7 +483,6 @@ local OvaleFrame = __class(AceGUI.WidgetContainerBase, {
         self.localstatus = {}
         self.actions = {}
         AceGUI.WidgetContainerBase.constructor(self)
-        __exports.frame = self
         local hider = CreateFrame("Frame", Ovale:GetName() .. "PetBattleFrameHider", UIParent, "SecureHandlerStateTemplate")
         local newFrame = CreateFrame("Frame", nil, hider)
         hider:SetAllPoints(UIParent)
@@ -547,29 +546,29 @@ local OvaleFrame = __class(AceGUI.WidgetContainerBase, {
 local OvaleFrameBase = Ovale:NewModule("OvaleFrame", aceEvent)
 local OvaleFrameModuleClass = __class(OvaleFrameBase, {
     OnInitialize = function(self)
-        __exports.frame = OvaleFrame()
+        self.frame = OvaleFrame()
     end,
     Ovale_OptionChanged = function(self, event, eventType)
-        if  not __exports.frame then
+        if  not self.frame then
             return 
         end
         if eventType == "visibility" then
-            __exports.frame:UpdateVisibility()
+            self.frame:UpdateVisibility()
         else
             if eventType == "layout" then
-                __exports.frame:UpdateFrame()
+                self.frame:UpdateFrame()
             end
-            __exports.frame:UpdateFrame()
+            self.frame:UpdateFrame()
         end
     end,
     PLAYER_TARGET_CHANGED = function(self)
-        __exports.frame:UpdateVisibility()
+        self.frame:UpdateVisibility()
     end,
     Ovale_CombatStarted = function(self, event, atTime)
-        __exports.frame:UpdateVisibility()
+        self.frame:UpdateVisibility()
     end,
     Ovale_CombatEnded = function(self, event, atTime)
-        __exports.frame:UpdateVisibility()
+        self.frame:UpdateVisibility()
     end,
     constructor = function(self)
         OvaleFrameBase.constructor(self)

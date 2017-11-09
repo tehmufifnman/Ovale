@@ -292,8 +292,7 @@ class OvaleAuraClass extends OvaleAuraBase {
     serial = {}
     bypassState = {}
     
-    constructor() {
-        super();
+    OnInitialize() {
         self_playerGUID = Ovale.playerGUID;
         self_petGUID = OvaleGUID.petGUID;
         this.RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED");

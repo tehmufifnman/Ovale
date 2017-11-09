@@ -213,7 +213,7 @@ export interface AstAnnotation {
     parametersList?: LuaArray<NamedParameters>;
 }
 
-export type NodeType = "function" | "string" | "variable" | "value" | "number" | "spell_aura_list" | "item_info" |
+export type NodeType = "function" | "string" | "variable" | "value" | "spell_aura_list" | "item_info" |
      "item_require" | "spell_info" | "spell_require" | "score_spells" |
      "add_function" | "icon" | "script" | "checkbox" | "list_item" | "list" |
      "logical" | "group" | "unless" | "comment" | "if" | "simc_pool_resource" |
@@ -223,7 +223,7 @@ export type NodeType = "function" | "string" | "variable" | "value" | "number" |
 
 export type OperatorType = "not" | "or" | "and" | "-" | "=" | "!=" |
     "xor" | "^" | "|" | "%" | "&" | "==" | "/" | "!" | ">" |
-    ">=" | "<=" | "<";
+    ">=" | "<=" | "<" | "+" | "*";
 
 export interface AstNode {
     child: LuaArray<AstNode>;
@@ -277,15 +277,6 @@ export interface AstNode {
 export interface FunctionNode extends AstNode {
     func: string;
     type: "state" | "action" | "function" | "custom_function"
-}
-
-export interface NumberNode extends AstNode {
-    type: "number";
-    value: number;    
-}
-
-export function isNumberNode(node: AstNode): node is NumberNode {
-    return node.type === "number";
 }
 
 export interface StringNode extends AstNode {
@@ -588,8 +579,6 @@ class OvaleASTClass extends OvaleASTBase {
                 value = node.name;
             } else if (isStringNode(node)) {
                 value = node.value;
-            } else if (isNumberNode(node)) {
-                value = node.value;
             }
             else {
                 // TODO not nice at all!
@@ -815,7 +804,7 @@ class OvaleASTClass extends OvaleASTBase {
     UnparseList:UnparserFunction = (node) => {
         return format("%s(%s %s)", node.keyword, node.name, this.UnparseParameters(node.rawPositionalParams, node.rawNamedParams));
     }
-    UnparseNumber:UnparserFunction = (node: NumberNode) => {
+    UnparseValue:UnparserFunction = (node: ValueNode) => {
         return tostring(node.value);
     }
     UnparseParameters(positionalParams: RawPositionalParameters, namedParams: RawNamedParameters) {
@@ -924,7 +913,6 @@ class OvaleASTClass extends OvaleASTBase {
         ["list"]: this.UnparseList,
         ["list_item"]: this.UnparseAddListItem,
         ["logical"]: this.UnparseExpression,
-        ["number"]: this.UnparseNumber,
         ["score_spells"]: this.UnparseScoreSpells,
         ["script"]: this.UnparseScript,
         ["spell_aura_list"]: this.UnparseSpellAuraList,
@@ -933,7 +921,7 @@ class OvaleASTClass extends OvaleASTBase {
         ["state"]: this.UnparseFunction,
         ["string"]: this.UnparseString,
         ["unless"]: this.UnparseUnless,
-        ["value"]: this.UnparseNumber,
+        ["value"]: this.UnparseValue,
         ["variable"]: this.UnparseVariable
     }
 
@@ -2591,9 +2579,9 @@ class OvaleASTClass extends OvaleASTBase {
                     targetNode.previousType = node.type;
                     targetNode.type = "string";
                     targetNode.value = value;
-                } else if (isNumberNode(node)) {
+                } else if (isValueNode(node)) {
                     let value = node.value;
-                    targetNode.previousType = "number";
+                    targetNode.previousType = "value";
                     targetNode.type = "string";
                     targetNode.value = tostring(value);
                 } else if (node.type == "function") {

@@ -46,8 +46,7 @@ class OvaleSteadyFocusClass extends OvaleSteadyFocusBase {
     duration = INFINITY;
     stacks = 0;
 
-    constructor() {
-        super();
+    OnInitialize() {
         if (Ovale.playerClass == "HUNTER") {
             self_playerGUID = Ovale.playerGUID;
             this.RegisterMessage("Ovale_TalentsChanged");

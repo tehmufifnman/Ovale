@@ -44,15 +44,7 @@ local RANGED_ATTACKS = {
     [121414] = "Glaive Toss"
 }
 local OvaleSteadyFocusClass = __class(OvaleSteadyFocusBase, {
-    constructor = function(self)
-        self.hasSteadyFocus = nil
-        self.spellName = "Pre-Steady Focus"
-        self.spellId = PRE_STEADY_FOCUS
-        self.start = 0
-        self.ending = 0
-        self.duration = INFINITY
-        self.stacks = 0
-        OvaleSteadyFocusBase.constructor(self)
+    OnInitialize = function(self)
         if Ovale.playerClass == "HUNTER" then
             self_playerGUID = Ovale.playerGUID
             self:RegisterMessage("Ovale_TalentsChanged")
@@ -125,6 +117,16 @@ local OvaleSteadyFocusClass = __class(OvaleSteadyFocusBase, {
             self:Print("Player has no pre-Steady Focus aura!")
         end
     end,
+    constructor = function(self, ...)
+        OvaleSteadyFocusBase.constructor(self, ...)
+        self.hasSteadyFocus = nil
+        self.spellName = "Pre-Steady Focus"
+        self.spellId = PRE_STEADY_FOCUS
+        self.start = 0
+        self.ending = 0
+        self.duration = INFINITY
+        self.stacks = 0
+    end
 })
 local SteadyFocusState = __class(nil, {
     CleanState = function(self)

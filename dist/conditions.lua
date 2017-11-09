@@ -56,7 +56,7 @@ local sigilState = __DemonHunterSigils.sigilState
 local __DemonHunterSoulFragments = LibStub:GetLibrary("ovale/DemonHunterSoulFragments")
 local demonHunterSoulFragmentsState = __DemonHunterSoulFragments.demonHunterSoulFragmentsState
 local __Frame = LibStub:GetLibrary("ovale/Frame")
-local frame = __Frame.frame
+local OvaleFrameModule = __Frame.OvaleFrameModule
 local __LastSpell = LibStub:GetLibrary("ovale/LastSpell")
 local lastSpell = __LastSpell.lastSpell
 local __DataState = LibStub:GetLibrary("ovale/DataState")
@@ -100,6 +100,8 @@ local UnitPowerMax = UnitPowerMax
 local UnitRace = UnitRace
 local UnitStagger = UnitStagger
 local huge = math.huge
+local __AST = LibStub:GetLibrary("ovale/AST")
+local isValueNode = __AST.isValueNode
 local INFINITY = huge
 local BossArmorDamageReduction = function(target, state)
     local armor = 24835
@@ -117,7 +119,7 @@ local ComputeParameter = function(spellId, paramName, state, atTime)
         local node = OvaleCompile:GetFunctionNode(name)
         if node then
             local _, element = OvaleBestAction:Compute(node.child[1], state, atTime)
-            if element and element.type == "value" then
+            if element and isValueNode(element) then
                 local value = element.value + (state.currentTime - element.origin) * element.rate
                 return value
             end
@@ -565,7 +567,7 @@ end
 do
     local CheckBoxOff = function(positionalParams, namedParams, state, atTime)
         for _, id in ipairs(positionalParams) do
-            if frame and frame:IsChecked(id) then
+            if OvaleFrameModule.frame and OvaleFrameModule.frame:IsChecked(id) then
                 return nil
             end
         end
@@ -574,7 +576,7 @@ do
 
     local CheckBoxOn = function(positionalParams, namedParams, state, atTime)
         for _, id in ipairs(positionalParams) do
-            if frame and  not frame:IsChecked(id) then
+            if OvaleFrameModule.frame and  not OvaleFrameModule.frame:IsChecked(id) then
                 return nil
             end
         end
@@ -1368,7 +1370,7 @@ end
 do
     local List = function(positionalParams, namedParams, state, atTime)
         local name, value = positionalParams[1], positionalParams[2]
-        if name and frame and frame:GetListValue(name) == value then
+        if name and OvaleFrameModule.frame and OvaleFrameModule.frame:GetListValue(name) == value then
             return 0, INFINITY
         end
         return nil

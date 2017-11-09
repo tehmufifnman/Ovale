@@ -31,9 +31,7 @@ local IsActiveRune = function(rune, atTime)
 end
 
 local OvaleRunesClass = __class(OvaleRunesBase, {
-    constructor = function(self)
-        self.rune = {}
-        OvaleRunesBase.constructor(self)
+    OnInitialize = function(self)
         if Ovale.playerClass == "DEATHKNIGHT" then
             for slot = 1, RUNE_SLOTS, 1 do
                 self.rune[slot] = {}
@@ -106,6 +104,10 @@ local OvaleRunesClass = __class(OvaleRunesBase, {
             end
         end
     end,
+    constructor = function(self, ...)
+        OvaleRunesBase.constructor(self, ...)
+        self.rune = {}
+    end
 })
 local usedRune = {}
 local RunesState = __class(nil, {

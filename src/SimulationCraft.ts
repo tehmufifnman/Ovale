@@ -3491,7 +3491,7 @@ EmitOperandPreviousSpell = function (operand, parseNode, nodeList, annotation, a
     if (token == "prev" || token == "prev_gcd" || token == "prev_off_gcd") {
         let name = tokenIterator();
         let howMany = 1;
-        if (tonumber(name) != nan) {
+        if (tonumber(name)) {
             howMany = tonumber(name);
             name = tokenIterator();
         }

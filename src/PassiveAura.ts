@@ -128,8 +128,7 @@ let READINESS_ROLE = {
     }
 }
 class OvalePassiveAuraClass extends OvalePassiveAuraBase {
-    constructor() {
-        super();
+    OnInitialize() {
         self_playerGUID = Ovale.playerGUID;
         this.RegisterMessage("Ovale_EquipmentChanged");
         this.RegisterMessage("Ovale_SpecializationChanged");

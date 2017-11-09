@@ -121,18 +121,6 @@ local OvaleScriptsClass = __class(OvaleScriptsBase, {
             elseif specialization == "guardian" then
                 name = "icyveins_druid_guardian"
             end
-        elseif className == "HUNTER" then
-            local short
-            if specialization == "beast_mastery" then
-                short = "bm"
-            elseif specialization == "marksmanship" then
-                short = "mm"
-            elseif specialization == "survival" then
-                short = "sv"
-            end
-            if short then
-                name = format("sc_hunter_%s_t19", short)
-            end
         elseif className == "MONK" then
             if specialization == "mistweaver" then
                 name = DISABLED_NAME

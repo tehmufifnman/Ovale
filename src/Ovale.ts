@@ -136,7 +136,6 @@ class OvaleClass extends OvaleBase {
         _G["BINDING_NAME_OVALE_CHECKBOX3"] = `${toggleCheckBox}(4)`;
         _G["BINDING_NAME_OVALE_CHECKBOX4"] = `${toggleCheckBox}(5)`;
     
-        this.RegisterEvent("PLAYER_ENTERING_WORLD");
     }
 
     // OnDisable() {
@@ -146,7 +145,7 @@ class OvaleClass extends OvaleBase {
     //     this.UnregisterMessage("Ovale_OptionChanged");
     //     this.frame.Hide();
     // }
-    PLAYER_ENTERING_WORLD() {
+    OnInitialize() {
         this.playerGUID = UnitGUID("player");
         wipe(self_refreshIntervals);
         self_refreshIndex = 1;

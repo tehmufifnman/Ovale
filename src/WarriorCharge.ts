@@ -17,8 +17,7 @@ let CHARGED_ATTACKS = {
 }
 class OvaleWarriorChargeClass extends OvaleWarriorChargeBase {
     targetGUID = undefined;
-    constructor() {
-        super();
+    OnInitialize() {
         if (Ovale.playerClass == "WARRIOR") {
             self_playerGUID = Ovale.playerGUID;
             this.RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED");

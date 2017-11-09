@@ -522,7 +522,6 @@ class OvaleFrame extends AceGUI.WidgetContainerBase {
 
     constructor() {
         super();
-        frame = this;
         let hider = CreateFrame("Frame", `${Ovale.GetName()}PetBattleFrameHider`, UIParent, "SecureHandlerStateTemplate");
         let newFrame = CreateFrame("Frame", undefined, hider);
         hider.SetAllPoints(UIParent);
@@ -582,35 +581,35 @@ class OvaleFrame extends AceGUI.WidgetContainerBase {
     }
 }
 
-export let frame: OvaleFrame;
-
 const OvaleFrameBase = Ovale.NewModule("OvaleFrame", aceEvent);
 class OvaleFrameModuleClass extends OvaleFrameBase {
+
+    frame: OvaleFrame;
     OnInitialize() {
-       frame = new OvaleFrame();
+       this.frame = new OvaleFrame();
     }
 
     Ovale_OptionChanged(event, eventType) {
-        if (!frame) return;
+        if (!this.frame) return;
         if (eventType == "visibility") {
-            frame.UpdateVisibility();
+            this.frame.UpdateVisibility();
         }
         else {
             if (eventType == "layout") {
-                frame.UpdateFrame(); // TODO
+                this.frame.UpdateFrame(); // TODO
             }
-            frame.UpdateFrame();
+            this.frame.UpdateFrame();
         }    
     }
 
     PLAYER_TARGET_CHANGED() {
-        frame.UpdateVisibility();
+        this.frame.UpdateVisibility();
     }
     Ovale_CombatStarted(event, atTime) {
-        frame.UpdateVisibility();
+        this.frame.UpdateVisibility();
     }
     Ovale_CombatEnded(event, atTime) {
-        frame.UpdateVisibility();
+        this.frame.UpdateVisibility();
     }
     
     constructor(){

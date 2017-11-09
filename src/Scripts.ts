@@ -123,18 +123,6 @@ class OvaleScriptsClass  extends OvaleScriptsBase {
             } else if (specialization == "guardian") {
                 name = "icyveins_druid_guardian";
             }
-        } else if (className == "HUNTER") {
-            let short;
-            if (specialization == "beast_mastery") {
-                short = "bm";
-            } else if (specialization == "marksmanship") {
-                short = "mm";
-            } else if (specialization == "survival") {
-                short = "sv";
-            }
-            if (short) {
-                name = format("sc_hunter_%s_t19", short);
-            }
         } else if (className == "MONK") {
             if (specialization == "mistweaver") {
                 name = DISABLED_NAME;
