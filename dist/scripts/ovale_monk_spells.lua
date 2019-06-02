@@ -59,9 +59,9 @@ Define(elusive_brawler 195630)
   # Dodge chance increased by w1.
   SpellAddBuff(elusive_brawler elusive_brawler=1)
 Define(energizing_elixir 115288)
-# Chug an Energizing Elixir, granting s2 Chi and generating s1/5*5 Energy over 5 seconds.
-  SpellInfo(energizing_elixir cd=60 duration=5 max_stacks=3 gcd=1 chi=-2 talent=energizing_elixir_talent)
-  # Generating w1/5 extra Energy per sec.
+# Chug an Energizing Elixir, granting 2 Chi and generating 75 Energy over 5 seconds.
+  SpellInfo(energizing_elixir cd=60 duration=5 gcd=1 chi=-2 talent=energizing_elixir_talent)
+  # Generating 15 extra Energy per second.
   SpellAddBuff(energizing_elixir energizing_elixir=1)
 Define(fireblood 265221)
 # Removes all poison, disease, curse, magic, and bleed effects and increases your ?a162700[Agility]?a162702[Strength]?a162697[Agility]?a162698[Strength]?a162699[Intellect]?a162701[Intellect][primary stat] by 265226s1*3 and an additional 265226s1 for each effect removed. Lasts 8 seconds. 
@@ -187,7 +187,7 @@ Define(dampen_harm_talent 15) #20175
 Define(diffuse_magic_talent 14) #20173
 # Reduces magic damage you take by m1 for 6 seconds, and transfers all currently active harmful magical effects on you back to their original caster if possible.
 Define(energizing_elixir_talent 9) #22096
-# Chug an Energizing Elixir, granting s2 Chi and generating s1/5*5 Energy over 5 seconds.
+# Chug an Energizing Elixir, granting 2 Chi and generating 15 Energy over 5 seconds.
 Define(fist_of_the_white_tiger_talent 8) #19771
 # Strike with the technique of the White Tiger, dealing s1+261977s1 Physical damage.rnrn|cFFFFFFFFGenerates 261978s1 Chi.
 Define(hit_combo_talent 16) #22093
